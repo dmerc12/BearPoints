@@ -1,0 +1,25 @@
+{
+  "name": "bearpoints",
+  "version": "1.0.0",
+  "description": "BearPoints is a points based gamification system to reward and students for good behavior.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dmerc12/BearPoints.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dmerc12/BearPoints/issues"
+  },
+  "homepage": "https://github.com/dmerc12/BearPoints#readme",
+  "dependencies": {
+    "express": "^4.21.2",
+    "googleapis": "^146.0.0",
+    "qrcode": "^1.5.4"
+  }
+}
