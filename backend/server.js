@@ -21,6 +21,16 @@ const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
 // Get leaderboard
 
 // Get all students
+app.get( "/api/students", async ( req, res ) => {
+    const response = await sheets.spreadsheets.values.get( {
+        spreadsheetId: SPREADSHEET_ID,
+        range: "Students!A:C"
+    } );
+    res.json( response.data.values.map( ( row ) => ( {
+        studentId: row[ 0 ],
+        name: row[ 2 ]
+    } )));
+});
 
 // Generate QR code URL for specific student
 
