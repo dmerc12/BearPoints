@@ -1,21 +1,12 @@
 import express, { Request, Response } from 'express';
-import { initializeApp } from 'firebase-admin/app';
+import { createFirebase } from '../createFirebase';
 import { getAuth } from 'firebase-admin/auth';
 import { createApp } from '../createApp';
 import { authenticateUser } from '.';
 import request from 'supertest';
-import 'dotenv/config';
 
-require('dotenv').config();
-
-var admin = require('firebase-admin');
-
-var serviceAccount = require('../../../firebase-service-account.json');
-
-const firebaseApp = initializeApp({
-    credential: admin.credential.cert(serviceAccount)
-});
-const auth = getAuth(firebaseApp);
+const firebase = createFirebase()
+const auth = getAuth(firebase);
 
 const createTestApp = () => {
     const app = createApp();
