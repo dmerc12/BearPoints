@@ -137,3 +137,6 @@ dist
 
 # Google Cloud JSON key file
 backend/service-account.json
+backend/firebase-service-account.json
+concept/
+example/
