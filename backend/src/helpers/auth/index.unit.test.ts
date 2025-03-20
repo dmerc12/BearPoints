@@ -16,6 +16,7 @@ describe('authenticateUser (Unit)', () => {
     let next: jest.Mock;
 
     beforeEach(() => {
+        process.env.ALLOWED_DOMAIN = '@okcps.org';
         req = { headers: {}, user: null };
         res = {
             status: jest.fn(() => res),
