@@ -1,3 +1,4 @@
+import studentsRouter from '../../routes/students';
 import formRouter from '../../routes/form';
 import express from 'express';
 import cors from 'cors';
@@ -14,6 +15,7 @@ export function createApp () {
 
     // Routes go below
     app.use('/api/form', formRouter);
+    app.use('/api/students', studentsRouter);
 
     return app;
 }
