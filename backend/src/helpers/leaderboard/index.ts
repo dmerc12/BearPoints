@@ -1,5 +1,11 @@
 import { BehaviorLog, Student, Timeframe, LeaderboardEntry, StudentsMap } from '../../types';
 
+export const daysAgo = (days: number): string => {
+    const date = new Date();
+    date.setDate(date.getDate() - days);
+    return date.toISOString();
+};
+
 export const filterLogsByTimeframe = ( logs: BehaviorLog[], timeframe: Timeframe ): BehaviorLog[] => {
     const now = new Date();
     const startDates: Record<Timeframe, Date> = {

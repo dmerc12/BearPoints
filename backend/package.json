@@ -20,11 +20,14 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "firebase-admin": "^13.2.0",
+    "google-auth-library": "^9.15.1",
+    "google-spreadsheet": "^4.1.4",
     "googleapis": "^105.0.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
+    "@types/google-spreadsheet": "^3.3.2",
     "@types/jest": "^29.5.14",
     "@types/mock-req-res": "^1.1.6",
     "@types/supertest": "^6.0.2",

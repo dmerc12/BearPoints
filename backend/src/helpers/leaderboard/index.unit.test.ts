@@ -1,11 +1,5 @@
-import { filterLogsByTimeframe, calculateLeaderboard } from '.';
+import { daysAgo, filterLogsByTimeframe, calculateLeaderboard } from '.';
 import { BehaviorLog, Student } from '../../types';
-
-const daysAgo = (days: number): string => {
-    const date = new Date();
-    date.setDate(date.getDate() - days);
-    return date.toISOString();
-};
 
 // Mock data
 const mockStudents: Student[] = [

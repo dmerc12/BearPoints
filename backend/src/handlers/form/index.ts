@@ -1,9 +1,8 @@
 import { Request, RequestHandler, Response } from 'express-serve-static-core';
 import { SheetsHelper } from '../../helpers/sheets';
-import { BehaviorLog } from '../../types';
 
 type BodyType = {
-    studentId: number;
+    studentID: number;
     behaviors: {
         respectful: boolean;
         responsible: boolean;
@@ -15,21 +14,27 @@ type BodyType = {
 // Submit form to create a new BehaviorLog row
 export const submitForm: RequestHandler<{}, any, BodyType> = async (request: Request<{}, any, BodyType>, response: Response) => {
     try {
-        const { studentId, behaviors, notes } = request.body;
+        const { studentID, behaviors, notes } = request.body;
         if (!behaviors) {
             response.status(400).json({ error: 'Invalid request format' });
             return;
         }
+        const doc = SheetsHelper();
+        await doc.loadInfo();
+        const sheet = doc.sheetsByTitle[ 'BehaviorLog' ];
+        if (!sheet) {
+            throw new Error('BehaviorLog sheet not found');
+            // TODO: Create behaviorLog sheet if it doesn't exist
+        }
         const points = Object.values(behaviors).filter(Boolean).length;
         const timestamp = new Date().toISOString();
-        const logEntry: BehaviorLog = {
-            timestamp,
-            studentID: studentId,
+        await sheet.addRow({
+            timestamp: timestamp,
+            studentID: studentID,
             ...behaviors,
-            points,
+            points: points,
             notes: notes || ''
-        }
-        await SheetsHelper.append('BehaviorLog', [Object.values(logEntry)]);
+        });
         response.status(201).json({ success: true });
     } catch (error: any) {
         response.status(500).json({ error: error.message });

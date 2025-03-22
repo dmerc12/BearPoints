@@ -5,12 +5,19 @@ import { Student } from '../../types';
 // Get all students
 export const getStudents: RequestHandler = async (request: Request, response: Response) => {
     try {
-        const rows = await SheetsHelper.read('Students', 'A:D');
-        const students: Student[] = rows.map((row: any[]) => ({
-            studentID: Number(row[ 0 ]),
-            name: String(row[ 1 ]),
-            grade: String(row[ 2 ]),
-            teacher: String(row[ 3 ]),
+        const doc = SheetsHelper();
+        await doc.loadInfo();
+        const sheet = doc.sheetsByTitle[ 'Students' ];
+        if (!sheet) {
+            throw new Error('Students sheet not found');
+            // TODO: Create students sheet if it doesn't exist
+        }
+        const rows = await sheet.getRows();
+        const students: Student[] = rows.map(row => ({
+            studentID: Number(row.get('studentID')),
+            name: String(row.get('name')),
+            grade: String(row.get('grade')),
+            teacher: String(row.get('teacher')),
         }));
         response.json(students);
     } catch (error: any) {

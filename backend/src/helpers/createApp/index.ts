@@ -1,3 +1,4 @@
+import leaderboardRouter from '../../routes/leaderboard';
 import studentsRouter from '../../routes/students';
 import formRouter from '../../routes/form';
 import express from 'express';
@@ -16,6 +17,7 @@ export function createApp () {
     // Routes go below
     app.use('/api/form', formRouter);
     app.use('/api/students', studentsRouter);
+    app.use('/api/leaderboard', leaderboardRouter);
 
     return app;
 }

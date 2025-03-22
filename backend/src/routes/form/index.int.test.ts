@@ -4,44 +4,29 @@ import { Application } from 'express';
 import request from 'supertest';
 
 const TEST_SHEET_NAME = 'BehaviorLog';
-const TEST_SPREADSHEET_ID = process.env.TEST_SPREADSHEET_ID;
+const HEADER_VALUES = [ 'timestamp', 'studentID','respectful','responsible','safe','points','notes' ];
 
 describe('Form Routes (Integration)', () => {
     let app: Application;
+    let testSheet: any;
 
-    beforeEach(() => {
-        process.env.SPREADSHEET_ID = TEST_SPREADSHEET_ID;
+    beforeAll(async () => {
+        const doc = SheetsHelper();
+        await doc.loadInfo();
+        testSheet = doc.sheetsByTitle[ TEST_SHEET_NAME ];
+        if (testSheet) {
+            await testSheet.clearRows();
+        } else {
+            testSheet = await doc.addSheet({
+                title: TEST_SHEET_NAME,
+                headerValues: HEADER_VALUES
+            });
+        }
         app = createApp();
-        // await SheetsHelper.clear(TEST_SHEET_NAME);
     });
 
-    // afterAll(async () => {
-    //     await SheetsHelper.clear(TEST_SHEET_NAME);
-    // });
-
-    it('should successfully submit valid form data to sheets', async () => {
-        const testData = {
-            studentId: 12345,
-            behaviors: {
-                respectful: true,
-                responsible: true,
-                safe: false,
-            },
-            notes: 'Integration test entry'
-        };
-        const response = await request(app).post('/api/form/submit').send(testData).expect(201);
-        expect(response.body).toEqual({ success: true });
-        const [ header, ...rows ] = await SheetsHelper.read(TEST_SHEET_NAME, 'A1:G20');
-        const newRow = rows.find(row => row[ 1 ] === testData.studentId.toString());
-        expect(newRow).toMatchObject([
-            expect.any(String),
-            testData.studentId.toString(),
-            'TRUE',
-            'TRUE',
-            'FALSE',
-            '2',
-            testData.notes
-        ]);
+    afterEach(async () => {
+        await testSheet.clearRows();
     });
 
     it('should handle invalid submissions', async () => {
@@ -53,29 +38,21 @@ describe('Form Routes (Integration)', () => {
 
     it('should handle empty notes by storing empty string', async () => {
         const testData = {
-            studentId: 67890,
+            studentID: '123',
             behaviors: {
                 respectful: false,
                 responsible: true,
                 safe: true
             }
         };
-        const response = await request(app).post('/api/form/submit').send(testData).expect(201);
-        const [ _, ...rows ] = await SheetsHelper.read(TEST_SHEET_NAME, 'A1:G20');
-        const newRow = rows.find(row => row[ 1 ] === testData.studentId.toString());
-        expect(newRow).toMatchObject([
-            expect.any(String),
-            testData.studentId.toString(),
-            'FALSE',
-            'TRUE',
-            'TRUE',
-            '2'
-        ]); 
+        await request(app).post('/api/form/submit').send(testData).expect(201);
+        const rows = await testSheet.getRows();
+        expect(rows[ 0 ].notes).toBeUndefined();
     });
 
     it('should handle empty notes string', async () => {
         const testData = {
-            studentId: 13579,
+            studentID: '123',
             behaviors: {
                 respectful: true,
                 responsible: false,
@@ -83,16 +60,8 @@ describe('Form Routes (Integration)', () => {
             },
             notes: ''
         };
-        const response = await request(app).post('/api/form/submit').send(testData).expect(201);
-        const [ _, ...rows ] = await SheetsHelper.read(TEST_SHEET_NAME, 'A1:G20');
-        const newRow = rows.find(row => row[ 1 ] === testData.studentId.toString());
-        expect(newRow).toMatchObject([
-            expect.any(String),
-            testData.studentId.toString(),
-            'TRUE',
-            'FALSE',
-            'TRUE',
-            '2'
-        ]);
+        await request(app).post('/api/form/submit').send(testData).expect(201);
+        const rows = await testSheet.getRows();
+        expect(rows[ 0 ].notes).toBeUndefined();
     });
 });

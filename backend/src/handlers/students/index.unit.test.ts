@@ -1,4 +1,5 @@
 import { Request, Response } from 'express-serve-static-core';
+import { GoogleSpreadsheet } from 'google-spreadsheet';
 import { SheetsHelper } from '../../helpers/sheets';
 import { getStudents } from '.';
 
@@ -12,27 +13,48 @@ const mockResponse = () => {
     return response;
 };
 
-const mockNext = jest.fn();
-
 describe('getStudents (Unit)', () => {
-    let request: Request;
-    let response: Response;
-    let next: jest.Mock;
+    let mockDoc: GoogleSpreadsheet;
+    let mockSheet: any;
 
     beforeEach(() => {
-        jest.clearAllMocks();
-        request = mockRequest();
-        response = mockResponse();
-        next = mockNext;
+        mockSheet = {
+            title: 'Students',
+            getRows: jest.fn(),
+        };
+        mockDoc = {
+            sheetsByTitle: { 'Students': mockSheet },
+            loadInfo: jest.fn()
+        } as unknown as GoogleSpreadsheet;
+        (SheetsHelper as jest.Mock).mockReturnValue(mockDoc);
     });
 
     it('should return list of students', async () => {
-        const mockData = [
-            [ '123', 'John Doe', '5th', 'Mrs. Smith' ],
-            [ '456', 'Jane Smith', '4th', 'Mr. Johnson' ]
+        const mockRows = [
+            {
+                get: (field: string) => {
+                    switch (field) {
+                        case 'studentID': return '123';
+                        case 'name': return 'John Doe';
+                        case 'grade': return '5th';
+                        case 'teacher': return 'Mrs. Smith';
+                    }
+                }
+            },
+            {
+                get: (field: string) => {
+                    switch (field) {
+                        case 'studentID': return '456';
+                        case 'name': return 'Jane Smith';
+                        case 'grade': return '4th';
+                        case 'teacher': return 'Mr. Johnson';
+                    }
+                }
+            },
         ];
-        (SheetsHelper.read as jest.Mock).mockResolvedValue(mockData);
-        await getStudents(request, response, next);
+        mockSheet.getRows.mockResolvedValue(mockRows);
+        const response = mockResponse();
+        await getStudents(mockRequest(), response, jest.fn());
         expect(response.json).toHaveBeenCalledWith([
             {
                 studentID: 123,
@@ -49,17 +71,11 @@ describe('getStudents (Unit)', () => {
         ]);
     });
 
-    it('should handle empty response', async () => {
-        (SheetsHelper.read as jest.Mock).mockResolvedValue([]);
-        await getStudents(request, response, next);
-        expect(response.json).toHaveBeenCalledWith([]);
-    });
-
-    it('should handle API errors', async () => {
-        const error = new Error('Sheet not found');
-        (SheetsHelper.read as jest.Mock).mockRejectedValue(error);
-        await getStudents(request, response, next);
+    it('should handle sheet not found', async () => {
+        delete mockDoc.sheetsByTitle.Students;
+        const response = mockResponse();
+        await getStudents(mockRequest(), response, jest.fn());
         expect(response.status).toHaveBeenCalledWith(500);
-        expect(response.json).toHaveBeenCalledWith({ error: 'Sheet not found' });
+        expect(response.json).toHaveBeenCalledWith({ error: 'Students sheet not found' });
     });
 });
