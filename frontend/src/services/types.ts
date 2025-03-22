@@ -1,3 +1,5 @@
+export type Timeframe = 'week' | 'month' | 'semester' | 'year'
+
 export interface Student {
     studentID: number;
     name: string;
