@@ -11,7 +11,9 @@ export default function StudentsPage () {
     const [ error, setError ] = useState('');
     const [ filter, setFilter ] = useState({
         teacher: '',
-        search: ''
+        nameSearch: '',
+        idSearch: '',
+        grade: ''
     });
 
     const navigate = useNavigate();
@@ -33,29 +35,41 @@ export default function StudentsPage () {
         fetchStudents();
     }, []);
 
-    const handleQRScan = (studentID: number, studentName: string) => {
-        navigate('/behavior', {
-            state: {
-                studentID,
-                studentName
-            }
-        });
+    const handleQRScan = (token: string) => {
+        navigate(`/behavior?token=${token}`);
     };
 
     const teachers = Array.from(new Set(students.map(s => s.teacher)));
 
+    const grades = Array.from(new Set(students.map(s => s.grade))).sort((a, b) => {
+        if (a === 'Pre-K') return -1;
+        if (b === 'Pre-K') return 1;
+        if (a === 'K') return -1;
+        if (b === 'K') return 1;
+        return a.localeCompare(b);
+    });
+
     const filteredStudents = students.filter(student =>
         student.teacher.toLowerCase().includes(filter.teacher.toLowerCase()) &&
-        (student.name.toLowerCase().includes(filter.search.toLowerCase()) ||
-            student.studentID.toString().includes(filter.search))
+        (filter.grade === '' || student.grade === filter.grade) &&
+        student.name.toLowerCase().includes(filter.nameSearch.toLowerCase()) &&
+            (filter.idSearch === '' || student.studentID.toString() === filter.idSearch)
     );
 
     return (
-        <Container className='mt-4'>
+        <Container className='mt-5'>
             <Row className='mb-3 g-3'>
+                {/* ID Search */}
                 <Col md={ 6 }>
-                    <Form.Control placeholder='Search by ID or Name' onChange={ (e) => setFilter({ ...filter, search: e.target.value }) } />
+                    <Form.Control placeholder='Search by exact ID' value={filter.idSearch} onChange={ (e) => setFilter({ ...filter, idSearch: e.target.value }) } />
+                    <Form.Text className='text-muted'>Enter full student ID for exact match</Form.Text>
                 </Col>
+                {/* Name Search */ }
+                <Col md={ 6 }>
+                    <Form.Control placeholder='Search by name' value={filter.nameSearch} onChange={ (e) => setFilter({...filter, nameSearch: e.target.value }) } />
+                    <Form.Text className='text-muted'>Partial name matches accepted</Form.Text>
+                </Col>
+                {/* Teacher Filter */}
                 <Col md={ 6 }>
                     <Form.Select value={ filter.teacher } onChange={ (e) => setFilter({ ...filter, teacher: e.target.value }) }>
                         <option value=''>All Teachers</option>
@@ -64,7 +78,17 @@ export default function StudentsPage () {
                         ))}
                     </Form.Select>
                 </Col>
+                {/* Grade Filter */}
+                <Col md={ 6 }>
+                    <Form.Select value={ filter.grade } onChange={ (e) => setFilter({ ...filter, grade: e.target.value }) }>
+                        <option value=''>All Grades</option>
+                        { grades.map(grade => (
+                            <option key={ grade } value={ grade }>{ grade }</option>
+                        )) }
+                    </Form.Select>
+                </Col>
             </Row>
+            {/* Loading and Error States */}
             { loading && (
                 <div className='text-center my-4'>
                     <Spinner animation='border' role='status'>
@@ -74,7 +98,19 @@ export default function StudentsPage () {
                 </div>
             ) }
             { error && <Alert variant='danger'>{ error }</Alert> }
-            <StudentTable students={ filteredStudents } onQRScan={ handleQRScan } />
+            {/* Results Section */ }
+            { !loading && !error && (
+                <>
+                    { filteredStudents.length === 0 ? (
+                        <Alert variant='info' className='mt-4'>No sudents found matching the current filters</Alert>
+                    ) : (
+                         <>
+                            <div className='mb-2'>Showing { filteredStudents.length } of { students.length } students</div>
+                            <StudentTable students={ filteredStudents } onQRScan={ handleQRScan } />
+                        </>
+                    )}
+                </>
+            )}
         </Container>
     );
 }

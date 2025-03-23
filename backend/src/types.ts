@@ -18,18 +18,8 @@ export interface Student {
     name: string;
     grade: string;
     teacher: string;
-}
-
-export interface LeaderboardEntry {
-    studentID: number;
-    name: string;
-    teacher: string;
+    token: string;
     points: number;
-}
-
-export interface StudentsMap {
-    name: string;
-    teacher: string;
 }
 
 // Auth types

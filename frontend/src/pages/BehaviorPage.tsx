@@ -1,22 +1,46 @@
+import { submitBehavior, getStudentByToken } from '../services/api';
+import { Container, Alert, Spinner } from 'react-bootstrap';
 import BehaviorForm from '../components/BehaviorForm';
 import { BehaviorFormData } from '../services/types';
-import { useLocation } from 'react-router-dom';
-import { Container, Alert } from 'react-bootstrap';
-import { submitBehavior } from '../services/api';
-import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { Student } from '../services/types';
+import { useEffect, useState } from 'react';
 
 export default function SubmitBehaviorPage () {
-    const location = useLocation();
+    const [ searchParams ] = useSearchParams();
     const [ success, setSuccess ] = useState(false);
-    const { studentID, studentName } = location.state as {
-        studentID: number;
-        studentName: string;
-    };
+    const [ loading, setLoading ] = useState(true);
+    const [ student, setStudent ] = useState<Student | null>(null);
     
-    if (!studentID || !studentName) {
+    const token = searchParams.get('token');
+
+    useEffect(() => {
+        const fetchStudent = async () => {
+            if (!token) return;
+            try {
+                const data = await getStudentByToken(token);
+                setStudent(data);
+            } catch (error) {
+                console.error('Error fetching student:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchStudent();
+    }, [ token ]);
+
+    if (loading) {
         return (
             <Container className='mt-4'>
-                <Alert variant='danger'>Invalid student information</Alert>
+                <Spinner animation='border' />
+            </Container>
+        );
+    }
+    
+    if (!student) {
+        return (
+            <Container className='mt-4'>
+                <Alert variant='danger'>Invalid or expired QR code</Alert>
             </Container>
         );
     }
@@ -32,10 +56,10 @@ export default function SubmitBehaviorPage () {
     };
 
     return (
-        <Container className='mt-4'>
+        <Container className='mt-5'>
             <h2 className='mb-4'>Behavior Report</h2>
             { success && <Alert variant='success'>Behavior report submitted successfully!</Alert> }
-            <BehaviorForm onSubmit={ handleSubmit } studentID={ studentID } studentName={ studentName } />
+            <BehaviorForm onSubmit={ handleSubmit } studentID={ student.studentID } studentName={ student.name } />
         </Container>
-    )
+    );
 }

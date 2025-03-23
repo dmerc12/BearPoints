@@ -5,6 +5,18 @@ export interface Student {
     name: string;
     grade: string;
     teacher: string;
+    token: string;
+    points: number;
+}
+
+export interface BehaviorLog {
+    timestamp: string;
+    studentID: number;
+    respectful: boolean;
+    responsible: boolean;
+    safe: boolean;
+    points: number;
+    notes?: string;
 }
 
 export interface LeaderboardEntry {
