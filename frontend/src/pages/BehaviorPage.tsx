@@ -1,19 +1,25 @@
 import BehaviorForm from '../components/BehaviorForm';
 import { BehaviorFormData } from '../services/types';
-import { useSearchParams } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { Container, Alert } from 'react-bootstrap';
 import { submitBehavior } from '../services/api';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 export default function SubmitBehaviorPage () {
-    const [ searchParams ] = useSearchParams();
+    const location = useLocation();
     const [ success, setSuccess ] = useState(false);
-    const [ initialStudentID, setInitialStudentID ] = useState<number>();
-
-    useEffect(() => {
-        const studentID = Number(searchParams.get('studentID'));
-        if (studentID) setInitialStudentID(studentID);
-    }, [ searchParams ]);
+    const { studentID, studentName } = location.state as {
+        studentID: number;
+        studentName: string;
+    };
+    
+    if (!studentID || !studentName) {
+        return (
+            <Container className='mt-4'>
+                <Alert variant='danger'>Invalid student information</Alert>
+            </Container>
+        );
+    }
 
     const handleSubmit = async (data: BehaviorFormData) => {
         try {
@@ -29,7 +35,7 @@ export default function SubmitBehaviorPage () {
         <Container className='mt-4'>
             <h2 className='mb-4'>Behavior Report</h2>
             { success && <Alert variant='success'>Behavior report submitted successfully!</Alert> }
-            <BehaviorForm onSubmit={handleSubmit} initialStudentID={initialStudentID} />
+            <BehaviorForm onSubmit={ handleSubmit } studentID={ studentID } studentName={ studentName } />
         </Container>
     )
 }

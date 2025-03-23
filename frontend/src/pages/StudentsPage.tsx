@@ -33,16 +33,22 @@ export default function StudentsPage () {
         fetchStudents();
     }, []);
 
-    const handleQRScan = (studentID: number) => {
-        navigate(`/behavior?studentID=${studentID}`);
+    const handleQRScan = (studentID: number, studentName: string) => {
+        navigate('/behavior', {
+            state: {
+                studentID,
+                studentName
+            }
+        });
     };
 
-    const filteredStudents = Array.isArray(students)
-        ? students.filter(student =>
-        student.teacher.includes(filter.teacher) &&
+    const teachers = Array.from(new Set(students.map(s => s.teacher)));
+
+    const filteredStudents = students.filter(student =>
+        student.teacher.toLowerCase().includes(filter.teacher.toLowerCase()) &&
         (student.name.toLowerCase().includes(filter.search.toLowerCase()) ||
             student.studentID.toString().includes(filter.search))
-        ) : [];
+    );
 
     return (
         <Container className='mt-4'>
@@ -53,10 +59,20 @@ export default function StudentsPage () {
                 <Col md={ 6 }>
                     <Form.Select value={ filter.teacher } onChange={ (e) => setFilter({ ...filter, teacher: e.target.value }) }>
                         <option value=''>All Teachers</option>
+                        { teachers.map(teacher => (
+                            <option key={teacher} value={ teacher }>{ teacher }</option>
+                        ))}
                     </Form.Select>
                 </Col>
             </Row>
-            { loading && <Spinner animation='border' /> }
+            { loading && (
+                <div className='text-center my-4'>
+                    <Spinner animation='border' role='status'>
+                        <span className='visually-hidden'>Loading...</span>
+                    </Spinner>
+                    <p>Loading students...</p>
+                </div>
+            ) }
             { error && <Alert variant='danger'>{ error }</Alert> }
             <StudentTable students={ filteredStudents } onQRScan={ handleQRScan } />
         </Container>

@@ -1,18 +1,18 @@
 import { Form, Alert, Spinner, Card, Button } from 'react-bootstrap';
 import { FormEvent, useState, useEffect } from 'react';
 import { BehaviorFormData } from '../services/types';
-import { Scanner } from '@yudiel/react-qr-scanner';
 
 interface BehaviorFormProps {
     onSubmit: (data: BehaviorFormData) => Promise<void>;
-    initialStudentID?: number;
+    studentID: number;
+    studentName: string;
 }
 
-export default function BehaviorForm ({ onSubmit }: BehaviorFormProps) {
+export default function BehaviorForm ({ onSubmit, studentID, studentName }: BehaviorFormProps) {
     const [ loading, setLoading ] = useState(false);
     const [ error, setError ] = useState('');
     const [ formData, setFormData ] = useState<BehaviorFormData>({
-        studentID: -1,
+        studentID: studentID,
         behaviors: {
             respectful: false,
             responsible: false,
@@ -23,6 +23,13 @@ export default function BehaviorForm ({ onSubmit }: BehaviorFormProps) {
     });
 
     useEffect(() => {
+        setFormData(prev => ({
+            ...prev,
+            studentID: studentID
+        }));
+    }, [ studentID ]);
+
+    useEffect(() => {
         const newPoints = Object.values(formData.behaviors).filter(Boolean).length;
         setFormData(prev => ({
             ...prev,
@@ -30,28 +37,13 @@ export default function BehaviorForm ({ onSubmit }: BehaviorFormProps) {
         }));
     }, [ formData.behaviors ]);
 
-    const handleScan = (result: string) => {
-        try {
-            const data = JSON.parse(result);
-            if (data.studentID) {
-                setFormData(prev => ({
-                    ...prev,
-                    studentID: Number(data.studentID)
-                }));
-            }
-        } catch (error) {
-            setError('Invalid QR code format');
-            console.error('Invalid QR code error:', error);
-        }
-    };
-
     const handleSubmit = async (event: FormEvent) => {
         event.preventDefault();
         try {
             setLoading(true);
             await onSubmit(formData);
             setFormData({
-                studentID: -1,
+                studentID: studentID || -1,
                 points: 0,
                 behaviors: {
                     responsible: false,
@@ -72,12 +64,9 @@ export default function BehaviorForm ({ onSubmit }: BehaviorFormProps) {
         <>
             <Card className='mb-4'>
                 <Card.Body>
-                    <div className='mb-4' style={ { maxWidth: '500px' } }>
-                        <Scanner onScan={ (results) => { if (results?.[ 0 ]?.rawValue) { handleScan(results[ 0 ].rawValue); } } } onError={ (error) => setError(error instanceof Error ? error.message: String(error)) } constraints={{ facingMode: 'environment' }} />
-                    </div>
                     <Form onSubmit={ handleSubmit }>
                         <Form.Group className='mb-3'>
-                            <Form.Control type='number' value={ formData.studentID } onChange={ (e) => setFormData({ ...formData, studentID: Number(e.target.value) || -1 }) } required />
+                            <Form.Control type='text' value={ studentName } disabled />
                         </Form.Group>
                         <Form.Group className='mb-3'>
                             <Form.Label>Behaviors</Form.Label>
@@ -104,6 +93,5 @@ export default function BehaviorForm ({ onSubmit }: BehaviorFormProps) {
                 </Card.Body>
             </Card>
         </>
-    )
-
+    );
 }

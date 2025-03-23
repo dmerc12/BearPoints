@@ -4,7 +4,7 @@ import { QRCodeSVG } from 'qrcode.react';
 
 interface StudentTableProps {
     students: Student[];
-    onQRScan?: (studentID: number) => void;
+    onQRScan?: (studentID: number, studentName: string) => void;
 }
 
 export default function StudentTable ({ students, onQRScan }: StudentTableProps) {
@@ -31,10 +31,15 @@ export default function StudentTable ({ students, onQRScan }: StudentTableProps)
                         <td>
                             <QRCodeSVG value={ JSON.stringify({
                                 studentID: student.studentID,
+                                studentName: student.name,
                                 timestamp: Date.now()
                             }) }
                                 size={ 80 }
-                                onClick={ () => onQRScan?.(student.studentID) }
+                                onClick={ () => {
+                                    if (onQRScan) {
+                                        onQRScan(student.studentID, student.name);
+                                    }
+                                } }
                                 bgColor='#FFFFFF'
                                 fgColor='#000000'
                                 level='L'

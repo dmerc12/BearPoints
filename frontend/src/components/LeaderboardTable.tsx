@@ -20,7 +20,7 @@ export default function LeaderboardTable ({ entries }: LeaderboardTableProps) {
             </thead>
             <tbody>
                 { safeEntries.map((entry) => (
-                    <tr>
+                    <tr key={entry.studentID}>
                         {/* <td>{ entry.rank }</td> */ }
                         <td>{ entry.name }</td>
                         <td>{ entry.points }</td>
