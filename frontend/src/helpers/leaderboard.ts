@@ -2,10 +2,10 @@ import { BehaviorLog, Student, Timeframe, LeaderboardEntry } from '../services/t
 
 export const getProcessedLeaderboard = (
     rawData: { behaviorLogs: BehaviorLog[]; students: Student[]; },
-    filters: { timeframe: Timeframe; teacher?: string; }
+    filters: { timeframe: Timeframe; teacher?: string; grade?: string }
 ): LeaderboardEntry[] => {
     const filteredLogs = filterLogsByTimeframe(rawData.behaviorLogs, filters.timeframe);
-    return calculateLeaderboard(filteredLogs, rawData.students, filters.teacher);
+    return calculateLeaderboard(filteredLogs, rawData.students, filters.teacher, filters.grade);
 };
 
 export const filterLogsByTimeframe = ( logs: BehaviorLog[], timeframe: Timeframe ): BehaviorLog[] => {
@@ -22,7 +22,8 @@ export const filterLogsByTimeframe = ( logs: BehaviorLog[], timeframe: Timeframe
 const calculateLeaderboard = (
     logs: BehaviorLog[],
     students: Student[],
-    teacher?: string
+    teacher?: string,
+    grade?: string
 ): LeaderboardEntry[] => {
     const studentMap = new Map(students.map(student => [
         student.studentID,
@@ -36,13 +37,16 @@ const calculateLeaderboard = (
     return Array.from(
         logs.reduce((acc, log) => {
             const student = studentMap.get(log.studentID);
-            if (student && (!teacher || student.teacher === teacher)) {
+            if (student &&
+                (!teacher || student.teacher === teacher) &&
+                (!grade || student.grade === grade)
+            ) {
                 acc.set(log.studentID, (acc.get(log.studentID) || 0) + log.points);
             }
             return acc;
         }, new Map<number, number>())
             .entries()
-    ).map(([ studentID, points ]: [ number, number ]) => ({
+    ).map(([ studentID, points ]) => ({
         studentID,
         points,
         name: studentMap.get(studentID)!.name,
@@ -54,4 +58,8 @@ const calculateLeaderboard = (
 
 export const getUniqueTeachers = (entries: LeaderboardEntry[]): string[] => {
     return Array.from(new Set(entries.map(entry => entry.teacher))).filter(Boolean);
+};
+
+export const getUniqueGrades = (entries: LeaderboardEntry[]): string[] => {
+    return Array.from(new Set(entries.map(entry => entry.grade))).filter(Boolean);
 };

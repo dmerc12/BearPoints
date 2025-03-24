@@ -25,6 +25,7 @@ export interface LeaderboardEntry {
     teacher: string;
     grade: string;
     points: number;
+    rank?: number;
 }
 
 export interface BehaviorFormData {

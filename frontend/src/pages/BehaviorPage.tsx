@@ -57,7 +57,7 @@ export default function SubmitBehaviorPage () {
 
     return (
         <Container className='mt-5'>
-            <h2 className='mb-4'>Behavior Report</h2>
+            <h1 className='mb-4'>Behavior Report</h1>
             { success && <Alert variant='success'>Behavior report submitted successfully!</Alert> }
             <BehaviorForm onSubmit={ handleSubmit } studentID={ student.studentID } studentName={ student.name } />
         </Container>

@@ -59,6 +59,11 @@ export default function StudentsPage () {
     return (
         <Container className='mt-5'>
             <Row className='mb-3 g-3'>
+                <Col md={ 6 }>
+                    <h1 className='mb-4'>Students</h1>
+                </Col>
+            </Row>
+            <Row className='mb-3 g-3'>
                 {/* ID Search */}
                 <Col md={ 6 }>
                     <Form.Control placeholder='Search by exact ID' value={filter.idSearch} onChange={ (e) => setFilter({ ...filter, idSearch: e.target.value }) } />
