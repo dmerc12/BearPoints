@@ -134,3 +134,7 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Google Cloud JSON key file
+backend/service-account.json
+backend/firebase-service-account.json
