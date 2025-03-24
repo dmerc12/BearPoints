@@ -36,8 +36,8 @@ export default function LeaderboardTable ({ entries, itemsPerPage = 10 }: Leader
     }
 
     return (
-        <div>
-            <div className='mb-3'>
+        <div className='table-responsive'>
+            <div className='mb-3 mt-3 text-center'>
                 Page {currentPage} of {totalPages} - Showing {paginatedEntries.length} of {entries.length} entries
             </div>
             <Table striped bordered hover responsive>
@@ -64,7 +64,7 @@ export default function LeaderboardTable ({ entries, itemsPerPage = 10 }: Leader
             </Table>
             { totalPages > 1 && (
                 <div className='d-flex justify-content-center mt-3'>
-                    <Pagination>
+                    <Pagination className='flex-wrap'>
                         <Pagination.Prev onClick={ () => setCurrentPage(Math.max(1, currentPage - 1)) } disabled={ currentPage === 1 } />
                         { pageItems }
                         <Pagination.Next onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages} />

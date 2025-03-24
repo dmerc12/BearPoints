@@ -48,16 +48,16 @@ export default function LeaderboardPage () {
     }, [ filters, rawData ]);
 
     return (
-        <Container>
-            <Row className='mb-3 g-3'>
-                <Col md={ 6 }>
+        <Container fluid className='mt-md-5 mt-3 px-lg-5'>
+            <Row className='mb-4 justify-content-center'>
+                <Col xs={12} className='text-center'>
                     <h1 className='mb-4'>Leaderboard</h1>
                 </Col>
             </Row>
-            <Row className='d-flex gap-3 mb-4'>
+            <Row className='d-flex gap-3 mb-4 justify-content-center'>
                 {/* Timeframe Filter */ }
-                <Col md={ 6 }>
-                    <Form.Select value={ filters.timeframe } onChange={ (e) => setFilters(prev => ({ ...prev, timeframe: e.target.value as Timeframe })) }>
+                <Col xs={12} lg={10} xl={8} className='d-flex flex-column align-items-center gap-3'>
+                    <Form.Select value={ filters.timeframe } onChange={ (e) => setFilters(prev => ({ ...prev, timeframe: e.target.value as Timeframe })) } style={{ maxWidth: '300px' }}>
                         <option value='week'>Last Week</option>
                         <option value='month'>Last Month</option>
                         <option value='semester'>Semester</option>
@@ -65,8 +65,8 @@ export default function LeaderboardPage () {
                     </Form.Select>
                 </Col>
                 {/* Teacher Filter */ }
-                <Col md={ 6 }>
-                    <Form.Select value={ filters.teacher } onChange={ (e) => setFilters(prev => ({ ...prev, teacher: e.target.value })) }>
+                <Col xs={12} lg={10} xl={8} className='d-flex flex-column align-items-center gap-3'>
+                    <Form.Select value={ filters.teacher } onChange={ (e) => setFilters(prev => ({ ...prev, teacher: e.target.value })) } style={{ maxWidth: '300px' }}>
                         <option value=''>All Teachers</option>
                         { getUniqueTeachers(leaderboard).map(teacher => (
                             <option key={ teacher } value={ teacher }>{ teacher }</option>
@@ -74,8 +74,8 @@ export default function LeaderboardPage () {
                     </Form.Select>
                 </Col>
                 {/* Grade Filter */ }
-                <Col md={ 6 }>
-                    <Form.Select value={ filters.grade } onChange={ (e) => setFilters(prev => ({ ...prev, grade: e.target.value })) }>
+                <Col xs={12} lg={10} xl={8} className='d-flex flex-column align-items-center gap-3'>
+                    <Form.Select value={ filters.grade } onChange={ (e) => setFilters(prev => ({ ...prev, grade: e.target.value })) } style={{ maxWidth: '300px' }}>
                         <option value=''>All Grades</option>
                         { getUniqueGrades(leaderboard).map(grade => (
                             <option key={ grade } value={ grade }>{ grade }</option>
@@ -99,7 +99,9 @@ export default function LeaderboardPage () {
                     { leaderboard.length === 0 ? (
                         <Alert variant='info' className='mt-4'>No data to calculate leaderboard yet matching the current filters</Alert>
                     ) : (
-                        <LeaderboardTable entries={ leaderboard } />
+                        <div className='border rounded-3 overflow-hidden'>
+                            <LeaderboardTable entries={ leaderboard } />
+                        </div>
                     )}
                 </>
             )}

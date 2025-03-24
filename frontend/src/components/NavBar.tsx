@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 export default function NavigationBar () {
     return (
         <Navbar bg='primary' variant='dark' expand='lg' className='fixed-top' id='mainNav' aria-label='Navigation bar for BearPoints'>
-            <Container>
+            <Container fluid>
                 <Navbar.Brand as={ Link } to="/">BearPoints</Navbar.Brand>
                 <Navbar.Toggle aria-controls='basic-navbar-nav' aria-label="Toggle navigation bar" />
                 <Navbar.Collapse id='basic-navbar-nav'>

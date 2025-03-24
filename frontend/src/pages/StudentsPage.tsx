@@ -57,9 +57,9 @@ export default function StudentsPage () {
     );
 
     return (
-        <Container className='mt-5'>
-            <Row className='mb-3 g-3'>
-                <Col md={ 6 }>
+        <Container className='mt-5 mt-md-5'>
+            <Row className='mb-4 justify-content-center'>
+                <Col md={ 6 } className='text-center'>
                     <h1 className='mb-4'>Students</h1>
                 </Col>
             </Row>
@@ -109,10 +109,10 @@ export default function StudentsPage () {
                     { filteredStudents.length === 0 ? (
                         <Alert variant='info' className='mt-4'>No sudents found matching the current filters</Alert>
                     ) : (
-                         <>
-                            <div className='mb-2'>Showing { filteredStudents.length } of { students.length } students</div>
+                         <div className='border rounded-3 overflow-hidden'>
+                            <div className='mb-2 mt-2'>Showing { filteredStudents.length } of { students.length } students</div>
                             <StudentTable students={ filteredStudents } onQRScan={ handleQRScan } />
-                        </>
+                        </div>
                     )}
                 </>
             )}

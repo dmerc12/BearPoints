@@ -28,7 +28,7 @@ export default function StudentTable ({ students, onQRScan, itemsPerPage = 10 }:
     }
 
     return (
-        <div>
+        <div className='table-responsive'>
             <Table striped bordered hover responsive>
                 <thead>
                     <tr>
@@ -49,7 +49,7 @@ export default function StudentTable ({ students, onQRScan, itemsPerPage = 10 }:
                             <td>
                                 <QRCodeSVG
                                     value={`${import.meta.env.VITE_APP_URL}/behavior?token=${student.token}`}
-                                    size={ 80 }
+                                    size={ window.innerWidth < 768 ? 64 : 80 }
                                     onClick={ () => onQRScan?.(student.token) }
                                     bgColor='#FFFFFF'
                                     fgColor='#000000'
@@ -61,7 +61,7 @@ export default function StudentTable ({ students, onQRScan, itemsPerPage = 10 }:
                 </tbody>
             </Table>
             <div className='d-flex justify-content-center mt-3'>
-                    <Pagination>
+                    <Pagination className='flex-wrap'>
                         <Pagination.Prev onClick={() => setCurrentPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1} />
                         {pageItems}
                         <Pagination.Next onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages} />

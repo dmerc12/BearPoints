@@ -65,26 +65,26 @@ export default function BehaviorForm ({ onSubmit, studentID, studentName }: Beha
             <Card className='mb-4'>
                 <Card.Body>
                     <Form onSubmit={ handleSubmit }>
-                        <Form.Group className='mb-3'>
-                            <Form.Control type='text' value={ studentName } disabled />
+                        <Form.Group className='mb-3' controlId='studentName'>
+                            <Form.Control type='text' value={ studentName } disabled aria-label='Student name' />
                         </Form.Group>
-                        <Form.Group className='mb-3'>
+                        <Form.Group className='mb-3' controlId='behaviors'>
                             <Form.Label>Behaviors</Form.Label>
-                            <div className='d-flex gap-3'>
+                            <div className='d-flex flex-column flex-md-row gap-3'>
                                 { Object.entries(formData.behaviors).map(([ behavior, checked ]) => (
-                                    <Form.Check key={ behavior } type='checkbox' label={ behavior.charAt(0).toUpperCase() + behavior.slice(1) } checked={ checked } onChange={ (e) => setFormData({ ...formData, behaviors: { ...formData.behaviors, [ behavior ]: e.target.checked } }) } />
+                                    <Form.Check key={ behavior } type='checkbox' label={ behavior.charAt(0).toUpperCase() + behavior.slice(1) } checked={ checked } onChange={ (e) => setFormData({ ...formData, behaviors: { ...formData.behaviors, [ behavior ]: e.target.checked } }) } aria-label={`Check student was ${behavior}`} />
                                 )) }
                             </div>
                         </Form.Group>
-                        <Form.Group className='mb-3'>
+                        <Form.Group className='mb-3' controlId='notes'>
                             <Form.Label>Notes</Form.Label>
-                            <Form.Control as='textarea' rows={ 3 } value={ formData.notes } onChange={ (e) => setFormData({ ...formData, notes: e.target.value }) } />
+                            <Form.Control as='textarea' rows={ 3 } value={ formData.notes } onChange={ (e) => setFormData({ ...formData, notes: e.target.value }) } aria-label='Enter any notes to report' />
                         </Form.Group>
                         <div className='d-flex justify-content-between align-items-center'>
                             <div>
                                 <strong>Points: { formData.points }</strong>
                             </div>
-                            <Button variant='primary' type='submit' disabled={ loading }>
+                            <Button variant='primary' type='submit' disabled={ loading } style={{ minWidth: '120px', minHeight: '48px' }}>
                                 { loading ? <Spinner size='sm' /> : 'Submit' }
                             </Button>
                         </div>
