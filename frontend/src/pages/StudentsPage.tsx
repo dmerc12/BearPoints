@@ -1,8 +1,10 @@
-import { Container, Row, Col, Spinner, Alert, Form } from 'react-bootstrap';
+import { Container, Row, Button, Col, Spinner, Alert, Form } from 'react-bootstrap';
+import QRCodesPrint from '../components/QRCodesPrint';
 import StudentTable from '../components/StudentTable';
+import { useState, useEffect, useRef } from 'react';
+import { useReactToPrint } from 'react-to-print';
 import { useNavigate } from 'react-router-dom';
 import { getStudents } from '../services/api';
-import { useState, useEffect } from 'react';
 import { Student } from '../services/types';
 
 export default function StudentsPage () {
@@ -17,6 +19,9 @@ export default function StudentsPage () {
     });
 
     const navigate = useNavigate();
+
+    const contentRef = useRef<HTMLDivElement>(null);
+    const reactToPrintFn = useReactToPrint({ contentRef });
 
     useEffect(() => {
         const fetchStudents = async () => {
@@ -64,26 +69,26 @@ export default function StudentsPage () {
                 </Col>
             </Row>
             <Row className='mb-3 g-3'>
-                {/* ID Search */}
+                {/* ID Search */ }
                 <Col md={ 6 }>
-                    <Form.Control placeholder='Search by exact ID' value={filter.idSearch} onChange={ (e) => setFilter({ ...filter, idSearch: e.target.value }) } />
+                    <Form.Control placeholder='Search by exact ID' value={ filter.idSearch } onChange={ (e) => setFilter({ ...filter, idSearch: e.target.value }) } />
                     <Form.Text className='text-muted'>Enter full student ID for exact match</Form.Text>
                 </Col>
                 {/* Name Search */ }
                 <Col md={ 6 }>
-                    <Form.Control placeholder='Search by name' value={filter.nameSearch} onChange={ (e) => setFilter({...filter, nameSearch: e.target.value }) } />
+                    <Form.Control placeholder='Search by name' value={ filter.nameSearch } onChange={ (e) => setFilter({ ...filter, nameSearch: e.target.value }) } />
                     <Form.Text className='text-muted'>Partial name matches accepted</Form.Text>
                 </Col>
-                {/* Teacher Filter */}
+                {/* Teacher Filter */ }
                 <Col md={ 6 }>
                     <Form.Select value={ filter.teacher } onChange={ (e) => setFilter({ ...filter, teacher: e.target.value }) }>
                         <option value=''>All Teachers</option>
                         { teachers.map(teacher => (
-                            <option key={teacher} value={ teacher }>{ teacher }</option>
-                        ))}
+                            <option key={ teacher } value={ teacher }>{ teacher }</option>
+                        )) }
                     </Form.Select>
                 </Col>
-                {/* Grade Filter */}
+                {/* Grade Filter */ }
                 <Col md={ 6 }>
                     <Form.Select value={ filter.grade } onChange={ (e) => setFilter({ ...filter, grade: e.target.value }) }>
                         <option value=''>All Grades</option>
@@ -93,7 +98,7 @@ export default function StudentsPage () {
                     </Form.Select>
                 </Col>
             </Row>
-            {/* Loading and Error States */}
+            {/* Loading and Error States */ }
             { loading && (
                 <div className='text-center my-4'>
                     <Spinner animation='border' role='status'>
@@ -109,13 +114,27 @@ export default function StudentsPage () {
                     { filteredStudents.length === 0 ? (
                         <Alert variant='info' className='mt-4'>No sudents found matching the current filters</Alert>
                     ) : (
-                         <div className='border rounded-3 overflow-hidden'>
+                        <div className='border rounded-3 overflow-hidden'>
                             <div className='mb-2 mt-2'>Showing { filteredStudents.length } of { students.length } students</div>
                             <StudentTable students={ filteredStudents } onQRScan={ handleQRScan } />
                         </div>
-                    )}
+                    ) }
                 </>
-            )}
+            ) }
+            {/* Print QR codes button */ }
+            <Row className='mt-4'>
+                <Col className='text-center'>
+                    <Button
+                        variant='primary'
+                        onClick={ () => reactToPrintFn() }
+                        disabled={ filteredStudents.length === 0 }
+                        className='no-print'
+                    >
+                        Print QR Codes ({ filteredStudents.length })
+                    </Button>
+                </Col>
+            </Row>
+            <QRCodesPrint ref={ contentRef } students={ filteredStudents } />
         </Container>
     );
 }

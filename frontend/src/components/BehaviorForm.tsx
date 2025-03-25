@@ -14,9 +14,11 @@ export default function BehaviorForm ({ onSubmit, studentID, studentName }: Beha
     const [ formData, setFormData ] = useState<BehaviorFormData>({
         studentID: studentID,
         behaviors: {
-            respectful: false,
-            responsible: false,
-            safe: false,
+            brilliant: false,
+            excelled: false,
+            answered: false,
+            read: false,
+            sensationalWriting: false
         },
         points: 0,
         notes: ''
@@ -46,9 +48,11 @@ export default function BehaviorForm ({ onSubmit, studentID, studentName }: Beha
                 studentID: studentID || -1,
                 points: 0,
                 behaviors: {
-                    responsible: false,
-                    respectful: false,
-                    safe: false
+                    brilliant: false,
+                    excelled: false,
+                    answered: false,
+                    read: false,
+                    sensationalWriting: false
                 },
                 notes: ''
             });
@@ -71,9 +75,11 @@ export default function BehaviorForm ({ onSubmit, studentID, studentName }: Beha
                         <Form.Group className='mb-3' controlId='behaviors'>
                             <Form.Label>Behaviors</Form.Label>
                             <div className='d-flex flex-column flex-md-row gap-3'>
-                                { Object.entries(formData.behaviors).map(([ behavior, checked ]) => (
-                                    <Form.Check key={ behavior } type='checkbox' label={ behavior.charAt(0).toUpperCase() + behavior.slice(1) } checked={ checked } onChange={ (e) => setFormData({ ...formData, behaviors: { ...formData.behaviors, [ behavior ]: e.target.checked } }) } aria-label={`Check student was ${behavior}`} />
-                                )) }
+                                <Form.Check type='checkbox' label='Brilliant Behavior' checked={ formData.behaviors.brilliant } onChange={ (e) => setFormData({ ...formData, behaviors: { ...formData.behaviors,  brilliant: e.target.checked } }) } aria-label='Check student had brilliant behavior' />
+                                <Form.Check type='checkbox' label='Excelled in Math' checked={ formData.behaviors.excelled } onChange={ (e) => setFormData({ ...formData, behaviors: { ...formData.behaviors, excelled: e.target.checked } }) } aria-label='Check student excelled in Math' />
+                                <Form.Check type='checkbox' label='Answered and participated' checked={ formData.behaviors.answered } onChange={ (e) => setFormData({ ...formData, behaviors: { ...formData.behaviors, answered: e.target.checked } }) } aria-label='Check student answered and participated' />
+                                <Form.Check type='checkbox' label='Read and thought carefully' checked={ formData.behaviors.read } onChange={ (e) => setFormData({ ...formData, behaviors: { ...formData.behaviors, read: e.target.checked } }) } aria-label='Check student read and thought carefully' />
+                                <Form.Check type='checkbox' label='Sensational writing / Bear Time' checked={ formData.behaviors.sensationalWriting } onChange={ (e) => setFormData({ ...formData, behaviors: { ...formData.behaviors, sensationalWriting: e.target.checked } }) } aria-label='Check student had sensational writing and / or Bear Time' />
                             </div>
                         </Form.Group>
                         <Form.Group className='mb-3' controlId='notes'>

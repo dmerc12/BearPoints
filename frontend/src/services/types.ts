@@ -12,9 +12,11 @@ export interface Student {
 export interface BehaviorLog {
     timestamp: string;
     studentID: number;
-    respectful: boolean;
-    responsible: boolean;
-    safe: boolean;
+    brilliant: boolean;
+    excelled: boolean;
+    answered: boolean;
+    read: boolean;
+    sensationalWriting: boolean;
     points: number;
     notes?: string;
 }
@@ -31,9 +33,11 @@ export interface LeaderboardEntry {
 export interface BehaviorFormData {
     studentID: number;
     behaviors: {
-        respectful: boolean;
-        responsible: boolean;
-        safe: boolean;
+        brilliant: boolean;
+        excelled: boolean;
+        answered: boolean;
+        read: boolean;
+        sensationalWriting: boolean;
     },
     points: number;
     notes?: string;
