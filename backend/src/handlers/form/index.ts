@@ -4,9 +4,11 @@ import { SheetsHelper } from '../../helpers/sheets';
 type BodyType = {
     studentID: number;
     behaviors: {
-        respectful: boolean;
-        responsible: boolean;
-        safe: boolean;
+        brilliant: boolean;
+        excelled: boolean;
+        answered: boolean;
+        read: boolean;
+        sensationalWriting: boolean;
     };
     notes?: string;
 };
