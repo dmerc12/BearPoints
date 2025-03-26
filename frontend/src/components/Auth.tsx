@@ -1,6 +1,7 @@
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
+import { Spinner } from 'react-bootstrap';
 import { auth } from '../Auth';
 
 interface AuthProps {
@@ -28,7 +29,16 @@ export default function Auth ({ children }: AuthProps) {
         return () => unsubscribe();
     }, []);
 
-    if (loading) return <div>Loading</div>
+    if (loading) {
+        return (
+            <div className='text-center my-4'>
+                <Spinner animation='border' role='status'>
+                    <span className='visually-hidden'>Loading...</span>
+                </Spinner>
+                <p>Loading...</p>
+            </div>
+        )
+    }
 
     return user ? <>{ children }</> : <Navigate to='/' />;
 }
