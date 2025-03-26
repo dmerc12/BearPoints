@@ -3,9 +3,9 @@ import { ServiceAccount } from 'firebase-admin';
 
 // Initialize firebase app
 const admin = require('firebase-admin');
-const serviceAccount: ServiceAccount = require('../../../firebase-service-account.json');
+const firebaseConfig = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT || '');
 admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
+    credential: admin.credential.cert(firebaseConfig)
 });
 
 const authorize = async (request: Request, response: Response, next: NextFunction) => {

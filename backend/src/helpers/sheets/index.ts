@@ -3,7 +3,7 @@ import { GoogleAuth } from 'google-auth-library'
 
 export const SheetsHelper = () => {
     const auth = new GoogleAuth({
-        keyFile: './service-account.json',
+        keyFile: process.env.SERVICE_ACCOUNT,
         scopes: [ 'https://www.googleapis.com/auth/spreadsheets' ]
     });
     const spreadsheetId = process.env.SPREADSHEET_ID;

@@ -16,10 +16,11 @@ export function createApp () {
     // Enable application to use cors
     app.use(cors({
         origin: [
+            process.env.VITE_API_URL as string,
             process.env.VITE_APP_URL as string,
             process.env.FIREBASE_AUTH_DOMAIN as string,
             'http://localhost:3000',
-            'http://localhost:5173'
+            'http://localhost:5173',
         ].filter(Boolean) as string[]
     }));
 
