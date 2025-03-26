@@ -12,7 +12,7 @@ export const getStudents: RequestHandler = async (request: Request, response: Re
             console.error('Students sheet not found');
             response.status(404).json({ error: 'Students sheet not found' });
         }
-        const behaviorSheet = doc.sheetsByTitle[ 'BehaviorLog' ];
+        const behaviorSheet = doc.sheetsByTitle[ 'BearBragLog' ];
         const pointsMap = new Map<number, number>();
         if (behaviorSheet) {
             const behaviorRows = await behaviorSheet.getRows();

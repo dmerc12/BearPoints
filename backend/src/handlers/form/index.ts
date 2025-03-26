@@ -23,10 +23,9 @@ export const submitForm: RequestHandler<{}, any, BodyType> = async (request: Req
         }
         const doc = SheetsHelper();
         await doc.loadInfo();
-        const sheet = doc.sheetsByTitle[ 'BehaviorLog' ];
+        const sheet = doc.sheetsByTitle[ 'BearBragLog' ];
         if (!sheet) {
-            throw new Error('BehaviorLog sheet not found');
-            // TODO: Create behaviorLog sheet if it doesn't exist
+            throw new Error('BearBragLog sheet not found');
         }
         const points = Object.values(behaviors).filter(Boolean).length;
         const timestamp = new Date().toISOString();

@@ -7,7 +7,7 @@ export const getLeaderboard: RequestHandler = async (request: Request, response:
         // Get all behavior logs and students
         const doc = SheetsHelper();
         await doc.loadInfo();
-        const behaviorLogSheet = doc.sheetsByTitle[ 'BehaviorLog' ];
+        const behaviorLogSheet = doc.sheetsByTitle[ 'BearBragLog' ];
         const studentsSheet = doc.sheetsByTitle[ 'Students' ];
         if (!behaviorLogSheet || !studentsSheet) {
             throw new Error('Required sheets not found');
