@@ -4,6 +4,7 @@ import { Container, Form, Spinner, Alert, Row, Col } from 'react-bootstrap';
 import LeaderboardTable from '../components/LeaderboardTable';
 import { getLeaderboard } from '../services/api';
 import { useEffect, useState } from 'react';
+import Auth from '../components/Auth';
 
 export default function LeaderboardPage () {
     const [ leaderboard, setLeaderboard ] = useState<LeaderboardEntry[]>([]);
@@ -48,63 +49,65 @@ export default function LeaderboardPage () {
     }, [ filters, rawData ]);
 
     return (
-        <Container fluid className='mt-md-5 mt-3 px-lg-5'>
-            <Row className='mb-4 justify-content-center'>
-                <Col xs={12} className='text-center'>
-                    <h1 className='mb-4'>Leaderboard</h1>
-                </Col>
-            </Row>
-            <Row className='d-flex gap-3 mb-4 justify-content-center'>
-                {/* Timeframe Filter */ }
-                <Col xs={12} lg={10} xl={8} className='d-flex flex-column align-items-center gap-3'>
-                    <Form.Select value={ filters.timeframe } onChange={ (e) => setFilters(prev => ({ ...prev, timeframe: e.target.value as Timeframe })) } style={{ maxWidth: '300px' }}>
-                        <option value='week'>Last Week</option>
-                        <option value='month'>Last Month</option>
-                        <option value='semester'>Semester</option>
-                        <option value='year'>Year</option>
-                    </Form.Select>
-                </Col>
-                {/* Teacher Filter */ }
-                <Col xs={12} lg={10} xl={8} className='d-flex flex-column align-items-center gap-3'>
-                    <Form.Select value={ filters.teacher } onChange={ (e) => setFilters(prev => ({ ...prev, teacher: e.target.value })) } style={{ maxWidth: '300px' }}>
-                        <option value=''>All Teachers</option>
-                        { getUniqueTeachers(leaderboard).map(teacher => (
-                            <option key={ teacher } value={ teacher }>{ teacher }</option>
-                        )) }
-                    </Form.Select>
-                </Col>
-                {/* Grade Filter */ }
-                <Col xs={12} lg={10} xl={8} className='d-flex flex-column align-items-center gap-3'>
-                    <Form.Select value={ filters.grade } onChange={ (e) => setFilters(prev => ({ ...prev, grade: e.target.value })) } style={{ maxWidth: '300px' }}>
-                        <option value=''>All Grades</option>
-                        { getUniqueGrades(leaderboard).map(grade => (
-                            <option key={ grade } value={ grade }>{ grade }</option>
-                        )) }
-                    </Form.Select>
-                </Col>
-            </Row>
-            {/* Loading and Error States */}
-            { loading && (
-                <div className='text-center my-4'>
-                    <Spinner animation='border' role='status'>
-                        <span className='visually-hidden'>Loading...</span>
-                    </Spinner>
-                    <p>Loading leaderboard...</p>
-                </div>
-            ) }
-            { error && <Alert variant='danger'>{ error }</Alert> }
-            {/* Results Section */ }
-            { !loading && !error && (
-                <>
-                    { leaderboard.length === 0 ? (
-                        <Alert variant='info' className='mt-4'>No data to calculate leaderboard yet matching the current filters</Alert>
-                    ) : (
-                        <div className='border rounded-3 overflow-hidden'>
-                            <LeaderboardTable entries={ leaderboard } />
-                        </div>
-                    )}
-                </>
-            )}
-        </Container>
+        <Auth>
+            <Container fluid className='mt-md-5 mt-3 px-lg-5'>
+                <Row className='mb-4 justify-content-center'>
+                    <Col xs={ 12 } className='text-center'>
+                        <h1 className='mb-4'>Leaderboard</h1>
+                    </Col>
+                </Row>
+                <Row className='d-flex gap-3 mb-4 justify-content-center'>
+                    {/* Timeframe Filter */ }
+                    <Col xs={ 12 } lg={ 10 } xl={ 8 } className='d-flex flex-column align-items-center gap-3'>
+                        <Form.Select value={ filters.timeframe } onChange={ (e) => setFilters(prev => ({ ...prev, timeframe: e.target.value as Timeframe })) } style={ { maxWidth: '300px' } }>
+                            <option value='week'>Last Week</option>
+                            <option value='month'>Last Month</option>
+                            <option value='semester'>Semester</option>
+                            <option value='year'>Year</option>
+                        </Form.Select>
+                    </Col>
+                    {/* Teacher Filter */ }
+                    <Col xs={ 12 } lg={ 10 } xl={ 8 } className='d-flex flex-column align-items-center gap-3'>
+                        <Form.Select value={ filters.teacher } onChange={ (e) => setFilters(prev => ({ ...prev, teacher: e.target.value })) } style={ { maxWidth: '300px' } }>
+                            <option value=''>All Teachers</option>
+                            { getUniqueTeachers(leaderboard).map(teacher => (
+                                <option key={ teacher } value={ teacher }>{ teacher }</option>
+                            )) }
+                        </Form.Select>
+                    </Col>
+                    {/* Grade Filter */ }
+                    <Col xs={ 12 } lg={ 10 } xl={ 8 } className='d-flex flex-column align-items-center gap-3'>
+                        <Form.Select value={ filters.grade } onChange={ (e) => setFilters(prev => ({ ...prev, grade: e.target.value })) } style={ { maxWidth: '300px' } }>
+                            <option value=''>All Grades</option>
+                            { getUniqueGrades(leaderboard).map(grade => (
+                                <option key={ grade } value={ grade }>{ grade }</option>
+                            )) }
+                        </Form.Select>
+                    </Col>
+                </Row>
+                {/* Loading and Error States */ }
+                { loading && (
+                    <div className='text-center my-4'>
+                        <Spinner animation='border' role='status'>
+                            <span className='visually-hidden'>Loading...</span>
+                        </Spinner>
+                        <p>Loading leaderboard...</p>
+                    </div>
+                ) }
+                { error && <Alert variant='danger'>{ error }</Alert> }
+                {/* Results Section */ }
+                { !loading && !error && (
+                    <>
+                        { leaderboard.length === 0 ? (
+                            <Alert variant='info' className='mt-4'>No data to calculate leaderboard yet matching the current filters</Alert>
+                        ) : (
+                            <div className='border rounded-3 overflow-hidden'>
+                                <LeaderboardTable entries={ leaderboard } />
+                            </div>
+                        ) }
+                    </>
+                ) }
+            </Container>
+        </Auth>
     );
 }

@@ -1,4 +1,5 @@
 import { Student, BehaviorLog, BehaviorFormData } from './types';
+import { auth } from '../Auth';
 import axios from 'axios';
 
 // API with base URL
@@ -8,6 +9,15 @@ const api = axios.create({
         'Content-Type': 'application/json',
         'Accept': 'application/json'
     },
+});
+
+api.interceptors.request.use(async (config) => {
+    const user = auth.currentUser;
+    if (user) {
+        const token = await user.getIdToken();
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
 });
 
 // Get students
