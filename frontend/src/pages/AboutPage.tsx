@@ -1,8 +1,8 @@
 import { Container, Row, Col, Card, Button, ListGroup, Badge, Image } from 'react-bootstrap';
-import bearMascot from '../assets/bear-mascot.png';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth, login } from '../Auth';
+import bearMascot from '../assets/bear-mascot.png';
 import { toast } from 'react-toastify';
+import { auth, login } from '../Auth';
 import { useState } from 'react';
 
 export default function AboutPage () {

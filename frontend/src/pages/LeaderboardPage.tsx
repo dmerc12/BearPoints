@@ -28,6 +28,7 @@ export default function LeaderboardPage () {
         const loadData = async () => {
             try {
                 setLoading(true);
+                setError('');
                 const data = await getLeaderboard();
                 setRawData(data);
             } catch (error) {
@@ -37,7 +38,10 @@ export default function LeaderboardPage () {
                 setLoading(false);
             }
         };
-        loadData();
+        loadData().catch(error => {
+            console.error('Unhandled fetch error:', error);
+            setError('An unexpected error occurred');
+        });
     }, []);
 
     useEffect(() => {

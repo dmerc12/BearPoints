@@ -28,6 +28,7 @@ export default function StudentsPage () {
         const fetchStudents = async () => {
             try {
                 setLoading(true);
+                setError('');
                 const data = await getStudents();
                 setStudents(Array.isArray(data) ? data : []);
             } catch (error) {
@@ -38,7 +39,10 @@ export default function StudentsPage () {
                 setLoading(false);
             }
         };
-        fetchStudents();
+        fetchStudents().catch(error => {
+            console.error('Unhandled fetch error:', error);
+            setError('An unexpected error occurred');
+        });
     }, []);
 
     const handleQRScan = (token: string) => {

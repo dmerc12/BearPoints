@@ -5,6 +5,7 @@ import { BehaviorFormData } from '../services/types';
 import { useSearchParams } from 'react-router-dom';
 import { Student } from '../services/types';
 import { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 
 export default function SubmitBehaviorPage () {
     const [ searchParams ] = useSearchParams();
@@ -21,12 +22,16 @@ export default function SubmitBehaviorPage () {
                 const data = await getStudentByToken(token);
                 setStudent(data);
             } catch (error) {
+                toast.error('Failed to load student data')
                 console.error('Error fetching student:', error);
             } finally {
                 setLoading(false);
             }
         };
-        fetchStudent();
+        fetchStudent().catch(error => {
+            console.error('Unhandled fetch error:', error);
+            toast.error('An unexpected error occurred')
+        });
     }, [ token ]);
 
     if (loading) {
