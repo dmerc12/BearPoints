@@ -1,5 +1,4 @@
 import { publicStudentsRouter, protectedStudentsRouter} from '../../routes/students';
-import { NextFunction, Request, Response} from "express-serve-static-core";
 import leaderboardRouter from '../../routes/leaderboard';
 import formRouter from '../../routes/form';
 import express from 'express';
@@ -39,11 +38,6 @@ export function createApp () {
     // Routes that require authorization go below
     app.use('/api/students', protectedStudentsRouter);
     app.use('/api/leaderboard', leaderboardRouter);
-
-    app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-        console.error(err.stack);
-        res.status(500).json({ message: 'Internal Server Error' });
-    });
 
     return app;
 }
