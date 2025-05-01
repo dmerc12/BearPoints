@@ -138,3 +138,7 @@ dist
 # Google Cloud JSON key file
 backend/service-account.json
 backend/firebase-service-account.json
+
+# IDE and Mac files
+.idea
+.DS_Store
