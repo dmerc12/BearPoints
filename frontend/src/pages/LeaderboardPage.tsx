@@ -50,7 +50,7 @@ export default function LeaderboardPage () {
 
     return (
         <Auth>
-            <Container fluid className='mt-md-5 mt-3 px-lg-5'>
+            <Container fluid className='mt-3 pt-2 px-lg-5 mb-4'>
                 <Row className='mb-4 justify-content-center'>
                     <Col xs={ 12 } className='text-center'>
                         <h1 className='mb-4'>Leaderboard</h1>

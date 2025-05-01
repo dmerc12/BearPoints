@@ -1,5 +1,5 @@
+import { Container, Alert, Spinner, Row, Col } from 'react-bootstrap';
 import { submitBehavior, getStudentByToken } from '../services/api';
-import { Container, Alert, Spinner } from 'react-bootstrap';
 import BehaviorForm from '../components/BehaviorForm';
 import { BehaviorFormData } from '../services/types';
 import { useSearchParams } from 'react-router-dom';
@@ -56,8 +56,12 @@ export default function SubmitBehaviorPage () {
     };
 
     return (
-        <Container className='mt-5 mt-md-5'>
-            <h1 className='mb-4'>Behavior Report</h1>
+        <Container className='mt-3 pt-2 mb-4'>
+            <Row className='mb-4 justify-content-center'>
+                <Col className='text-center'>
+                    <h1>Behavior Report</h1>
+                </Col>
+            </Row>
             { success && <Alert variant='success'>Behavior report submitted successfully!</Alert> }
             <BehaviorForm onSubmit={ handleSubmit } studentID={ student.studentID } studentName={ student.name } />
         </Container>

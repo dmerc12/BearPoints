@@ -29,7 +29,7 @@ export default function StudentTable ({ students, onQRScan, itemsPerPage = 10 }:
 
     return (
         <div className='table-responsive'>
-            <Table striped bordered hover responsive>
+            <Table striped bordered hover responsive className='text-center align-middle'>
                 <thead>
                     <tr>
                         <th>Name</th>

@@ -64,7 +64,7 @@ export default function StudentsPage () {
 
     return (
         <Auth>
-            <Container className='mt-5 mt-md-5'>
+            <Container className='mt-3 pt-2 mb-4'>
                 <Row className='mb-4 justify-content-center'>
                     <Col md={ 6 } className='text-center'>
                         <h1 className='mb-4'>Students</h1>
@@ -114,10 +114,10 @@ export default function StudentsPage () {
                 { !loading && !error && (
                     <>
                         { filteredStudents.length === 0 ? (
-                            <Alert variant='info' className='mt-4'>No sudents found matching the current filters</Alert>
+                            <Alert variant='info' className='mt-4'>No students found matching the current filters</Alert>
                         ) : (
                             <div className='border rounded-3 overflow-hidden'>
-                                <div className='mb-2 mt-2'>Showing { filteredStudents.length } of { students.length } students</div>
+                                <div className='m-2'>Showing { filteredStudents.length } of { students.length } students</div>
                                 <StudentTable students={ filteredStudents } onQRScan={ handleQRScan } />
                             </div>
                         ) }
