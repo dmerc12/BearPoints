@@ -4,7 +4,7 @@ import LeaderboardPage from './pages/LeaderboardPage';
 import NavigationBar from './components/NavBar';
 import StudentsPage from './pages/StudentsPage';
 import AboutPage from './pages/AboutPage';
-
+import './App.css';
 
 function App() {
 
