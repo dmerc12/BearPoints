@@ -9,15 +9,25 @@ const api = axios.create({
         'Content-Type': 'application/json',
         'Accept': 'application/json'
     },
+    withCredentials: true
 });
 
 api.interceptors.request.use(async (config) => {
-    const user = auth.currentUser;
-    if (user) {
-        const token = await user.getIdToken();
-        config.headers.Authorization = `Bearer ${token}`;
+    try {
+        await auth.authStateReady();
+        const user = auth.currentUser;
+        if (user) {
+            const token = await user.getIdToken();
+            config.headers.Authorization = `Bearer ${token}`;
+            config.headers['Content-Type'] = 'application/json';
+        }
+        return config;
+    } catch (error) {
+        console.error('Token refresh failed:', error);
+        throw error;
     }
-    return config;
+}, (error) => {
+    return Promise.reject(error);
 });
 
 // Get students

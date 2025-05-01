@@ -1,5 +1,6 @@
-import leaderboardRouter from '../../routes/leaderboard';
 import { publicStudentsRouter, protectedStudentsRouter} from '../../routes/students';
+import { NextFunction, Request, Response} from "express-serve-static-core";
+import leaderboardRouter from '../../routes/leaderboard';
 import formRouter from '../../routes/form';
 import express from 'express';
 import cors from 'cors';
@@ -16,12 +17,16 @@ export function createApp () {
     // Enable application to use cors
     app.use(cors({
         origin: [
-            process.env.API_DOMAIN as string,
-            process.env.APP_DOMAIN as string,
-            process.env.FIREBASE_AUTH_DOMAIN as string,
-            'http://localhost:3000',
+            // process.env.API_DOMAIN,
+            // process.env.APP_DOMAIN,
+            process.env.FIREBASE_AUTH_DOMAIN,
+            // 'http://localhost:3000',
             'http://localhost:5173',
-        ].filter(Boolean) as string[]
+        ].filter(Boolean) as string[],
+        credentials: true,
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['content-type', 'Authorization', 'X-Requested-With'],
+        exposedHeaders: ['Authorization']
     }));
 
     // Routes that do not require authorization go below
@@ -34,6 +39,11 @@ export function createApp () {
     // Routes that require authorization go below
     app.use('/api/students', protectedStudentsRouter);
     app.use('/api/leaderboard', leaderboardRouter);
+
+    app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+        console.error(err.stack);
+        res.status(500).json({ message: 'Internal Server Error' });
+    });
 
     return app;
 }
