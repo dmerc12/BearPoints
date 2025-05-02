@@ -44,7 +44,7 @@ export default function StudentTable ({ students, onQRScan, itemsPerPage = 10 }:
                         <tr key={ student.token }>
                             <td>{ student.name }</td>
                             <td>{ student.grade }</td>
-                            <td>{ student.teacher }</td>
+                            <td>{ student.teacher.split(' ').pop() || student.teacher }</td>
                             <td>{ student.points }</td>
                             <td>
                                 <QRCodeSVG

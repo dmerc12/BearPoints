@@ -1,4 +1,4 @@
-import { Student, BehaviorLog, BehaviorFormData } from './types';
+import { Student, BragLog, StudentToken, BehaviorFormData, StudentsResponse, LeaderboardResponse } from './types';
 import { auth } from '../Auth';
 import axios from 'axios';
 
@@ -31,20 +31,20 @@ api.interceptors.request.use(async (config) => {
 });
 
 // Get students
-export const getStudents = async (): Promise<Student[]> => {
+export const getStudents = async (): Promise<StudentsResponse> => {
     try {
-        const response = await api.get<Student[]>('/students');
-        return Array.isArray(response.data) ? response.data : [];
+        const response = await api.get<StudentsResponse>('/students');
+        return response.data;
     } catch (error) {
         console.error('API Error:', error);
-        return [];
+        return { students: [], teachers: [] };
     }
 };
 
 // Get student by token
-export const getStudentByToken = async (token: string): Promise<Student | null> => {
+export const getStudentByToken = async (token: string): Promise<StudentToken | null> => {
     try {
-        const response = await api.get<Student>('/students/token', { params: { token } });
+        const response = await api.get<StudentToken>('/students/token', { params: { token } });
         return response.data;
     } catch (error) {
         console.error('API Error:', error);
@@ -53,22 +53,26 @@ export const getStudentByToken = async (token: string): Promise<Student | null> 
 };
 
 // Get leaderboard
-export const getLeaderboard = async (): Promise<{ behaviorLogs: BehaviorLog[], students: Student[] } > => {
+export const getLeaderboard = async (): Promise<LeaderboardResponse> => {
     try {
-        const response = await api.get('/leaderboard');
-        return response.data;
+        const response = await api.get<{ bragLogs: BragLog[], students: Student[] }>('/leaderboard');
+        return {
+            bragLogs: response.data.bragLogs,
+            students: response.data.students,
+        };
     } catch (error) {
         console.error('API Error:', error);
-        return { behaviorLogs: [], students: []};
+        return { bragLogs: [], students: [] };
     }
 };
 
 // Submit behavior report
 export const submitBehavior = async (data: BehaviorFormData) => {
     try {
-        const response = await api.post('/form/submit', data);
+        const response = await api.post<{ success: boolean }>('/form/submit', data);
         return response.data;
     } catch (error) {
         console.error('API Error:', error);
+        throw error;
     }
 };

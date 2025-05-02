@@ -1,15 +1,20 @@
 import { Container, Row, Button, Col, Spinner, Alert, Form } from 'react-bootstrap';
 import QRCodesPrint from '../components/QRCodesPrint';
 import StudentTable from '../components/StudentTable';
+import { Student, Teacher } from '../services/types';
 import { useState, useEffect, useRef } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import { useNavigate } from 'react-router-dom';
 import { getStudents } from '../services/api';
-import { Student } from '../services/types';
 import Auth from '../components/Auth';
 
+interface StudentsData {
+    students: Student[];
+    teachers: Teacher[];
+}
+
 export default function StudentsPage () {
-    const [ students, setStudents ] = useState<Student[]>([]);
+    const [ data, setData ] = useState<StudentsData>({ students: [], teachers: [] });
     const [ loading, setLoading ] = useState(false);
     const [ error, setError ] = useState('');
     const [ filter, setFilter ] = useState({
@@ -29,12 +34,12 @@ export default function StudentsPage () {
             try {
                 setLoading(true);
                 setError('');
-                const data = await getStudents();
-                setStudents(Array.isArray(data) ? data : []);
+                const response = await getStudents();
+                setData(response);
             } catch (error) {
                 setError('Failed to load students');
                 console.error('Failed to load students:', error);
-                setStudents([]);
+                setData({ students: [], teachers: [] });
             } finally {
                 setLoading(false);
             }
@@ -46,12 +51,12 @@ export default function StudentsPage () {
     }, []);
 
     const handleQRScan = (token: string) => {
-        navigate(`/behavior?token=${token}`);
+        navigate(`/brag?token=${token}`);
     };
 
-    const teachers = Array.from(new Set(students.map(s => s.teacher)));
+    const teachers = Array.from(new Set(data.teachers.map(t => t.name.split(' ').pop() || t.name)));
 
-    const grades = Array.from(new Set(students.map(s => s.grade))).sort((a, b) => {
+    const grades = Array.from(new Set(data.teachers.map(t => t.grade))).sort((a, b) => {
         if (a === 'Pre-K') return -1;
         if (b === 'Pre-K') return 1;
         if (a === 'K') return -1;
@@ -59,12 +64,13 @@ export default function StudentsPage () {
         return a.localeCompare(b);
     });
 
-    const filteredStudents = students.filter(student =>
-        student.teacher.toLowerCase().includes(filter.teacher.toLowerCase()) &&
-        (filter.grade === '' || student.grade === filter.grade) &&
-        student.name.toLowerCase().includes(filter.nameSearch.toLowerCase()) &&
-            (filter.idSearch === '' || student.studentID.toString() === filter.idSearch)
-    );
+    const filteredStudents = data.students.filter(student => {
+        const teacherMatch = filter.teacher === '' || student.teacher.toLowerCase().includes(filter.teacher.toLowerCase());
+        const gradeMatch = filter.grade === '' || student.grade === filter.grade;
+        const nameMatch = student.name.toLowerCase().includes(filter.nameSearch.toLowerCase());
+        const idMatch = filter.idSearch === '' || student.studentID.toString() === filter.idSearch;
+        return teacherMatch && gradeMatch && nameMatch && idMatch
+    });
 
     return (
         <Auth>
@@ -121,7 +127,7 @@ export default function StudentsPage () {
                             <Alert variant='info' className='mt-4'>No students found matching the current filters</Alert>
                         ) : (
                             <div className='border rounded-3 overflow-hidden'>
-                                <div className='m-2'>Showing { filteredStudents.length } of { students.length } students</div>
+                                <div className='m-2'>Showing { filteredStudents.length } of { data.students.length } students</div>
                                 <StudentTable students={ filteredStudents } onQRScan={ handleQRScan } />
                             </div>
                         ) }

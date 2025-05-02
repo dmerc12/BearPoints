@@ -1,14 +1,14 @@
-import { BehaviorLog, Student, Timeframe, LeaderboardEntry } from '../services/types';
+import { BragLog, Student, Timeframe, LeaderboardEntry } from '../services/types';
 
 export const getProcessedLeaderboard = (
-    rawData: { behaviorLogs: BehaviorLog[]; students: Student[]; },
+    rawData: { behaviorLogs: BragLog[]; students: Student[]; },
     filters: { timeframe: Timeframe; teacher?: string; grade?: string }
 ): LeaderboardEntry[] => {
     const filteredLogs = filterLogsByTimeframe(rawData.behaviorLogs, filters.timeframe);
     return calculateLeaderboard(filteredLogs, rawData.students, filters.teacher, filters.grade);
 };
 
-export const filterLogsByTimeframe = ( logs: BehaviorLog[], timeframe: Timeframe ): BehaviorLog[] => {
+export const filterLogsByTimeframe = ( logs: BragLog[], timeframe: Timeframe ): BragLog[] => {
     const now = new Date();
     const startDates: Record<Timeframe, Date> = {
         week: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
@@ -20,7 +20,7 @@ export const filterLogsByTimeframe = ( logs: BehaviorLog[], timeframe: Timeframe
 };
 
 const calculateLeaderboard = (
-    logs: BehaviorLog[],
+    logs: BragLog[],
     students: Student[],
     teacher?: string,
     grade?: string
@@ -29,7 +29,7 @@ const calculateLeaderboard = (
         student.studentID,
         {
             name: student.name,
-            teacher: student.teacher,
+            teacher: student.teacher.split(' ').pop() || student.teacher,
             grade: student.grade
         }
     ]));

@@ -1,9 +1,8 @@
 import { Container, Alert, Spinner, Row, Col } from 'react-bootstrap';
 import { submitBehavior, getStudentByToken } from '../services/api';
+import { BehaviorFormData, StudentToken } from '../services/types';
 import BehaviorForm from '../components/BehaviorForm';
-import { BehaviorFormData } from '../services/types';
 import { useSearchParams } from 'react-router-dom';
-import { Student } from '../services/types';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 
@@ -11,7 +10,7 @@ export default function SubmitBehaviorPage () {
     const [ searchParams ] = useSearchParams();
     const [ success, setSuccess ] = useState(false);
     const [ loading, setLoading ] = useState(true);
-    const [ student, setStudent ] = useState<Student | null>(null);
+    const [ student, setStudent ] = useState<StudentToken | null>(null);
     
     const token = searchParams.get('token');
 
@@ -68,7 +67,7 @@ export default function SubmitBehaviorPage () {
                 </Col>
             </Row>
             { success && <Alert variant='success'>Behavior report submitted successfully!</Alert> }
-            <BehaviorForm onSubmit={ handleSubmit } studentID={ student.studentID } studentName={ student.name } />
+            <BehaviorForm onSubmit={ handleSubmit } studentID={ student.studentID } teacherID={student.teacherID} grade={student.grade} studentName={ student.name } />
         </Container>
     );
 }
