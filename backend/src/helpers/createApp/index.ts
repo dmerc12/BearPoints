@@ -1,5 +1,6 @@
 import { publicStudentsRouter, protectedStudentsRouter} from '../../routes/students';
 import leaderboardRouter from '../../routes/leaderboard';
+import healthRouter from '../../routes/health';
 import formRouter from '../../routes/form';
 import express from 'express';
 import cors from 'cors';
@@ -29,6 +30,7 @@ export function createApp () {
     }));
 
     // Routes that do not require authorization go below
+    app.use('/api/health', healthRouter);
     app.use('/api/form', formRouter);
     app.use('/api/students', publicStudentsRouter);
 

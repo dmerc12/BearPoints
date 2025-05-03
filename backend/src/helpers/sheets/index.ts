@@ -150,3 +150,42 @@ export const addBearBrag = async (studentID: number, teacherID: number, grade: s
     await sheet.addRow(rowData);
     return true;
 };
+
+export const checkHealth = async (response: Response) => {
+    // 1. Verify Google Sheets connection
+    const doc = SheetsHelper();
+    await doc.loadInfo();
+    // 2. Verify required sheets exist
+    const requiredSheets = ['Students', 'Teachers', 'BearBragLog'];
+    const missingSheets = requiredSheets.filter(title => !doc.sheetsByTitle[title])
+    if (missingSheets.length > 0) {
+        response.status(500).json({
+            healthy: false,
+            error: `Missing sheets: ${missingSheets.join(', ')}`
+        });
+    }
+    // 3. Verify we can read data
+    const [studentsSheet, teachersSheet, bragsSheet] = await Promise.all([
+        doc.sheetsByTitle['Students'].getRows(),
+        doc.sheetsByTitle['Teachers'].getRows(),
+        doc.sheetsByTitle['BearBragLog'].getRows(),
+    ]);
+    if (studentsSheet.length === 0 || teachersSheet.length === 0) {
+        response.status(500).json({
+            healthy: false,
+            error: 'Sheets contain no data'
+        });
+    }
+    // Return healthy response
+    response.status(200).json({
+        healthy: true,
+        details: {
+            spreadsheetId: doc.spreadsheetId,
+            sheetTitles: Object.keys(doc.sheetsByTitle),
+            studentsCount: studentsSheet.length,
+            teachersCount: teachersSheet.length,
+            bragsCount: bragsSheet.length
+        }
+    });
+};
+

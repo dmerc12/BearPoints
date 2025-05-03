@@ -72,3 +72,15 @@ export interface LeaderboardResponse {
     bragLogs: BragLog[];
     students: Student[];
 }
+
+export interface HealthResponse {
+    healthy: boolean;
+    error?: string;
+    details?: {
+        spreadsheetId: string;
+        sheetTitles: string[];
+        studentsCount: number;
+        teachersCount: number;
+        bragsCount: number;
+    }
+}
