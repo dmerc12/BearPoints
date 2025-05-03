@@ -1,9 +1,10 @@
+import { getCachedSheets, invalidateCache, getCacheTimestamp } from '../cache';
 import { Student, BragLog, Teacher, StudentToken, BragRow } from 'types';
 import { GoogleSpreadsheet } from 'google-spreadsheet';
 import { Response } from 'express-serve-static-core';
 import { JWT } from 'google-auth-library';
 
-export const SheetsHelper = () => {
+const SheetsHelper = () => {
     const serviceAccount = process.env.SHEETS_SERVICE_ACCOUNT;
     const spreadsheetId = process.env.SPREADSHEET_ID;
     if (!serviceAccount) {
@@ -21,7 +22,7 @@ export const SheetsHelper = () => {
     return new GoogleSpreadsheet(spreadsheetId, auth);
 };
 
-export const fetchSheets = async (response: Response) => {
+export const fetchData = async () => {
     const doc = SheetsHelper();
     await doc.loadInfo();
     const [studentsSheet, teachersSheet, bragsSheet] = await Promise.all([
@@ -31,15 +32,12 @@ export const fetchSheets = async (response: Response) => {
     ]);
     if (!studentsSheet) {
         console.error('Students sheet not found');
-        response.status(404).json({ error: 'Students sheet not found' });
     }
     if (!teachersSheet) {
         console.error('Teachers sheet not found');
-        response.status(404).json({ error: 'Teachers sheet not found' });
     }
     if (!bragsSheet) {
         console.error('Brags sheet not found');
-        response.status(404).json({ error: 'Brags sheet not found' });
     }
     const [studentRows, teacherRows, bragRows] = await Promise.all([
         studentsSheet.getRows(),
@@ -47,6 +45,28 @@ export const fetchSheets = async (response: Response) => {
         bragsSheet.getRows()
     ]);
     return { studentRows, teacherRows, bragRows };
+}
+
+export const fetchSheets = async (response: Response) => {
+    try {
+        const { studentRows, teacherRows, bragRows } = await getCachedSheets();
+        if (!studentRows || studentRows.length === 0) {
+            console.error('Students sheet not found');
+            response.status(404).json({ error: 'Students sheet not found' });
+        }
+        if (!teacherRows || teacherRows.length === 0) {
+            console.error('Teachers sheet not found');
+            response.status(404).json({ error: 'Teachers sheet not found' });
+        }
+        if (!bragRows) {
+            console.error('Brags sheet not found');
+            response.status(404).json({ error: 'Brags sheet not found' });
+        }
+        return { studentRows, teacherRows, bragRows };
+    } catch (error) {
+        console.error('Error fetching sheets:', error);
+        throw error;
+    }
 };
 
 export const mapSheets = async (response: Response) => {
@@ -148,44 +168,28 @@ export const addBearBrag = async (studentID: number, teacherID: number, grade: s
         notes: notes || ''
     }
     await sheet.addRow(rowData);
+    invalidateCache();
     return true;
 };
 
 export const checkHealth = async (response: Response) => {
-    // 1. Verify Google Sheets connection
-    const doc = SheetsHelper();
-    await doc.loadInfo();
-    // 2. Verify required sheets exist
-    const requiredSheets = ['Students', 'Teachers', 'BearBragLog'];
-    const missingSheets = requiredSheets.filter(title => !doc.sheetsByTitle[title])
-    if (missingSheets.length > 0) {
+    try {
+        const { studentRows, teacherRows, bragRows } = await getCachedSheets();
+        response.status(200).json({
+            healthy: true,
+            details: {
+                studentsCount: studentRows.length,
+                teachersCount: teacherRows.length,
+                bragsCount: bragRows.length,
+                lastUpdated: getCacheTimestamp()
+            }
+        });
+    } catch (error) {
+        console.error('Health check failed:', error);
         response.status(500).json({
             healthy: false,
-            error: `Missing sheets: ${missingSheets.join(', ')}`
+            error: error instanceof Error ? error.message : 'Unknown error'
         });
     }
-    // 3. Verify we can read data
-    const [studentsSheet, teachersSheet, bragsSheet] = await Promise.all([
-        doc.sheetsByTitle['Students'].getRows(),
-        doc.sheetsByTitle['Teachers'].getRows(),
-        doc.sheetsByTitle['BearBragLog'].getRows(),
-    ]);
-    if (studentsSheet.length === 0 || teachersSheet.length === 0) {
-        response.status(500).json({
-            healthy: false,
-            error: 'Sheets contain no data'
-        });
-    }
-    // Return healthy response
-    response.status(200).json({
-        healthy: true,
-        details: {
-            spreadsheetId: doc.spreadsheetId,
-            sheetTitles: Object.keys(doc.sheetsByTitle),
-            studentsCount: studentsSheet.length,
-            teachersCount: teachersSheet.length,
-            bragsCount: bragsSheet.length
-        }
-    });
 };
 

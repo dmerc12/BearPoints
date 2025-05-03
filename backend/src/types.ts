@@ -74,3 +74,12 @@ export type BragRow = {
     points: number;
     notes?: string;
 };
+
+export type CachedData = {
+    timestamp: number;
+    data: {
+        studentRows: any[];
+        teacherRows: any[];
+        bragRows: any[];
+    };
+};
