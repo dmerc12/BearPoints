@@ -18,7 +18,7 @@ export function createApp () {
     app.use(cors({
         origin: [
             // process.env.API_DOMAIN,
-            // process.env.APP_DOMAIN,
+            process.env.APP_DOMAIN,
             process.env.FIREBASE_AUTH_DOMAIN,
             // 'http://localhost:3000',
             'http://localhost:5173',
