@@ -1,5 +1,5 @@
 import { getProcessedLeaderboard, getUniqueTeachers, getUniqueGrades } from '../helpers/leaderboard';
-import { LeaderboardEntry, Timeframe, BehaviorLog, Student } from '../services/types';
+import { LeaderboardEntry, Timeframe, BragLog, Student } from '../services/types';
 import { Container, Form, Spinner, Alert, Row, Col } from 'react-bootstrap';
 import LeaderboardTable from '../components/LeaderboardTable';
 import { getLeaderboard } from '../services/api';
@@ -11,9 +11,9 @@ export default function LeaderboardPage () {
     const [ loading, setLoading ] = useState(false);
     const [ error, setError ] = useState('');
     const [ rawData, setRawData ] = useState<{
-        behaviorLogs: BehaviorLog[];
+        bragLogs: BragLog[];
         students: Student[];
-    }>({ behaviorLogs: [], students: [] });
+    }>({ bragLogs: [], students: [] });
     const [ filters, setFilters ] = useState<{
         teacher: string;
         timeframe: Timeframe;
@@ -28,8 +28,12 @@ export default function LeaderboardPage () {
         const loadData = async () => {
             try {
                 setLoading(true);
+                setError('');
                 const data = await getLeaderboard();
-                setRawData(data);
+                setRawData({
+                    bragLogs: data.bragLogs,
+                    students: data.students,
+                });
             } catch (error) {
                 setError('Failed to load data');
                 console.error('Failed to load data:', error);
@@ -37,12 +41,18 @@ export default function LeaderboardPage () {
                 setLoading(false);
             }
         };
-        loadData();
+        loadData().catch(error => {
+            console.error('Unhandled fetch error:', error);
+            setError('An unexpected error occurred');
+        });
     }, []);
 
     useEffect(() => {
-        if (rawData.behaviorLogs.length && rawData.students.length) {
-            const processed = getProcessedLeaderboard(rawData, filters)
+        if (rawData.bragLogs.length && rawData.students.length) {
+            const processed = getProcessedLeaderboard({
+                behaviorLogs: rawData.bragLogs,
+                students: rawData.students
+            }, filters)
                 .map((entry, index) => ({ ...entry, rank: index + 1 }));
             setLeaderboard(processed);
         }
@@ -50,7 +60,7 @@ export default function LeaderboardPage () {
 
     return (
         <Auth>
-            <Container fluid className='mt-md-5 mt-3 px-lg-5'>
+            <Container fluid className='mt-3 pt-2 px-lg-5 mb-4'>
                 <Row className='mb-4 justify-content-center'>
                     <Col xs={ 12 } className='text-center'>
                         <h1 className='mb-4'>Leaderboard</h1>

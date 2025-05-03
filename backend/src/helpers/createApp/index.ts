@@ -1,5 +1,6 @@
-import leaderboardRouter from '../../routes/leaderboard';
 import { publicStudentsRouter, protectedStudentsRouter} from '../../routes/students';
+import leaderboardRouter from '../../routes/leaderboard';
+import healthRouter from '../../routes/health';
 import formRouter from '../../routes/form';
 import express from 'express';
 import cors from 'cors';
@@ -16,15 +17,20 @@ export function createApp () {
     // Enable application to use cors
     app.use(cors({
         origin: [
-            process.env.API_DOMAIN as string,
-            process.env.APP_DOMAIN as string,
-            process.env.FIREBASE_AUTH_DOMAIN as string,
-            'http://localhost:3000',
+            // process.env.API_DOMAIN,
+            // process.env.APP_DOMAIN,
+            process.env.FIREBASE_AUTH_DOMAIN,
+            // 'http://localhost:3000',
             'http://localhost:5173',
-        ].filter(Boolean) as string[]
+        ].filter(Boolean) as string[],
+        credentials: true,
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['content-type', 'Authorization', 'X-Requested-With'],
+        exposedHeaders: ['Authorization']
     }));
 
     // Routes that do not require authorization go below
+    app.use('/api/health', healthRouter);
     app.use('/api/form', formRouter);
     app.use('/api/students', publicStudentsRouter);
 

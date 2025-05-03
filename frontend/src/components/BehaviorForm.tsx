@@ -5,14 +5,18 @@ import { BehaviorFormData } from '../services/types';
 interface BehaviorFormProps {
     onSubmit: (data: BehaviorFormData) => Promise<void>;
     studentID: number;
+    teacherID: number;
+    grade: string;
     studentName: string;
 }
 
-export default function BehaviorForm ({ onSubmit, studentID, studentName }: BehaviorFormProps) {
+export default function BehaviorForm ({ onSubmit, studentID, teacherID, grade, studentName }: BehaviorFormProps) {
     const [ loading, setLoading ] = useState(false);
     const [ error, setError ] = useState('');
     const [ formData, setFormData ] = useState<BehaviorFormData>({
         studentID: studentID,
+        teacherID: teacherID,
+        grade: grade,
         behaviors: {
             brilliant: false,
             excelled: false,
@@ -27,9 +31,11 @@ export default function BehaviorForm ({ onSubmit, studentID, studentName }: Beha
     useEffect(() => {
         setFormData(prev => ({
             ...prev,
-            studentID: studentID
+            studentID: studentID,
+            teacherID: teacherID,
+            grade: grade
         }));
-    }, [ studentID ]);
+    }, [ studentID, teacherID, grade ]);
 
     useEffect(() => {
         const newPoints = Object.values(formData.behaviors).filter(Boolean).length;
@@ -46,7 +52,8 @@ export default function BehaviorForm ({ onSubmit, studentID, studentName }: Beha
             await onSubmit(formData);
             setFormData({
                 studentID: studentID || -1,
-                points: 0,
+                teacherID: teacherID || -1,
+                grade: grade || '',
                 behaviors: {
                     brilliant: false,
                     excelled: false,
@@ -54,6 +61,7 @@ export default function BehaviorForm ({ onSubmit, studentID, studentName }: Beha
                     read: false,
                     sensationalWriting: false
                 },
+                points: 0,
                 notes: ''
             });
         } catch (error) {

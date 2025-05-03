@@ -5,13 +5,31 @@ export interface Student {
     name: string;
     grade: string;
     teacher: string;
+    teacherID: number;
     token: string;
     points: number;
 }
 
-export interface BehaviorLog {
+export interface Teacher {
+    teacherID: number;
+    name: string;
+    email: string;
+    grade: string;
+}
+
+export interface StudentToken {
+    studentID: number;
+    name: string;
+    teacherID: number;
+    grade: string;
+    token: string;
+}
+
+export interface BragLog {
     timestamp: string;
     studentID: number;
+    teacherID: number;
+    grade: string;
     brilliant: boolean;
     excelled: boolean;
     answered: boolean;
@@ -32,6 +50,8 @@ export interface LeaderboardEntry {
 
 export interface BehaviorFormData {
     studentID: number;
+    teacherID: number;
+    grade: string;
     behaviors: {
         brilliant: boolean;
         excelled: boolean;
@@ -39,6 +59,28 @@ export interface BehaviorFormData {
         read: boolean;
         sensationalWriting: boolean;
     },
-    points: number;
+    points: number,
     notes?: string;
+}
+
+export interface StudentsResponse {
+    students: Student[];
+    teachers: Teacher[];
+}
+
+export interface LeaderboardResponse {
+    bragLogs: BragLog[];
+    students: Student[];
+}
+
+export interface HealthResponse {
+    healthy: boolean;
+    error?: string;
+    details?: {
+        spreadsheetId: string;
+        sheetTitles: string[];
+        studentsCount: number;
+        teachersCount: number;
+        bragsCount: number;
+    }
 }

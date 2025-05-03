@@ -40,7 +40,7 @@ export default function LeaderboardTable ({ entries, itemsPerPage = 10 }: Leader
             <div className='mb-3 mt-3 text-center'>
                 Page {currentPage} of {totalPages} - Showing {paginatedEntries.length} of {entries.length} entries
             </div>
-            <Table striped bordered hover responsive>
+            <Table striped bordered hover responsive className='text-center align-center'>
                 <thead>
                     <tr>
                         <th>Rank</th>
