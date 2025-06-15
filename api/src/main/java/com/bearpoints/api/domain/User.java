@@ -1,6 +1,6 @@
 package com.bearpoints.api.domain;
 
-import com.bearpoints.api.service.GoogleSheetsSyncService;
+import com.bearpoints.api.dto.Syncable;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.Data;
@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @Table(name = "app_user", uniqueConstraints = {
         @UniqueConstraint(columnNames = "email", name = "uk_user_email")
 })
-public class User implements GoogleSheetsSyncService.Syncable {
+public class User implements Syncable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -70,6 +70,9 @@ public class User implements GoogleSheetsSyncService.Syncable {
     @Column(name = "synced_to_sheets", nullable = false)
     private Boolean syncedToSheets = false;
 
+    @Column(name = "sheet_row_id")
+    private Integer sheetRowId;
+
     @Override
     public void setSyncedToSheets(boolean synced) {
         this.syncedToSheets = synced;
@@ -78,5 +81,15 @@ public class User implements GoogleSheetsSyncService.Syncable {
     @Override
     public void setLastSynced(LocalDateTime lastSynced) {
         this.lastSynced = lastSynced;
+    }
+
+    @Override
+    public Integer getSheetRowId() {
+        return this.sheetRowId;
+    }
+
+    @Override
+    public void setSheetRowId(Integer rowId) {
+        this.sheetRowId = rowId;
     }
 }

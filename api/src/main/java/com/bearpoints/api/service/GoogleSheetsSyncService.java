@@ -1,6 +1,8 @@
 package com.bearpoints.api.service;
 
 import com.bearpoints.api.domain.*;
+import com.bearpoints.api.dto.BatchUpdateRequest;
+import com.bearpoints.api.dto.Syncable;
 import com.bearpoints.api.repository.*;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
@@ -12,8 +14,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -71,22 +72,86 @@ public class GoogleSheetsSyncService {
     }
 
     private void syncUsers() throws IOException {
-        List<User> unsyncedUsers = userRepository.findBySyncedToSheetsFalse();
-        if (unsyncedUsers.isEmpty()) return;
-        logger.info("Syncing {} users to Google Sheets", unsyncedUsers.size());
-        List<List<String>> data = unsyncedUsers.stream()
-                .map(user -> Arrays.asList(
-                        user.getId().toString(),
-                        user.getEmail(),
-                        user.getFirstName(),
-                        user.getLastName(),
-                        user.getRole().name(),
-                        formatDateTime(user.getCreatedAt()),
-                        formatDateTime(user.getUpdatedAt())
-                )).collect(Collectors.toList());
-        googleSheetsService.appendToSheet("Users", data);
-        markAsSynced(unsyncedUsers);
-        userRepository.saveAll(unsyncedUsers);
+        // 1. Get existing sheet data
+        List<List<Object>> sheetData = googleSheetsService.getSheetData("Users");
+        Map<Long, Integer> sheetRowMap = new HashMap<>();
+        // Create ID -> row number mapping (skip header row)
+        for (int i = 1; i < sheetData.size(); i++) {
+            List<Object> row = sheetData.get(i);
+            if (!row.isEmpty()) {
+                Long id = Long.parseLong(row.getFirst().toString());
+                // +1 for 1-based indexing
+                sheetRowMap.put(id, i + 1);
+            }
+        }
+        // 2. Process database entities
+        List<User> allUsers = userRepository.findAll();
+        List<List<String>> newData = new ArrayList<>();
+        List<BatchUpdateRequest> updates = new ArrayList<>();
+        for (User user : allUsers) {
+            List<String> rowData = Arrays.asList(
+                    user.getId().toString(),
+                    user.getEmail(),
+                    user.getFirstName(),
+                    user.getLastName(),
+                    user.getRole().name(),
+                    formatDateTime(user.getCreatedAt()),
+                    formatDateTime(user.getUpdatedAt())
+            );
+            if (sheetRowMap.containsKey(user.getId())) {
+                // Existing row - prepare update
+                int rowNum = sheetRowMap.get(user.getId());
+                updates.add(new BatchUpdateRequest(rowNum, rowData));
+                user.setSheetRowId(rowNum);
+            } else {
+                // New row - prepare for append
+                newData.add(rowData);
+            }
+        }
+        // 3. Execute batch updates
+        if (!updates.isEmpty()) {
+            googleSheetsService.batchUpdate("Users", updates);
+        }
+        // 4. Append new rows
+        if (!newData.isEmpty()) {
+            googleSheetsService.appendToSheet("Users", newData);
+            // Update row IDs for new entries
+            List<List<Object>> updatedSheet = googleSheetsService.getSheetData("Users");
+            for (int i = sheetData.size() + 1; i <= updatedSheet.size(); i++) {
+                List<Object> row = updatedSheet.get(i - 1);
+                if (!row.isEmpty()) {
+                    Long id = Long.parseLong(row.getFirst().toString());
+                    int finalI = i;
+                    userRepository.findById(id).ifPresent(user -> user.setSheetRowId(finalI));
+                }
+            }
+        }
+        // 5. Sync from Sheets to DB (handle new sheet entries)
+        for (int i = 1; i < sheetData.size(); i++) {
+            List<Object> row = sheetData.get(i);
+            if (row.size() >= 5 && !row.getFirst().toString().isEmpty()) {
+                Long id = Long.parseLong(row.getFirst().toString());
+                if (!userRepository.existsById(id)) {
+                    User newUser = new User();
+                    newUser.setId(id);
+                    newUser.setEmail(row.get(1).toString());
+                    newUser.setFirstName(row.get(2).toString());
+                    newUser.setLastName(row.get(3).toString());
+                    newUser.setRole(Role.valueOf(row.get(4).toString()));
+                    newUser.setCreatedAt((LocalDateTime) row.get(5));
+                    newUser.setUpdatedAt((LocalDateTime) row.get(6));
+                    newUser.setTeacher((Teacher) row.get(7));
+                    newUser.setStudent((Student) row.get(8));
+                    newUser.setLastSynced((LocalDateTime) row.get(9));
+                    newUser.setSyncedToSheets((Boolean) row.get(10));
+                    newUser.setSheetRowId(i + 1);
+                    userRepository.save(newUser);
+                }
+            }
+        }
+        // 6. Mark all as synced
+        markAsSynced(allUsers);
+        userRepository.saveAll(allUsers);
     }
 
     private void syncTeachers() throws IOException {
@@ -205,10 +270,5 @@ public class GoogleSheetsSyncService {
 
     private String formatDateTime(LocalDateTime dateTime) {
         return dateTime != null ? dateTime.format(DATE_FORMATTER) : "";
-    }
-
-    public interface Syncable {
-        void setSyncedToSheets(boolean synced);
-        void setLastSynced(LocalDateTime lastSynced);
     }
 }
