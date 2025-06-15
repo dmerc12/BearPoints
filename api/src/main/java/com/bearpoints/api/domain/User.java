@@ -1,5 +1,6 @@
-package com.bearpoints.api.model;
+package com.bearpoints.api.domain;
 
+import com.bearpoints.api.service.GoogleSheetsSyncService;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.Data;
@@ -15,7 +16,7 @@ import java.time.LocalDateTime;
 @Table(name = "app_user", uniqueConstraints = {
         @UniqueConstraint(columnNames = "email", name = "uk_user_email")
 })
-public class User {
+public class User implements GoogleSheetsSyncService.Syncable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -68,4 +69,14 @@ public class User {
     @NotNull(message = "Sync status is required")
     @Column(name = "synced_to_sheets", nullable = false)
     private Boolean syncedToSheets = false;
+
+    @Override
+    public void setSyncedToSheets(boolean synced) {
+        this.syncedToSheets = synced;
+    }
+
+    @Override
+    public void setLastSynced(LocalDateTime lastSynced) {
+        this.lastSynced = lastSynced;
+    }
 }

@@ -1,5 +1,6 @@
-package com.bearpoints.api.model;
+package com.bearpoints.api.domain;
 
+import com.bearpoints.api.service.GoogleSheetsSyncService;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -17,7 +18,7 @@ import java.util.Set;
 @Table(name = "reward_item", uniqueConstraints = {
         @UniqueConstraint(columnNames = "name", name = "uk_reward_name")
 })
-public class RewardItem {
+public class RewardItem implements GoogleSheetsSyncService.Syncable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -48,4 +49,14 @@ public class RewardItem {
     @NotNull(message = "Sync status is required")
     @Column(name = "synced_to_sheets", nullable = false)
     private Boolean syncedToSheets = false;
+
+    @Override
+    public void setSyncedToSheets(boolean synced) {
+        this.syncedToSheets = synced;
+    }
+
+    @Override
+    public void setLastSynced(LocalDateTime lastSynced) {
+        this.lastSynced = lastSynced;
+    }
 }

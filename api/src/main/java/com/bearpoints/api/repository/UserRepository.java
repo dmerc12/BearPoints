@@ -1,10 +1,13 @@
 package com.bearpoints.api.repository;
 
-import com.bearpoints.api.model.User;
+import com.bearpoints.api.domain.User;
+import io.micrometer.common.lang.NonNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
+import org.springframework.data.rest.core.annotation.RestResource;
 import org.springframework.security.access.prepost.PreAuthorize;
 
+import java.util.List;
 import java.util.Optional;
 
 @RepositoryRestResource(path = "users")
@@ -13,13 +16,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @PreAuthorize("permitAll()")
     Optional<User> findByEmail(String email);
 
+    @NonNull
     @Override
     @PreAuthorize("hasRole('ADMIN')")
-    <S extends User> S save(S entity);
+    <S extends User> S save(@NonNull S entity);
 
     @Override
     @PreAuthorize("hasRole('ADMIN')")
-    void delete(User entity);
+    void delete(@NonNull User entity);
 
     @Override
     @PreAuthorize("hasRole('ADMIN')")
@@ -27,5 +31,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Override
     @PreAuthorize("hasRole('ADMIN')")
-    void deleteAll(Iterable<? extends User> entities);
+    void deleteAll(@NonNull Iterable<? extends User> entities);
+
+    @RestResource(exported = false)
+    List<User> findBySyncedToSheetsFalse();
 }

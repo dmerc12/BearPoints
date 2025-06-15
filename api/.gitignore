@@ -34,3 +34,11 @@ build/
 
 ## Environment Variables ###
 .env
+
+## Google Cloud JSON key file ##
+service-account.json
+firebase-service-account.json
+
+## IDE and Mac files ##
+.idea
+.DS_Store

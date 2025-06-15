@@ -1,8 +1,10 @@
 package com.bearpoints.api.repository;
 
-import com.bearpoints.api.model.RewardItem;
+import com.bearpoints.api.domain.RewardItem;
+import io.micrometer.common.lang.NonNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
+import org.springframework.data.rest.core.annotation.RestResource;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
@@ -12,13 +14,14 @@ public interface RewardItemRepository extends JpaRepository<RewardItem, Long> {
     @PreAuthorize("permitAll()")
     List<RewardItem> findAllByOrderByNameAsc();
 
+    @NonNull
     @Override
     @PreAuthorize("hasRole('ADMIN')")
-    <S extends RewardItem> S save(S entity);
+    <S extends RewardItem> S save(@NonNull S entity);
 
     @Override
     @PreAuthorize("hasRole('ADMIN')")
-    void delete(RewardItem entity);
+    void delete(@NonNull RewardItem entity);
 
     @Override
     @PreAuthorize("hasRole('ADMIN')")
@@ -26,5 +29,8 @@ public interface RewardItemRepository extends JpaRepository<RewardItem, Long> {
 
     @Override
     @PreAuthorize("hasRole('ADMIN')")
-    void deleteAll(Iterable<? extends RewardItem> entities);
+    void deleteAll(@NonNull Iterable<? extends RewardItem> entities);
+
+    @RestResource(exported = false)
+    List<RewardItem> findBySyncedToSheetsFalse();
 }
