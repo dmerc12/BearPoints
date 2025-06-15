@@ -51,6 +51,9 @@ public class BragLog {
     @Column(nullable = false, updatable = false)
     private LocalDateTime timestamp;
 
+    @Column(name = "last_synced")
+    private LocalDateTime lastSynced;
+
     @NotNull(message = "Sync status is required")
     @Column(name = "synced_to_sheets", nullable = false)
     private Boolean syncedToSheets = false;
