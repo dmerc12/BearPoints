@@ -33,4 +33,7 @@ public interface BehaviorTypeRepository extends JpaRepository<BehaviorType, Long
 
     @RestResource(exported = false)
     List<BehaviorType> findBySyncedToSheetsFalse();
+
+    @RestResource(exported = false)
+    BehaviorType findByName(String name);
 }

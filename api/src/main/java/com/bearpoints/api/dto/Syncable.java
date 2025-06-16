@@ -7,4 +7,5 @@ public interface Syncable {
     void setLastSynced(LocalDateTime lastSynced);
     Integer getSheetRowId();
     void setSheetRowId(Integer rowId);
+    Long getId();
 }
