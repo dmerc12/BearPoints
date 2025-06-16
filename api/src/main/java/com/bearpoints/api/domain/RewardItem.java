@@ -15,6 +15,7 @@ import java.util.Set;
 
 @Data
 @Entity
+@EntityListeners(SyncableEntityListener.class)
 @Table(name = "reward_item", uniqueConstraints = {
         @UniqueConstraint(columnNames = "name", name = "uk_reward_name")
 })

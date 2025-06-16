@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity
+@EntityListeners(SyncableEntityListener.class)
 @Table(name = "behavior_type", uniqueConstraints = {
         @UniqueConstraint(columnNames = "name", name = "uk_behavior_name")
 })

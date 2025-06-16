@@ -15,6 +15,7 @@ import java.util.Set;
 @Data
 @Entity
 @Table(name = "brag_log")
+@EntityListeners(SyncableEntityListener.class)
 public class BragLog implements Syncable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

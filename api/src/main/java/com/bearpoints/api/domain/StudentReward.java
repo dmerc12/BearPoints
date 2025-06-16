@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 @Data
 @Entity
 @Table(name = "student_reward")
+@EntityListeners(SyncableEntityListener.class)
 public class StudentReward implements Syncable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

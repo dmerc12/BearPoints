@@ -50,6 +50,12 @@ public class GoogleSheetsService {
                 .setApplicationName("BearPoints API").build();
     }
 
+    public int getRowCount(String sheetName) throws IOException {
+        ValueRange response = sheets.spreadsheets().values()
+                .get(spreadsheetId, sheetName).execute();
+        return response.getValues() != null ? response.getValues().size() : 0;
+    }
+
     public List<List<Object>> getSheetData(String sheetName) throws IOException {
         ValueRange response = sheets.spreadsheets().values()
                 .get(spreadsheetId, sheetName).execute();

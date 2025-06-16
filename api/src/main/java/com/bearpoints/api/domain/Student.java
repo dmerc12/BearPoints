@@ -14,6 +14,7 @@ import java.util.Set;
 @Data
 @Entity
 @Table(name = "student")
+@EntityListeners(SyncableEntityListener.class)
 public class Student implements Syncable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

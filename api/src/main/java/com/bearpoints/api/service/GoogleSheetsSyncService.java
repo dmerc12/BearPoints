@@ -3,7 +3,10 @@ package com.bearpoints.api.service;
 import com.bearpoints.api.domain.*;
 import com.bearpoints.api.dto.BatchUpdateRequest;
 import com.bearpoints.api.dto.Syncable;
+import com.bearpoints.api.exception.RunnableThrowing;
 import com.bearpoints.api.repository.*;
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
+import com.google.common.collect.Lists;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.Getter;
@@ -66,13 +69,13 @@ public class GoogleSheetsSyncService {
     public void syncAllData() {
         try {
             logger.info("Starting Google Sheets sync process");
-            syncUsers();
-            syncTeachers();
-            syncStudents();
-            syncBehaviorTypes();
-            syncBragLogs();
-            syncRewardItems();
-            syncStudentRewards();
+            if (checkDailyQuota("Users")) syncUsers();
+            if (checkDailyQuota("Teachers")) syncTeachers();
+            if (checkDailyQuota("Students")) syncStudents();
+            if (checkDailyQuota("BehaviorTypes")) syncBehaviorTypes();
+            if (checkDailyQuota("BragLogs")) syncBragLogs();
+            if (checkDailyQuota("RewardItems")) syncRewardItems();
+            if (checkDailyQuota("StudentRewards")) syncStudentRewards();
             logger.info("Google Sheets sync completed successfully");
         } catch (Exception e) {
             logger.error("Google Sheets sync failed", e);
@@ -82,7 +85,7 @@ public class GoogleSheetsSyncService {
     private void syncUsers() throws IOException {
         syncEntity(
                 "Users",
-                userRepository::findAll,
+                userRepository::findBySyncedToSheetsFalse,
                 user -> Arrays.asList(
                         user.getId().toString(),
                         user.getEmail(),
@@ -102,7 +105,7 @@ public class GoogleSheetsSyncService {
     private void syncTeachers() throws IOException {
         syncEntity(
                 "Teachers",
-                teacherRepository::findAll,
+                teacherRepository::findBySyncedToSheetsFalse,
                 teacher -> Arrays.asList(
                         teacher.getId().toString(),
                         teacher.getGrade(),
@@ -120,7 +123,7 @@ public class GoogleSheetsSyncService {
     private void syncStudents() throws IOException {
         syncEntity(
                 "Students",
-                studentRepository::findAll,
+                studentRepository::findBySyncedToSheetsFalse,
                 student -> Arrays.asList(
                         student.getId().toString(),
                         student.getPoints().toString(),
@@ -140,7 +143,7 @@ public class GoogleSheetsSyncService {
     private void syncBehaviorTypes() throws IOException {
         syncEntity(
                 "BehaviorTypes",
-                behaviorTypeRepository::findAll,
+                behaviorTypeRepository::findBySyncedToSheetsFalse,
                 behaviorType -> Arrays.asList(
                         behaviorType.getId().toString(),
                         behaviorType.getName(),
@@ -159,7 +162,7 @@ public class GoogleSheetsSyncService {
     private void syncBragLogs() throws IOException {
         syncEntity(
                 "BragLogs",
-                bragLogRepository::findAll,
+                bragLogRepository::findBySyncedToSheetsFalse,
                 bragLog -> {
                     String behaviors = bragLog.getBehaviors().stream()
                             .map(BehaviorType::getName)
@@ -186,7 +189,7 @@ public class GoogleSheetsSyncService {
     private void syncRewardItems() throws IOException {
         syncEntity(
                 "RewardItems",
-                rewardItemRepository::findAll,
+                rewardItemRepository::findBySyncedToSheetsFalse,
                 rewardItem -> Arrays.asList(
                         rewardItem.getId().toString(),
                         rewardItem.getName(),
@@ -205,7 +208,7 @@ public class GoogleSheetsSyncService {
     private void syncStudentRewards() throws IOException {
         syncEntity(
                 "StudentRewards",
-                studentRewardRepository::findAll,
+                studentRewardRepository::findBySyncedToSheetsFalse,
                 studentReward -> Arrays.asList(
                         studentReward.getId().toString(),
                         formatDateTime(studentReward.getRedeemedAt()),
@@ -223,28 +226,19 @@ public class GoogleSheetsSyncService {
 
     private <T extends Syncable> void syncEntity(
             String sheetName,
-            Supplier<List<T>> repositoryFindAll,
+            Supplier<List<T>> repositoryFindUnsynced,
             Function<T, List<String>> toRowConverter,
             Function<List<Object>, Optional<T>> fromRowConverter,
             Consumer<T> repositorySave,
             Consumer<List<T>> markAndSave) throws IOException {
         // 1. Get sheet data
         List<List<Object>> sheetData = googleSheetsService.getSheetData(sheetName);
-        Map<Long, Integer> sheetRowMap = new HashMap<>();
-        // Create ID -> row number mapping (skip header row)
-        for (int i = 1; i < sheetData.size(); i++) {
-            List<Object> row = sheetData.get(i);
-            if (!row.isEmpty() && !row.getFirst().toString().isEmpty()) {
-                Long id = Long.parseLong(row.getFirst().toString());
-                // +1 for 1-based indexing
-                sheetRowMap.put(id, i + 1);
-            }
-        }
+        Map<Long, Integer> sheetRowMap = createRowIdMap(sheetData);
         // 2. Process database entities
-        List<T> allEntities = repositoryFindAll.get();
+        List<T> unsyncedEntities = repositoryFindUnsynced.get();
         List<List<String>> newData = new ArrayList<>();
         List<BatchUpdateRequest> updates = new ArrayList<>();
-        for (T entity : allEntities) {
+        for (T entity : unsyncedEntities) {
             List<String> rowData = toRowConverter.apply(entity);
             Long id = Long.parseLong(rowData.getFirst());
             if (sheetRowMap.containsKey(id)) {
@@ -258,55 +252,35 @@ public class GoogleSheetsSyncService {
             }
         }
         // 3. Execute batch updates
-        if (!updates.isEmpty()) {
-            googleSheetsService.batchUpdate(sheetName, updates);
-        }
+        executeWithRetry(() -> executeBatchOperations(sheetName, updates, newData), "batchUpdate");
         // 4. Append new rows
-        if (!newData.isEmpty()) {
-            googleSheetsService.appendToSheet(sheetName, newData);
-            // Update row IDs for new entries
-            updateNewRowIds(sheetName, sheetData.size(), allEntities, repositorySave);
-        }
+        executeWithRetry(() -> updateNewRowIds(sheetName, sheetData.size(), unsyncedEntities, repositorySave), "updateRowIds");
         // 5. Sync from Sheets to DB (handle new sheet entries)
-        for (int i = 1; i < sheetData.size(); i++) {
-            List<Object> row = sheetData.get(i);
-            if (!row.isEmpty() && !row.getFirst().toString().isEmpty()) {
-                Long id = Long.parseLong(row.getFirst().toString());
-                boolean exists = allEntities.stream().anyMatch(e -> e.getId().equals(id));
-                if (!exists) {
-                    int finalI = i;
-                    fromRowConverter.apply(row).ifPresent(newEntity -> {
-                        newEntity.setSheetRowId(finalI + 1);
-                        repositorySave.accept(newEntity);
-                    });
-                }
-            }
-        }
+        executeWithRetry(() -> syncFromSheets(sheetData, repositorySave, fromRowConverter), "syncFromSheets");
         // 6. Mark as synced
-        markAndSave.accept(allEntities);
+        markAndSave.accept(unsyncedEntities);
     }
 
     private <T extends Syncable> void updateNewRowIds(
             String sheetName,
             int originalSize,
-            List<T> allEntities,
+            List<T> unsyncedEntities,
             Consumer<T> repositorySave) throws IOException {
         List<List<Object>> updatedSheet = googleSheetsService.getSheetData(sheetName);
         int newRowIndex = originalSize + 1;
-        for (int i = originalSize; i <= updatedSheet.size(); i++) {
+        for (int i = originalSize; i < updatedSheet.size(); i++) {
             List<Object> row = updatedSheet.get(i);
-            if (!row.isEmpty()) {
-                try {
-                    Long id = Long.parseLong(row.getFirst().toString());
-                    allEntities.stream()
-                            .filter(e -> e.getId().equals(id) && e.getSheetRowId() == null)
-                            .findFirst().ifPresent(entity -> {
-                                entity.setSheetRowId(newRowIndex + 1);
-                                repositorySave.accept(entity);
-                            });
-                } catch (NumberFormatException e) {
-                    logger.warn("Invalid ID in row: {}", row.getFirst());
-                }
+            if (row == null || row.isEmpty() || row.getFirst() == null) continue;
+            try {
+                Long id = Long.parseLong(row.getFirst().toString());
+                unsyncedEntities.stream()
+                        .filter(e -> e.getId().equals(id) && e.getSheetRowId() == null)
+                        .findFirst().ifPresent(entity -> {
+                            entity.setSheetRowId(newRowIndex + 1);
+                            repositorySave.accept(entity);
+                        });
+            } catch (NumberFormatException e) {
+                logger.warn("Invalid ID in row: {}", row.getFirst());
             }
         }
     }
@@ -397,6 +371,7 @@ public class GoogleSheetsSyncService {
             String[] behaviorNames = row.get(3).toString().split(", ");
             Set<BehaviorType> behaviors = Arrays.stream(behaviorNames)
                     .map(behaviorTypeRepository::findByName)
+                    .filter(Objects::nonNull)
                     .collect(Collectors.toSet());
             bragLog.setBehaviors(behaviors);
             bragLog.setPointsGenerated(Integer.parseInt(row.get(4).toString()));
@@ -445,6 +420,56 @@ public class GoogleSheetsSyncService {
         }
     }
 
+    private Map<Long, Integer> createRowIdMap(List<List<Object>> sheetData) {
+        Map<Long, Integer> sheetRowMap = new HashMap<>();
+        // Create ID -> row number mapping (skip header row)
+        for (int i = 1; i < sheetData.size(); i++) {
+            List<Object> row = sheetData.get(i);
+            if (row == null || row.isEmpty()) continue;
+            int finalI = i;
+            parseRowId(row.getFirst(), i).ifPresent(id ->
+                    sheetRowMap.put(id, finalI + 1)
+            );
+        }
+        return sheetRowMap;
+    }
+
+    private <T extends Syncable> void syncFromSheets(
+            List<List<Object>> sheetData,
+            Consumer<T> repositorySave,
+            Function<List<Object>, Optional<T>> fromRowConverter) {
+        for (int i = 1; i < sheetData.size(); i++) {
+            List<Object> row = sheetData.get(i);
+            if (row == null || row.isEmpty()) continue;
+            int finalI = i;
+            parseRowId(row.getFirst(), i).ifPresent(id ->
+                    fromRowConverter.apply(row).ifPresent(newEntity -> {
+                if (!existsInDataBase(newEntity.getClass(), id)) {
+                    newEntity.setSheetRowId(finalI + 1);
+                    repositorySave.accept(newEntity);
+                }
+            }));
+        }
+    }
+
+    private void executeBatchOperations(
+            String sheetName,
+            List<BatchUpdateRequest> updates,
+            List<List<String>> newData ) throws IOException {
+        if (!updates.isEmpty()) {
+            List<List<BatchUpdateRequest>> updateChunks = Lists.partition(updates, 100);
+            for (List<BatchUpdateRequest> chunk : updateChunks) {
+                googleSheetsService.batchUpdate(sheetName, chunk);
+            }
+        }
+        if (!newData.isEmpty()) {
+            List<List<List<String>>> dataChunks = Lists.partition(newData, 100);
+            for (List<List<String>> chunk : dataChunks) {
+                googleSheetsService.appendToSheet(sheetName, chunk);
+            }
+        }
+    }
+
     private <T extends Syncable> void markAsSynced(List<T> entities) {
         LocalDateTime now = LocalDateTime.now();
         entities.forEach(entity -> {
@@ -455,5 +480,74 @@ public class GoogleSheetsSyncService {
 
     private String formatDateTime(LocalDateTime dateTime) {
         return dateTime != null ? dateTime.format(DATE_FORMATTER) : "";
+    }
+
+    private Optional<Long> parseRowId(Object idValue, int rowIndex) {
+        if (idValue == null) return Optional.empty();
+        try {
+            return Optional.of(Long.parseLong(idValue.toString()));
+        } catch (NumberFormatException e) {
+            logger.warn("Invalid ID in row {}: {}", rowIndex, idValue);
+            return Optional.empty();
+        }
+    }
+
+    private boolean existsInDataBase(Class<?> entityClass, Long id) {
+        if (entityClass == User.class) return userRepository.existsById(id);
+        if (entityClass == Teacher.class) return teacherRepository.existsById(id);
+        if (entityClass == Student.class) return studentRepository.existsById(id);
+        if (entityClass == BehaviorType.class) return behaviorTypeRepository.existsById(id);
+        if (entityClass == BragLog.class) return bragLogRepository.existsById(id);
+        if (entityClass == RewardItem.class) return rewardItemRepository.existsById(id);
+        if (entityClass == StudentReward.class) return studentRewardRepository.existsById(id);
+        return false;
+    }
+
+    private boolean checkDailyQuota(String sheetName) {
+        try {
+            int rowCount = googleSheetsService.getRowCount(sheetName);
+            int operations = rowCount * 2;
+            int dailyQuota = 50000;
+            return operations < (dailyQuota * 0.8);
+        } catch (IOException e) {
+            logger.error("Failed to get row count for {}: {}", sheetName, e.getMessage());
+            return false;
+        }
+    }
+
+    private void executeWithRetry(RunnableThrowing operation, String operationName) throws IOException {
+        int maxAttempts = 3;
+        for (int i = 0; i < maxAttempts; i++) {
+            try {
+                operation.run();
+                return;
+            } catch (GoogleJsonResponseException e) {
+                if (e.getStatusCode() == 429) {
+                    long waitTime = (long) Math.pow(2, i) * 1000;
+                    logger.warn("Quota exceeded for {}, retrying in {} ms", operationName, waitTime);
+                    try {
+                        Thread.sleep(waitTime);
+                    } catch (InterruptedException ex) {
+                        Thread.currentThread().interrupt();
+                        throw new IOException("Interrupted during backoff", ex);
+                    }
+                } else {
+                    throw e;
+                }
+            } catch (Exception e) {
+                if (i == maxAttempts - 1) {
+                    if (e instanceof IOException) throw (IOException) e;
+                    throw new IOException("Operation failed:", e);
+                }
+                long waitTime = (long) Math.pow(2, i) * 1000;
+                logger.warn("Error for {}, retrying in {} ms: {}", operationName, waitTime, e.getMessage());
+                try {
+                    Thread.sleep(waitTime);
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                    throw new IOException("Interrupted during backoff", ex);
+                }
+            }
+        }
     }
 }

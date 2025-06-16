@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity
+@EntityListeners(SyncableEntityListener.class)
 @Table(name = "app_user", uniqueConstraints = {
         @UniqueConstraint(columnNames = "email", name = "uk_user_email")
 })
