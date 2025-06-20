@@ -1,10 +1,9 @@
-package com.bearpoints.api.domain;
+package com.bearpoints.api.entity;
 
 import com.bearpoints.api.dto.Syncable;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -14,32 +13,32 @@ import java.util.Set;
 
 @Data
 @Entity
-@Table(name = "teacher")
+@Table(name = "student")
 @EntityListeners(SyncableEntityListener.class)
-public class Teacher implements Syncable {
+public class Student implements Syncable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Grade is required")
-    @Pattern(
-            regexp = "Pre-K|K|[1-4]",
-            message = "Invalid grade level"
-    )
+    @NotNull(message = "Points cannot be negative")
     @Column(nullable = false)
-    private String grade;
+    private Integer points = 0;
+
+    @NotBlank(message = "Token is required")
+    @Column(nullable = false, unique = true)
+    private String token;
 
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false)
     @NotNull(message = "User reference is required")
     private User user;
 
-    @OneToMany(mappedBy = "teacher", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true)
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
-    private Set<Student> students;
+    @ManyToOne
+    @JoinColumn(name = "teacher_id", nullable = false)
+    @NotNull(message = "Teacher is required")
+    private Teacher teacher;
 
-    @OneToMany(mappedBy = "teacher", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true)
+    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     private Set<BragLog> bragLogs;

@@ -1,6 +1,6 @@
 package com.bearpoints.api.security;
 
-import com.bearpoints.api.domain.User;
+import com.bearpoints.api.entity.User;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

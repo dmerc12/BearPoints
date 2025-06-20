@@ -1,6 +1,6 @@
 package com.bearpoints.api.dto;
 
-import com.bearpoints.api.domain.User;
+import com.bearpoints.api.entity.User;
 import lombok.Getter;
 
 @Getter

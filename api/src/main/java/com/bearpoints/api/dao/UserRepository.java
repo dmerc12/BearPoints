@@ -1,6 +1,6 @@
-package com.bearpoints.api.repository;
+package com.bearpoints.api.dao;
 
-import com.bearpoints.api.domain.BehaviorType;
+import com.bearpoints.api.entity.User;
 import io.micrometer.common.lang.NonNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
@@ -8,20 +8,22 @@ import org.springframework.data.rest.core.annotation.RestResource;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
+import java.util.Optional;
 
-@RepositoryRestResource(path = "behavior-types")
-public interface BehaviorTypeRepository extends JpaRepository<BehaviorType, Long> {
+@RepositoryRestResource(path = "users")
+@PreAuthorize("hasRole('ADMIN')")
+public interface UserRepository extends JpaRepository<User, Long> {
     @PreAuthorize("permitAll()")
-    List<BehaviorType> findByActiveTrue();
+    Optional<User> findByEmail(String email);
 
     @NonNull
     @Override
     @PreAuthorize("hasRole('ADMIN')")
-    <S extends BehaviorType> S save(@NonNull S entity);
+    <S extends User> S save(@NonNull S entity);
 
     @Override
     @PreAuthorize("hasRole('ADMIN')")
-    void delete(@NonNull BehaviorType entity);
+    void delete(@NonNull User entity);
 
     @Override
     @PreAuthorize("hasRole('ADMIN')")
@@ -29,11 +31,8 @@ public interface BehaviorTypeRepository extends JpaRepository<BehaviorType, Long
 
     @Override
     @PreAuthorize("hasRole('ADMIN')")
-    void deleteAll(@NonNull Iterable<? extends BehaviorType> entities);
+    void deleteAll(@NonNull Iterable<? extends User> entities);
 
     @RestResource(exported = false)
-    List<BehaviorType> findBySyncedToSheetsFalse();
-
-    @RestResource(exported = false)
-    BehaviorType findByName(String name);
+    List<User> findBySyncedToSheetsFalse();
 }

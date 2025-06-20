@@ -1,6 +1,6 @@
-package com.bearpoints.api.repository;
+package com.bearpoints.api.dao;
 
-import com.bearpoints.api.domain.Student;
+import com.bearpoints.api.entity.Teacher;
 import io.micrometer.common.lang.NonNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
@@ -10,22 +10,22 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import java.util.List;
 import java.util.Optional;
 
-@RepositoryRestResource(path = "students")
-public interface StudentRepository extends JpaRepository<Student, Long> {
-    @PreAuthorize("permitAll()")
-    Optional<Student> findByToken(String token);
+@RepositoryRestResource(path = "teachers")
+public interface TeacherRepository  extends JpaRepository<Teacher, Long> {
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    Optional<Teacher> findByUserEmail(String email);
 
     @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
-    Optional<Student> findByUserEmail(String email);
+    Optional<Teacher> findByGrade(String email);
 
     @NonNull
     @Override
     @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
-    <S extends Student> S save(@NonNull S entity);
+    <S extends Teacher> S save(@NonNull S entity);
 
     @Override
     @PreAuthorize("hasRole('ADMIN')")
-    void delete(@NonNull Student entity);
+    void delete(@NonNull Teacher entity);
 
     @Override
     @PreAuthorize("hasRole('ADMIN')")
@@ -33,8 +33,8 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 
     @Override
     @PreAuthorize("hasRole('ADMIN')")
-    void deleteAll(@NonNull Iterable<? extends Student> entities);
+    void deleteAll(@NonNull Iterable<? extends Teacher> entities);
 
     @RestResource(exported = false)
-    List<Student> findBySyncedToSheetsFalse();
+    List<Teacher> findBySyncedToSheetsFalse();
 }

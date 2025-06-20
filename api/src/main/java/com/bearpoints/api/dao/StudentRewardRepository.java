@@ -1,6 +1,6 @@
-package com.bearpoints.api.repository;
+package com.bearpoints.api.dao;
 
-import com.bearpoints.api.domain.StudentReward;
+import com.bearpoints.api.entity.StudentReward;
 import io.micrometer.common.lang.NonNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;

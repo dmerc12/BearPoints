@@ -1,6 +1,6 @@
 package com.bearpoints.api.security;
 
-import com.bearpoints.api.repository.UserRepository;
+import com.bearpoints.api.dao.UserRepository;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;

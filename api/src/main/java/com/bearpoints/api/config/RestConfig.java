@@ -1,6 +1,6 @@
 package com.bearpoints.api.config;
 
-import com.bearpoints.api.domain.*;
+import com.bearpoints.api.entity.*;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
 import org.springframework.data.rest.webmvc.config.RepositoryRestConfigurer;

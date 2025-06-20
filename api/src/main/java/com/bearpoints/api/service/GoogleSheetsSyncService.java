@@ -1,10 +1,10 @@
 package com.bearpoints.api.service;
 
-import com.bearpoints.api.domain.*;
+import com.bearpoints.api.entity.*;
 import com.bearpoints.api.dto.BatchUpdateRequest;
 import com.bearpoints.api.dto.Syncable;
 import com.bearpoints.api.exception.RunnableThrowing;
-import com.bearpoints.api.repository.*;
+import com.bearpoints.api.dao.*;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.common.collect.Lists;
 import jakarta.persistence.EntityNotFoundException;
