@@ -18,7 +18,10 @@ export default function SubmitBehaviorPage () {
 
     useEffect(() => {
         const fetchData = async () => {
-            if (!token) return;
+            if (!token || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(token)) {
+                toast.error('Invalid QR code format');
+                return;
+            }
             try {
                 setLoading(true);
                 const [studentData, behaviorData] = await Promise.all([
