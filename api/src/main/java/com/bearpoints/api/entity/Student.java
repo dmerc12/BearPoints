@@ -10,10 +10,13 @@ import lombok.ToString;
 
 import java.time.LocalDateTime;
 import java.util.Set;
+import java.util.UUID;
 
 @Data
 @Entity
-@Table(name = "student")
+@Table(name = "student", indexes = {
+        @Index(name = "idx_student_token", columnList = "token")
+})
 @EntityListeners(SyncableEntityListener.class)
 public class Student implements Syncable {
     @Id
@@ -25,7 +28,7 @@ public class Student implements Syncable {
     private Integer points = 0;
 
     @NotBlank(message = "Token is required")
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 36)
     private String token;
 
     @OneToOne
@@ -71,5 +74,12 @@ public class Student implements Syncable {
     @Override
     public void setSheetRowId(Integer rowId) {
         this.sheetRowId = rowId;
+    }
+
+    @PrePersist
+    public void generateToken() {
+        if (token == null) {
+            token = UUID.randomUUID().toString();
+        }
     }
 }
