@@ -1,86 +1,68 @@
-export type Timeframe = 'week' | 'month' | 'semester' | 'year'
+export type Timeframe = 'WEEK' | 'MONTH' | 'SEMESTER' | 'YEAR'
+
+export interface UserDTO {
+    id: number;
+    email: string;
+    firstName: string;
+    lastName: string;
+    role: string;
+    teacherId?: number;
+    studentId?: number;
+}
 
 export interface Student {
-    studentID: number;
+    id: number;
     name: string;
     grade: string;
-    teacher: string;
-    teacherID: number;
-    token: string;
     points: number;
+    token: string;
+    teacher: {
+        id: number;
+        name: string;
+    };
 }
 
 export interface Teacher {
-    teacherID: number;
+    id: number;
     name: string;
-    email: string;
     grade: string;
 }
 
-export interface StudentToken {
-    studentID: number;
+export interface BehaviorType {
+    id: number;
     name: string;
-    teacherID: number;
-    grade: string;
-    token: string;
+    pointValue: number;
+    active: boolean;
 }
 
 export interface BragLog {
+    id: number;
     timestamp: string;
-    studentID: number;
-    teacherID: number;
-    grade: string;
-    brilliant: boolean;
-    excelled: boolean;
-    answered: boolean;
-    read: boolean;
-    sensationalWriting: boolean;
-    points: number;
+    student: {
+        id: number;
+        name: string;
+    };
+    teacher: {
+        id: number;
+        name: string;
+    };
+    behaviors: BehaviorType[];
+    pointsGenerated: number;
+    notes?: string;
+}
+
+export interface BragLogRequest {
+    studentId: number;
+    teacherId: number;
+    behaviorIds: number[];
     notes?: string;
 }
 
 export interface LeaderboardEntry {
-    studentID: number;
-    name: string;
-    teacher: string;
+    studentId: number;
+    studentName: string;
+    teacherName: string;
     grade: string;
     points: number;
     rank?: number;
-}
-
-export interface BehaviorFormData {
-    studentID: number;
-    teacherID: number;
-    grade: string;
-    behaviors: {
-        brilliant: boolean;
-        excelled: boolean;
-        answered: boolean;
-        read: boolean;
-        sensationalWriting: boolean;
-    },
-    points: number,
-    notes?: string;
-}
-
-export interface StudentsResponse {
-    students: Student[];
-    teachers: Teacher[];
-}
-
-export interface LeaderboardResponse {
-    bragLogs: BragLog[];
-    students: Student[];
-}
-
-export interface HealthResponse {
-    healthy: boolean;
-    error?: string;
-    details?: {
-        spreadsheetId: string;
-        sheetTitles: string[];
-        studentsCount: number;
-        teachersCount: number;
-        bragsCount: number;
-    }
 }

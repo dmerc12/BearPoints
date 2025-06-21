@@ -52,11 +52,11 @@ export default function LeaderboardTable ({ entries, itemsPerPage = 10 }: Leader
                 </thead>
                 <tbody>
                     { paginatedEntries.map((entry) => (
-                        <tr key={ entry.studentID }>
+                        <tr key={ entry.studentId }>
                             <td>{ entry.rank }</td>
                             <td>{ entry.points }</td>
-                            <td>{ entry.name }</td>
-                            <td>{ entry.teacher }</td>
+                            <td>{ entry.studentName }</td>
+                            <td>{ entry.teacherName }</td>
                             <td>{ entry.grade }</td>
                         </tr>
                     )) }

@@ -1,69 +1,36 @@
+import { BragLogRequest, BehaviorType, Student } from '../services/types';
 import { Form, Alert, Spinner, Card, Button } from 'react-bootstrap';
-import { FormEvent, useState, useEffect } from 'react';
-import { BehaviorFormData } from '../services/types';
+import { FormEvent, useState } from 'react';
 
 interface BehaviorFormProps {
-    onSubmit: (data: BehaviorFormData) => Promise<void>;
-    studentID: number;
-    teacherID: number;
-    grade: string;
-    studentName: string;
+    onSubmit: (data: BragLogRequest) => Promise<void>;
+    student: Student;
+    behaviorTypes: BehaviorType[];
 }
 
-export default function BehaviorForm ({ onSubmit, studentID, teacherID, grade, studentName }: BehaviorFormProps) {
+export default function BehaviorForm ({ onSubmit, student, behaviorTypes }: BehaviorFormProps) {
     const [ loading, setLoading ] = useState(false);
     const [ error, setError ] = useState('');
-    const [ formData, setFormData ] = useState<BehaviorFormData>({
-        studentID: studentID,
-        teacherID: teacherID,
-        grade: grade,
-        behaviors: {
-            brilliant: false,
-            excelled: false,
-            answered: false,
-            read: false,
-            sensationalWriting: false
-        },
-        points: 0,
-        notes: ''
-    });
+    const [ selectedBehaviorIds, setSelectedBehaviorIds ] = useState<number[]>([]);
+    const [ notes, setNotes ] = useState('');
 
-    useEffect(() => {
-        setFormData(prev => ({
-            ...prev,
-            studentID: studentID,
-            teacherID: teacherID,
-            grade: grade
-        }));
-    }, [ studentID, teacherID, grade ]);
-
-    useEffect(() => {
-        const newPoints = Object.values(formData.behaviors).filter(Boolean).length;
-        setFormData(prev => ({
-            ...prev,
-            points: newPoints
-        }));
-    }, [ formData.behaviors ]);
+    const points = selectedBehaviorIds.reduce((total, id) => {
+        const behavior = behaviorTypes.find(bt => bt.id === id);
+        return total + (behavior?.pointValue || 0);
+    }, 0);
 
     const handleSubmit = async (event: FormEvent) => {
         event.preventDefault();
         try {
             setLoading(true);
-            await onSubmit(formData);
-            setFormData({
-                studentID: studentID || -1,
-                teacherID: teacherID || -1,
-                grade: grade || '',
-                behaviors: {
-                    brilliant: false,
-                    excelled: false,
-                    answered: false,
-                    read: false,
-                    sensationalWriting: false
-                },
-                points: 0,
-                notes: ''
+            await onSubmit({
+                studentId: student.id,
+                teacherId: student.teacher.id,
+                behaviorIds: selectedBehaviorIds,
+                notes
             });
+            setSelectedBehaviorIds([]);
+            setNotes('')
         } catch (error) {
             setError('Submission failed');
             console.error('Submission failed with error:', error);
@@ -72,33 +39,53 @@ export default function BehaviorForm ({ onSubmit, studentID, teacherID, grade, s
         }
     };
 
+    const toggleBehavior = (id: number) => {
+        setSelectedBehaviorIds(prev =>
+            prev.includes(id)
+                ? prev.filter(behaviorId => behaviorId !== id)
+                : [...prev, id]
+        );
+    };
+
     return (
         <>
             <Card className='mb-4'>
                 <Card.Body>
                     <Form onSubmit={ handleSubmit }>
                         <Form.Group className='mb-3' controlId='studentName'>
-                            <Form.Control type='text' value={ studentName } disabled aria-label='Student name' />
+                            <Form.Control type='text' value={ student.name } disabled aria-label='Student name' />
                         </Form.Group>
                         <Form.Group className='mb-3' controlId='behaviors'>
                             <Form.Label>Behaviors</Form.Label>
-                            <div className='d-flex flex-column flex-md-row gap-3'>
-                                <Form.Check type='checkbox' label='Brilliant Behavior' checked={ formData.behaviors.brilliant } onChange={ (e) => setFormData({ ...formData, behaviors: { ...formData.behaviors,  brilliant: e.target.checked } }) } aria-label='Check student had brilliant behavior' />
-                                <Form.Check type='checkbox' label='Excelled in Math' checked={ formData.behaviors.excelled } onChange={ (e) => setFormData({ ...formData, behaviors: { ...formData.behaviors, excelled: e.target.checked } }) } aria-label='Check student excelled in Math' />
-                                <Form.Check type='checkbox' label='Answered and participated' checked={ formData.behaviors.answered } onChange={ (e) => setFormData({ ...formData, behaviors: { ...formData.behaviors, answered: e.target.checked } }) } aria-label='Check student answered and participated' />
-                                <Form.Check type='checkbox' label='Read and thought carefully' checked={ formData.behaviors.read } onChange={ (e) => setFormData({ ...formData, behaviors: { ...formData.behaviors, read: e.target.checked } }) } aria-label='Check student read and thought carefully' />
-                                <Form.Check type='checkbox' label='Sensational writing / Bear Time' checked={ formData.behaviors.sensationalWriting } onChange={ (e) => setFormData({ ...formData, behaviors: { ...formData.behaviors, sensationalWriting: e.target.checked } }) } aria-label='Check student had sensational writing and / or Bear Time' />
+                            <div className='d-flex flex-column flex-md-row flex-wrap gap-3'>
+                                { behaviorTypes.filter(bt => bt.active)
+                                    .map(behavior => (
+                                        <Form.Check key={behavior.id} type='checkbox'
+                                                    label={`behavior.name (${behavior.pointValue} pts)`}
+                                                    checked={selectedBehaviorIds.includes(behavior.id)}
+                                                    onChange={() => toggleBehavior(behavior.id)}
+                                                    aria-label={`Select ${behavior.name}`}
+                                        />
+                                    ))
+                                }
                             </div>
                         </Form.Group>
                         <Form.Group className='mb-3' controlId='notes'>
                             <Form.Label>Notes</Form.Label>
-                            <Form.Control as='textarea' rows={ 3 } value={ formData.notes } onChange={ (e) => setFormData({ ...formData, notes: e.target.value }) } aria-label='Enter any notes to report' />
+                            <Form.Control as='textarea' rows={ 3 } value={ notes }
+                                          onChange={ (e) =>
+                                              setNotes(e.target.value )
+                                          } aria-label='Enter any notes to report'
+                            />
                         </Form.Group>
                         <div className='d-flex justify-content-between align-items-center'>
                             <div>
-                                <strong>Points: { formData.points }</strong>
+                                <strong>Points: { points }</strong>
                             </div>
-                            <Button variant='primary' type='submit' disabled={ loading } style={{ minWidth: '120px', minHeight: '48px' }}>
+                            <Button variant='primary' type='submit'
+                                    disabled={ loading || selectedBehaviorIds.length === 0 }
+                                    style={{ minWidth: '120px', minHeight: '48px' }}
+                            >
                                 { loading ? <Spinner size='sm' /> : 'Submit' }
                             </Button>
                         </div>

@@ -1,4 +1,7 @@
-import { Student, BragLog, StudentToken, BehaviorFormData, StudentsResponse, LeaderboardResponse, HealthResponse } from './types';
+import {
+    UserDTO, Student, Teacher,
+    BehaviorType, BragLogRequest, Timeframe, LeaderboardEntry
+} from './types';
 import { auth } from '../Auth';
 import axios from 'axios';
 
@@ -30,114 +33,47 @@ api.interceptors.request.use(async (config) => {
     return Promise.reject(error);
 });
 
-// Health check
-const checkHealth = async (): Promise<HealthResponse> => {
-    try {
-        const response = await api.get<HealthResponse>('/health');
-        return response.data;
-    } catch (error) {
-        console.error('API Error:', error);
-        return {
-            healthy: false,
-            details: {
-                spreadsheetId: '',
-                sheetTitles: [],
-                studentsCount: 0,
-                teachersCount: 0,
-                bragsCount: 0
-            }
-        };
-    }
+// ============== USER API =================
+export const getCurrentUser = async (): Promise<UserDTO> => {
+    const response = await api
+        .get<UserDTO>('/users/me');
+    return response.data;
 };
 
-// Health check wrapper
-const withHealthCheck = async <T>(operation: () => Promise<T>, options = { maxRetries: 3, initialDelay: 500 }): Promise<T> => {
-    const makeAttempt = async (attempt: number): Promise<T> => {
-        try {
-            const health = await checkHealth();
-            if (!health.healthy) {
-                throw new Error(`System unhealthy: ${health.error}`);
-            }
-            return await operation();
-        } catch (error) {
-            if (attempt >= options.maxRetries) {
-                return Promise.reject(error instanceof Error ? error : new Error(String(error)));
-            }
-            const delay = options.initialDelay * Math.pow(2, attempt - 1);
-            await new Promise(resolve => setTimeout(resolve, delay));
-            return makeAttempt(attempt + 1);
-        }
-    };
-    return makeAttempt(1);
+// ============== STUDENT API =================
+export const getStudents = async (): Promise<Student[]> => {
+    const response = await api
+        .get<{ _embedded: { students: Student[] } }>('/students');
+    return response.data._embedded.students;
 };
 
-// Get students
-const fetchStudents = async (): Promise<StudentsResponse> => {
-    try {
-        const response = await api.get<StudentsResponse>('/students');
-        return response.data;
-    } catch (error) {
-        console.error('API Error:', error);
-        return { students: [], teachers: [] };
-    }
+export const getStudentByToken = async (token: string): Promise<Student> => {
+    const response = await api
+        .get<Student>(`/students/search/findByToken?token=${token}`);
+    return response.data;
 };
 
-export const getStudents = async(): Promise<StudentsResponse> => {
-    return withHealthCheck(() => fetchStudents(), {
-        maxRetries: 4, initialDelay: 500
-    });
+// ============== BEHAVIOR API =================
+export const getActiveBehaviorTypes = async (): Promise<BehaviorType[]> => {
+    const response = await api
+        .get<{ _embedded: { behaviorTypes: BehaviorType[] } }>('/behavior-types?filter=active');
+    return response.data._embedded.behaviorTypes;
 };
 
-// Get student by token
-const fetchStudentByToken = async (token: string): Promise<StudentToken | null> => {
-    try {
-        const response = await api.get<StudentToken>('/students/token', { params: { token } });
-        return response.data;
-    } catch (error) {
-        console.error('API Error:', error);
-        return null;
-    }
+// ============== BRAG LOG API =================
+export const submitPublicBragLog = async (data: BragLogRequest) => {
+    return await api.post('/public/brag-logs', data);
 };
 
-export const getStudentByToken = async (token: string): Promise<StudentToken | null> => {
-    return withHealthCheck(() => fetchStudentByToken(token), {
-        maxRetries: 4, initialDelay: 500
-    });
-};
+// ============== TEACHER API =================
+export const getTeachers = async (): Promise<Teacher[]> => {
+    const response = await api
+        .get<{ _embedded: { teachers: Teacher[] } }>('/teachers');
+    return response.data._embedded.teachers;
+}
 
-// Get leaderboard
-const fetchLeaderboard = async (): Promise<LeaderboardResponse> => {
-    try {
-        const response = await api.get<{ bragLogs: BragLog[], students: Student[] }>('/leaderboard');
-        return {
-            bragLogs: response.data.bragLogs,
-            students: response.data.students,
-        };
-    } catch (error) {
-        console.error('API Error:', error);
-        return { bragLogs: [], students: [] };
-    }
-};
-
-export const getLeaderboard = async (): Promise<LeaderboardResponse> => {
-    return withHealthCheck(() => fetchLeaderboard(), {
-        maxRetries: 4, initialDelay: 500
-    });
-};
-
-// Submit behavior report
-const sendBehavior = async (data: BehaviorFormData) => {
-    try {
-        const response = await api.post<{ success: boolean }>('/form/submit', data);
-        return response.data;
-    } catch (error) {
-        console.error('API Error:', error);
-        throw error;
-    }
-};
-
-export const submitBehavior = async (data: BehaviorFormData) => {
-    return withHealthCheck(() => sendBehavior(data), {
-        maxRetries: 4, initialDelay: 500
-    });
-};
+// ============== LEADERBOARD API =================
+export const getLeaderboard = async (timeframe: Timeframe): Promise<LeaderboardEntry[]> => {
+    const response = await api.get<LeaderboardEntry[]>(`/leaderboard?timeframe=${timeframe}`);
+    return response.data;
+}

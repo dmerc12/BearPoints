@@ -28,6 +28,7 @@ export default function NavigationBar () {
                     <Nav className='ms-auto'>
                         { user ? (
                             <>
+                                <Nav.Link as={ Link } to='/dashboard'>Dashboard</Nav.Link>
                                 <Nav.Link as={ Link } to='/students'>Students</Nav.Link>
                                 <Nav.Link as={ Link } to='/leaderboard'>Leaderboard</Nav.Link>
                                 <Nav.Link onClick={ () => auth.signOut() }>Logout</Nav.Link>

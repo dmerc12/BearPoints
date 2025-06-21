@@ -1,6 +1,5 @@
-import { getProcessedLeaderboard, getUniqueTeachers, getUniqueGrades } from '../helpers/leaderboard';
-import { LeaderboardEntry, Timeframe, BragLog, Student } from '../services/types';
 import { Container, Form, Spinner, Alert, Row, Col } from 'react-bootstrap';
+import { LeaderboardEntry, Timeframe } from '../services/types';
 import LeaderboardTable from '../components/LeaderboardTable';
 import { getLeaderboard } from '../services/api';
 import { useEffect, useState } from 'react';
@@ -10,17 +9,9 @@ export default function LeaderboardPage () {
     const [ leaderboard, setLeaderboard ] = useState<LeaderboardEntry[]>([]);
     const [ loading, setLoading ] = useState(false);
     const [ error, setError ] = useState('');
-    const [ rawData, setRawData ] = useState<{
-        bragLogs: BragLog[];
-        students: Student[];
-    }>({ bragLogs: [], students: [] });
-    const [ filters, setFilters ] = useState<{
-        teacher: string;
-        timeframe: Timeframe;
-        grade: string;
-    }>({
+    const [ filters, setFilters ] = useState({
         teacher: '',
-        timeframe: 'week',
+        timeframe: 'WEEK' as Timeframe,
         grade: ''
     });
     
@@ -29,11 +20,8 @@ export default function LeaderboardPage () {
             try {
                 setLoading(true);
                 setError('');
-                const data = await getLeaderboard();
-                setRawData({
-                    bragLogs: data.bragLogs,
-                    students: data.students,
-                });
+                const data = await getLeaderboard(filters.timeframe);
+                setLeaderboard(data);
             } catch (error) {
                 setError('Failed to load data');
                 console.error('Failed to load data:', error);
@@ -45,18 +33,19 @@ export default function LeaderboardPage () {
             console.error('Unhandled fetch error:', error);
             setError('An unexpected error occurred');
         });
-    }, []);
+    }, [filters.timeframe]);
 
-    useEffect(() => {
-        if (rawData.bragLogs.length && rawData.students.length) {
-            const processed = getProcessedLeaderboard({
-                behaviorLogs: rawData.bragLogs,
-                students: rawData.students
-            }, filters)
-                .map((entry, index) => ({ ...entry, rank: index + 1 }));
-            setLeaderboard(processed);
-        }
-    }, [ filters, rawData ]);
+    const filteredEntries = leaderboard.filter(entry => {
+        const teacherMatch = filters.teacher === '' ||
+            entry.teacherName.includes(filters.teacher);
+        const gradeMatch = filters.grade === '' ||
+            entry.grade === filters.grade;
+        return teacherMatch && gradeMatch;
+    });
+
+    const uniqueTeachers = [...new Set(leaderboard.map(e => e.teacherName))];
+
+    const uniqueGrades = [...new Set(leaderboard.map(e => e.grade))];
 
     return (
         <Auth>
@@ -69,27 +58,45 @@ export default function LeaderboardPage () {
                 <Row className='d-flex gap-3 mb-4 justify-content-center'>
                     {/* Timeframe Filter */ }
                     <Col xs={ 12 } lg={ 10 } xl={ 8 } className='d-flex flex-column align-items-center gap-3'>
-                        <Form.Select value={ filters.timeframe } onChange={ (e) => setFilters(prev => ({ ...prev, timeframe: e.target.value as Timeframe })) } style={ { maxWidth: '300px' } }>
-                            <option value='week'>Last Week</option>
-                            <option value='month'>Last Month</option>
-                            <option value='semester'>Semester</option>
-                            <option value='year'>Year</option>
+                        <Form.Select value={ filters.timeframe }
+                                     onChange={ (e) =>
+                                         setFilters(prev => ({
+                                             ...prev,
+                                             timeframe: e.target.value as Timeframe })) }
+                                     style={ { maxWidth: '300px' } }
+                        >
+                            <option value='WEEK'>Last Week</option>
+                            <option value='MONTH'>Last Month</option>
+                            <option value='SEMESTER'>Semester</option>
+                            <option value='YEAR'>Year</option>
                         </Form.Select>
                     </Col>
                     {/* Teacher Filter */ }
                     <Col xs={ 12 } lg={ 10 } xl={ 8 } className='d-flex flex-column align-items-center gap-3'>
-                        <Form.Select value={ filters.teacher } onChange={ (e) => setFilters(prev => ({ ...prev, teacher: e.target.value })) } style={ { maxWidth: '300px' } }>
+                        <Form.Select value={ filters.teacher }
+                                     onChange={ (e) =>
+                                         setFilters(prev => ({
+                                             ...prev,
+                                             teacher: e.target.value })) }
+                                     style={ { maxWidth: '300px' } }
+                        >
                             <option value=''>All Teachers</option>
-                            { getUniqueTeachers(leaderboard).map(teacher => (
+                            { uniqueTeachers.map(teacher => (
                                 <option key={ teacher } value={ teacher }>{ teacher }</option>
                             )) }
                         </Form.Select>
                     </Col>
                     {/* Grade Filter */ }
                     <Col xs={ 12 } lg={ 10 } xl={ 8 } className='d-flex flex-column align-items-center gap-3'>
-                        <Form.Select value={ filters.grade } onChange={ (e) => setFilters(prev => ({ ...prev, grade: e.target.value })) } style={ { maxWidth: '300px' } }>
+                        <Form.Select value={ filters.grade }
+                                     onChange={ (e) =>
+                                         setFilters(prev => ({
+                                             ...prev,
+                                             grade: e.target.value })) }
+                                     style={ { maxWidth: '300px' } }
+                        >
                             <option value=''>All Grades</option>
-                            { getUniqueGrades(leaderboard).map(grade => (
+                            { uniqueGrades.map(grade => (
                                 <option key={ grade } value={ grade }>{ grade }</option>
                             )) }
                         </Form.Select>
@@ -109,10 +116,12 @@ export default function LeaderboardPage () {
                 { !loading && !error && (
                     <>
                         { leaderboard.length === 0 ? (
-                            <Alert variant='info' className='mt-4'>No data to calculate leaderboard yet matching the current filters</Alert>
+                            <Alert variant='info' className='mt-4'>
+                                No data to calculate leaderboard yet matching the current filters
+                            </Alert>
                         ) : (
                             <div className='border rounded-3 overflow-hidden'>
-                                <LeaderboardTable entries={ leaderboard } />
+                                <LeaderboardTable entries={ filteredEntries } />
                             </div>
                         ) }
                     </>

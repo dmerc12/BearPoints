@@ -1,6 +1,7 @@
+import { getActiveBehaviorTypes, submitPublicBragLog, getStudentByToken }
+    from '../services/api';
 import { Container, Alert, Spinner, Row, Col } from 'react-bootstrap';
-import { submitBehavior, getStudentByToken } from '../services/api';
-import { BehaviorFormData, StudentToken } from '../services/types';
+import {BehaviorType, BragLogRequest, Student} from '../services/types';
 import BehaviorForm from '../components/BehaviorForm';
 import { useSearchParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
@@ -10,16 +11,22 @@ export default function SubmitBehaviorPage () {
     const [ searchParams ] = useSearchParams();
     const [ success, setSuccess ] = useState(false);
     const [ loading, setLoading ] = useState(true);
-    const [ student, setStudent ] = useState<StudentToken | null>(null);
+    const [ student, setStudent ] = useState<Student | null>(null);
+    const [ behaviorTypes, setBehaviorTypes ] = useState<BehaviorType[]>([]);
     
     const token = searchParams.get('token');
 
     useEffect(() => {
-        const fetchStudent = async () => {
+        const fetchData = async () => {
             if (!token) return;
             try {
-                const data = await getStudentByToken(token);
-                setStudent(data);
+                setLoading(true);
+                const [studentData, behaviorData] = await Promise.all([
+                    getStudentByToken(token),
+                    getActiveBehaviorTypes()
+                ]);
+                setStudent(studentData);
+                setBehaviorTypes(behaviorData);
             } catch (error) {
                 toast.error('Failed to load student data')
                 console.error('Error fetching student:', error);
@@ -27,16 +34,27 @@ export default function SubmitBehaviorPage () {
                 setLoading(false);
             }
         };
-        fetchStudent().catch(error => {
+        fetchData().catch(error => {
             console.error('Unhandled fetch error:', error);
             toast.error('An unexpected error occurred')
         });
     }, [ token ]);
 
+    const handleSubmit = async (data: BragLogRequest) => {
+        try {
+            await submitPublicBragLog(data);
+            setSuccess(true);
+            setTimeout(() => setSuccess(false), 3000);
+        } catch (error) {
+            throw new Error('Failed to submit behavior report: ' + error);
+        }
+    };
+
     if (loading) {
         return (
             <Container className='mt-4'>
                 <Spinner animation='border' />
+                <p>Loading student data...</p>
             </Container>
         );
     }
@@ -49,25 +67,19 @@ export default function SubmitBehaviorPage () {
         );
     }
 
-    const handleSubmit = async (data: BehaviorFormData) => {
-        try {
-            await submitBehavior(data);
-            setSuccess(true);
-            setTimeout(() => setSuccess(false), 3000);
-        } catch (error) {
-            throw new Error(error instanceof Error ? error.message : 'Failed to submit behavior report');
-        }
-    };
-
     return (
         <Container className='mt-3 pt-2 mb-4'>
             <Row className='mb-4 justify-content-center'>
                 <Col className='text-center'>
-                    <h1>Behavior Report</h1>
+                    <h1>Bear Brag</h1>
                 </Col>
             </Row>
-            { success && <Alert variant='success'>Behavior report submitted successfully!</Alert> }
-            <BehaviorForm onSubmit={ handleSubmit } studentID={ student.studentID } teacherID={student.teacherID} grade={student.grade} studentName={ student.name } />
+            { success &&
+                <Alert variant='success' className='mb-4'>
+                    Bear brag submitted successfully!
+                </Alert>
+            }
+            <BehaviorForm onSubmit={ handleSubmit } student={ student } behaviorTypes={behaviorTypes} />
         </Container>
     );
 }

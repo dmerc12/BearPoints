@@ -8,12 +8,13 @@ interface QRCodesPrintProps {
     students: Student[];
 }
 
-const QRCodesPrint = forwardRef<HTMLDivElement, QRCodesPrintProps>(({ students }, ref) => {
-    const chunkSize = 12;
-    const studentGroups = [];
-    for (let i = 0; i < students.length; i += chunkSize) {
-        studentGroups.push(students.slice(i, i + chunkSize));
-    }
+const QRCodesPrint = forwardRef<HTMLDivElement, QRCodesPrintProps>(
+    ({ students }, ref) => {
+        const chunkSize = 12;
+        const studentGroups = [];
+        for (let i = 0; i < students.length; i += chunkSize) {
+            studentGroups.push(students.slice(i, i + chunkSize));
+        }
 
     return (
         <div className='d-none'>
@@ -35,8 +36,10 @@ const QRCodesPrint = forwardRef<HTMLDivElement, QRCodesPrintProps>(({ students }
                                         />
                                         <Card.Body className='p-1'>
                                             <Card.Text className='mb-0'>{ student.name }</Card.Text>
-                                            <small className='text-muted'>{ student.teacher.split(' ').pop()
-                                                || student.teacher }</small><br />
+                                            <small className='text-muted'>
+                                                { student.teacher.name.split(' ').pop()
+                                                    || student.teacher.name }
+                                            </small><br />
                                             <small className='text-muted'>{student.grade}</small>
                                         </Card.Body>
                                     </Card>
