@@ -4,8 +4,10 @@ import com.bearpoints.api.entity.BragLog;
 import io.micrometer.common.lang.NonNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
+import org.springframework.data.rest.core.annotation.RestResource;
 import org.springframework.security.access.prepost.PreAuthorize;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RepositoryRestResource(path = "brag-logs")
@@ -29,4 +31,7 @@ public interface BragLogRepository extends JpaRepository<BragLog, Long> {
     @Override
     @PreAuthorize("hasRole('ADMIN')")
     void deleteAll(@NonNull Iterable<? extends BragLog> entities);
+
+    @RestResource(exported = false)
+    List<BragLog> findByTimestampAfter(LocalDateTime startDate);
 }
