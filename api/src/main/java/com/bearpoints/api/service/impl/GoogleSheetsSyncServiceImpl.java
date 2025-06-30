@@ -2,7 +2,7 @@ package com.bearpoints.api.service.impl;
 
 import com.bearpoints.api.entity.*;
 import com.bearpoints.api.dto.BatchUpdateRequest;
-import com.bearpoints.api.dto.Syncable;
+import com.bearpoints.api.entity.Syncable;
 import com.bearpoints.api.exception.RunnableThrowing;
 import com.bearpoints.api.dao.*;
 import com.bearpoints.api.service.GoogleSheetsSyncService;

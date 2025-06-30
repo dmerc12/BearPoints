@@ -1,6 +1,5 @@
 package com.bearpoints.api.entity;
 
-import com.bearpoints.api.dto.Syncable;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
