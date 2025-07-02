@@ -49,7 +49,7 @@ public class TeacherTests {
         user.setRole(Role.ADMIN);
         Teacher  teacher = new Teacher();
         teacher.setUser(user);
-        teacher.setGrade("Pre-K");
+        teacher.setGrade(GradeLevel.PRE_K);
         return teacher;
     }
 
@@ -61,44 +61,16 @@ public class TeacherTests {
         assertThat(violations).isEmpty();
     }
 
-    @Nested
-    @DisplayName("Grade validation tests")
-    class GradeValidation {
-        /** Tests blank grade validation */
-        @Test
-        @DisplayName("Blank grade fails validation")
-        public void testTeacherGradeBlank() {
-            validTeacher.setGrade("");
-            Set<ConstraintViolation<Teacher>> violations = validator.validate(validTeacher);
-            assertThat(violations)
-                    .filteredOn(v -> v.getPropertyPath().toString().equals("grade"))
-                    .extracting(ConstraintViolation::getMessage)
-                    .containsAnyOf("Grade is required");
-        }
-
-        /** Tests null grade validation */
-        @Test
-        @DisplayName("Null grade fails validation")
-        public void testTeacherGradeNull() {
-            validTeacher.setGrade(null);
-            Set<ConstraintViolation<Teacher>> violations = validator.validate(validTeacher);
-            assertThat(violations)
-                    .filteredOn(v -> v.getPropertyPath().toString().equals("grade"))
-                    .extracting(ConstraintViolation::getMessage)
-                    .containsExactly("Grade is required");
-        }
-
-        /** Tests grade invalid validation */
-        @Test
-        @DisplayName("Invalid grade fails validation")
-        public void testTeacherGradeInvalid() {
-            validTeacher.setGrade("ABC");
-            Set<ConstraintViolation<Teacher>> violations = validator.validate(validTeacher);
-            assertThat(violations)
-                    .filteredOn(v -> v.getPropertyPath().toString().equals("grade"))
-                    .extracting(ConstraintViolation::getMessage)
-                    .containsExactly("Invalid grade level");
-        }
+    /** Tests null grade validation */
+    @Test
+    @DisplayName("Null grade fails validation")
+    public void testTeacherGradeNull() {
+        validTeacher.setGrade(null);
+        Set<ConstraintViolation<Teacher>> violations = validator.validate(validTeacher);
+        assertThat(violations)
+                .filteredOn(v -> v.getPropertyPath().toString().equals("grade"))
+                .extracting(ConstraintViolation::getMessage)
+                .containsExactly("Grade is required");
     }
 
     /** Tests null user validation */

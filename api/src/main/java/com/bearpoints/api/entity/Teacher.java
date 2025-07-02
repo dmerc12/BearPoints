@@ -1,9 +1,7 @@
 package com.bearpoints.api.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -31,20 +29,17 @@ public class Teacher implements Syncable {
     private Long id;
 
     /**
-     * Teacher's currently assigned grade
+     * Teacher's currently assigned grade level
      * <p>Constraints:
      * <ul>
-     *     <li>Non-blank</li>
-     *     <li>Must be one of: Pre-K, K, 1, 2, 3, or 4</li>
+     *     <li>Non-null</li>
+     *     <li>Must be one of: PRE_K, K, FIRST, SECOND, THIRD, FOURTH</li>
      * </ul>
      */
-    @NotBlank(message = "Grade is required")
-    @Pattern(
-            regexp = "Pre-K|K|[1-4]",
-            message = "Invalid grade level"
-    )
+    @NotNull(message = "Grade is required")
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String grade;
+    private GradeLevel grade;
 
     /** Teacher's personal user information */
     @OneToOne

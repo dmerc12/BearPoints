@@ -1,7 +1,9 @@
 package com.bearpoints.api.dao;
 
+import com.bearpoints.api.entity.GradeLevel;
 import com.bearpoints.api.entity.Teacher;
 import io.micrometer.common.lang.NonNull;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.data.rest.core.annotation.RestResource;
@@ -16,7 +18,7 @@ public interface TeacherRepository  extends JpaRepository<Teacher, Long> {
     Optional<Teacher> findByUserEmail(String email);
 
     @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
-    Optional<Teacher> findByGrade(String email);
+    Optional<Teacher> findByGrade(@NotNull(message = "Grade is required") GradeLevel grade);
 
     @NonNull
     @Override

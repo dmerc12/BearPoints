@@ -52,7 +52,7 @@ public class LeaderboardServiceImpl implements LeaderboardService {
                         student.getUser().getLastName(),
                 student.getTeacher().getUser().getFirstName() + " " +
                         student.getTeacher().getUser().getLastName(),
-                student.getTeacher().getGrade(),
+                student.getTeacher().getGrade().name(),
                 points
         );
     }

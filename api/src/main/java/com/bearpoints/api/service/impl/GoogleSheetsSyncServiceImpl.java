@@ -110,7 +110,7 @@ public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
                 teacherRepository::findBySyncedToSheetsFalse,
                 teacher -> Arrays.asList(
                         teacher.getId().toString(),
-                        teacher.getGrade(),
+                        teacher.getGrade().name(),
                         teacher.getUser().getId().toString()
                 ),
                 this::parseTeacherFromRow,
@@ -308,7 +308,7 @@ public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
             if (row.size() < 5) return Optional.empty();
             Teacher teacher = new Teacher();
             teacher.setId(Long.parseLong(row.getFirst().toString()));
-            teacher.setGrade(String.valueOf(row.get(1)));
+            teacher.setGrade(GradeLevel.valueOf(row.get(1).toString()));
             Long userId = Long.parseLong(row.get(2).toString());
             User user = userRepository.findById(userId).orElseThrow(() ->
                     new EntityNotFoundException("User not found: " + userId));
