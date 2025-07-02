@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
  *
  * @see Role
  * @see Syncable
+ * @version 1.0
  * @author Dylan Mercer
  */
 @Data
@@ -57,7 +58,7 @@ public class User implements Syncable {
      * </ul>
      */
     @NotBlank(message = "First name is required")
-    @Size(min = 1, max = 100, message = "First name must be between 1-100 characters")
+    @Size(min = 1, max = 100, message = "First name must be between 1 and 100 characters")
     @Column(name = "first_name", nullable = false)
     private String firstName;
 
@@ -70,7 +71,7 @@ public class User implements Syncable {
      * </ul>
      */
     @NotBlank(message = "Last name is required")
-    @Size(min = 1, max = 100, message = "Last name must be between 1-100 characters")
+    @Size(min = 1, max = 100, message = "Last name must be between 1 and 100 characters")
     @Column(name = "last_name", nullable = false)
     private String lastName;
 
@@ -115,22 +116,37 @@ public class User implements Syncable {
     @EqualsAndHashCode.Exclude
     private Student student;
 
-    /** Timestamp when last synced */
+    /**
+     * Timestamp of last successful sync with Google Sheets.
+     * <p>Null indicates the entity has never been synced.
+     */
     @Column(name = "last_synced")
     private LocalDateTime lastSynced;
 
-    /** Boolean indicating if synced */
+    /**
+     * Synchronization status flag for Google Sheets.
+     * <p>Constraints:
+     * <ul>
+     *     <li>Non-null</li>
+     *     <li>True indicates successful sync</li>
+     *     <li>False indicates pending sync</li>
+     * </ul>
+     */
     @NotNull(message = "Sync status is required")
     @Column(name = "synced_to_sheets", nullable = false)
     private Boolean syncedToSheets = false;
 
-    /** Integer row id location for syncing */
+    /**
+     * Corresponding row identifier in Google Sheets.
+     * <p>Null indicates the row ID hasn't been assigned or synced.
+     */
     @Column(name = "sheet_row_id")
     private Integer sheetRowId;
 
     /**
-     * Set sync status
-     * @param synced true if synced to Google Sheets
+     * Sets the sync completion status for Google Sheets.
+     * @param synced true indicates successful sync completion,
+     *               false indicates pending sync
      */
     @Override
     public void setSyncedToSheets(boolean synced) {
@@ -138,8 +154,8 @@ public class User implements Syncable {
     }
 
     /**
-     * Set last synced timestamp
-     * @param lastSynced timestamp of last sync
+     * Sets the timestamp of the last successful sync with Google Sheets.
+     * @param lastSynced timestamp of last sync operation completion
      */
     @Override
     public void setLastSynced(LocalDateTime lastSynced) {
@@ -147,8 +163,8 @@ public class User implements Syncable {
     }
 
     /**
-     * Get row id location
-     * @return integer row id location in Google Sheets
+     * Retrieves the row ID location in Google Sheets.
+     * @return integer row number in Google Sheets, or null if not set
      */
     @Override
     public Integer getSheetRowId() {
@@ -156,8 +172,8 @@ public class User implements Syncable {
     }
 
     /**
-     * Set row id location
-     * @param rowId integer row for id location in Google Sheets
+     * Sets the row ID location in Google Sheets.
+     * @param rowId integer row number in Google Sheets
      */
     @Override
     public void setSheetRowId(Integer rowId) {

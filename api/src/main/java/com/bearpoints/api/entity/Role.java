@@ -10,6 +10,7 @@ package com.bearpoints.api.entity;
  * </ul>
  *
  * @see User
+ * @version 1.0
  * @author Dylan Mercer
  */
 public enum Role {
