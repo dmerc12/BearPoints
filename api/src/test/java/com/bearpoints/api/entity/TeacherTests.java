@@ -46,7 +46,7 @@ public class TeacherTests {
         user.setEmail("valid.user@okcps.org");
         user.setFirstName("ValidFirstName");
         user.setLastName("ValidLastName");
-        user.setRole(Role.ADMIN);
+        user.setRole(Role.TEACHER);
         Teacher  teacher = new Teacher();
         teacher.setUser(user);
         teacher.setGrade(GradeLevel.PRE_K);

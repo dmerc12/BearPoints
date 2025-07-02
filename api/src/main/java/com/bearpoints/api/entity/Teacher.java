@@ -13,8 +13,10 @@ import java.util.Set;
  * Represents a teacher profile.
  * <p>Implements {@link Syncable} for Google Sheets synchronization
  *
+ * @see User
  * @see Role
  * @see Syncable
+ * @see GradeLevel
  * @version 1.0
  * @author Dylan Mercer
  */
@@ -61,7 +63,7 @@ public class Teacher implements Syncable {
     @EqualsAndHashCode.Exclude
     private Set<Student> students;
 
-    /** Associated brag logs from students in teacher's class (optional) */
+    /** Associated brag logs from students in teacher's class */
     @OneToMany(mappedBy = "teacher", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
