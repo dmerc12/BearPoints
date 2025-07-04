@@ -50,6 +50,7 @@ public class RewardItemTests {
         return rewardItem;
     }
 
+    /** Tests valid reward item creation */
     @Test
     @DisplayName("Valid reward item passes validation")
     public void testRewardItemValid() {

@@ -97,6 +97,7 @@ public class RewardItem implements Syncable {
     @NotNull(message = "Sync status is required")
     @Column(name = "synced_to_sheets", nullable = false)
     private Boolean syncedToSheets = false;
+
     /**
      * Corresponding row identifier in Google Sheets.
      * <p>Null indicates the row ID hasn't been assigned or synced.
