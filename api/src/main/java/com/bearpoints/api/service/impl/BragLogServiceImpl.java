@@ -46,7 +46,7 @@ public class BragLogServiceImpl implements BragLogService {
         this.behaviorTypeRepository = behaviorTypeRepository;
     }
 
-    /** Public service to assist in submitting brag logs */
+    /** Service to assist in submitting brag logs */
     @Override
     @Transactional
     public BragLog submitBragLog(BragLogRequest request) {

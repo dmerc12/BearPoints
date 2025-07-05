@@ -12,6 +12,6 @@ import com.bearpoints.api.service.impl.BragLogServiceImpl;
  * @author Dylan Mercer
  */
 public interface BragLogService {
-    /** Public service to assist in submitting brag logs */
+    /** Service to assist in submitting brag logs */
     BragLog submitBragLog(BragLogRequest request);
 }
