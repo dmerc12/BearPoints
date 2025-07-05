@@ -16,6 +16,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Represents service responsible for retrieving and calculating brag log leaderboard.
+ * <p>Implements {@link LeaderboardService}
+ *
+ * @see LeaderboardEntryDTO
+ * @see Timeframe
+ * @see Student
+ * @see BragLog
+ * @see BragLogRepository
+ *
+ * @version 1.0
+ * @author Dylan Mercer
+ */
 @Service
 public class LeaderboardServiceImpl implements LeaderboardService {
     private final BragLogRepository bragLogRepository;

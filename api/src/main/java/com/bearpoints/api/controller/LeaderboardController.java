@@ -8,6 +8,16 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Represents route controller responsible for returning brag log leaderboard.
+ *
+ * @see LeaderboardService
+ * @see LeaderboardEntryDTO
+ * @see Timeframe
+ *
+ * @version 1.0
+ * @author Dylan Mercer
+ */
 @CrossOrigin
 @RestController
 @RequestMapping("/api/leaderboard")
@@ -19,6 +29,7 @@ public class LeaderboardController {
         this.leaderboardService = leaderboardService;
     }
 
+    /** Internal brag log leaderboard retrieval route controller */
     @GetMapping
     public List<LeaderboardEntryDTO> getLeaderboard(
             @RequestParam(defaultValue = "WEEK") Timeframe timeframe) {
