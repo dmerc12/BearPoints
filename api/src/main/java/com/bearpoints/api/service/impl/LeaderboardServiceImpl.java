@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -71,7 +72,7 @@ public class LeaderboardServiceImpl implements LeaderboardService {
     }
 
     private LocalDateTime calculateStartDate(Timeframe timeframe) {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
         return switch (timeframe) {
             case WEEK -> now.minusWeeks(1);
             case MONTH -> now.minusMonths(1);
