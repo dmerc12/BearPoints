@@ -5,10 +5,7 @@ import com.bearpoints.api.dao.BragLogRepository;
 import com.bearpoints.api.dao.StudentRepository;
 import com.bearpoints.api.dao.TeacherRepository;
 import com.bearpoints.api.dto.BragLogRequest;
-import com.bearpoints.api.entity.BehaviorType;
-import com.bearpoints.api.entity.BragLog;
-import com.bearpoints.api.entity.Student;
-import com.bearpoints.api.entity.Teacher;
+import com.bearpoints.api.entity.*;
 import com.bearpoints.api.service.BragLogService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -17,6 +14,23 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Represents service responsible for public brag log submissions.
+ * <p>Implements with {@link BragLogService}
+ *
+ * @see BragLogRequest
+ * @see Student
+ * @see StudentRepository
+ * @see Teacher
+ * @see TeacherRepository
+ * @see BehaviorType
+ * @see BehaviorTypeRepository
+ * @see BragLog
+ * @see BragLogRepository
+ *
+ * @version 1.0
+ * @author Dylan Mercer
+ */
 @Slf4j
 @Service
 public class BragLogServiceImpl implements BragLogService {
@@ -32,9 +46,10 @@ public class BragLogServiceImpl implements BragLogService {
         this.behaviorTypeRepository = behaviorTypeRepository;
     }
 
+    /** Public service to assist in submitting brag logs */
     @Override
     @Transactional
-    public BragLog submitBearBrag(BragLogRequest request) {
+    public BragLog submitBragLog(BragLogRequest request) {
         log.info("Submitting brag log for student {}", request.getStudentId());
         // Validate behaviors are not empty
         if (request.getBehaviorIds().isEmpty()) {
