@@ -1,0 +1,136 @@
+package com.bearpoints.api.service;
+
+import com.bearpoints.api.dao.BragLogRepository;
+import com.bearpoints.api.entity.*;
+import com.bearpoints.api.service.impl.LeaderboardServiceImpl;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.Set;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
+
+/**
+ * Unit tests for {@link LeaderboardService} implementation and functionality.
+ * <p>Tests include:
+ * <ul>
+ *     <li>Service implementation and functionality</li>
+ * </ul>
+ * <p>Timeframes available and tested:
+ * <ul>
+ *     <li>WEEK</li>
+ *     <li>MONTH</li>
+ *     <li>SEMESTER</li>
+ *     <li>YEAR</li>
+ * </ul>
+ *
+ * @see LeaderboardService
+ * @see LeaderboardServiceImpl
+ *
+ * @version 1.0
+ * @author Dylan Mercer
+ */
+@ExtendWith(MockitoExtension.class)
+public class LeaderboardServiceTests {
+    /** Mock brag log repository */
+    @Mock
+    private BragLogRepository bragLogRepository;
+
+    /** Injects mock repository into service implementation */
+    @InjectMocks
+    private LeaderboardServiceImpl leaderboardService;
+
+    /** Test data */
+    private BragLog bragLog;
+
+    private BragLog createValidBragLog(LocalDateTime timestamp) {
+        // Create teacher
+        User teacherUser = new User();
+        teacherUser.setId(1L);
+        teacherUser.setEmail("valid.teacher@okcps.org");
+        teacherUser.setFirstName("ValidFirstName");
+        teacherUser.setLastName("ValidLastName");
+        teacherUser.setRole(Role.TEACHER);
+        Teacher  teacher = new Teacher();
+        teacher.setId(2L);
+        teacher.setUser(teacherUser);
+        teacher.setGrade(GradeLevel.PRE_K);
+        // Create student
+        User studentUser = new User();
+        studentUser.setId(2L);
+        studentUser.setEmail("valid.student@okcps.org");
+        studentUser.setFirstName("ValidFirstName");
+        studentUser.setLastName("ValidLastName");
+        studentUser.setRole(Role.STUDENT);
+        Student student = new Student();
+        student.setId(1L);
+        student.setUser(studentUser);
+        student.setTeacher(teacher);
+        student.generateToken();
+        // Create behavior type
+        BehaviorType behaviorType = new BehaviorType();
+        behaviorType.setId(1L);
+        behaviorType.setName("valid behavior type");
+        // Create brag log
+        BragLog bragLog = new BragLog();
+        bragLog.setStudent(student);
+        bragLog.setTeacher(teacher);
+        bragLog.setBehaviors(Set.of(behaviorType));
+        bragLog.setPointsGenerated(behaviorType.getPointValue());
+        bragLog.setTimestamp(timestamp);
+        bragLog.setNotes("test notes");
+        return bragLog;
+    }
+
+    /** Test get leaderboard with week timeframe */
+    @Test
+    @DisplayName("Leaderboard with week timeframe")
+    public void leaderboardWithWeekTimeframe() {
+        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
+        bragLog = createValidBragLog(now.minusDays(3));
+        LocalDateTime startDate = now.minusWeeks(1);
+        when(bragLogRepository.findByTimestampAfter(startDate)).thenReturn(List.of(bragLog));
+        assertThat(leaderboardService.getLeaderboard(Timeframe.WEEK)).isNotNull();
+    }
+
+    /** Test get leaderboard with month timeframe */
+    @Test
+    @DisplayName("Leaderboard with month timeframe")
+    public void leaderboardWithMonthTimeframe() {
+        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
+        bragLog = createValidBragLog(now.minusWeeks(3));
+        LocalDateTime startDate = now.minusMonths(1);
+        when(bragLogRepository.findByTimestampAfter(startDate)).thenReturn(List.of(bragLog));
+        assertThat(leaderboardService.getLeaderboard(Timeframe.MONTH)).isNotNull();
+    }
+
+    /** Test get leaderboard with semester timeframe */
+    @Test
+    @DisplayName("Leaderboard with semester timeframe")
+    public void leaderboardWithSemesterTimeframe() {
+        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
+        bragLog = createValidBragLog(now.minusMonths(4));
+        LocalDateTime startDate = now.minusMonths(6);
+        when(bragLogRepository.findByTimestampAfter(startDate)).thenReturn(List.of(bragLog));
+        assertThat(leaderboardService.getLeaderboard(Timeframe.SEMESTER)).isNotNull();
+    }
+
+    /** Test get leaderboard with year timeframe */
+    @Test
+    @DisplayName("Leaderboard with year timeframe")
+    public void leaderboardWithYearTimeframe() {
+        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
+        bragLog = createValidBragLog(now.minusMonths(8));
+        LocalDateTime startDate = now.minusYears(1);
+        when(bragLogRepository.findByTimestampAfter(startDate)).thenReturn(List.of(bragLog));
+        assertThat(leaderboardService.getLeaderboard(Timeframe.YEAR)).isNotNull();
+    }
+}
