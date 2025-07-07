@@ -13,6 +13,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * Unit tests for {@link FirebaseUserDetails} functionality.
@@ -54,7 +55,7 @@ public class FirebaseUserDetailsTests {
     @Test
     @DisplayName("Oauth used in place of passwords")
     public void getOauthUsedInPlace() {
-        userDetails.getPassword();
+        assertNull(userDetails.getPassword());
     }
 
     /** Test get username method */
