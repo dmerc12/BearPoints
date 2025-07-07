@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
  * <pre>
  *     {@code
  *     @Entity
- *     @EntityListeners(SyncableEntityListeners.class)
+ *     @EntityListeners(SyncableEntityListener.class)
  *     public class YourEntity implements Syncable {
  *         // Implement interface methods
  *     }

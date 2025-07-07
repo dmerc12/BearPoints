@@ -14,7 +14,7 @@ import jakarta.persistence.PreUpdate;
  * <pre>
  *     {@code
  *     @Entity
- *     @EntityListeners(SyncableEntityListener.clas)
+ *     @EntityListeners(SyncableEntityListener.class)
  *     public class YourEntity implements Syncable {...}
  *     }
  * </pre>
