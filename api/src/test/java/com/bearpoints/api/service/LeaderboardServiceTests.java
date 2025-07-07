@@ -1,6 +1,7 @@
 package com.bearpoints.api.service;
 
 import com.bearpoints.api.dao.BragLogRepository;
+import com.bearpoints.api.dto.LeaderboardEntryDTO;
 import com.bearpoints.api.entity.*;
 import com.bearpoints.api.service.impl.LeaderboardServiceImpl;
 import org.junit.jupiter.api.DisplayName;
@@ -98,7 +99,11 @@ public class LeaderboardServiceTests {
         bragLog = createValidBragLog(now.minusDays(3));
         LocalDateTime startDate = now.minusWeeks(1);
         when(bragLogRepository.findByTimestampAfter(startDate)).thenReturn(List.of(bragLog));
-        assertThat(leaderboardService.getLeaderboard(Timeframe.WEEK)).isNotNull();
+        assertThat(leaderboardService.getLeaderboard(Timeframe.WEEK))
+                .hasSize(1)
+                .first()
+                .extracting(LeaderboardEntryDTO::getPoints)
+                .isEqualTo(bragLog.getPointsGenerated());
     }
 
     /** Test get leaderboard with month timeframe */
@@ -109,7 +114,11 @@ public class LeaderboardServiceTests {
         bragLog = createValidBragLog(now.minusWeeks(3));
         LocalDateTime startDate = now.minusMonths(1);
         when(bragLogRepository.findByTimestampAfter(startDate)).thenReturn(List.of(bragLog));
-        assertThat(leaderboardService.getLeaderboard(Timeframe.MONTH)).isNotNull();
+        assertThat(leaderboardService.getLeaderboard(Timeframe.MONTH))
+                .hasSize(1)
+                .first()
+                .extracting(LeaderboardEntryDTO::getPoints)
+                .isEqualTo(bragLog.getPointsGenerated());
     }
 
     /** Test get leaderboard with semester timeframe */
@@ -120,7 +129,11 @@ public class LeaderboardServiceTests {
         bragLog = createValidBragLog(now.minusMonths(4));
         LocalDateTime startDate = now.minusMonths(6);
         when(bragLogRepository.findByTimestampAfter(startDate)).thenReturn(List.of(bragLog));
-        assertThat(leaderboardService.getLeaderboard(Timeframe.SEMESTER)).isNotNull();
+        assertThat(leaderboardService.getLeaderboard(Timeframe.SEMESTER))
+                .hasSize(1)
+                .first()
+                .extracting(LeaderboardEntryDTO::getPoints)
+                .isEqualTo(bragLog.getPointsGenerated());
     }
 
     /** Test get leaderboard with year timeframe */
@@ -131,6 +144,10 @@ public class LeaderboardServiceTests {
         bragLog = createValidBragLog(now.minusMonths(8));
         LocalDateTime startDate = now.minusYears(1);
         when(bragLogRepository.findByTimestampAfter(startDate)).thenReturn(List.of(bragLog));
-        assertThat(leaderboardService.getLeaderboard(Timeframe.YEAR)).isNotNull();
+        assertThat(leaderboardService.getLeaderboard(Timeframe.YEAR))
+                .hasSize(1)
+                .first()
+                .extracting(LeaderboardEntryDTO::getPoints)
+                .isEqualTo(bragLog.getPointsGenerated());
     }
 }
