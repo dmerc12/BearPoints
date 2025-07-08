@@ -3,7 +3,7 @@ package com.bearpoints.api.service;
 import com.bearpoints.api.dao.BehaviorTypeDAO;
 import com.bearpoints.api.dao.BragLogRepository;
 import com.bearpoints.api.dao.StudentRepository;
-import com.bearpoints.api.dao.TeacherRepository;
+import com.bearpoints.api.dao.TeacherDAO;
 import com.bearpoints.api.dto.BragLogRequest;
 import com.bearpoints.api.entity.*;
 import com.bearpoints.api.service.impl.BragLogServiceImpl;
@@ -55,7 +55,7 @@ public class BragLogServiceTests {
 
     /** Mock teacher repository */
     @Mock
-    private TeacherRepository teacherRepository;
+    private TeacherDAO teacherRepository;
 
     /** Mock behavior type repository */
     @Mock

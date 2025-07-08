@@ -35,7 +35,7 @@ public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
 
     private final UserDAO userRepository;
     private final StudentRepository studentRepository;
-    private final TeacherRepository teacherRepository;
+    private final TeacherDAO teacherRepository;
     private final BragLogRepository bragLogRepository;
     private final RewardItemRepository rewardItemRepository;
     private final StudentRewardRepository studentRewardRepository;
@@ -50,7 +50,7 @@ public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
     public GoogleSheetsSyncServiceImpl(
             UserDAO theUserRepository,
             StudentRepository theStudentRepository,
-            TeacherRepository theTeacherRepository,
+            TeacherDAO theTeacherRepository,
             BragLogRepository theBragLogRepository,
             RewardItemRepository theRewardItemRepository,
             StudentRewardRepository theStudentRewardRepository,
