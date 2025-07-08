@@ -12,7 +12,7 @@ import java.util.Optional;
 
 @RepositoryRestResource(path = "users")
 @PreAuthorize("hasRole('ADMIN')")
-public interface UserRepository extends JpaRepository<User, Long> {
+public interface UserDAO extends JpaRepository<User, Long> {
     @PreAuthorize("permitAll()")
     Optional<User> findByEmail(String email);
 

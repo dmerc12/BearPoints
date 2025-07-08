@@ -1,6 +1,6 @@
 package com.bearpoints.api.security;
 
-import com.bearpoints.api.dao.UserRepository;
+import com.bearpoints.api.dao.UserDAO;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
@@ -36,7 +36,7 @@ import java.io.IOException;
 @Component
 public class FirebaseAuthFilter extends OncePerRequestFilter {
     private final FirebaseAuth firebaseAuth;
-    private final UserRepository userRepository;
+    private final UserDAO userRepository;
 
     /**
      * Constructs a new Firebase authentication filter.
@@ -46,7 +46,7 @@ public class FirebaseAuthFilter extends OncePerRequestFilter {
      */
     public FirebaseAuthFilter(
             @NonNull FirebaseAuth firebaseAuth,
-            @NonNull UserRepository userRepository) {
+            @NonNull UserDAO userRepository) {
         this.firebaseAuth = firebaseAuth;
         this.userRepository = userRepository;
     }

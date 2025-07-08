@@ -33,7 +33,7 @@ public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
     private static final Logger logger = LoggerFactory.getLogger(GoogleSheetsSyncServiceImpl.class);
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    private final UserRepository userRepository;
+    private final UserDAO userRepository;
     private final StudentRepository studentRepository;
     private final TeacherRepository teacherRepository;
     private final BragLogRepository bragLogRepository;
@@ -48,7 +48,7 @@ public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
     private String spreadsheetId;
 
     public GoogleSheetsSyncServiceImpl(
-            UserRepository theUserRepository,
+            UserDAO theUserRepository,
             StudentRepository theStudentRepository,
             TeacherRepository theTeacherRepository,
             BragLogRepository theBragLogRepository,

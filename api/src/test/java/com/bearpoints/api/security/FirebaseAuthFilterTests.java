@@ -1,6 +1,6 @@
 package com.bearpoints.api.security;
 
-import com.bearpoints.api.dao.UserRepository;
+import com.bearpoints.api.dao.UserDAO;
 import com.bearpoints.api.entity.Role;
 import com.bearpoints.api.entity.User;
 import com.google.firebase.auth.FirebaseAuth;
@@ -54,7 +54,7 @@ public class FirebaseAuthFilterTests {
     private FirebaseAuth firebaseAuth;
 
     @Mock
-    private UserRepository userRepository;
+    private UserDAO userRepository;
 
     @Mock
     private HttpServletRequest request;
