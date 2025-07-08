@@ -34,7 +34,7 @@ public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private final UserDAO userRepository;
-    private final StudentRepository studentRepository;
+    private final StudentDAO studentRepository;
     private final TeacherDAO teacherRepository;
     private final BragLogRepository bragLogRepository;
     private final RewardItemRepository rewardItemRepository;
@@ -49,7 +49,7 @@ public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
 
     public GoogleSheetsSyncServiceImpl(
             UserDAO theUserRepository,
-            StudentRepository theStudentRepository,
+            StudentDAO theStudentRepository,
             TeacherDAO theTeacherRepository,
             BragLogRepository theBragLogRepository,
             RewardItemRepository theRewardItemRepository,

@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RepositoryRestResource(path = "students")
-public interface StudentRepository extends JpaRepository<Student, Long> {
+public interface StudentDAO extends JpaRepository<Student, Long> {
     @PreAuthorize("permitAll()")
     Optional<Student> findByToken(String token);
 
