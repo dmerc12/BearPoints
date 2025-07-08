@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * @see DataJpaTest
  * @see TestEntityManager
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @DataJpaTest
@@ -41,13 +41,14 @@ public class UserDAOTests {
 
     @BeforeEach
     void setup() {
+        entityManager.getEntityManager().createQuery("DELETE FROM User").executeUpdate();
+        entityManager.flush();
         entityManager.clear();
         testUser = new User();
         testUser.setFirstName("John");
         testUser.setLastName("Doe");
         testUser.setEmail("john.doe@okcps.org");
         testUser.setRole(Role.ADMIN);
-        testUser.setSyncedToSheets(false);
         entityManager.persist(testUser);
         entityManager.flush();
     }

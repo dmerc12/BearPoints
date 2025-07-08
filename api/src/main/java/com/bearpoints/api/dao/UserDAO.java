@@ -25,17 +25,18 @@ import java.util.Optional;
  *
  * <p>Security constraints:
  * <ul>
- *     <li>Save/delete operations require ADMIN role</li>
+ *     <li>ADMIN role required for all operations except email lookup</li>
+ *     <li>TEACHER role can create STUDENT users</li>
  *     <li>Email lookup is publicly accessible</li>
- *     <li>All other read operations require ADMIN role</li>
+ *     <li>All authenticated users can access user lists</li>
  * </ul>
  *
  * @see User
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @RepositoryRestResource(path = "users")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("isAuthenticated()")
 public interface UserDAO extends JpaRepository<User, Long> {
     /**
      * Finds a user by email address.
@@ -49,7 +50,7 @@ public interface UserDAO extends JpaRepository<User, Long> {
 
     @NonNull
     @Override
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or " + "(hasRole('TEACHER') and #entity.role.name() == 'STUDENT')")
     <S extends User> S save(@NonNull S entity);
 
     @Override
@@ -63,6 +64,11 @@ public interface UserDAO extends JpaRepository<User, Long> {
     @Override
     @PreAuthorize("hasRole('ADMIN')")
     void deleteAll(@NonNull Iterable<? extends User> entities);
+
+    @NonNull
+    @Override
+    @PreAuthorize("isAuthenticated()")
+    List<User> findAll();
 
     /**
      * Finds un-synchronized users (internal use only).
