@@ -39,7 +39,7 @@ public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
     private final BragLogRepository bragLogRepository;
     private final RewardItemRepository rewardItemRepository;
     private final StudentRewardRepository studentRewardRepository;
-    private final BehaviorTypeRepository behaviorTypeRepository;
+    private final BehaviorTypeDAO behaviorTypeRepository;
     private final GoogleSheetsServiceImpl googleSheetsService;
 
     @Getter
@@ -54,7 +54,7 @@ public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
             BragLogRepository theBragLogRepository,
             RewardItemRepository theRewardItemRepository,
             StudentRewardRepository theStudentRewardRepository,
-            BehaviorTypeRepository theBehaviorTypeRepository,
+            BehaviorTypeDAO theBehaviorTypeRepository,
             GoogleSheetsServiceImpl theGoogleSheetsService) {
         this.userRepository = theUserRepository;
         this.studentRepository = theStudentRepository;

@@ -1,6 +1,6 @@
 package com.bearpoints.api.service;
 
-import com.bearpoints.api.dao.BehaviorTypeRepository;
+import com.bearpoints.api.dao.BehaviorTypeDAO;
 import com.bearpoints.api.dao.BragLogRepository;
 import com.bearpoints.api.dao.StudentRepository;
 import com.bearpoints.api.dao.TeacherRepository;
@@ -59,7 +59,7 @@ public class BragLogServiceTests {
 
     /** Mock behavior type repository */
     @Mock
-    private BehaviorTypeRepository behaviorTypeRepository;
+    private BehaviorTypeDAO behaviorTypeRepository;
 
     /** Injects mock repositories into service implementation */
     @InjectMocks

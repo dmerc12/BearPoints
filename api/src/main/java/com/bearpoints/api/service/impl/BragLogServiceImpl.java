@@ -1,6 +1,6 @@
 package com.bearpoints.api.service.impl;
 
-import com.bearpoints.api.dao.BehaviorTypeRepository;
+import com.bearpoints.api.dao.BehaviorTypeDAO;
 import com.bearpoints.api.dao.BragLogRepository;
 import com.bearpoints.api.dao.StudentRepository;
 import com.bearpoints.api.dao.TeacherRepository;
@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
  * @see Teacher
  * @see TeacherRepository
  * @see BehaviorType
- * @see BehaviorTypeRepository
+ * @see BehaviorTypeDAO
  * @see BragLog
  * @see BragLogRepository
  *
@@ -37,9 +37,9 @@ public class BragLogServiceImpl implements BragLogService {
     private final BragLogRepository bragLogRepository;
     private final StudentRepository studentRepository;
     private final TeacherRepository teacherRepository;
-    private final BehaviorTypeRepository behaviorTypeRepository;
+    private final BehaviorTypeDAO behaviorTypeRepository;
 
-    public BragLogServiceImpl(BragLogRepository bragLogRepository, StudentRepository studentRepository, TeacherRepository teacherRepository, BehaviorTypeRepository behaviorTypeRepository) {
+    public BragLogServiceImpl(BragLogRepository bragLogRepository, StudentRepository studentRepository, TeacherRepository teacherRepository, BehaviorTypeDAO behaviorTypeRepository) {
         this.bragLogRepository = bragLogRepository;
         this.studentRepository = studentRepository;
         this.teacherRepository = teacherRepository;
