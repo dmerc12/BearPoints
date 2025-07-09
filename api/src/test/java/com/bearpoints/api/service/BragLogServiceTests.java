@@ -1,7 +1,7 @@
 package com.bearpoints.api.service;
 
 import com.bearpoints.api.dao.BehaviorTypeDAO;
-import com.bearpoints.api.dao.BragLogRepository;
+import com.bearpoints.api.dao.BragLogDAO;
 import com.bearpoints.api.dao.StudentDAO;
 import com.bearpoints.api.dao.TeacherDAO;
 import com.bearpoints.api.dto.BragLogRequest;
@@ -47,7 +47,7 @@ import static org.mockito.Mockito.when;
 public class BragLogServiceTests {
     /** Mock brag log repository */
     @Mock
-    private BragLogRepository bragLogRepository;
+    private BragLogDAO bragLogRepository;
 
     /** Mock student repository */
     @Mock

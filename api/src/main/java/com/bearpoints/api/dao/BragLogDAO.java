@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @RepositoryRestResource(path = "brag-logs")
-public interface BragLogRepository extends JpaRepository<BragLog, Long> {
+public interface BragLogDAO extends JpaRepository<BragLog, Long> {
     @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
     List<BragLog> findBySyncedToSheetsFalse();
 

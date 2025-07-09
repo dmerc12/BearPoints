@@ -1,6 +1,6 @@
 package com.bearpoints.api.service.impl;
 
-import com.bearpoints.api.dao.BragLogRepository;
+import com.bearpoints.api.dao.BragLogDAO;
 import com.bearpoints.api.dto.LeaderboardEntryDTO;
 import com.bearpoints.api.entity.BragLog;
 import com.bearpoints.api.entity.Student;
@@ -25,16 +25,16 @@ import java.util.stream.Collectors;
  * @see Timeframe
  * @see Student
  * @see BragLog
- * @see BragLogRepository
+ * @see BragLogDAO
  *
  * @version 1.0
  * @author Dylan Mercer
  */
 @Service
 public class LeaderboardServiceImpl implements LeaderboardService {
-    private final BragLogRepository bragLogRepository;
+    private final BragLogDAO bragLogRepository;
 
-    public LeaderboardServiceImpl(BragLogRepository bragLogRepository) {
+    public LeaderboardServiceImpl(BragLogDAO bragLogRepository) {
         this.bragLogRepository = bragLogRepository;
     }
 

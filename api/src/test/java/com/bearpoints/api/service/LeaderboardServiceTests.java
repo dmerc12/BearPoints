@@ -1,6 +1,6 @@
 package com.bearpoints.api.service;
 
-import com.bearpoints.api.dao.BragLogRepository;
+import com.bearpoints.api.dao.BragLogDAO;
 import com.bearpoints.api.dto.LeaderboardEntryDTO;
 import com.bearpoints.api.entity.*;
 import com.bearpoints.api.service.impl.LeaderboardServiceImpl;
@@ -43,7 +43,7 @@ import static org.mockito.Mockito.when;
 public class LeaderboardServiceTests {
     /** Mock brag log repository */
     @Mock
-    private BragLogRepository bragLogRepository;
+    private BragLogDAO bragLogRepository;
 
     /** Injects mock repository into service implementation */
     @InjectMocks
