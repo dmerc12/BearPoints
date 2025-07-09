@@ -10,7 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import java.util.List;
 
 @RepositoryRestResource(path = "reward-items")
-public interface RewardItemRepository extends JpaRepository<RewardItem, Long> {
+public interface RewardItemDAO extends JpaRepository<RewardItem, Long> {
     @PreAuthorize("permitAll()")
     List<RewardItem> findAllByOrderByNameAsc();
 
