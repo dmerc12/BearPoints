@@ -10,7 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import java.util.List;
 
 @RepositoryRestResource(path = "student-rewards")
-public interface StudentRewardRepository extends JpaRepository<StudentReward, Long> {
+public interface StudentRewardDAO extends JpaRepository<StudentReward, Long> {
     @NonNull
     @Override
     @PreAuthorize("hasAnyRole('STUDENT', 'TEACHER', 'ADMIN')")
