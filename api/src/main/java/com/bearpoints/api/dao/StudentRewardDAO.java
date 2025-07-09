@@ -9,8 +9,45 @@ import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 
+/**
+ * JPA repository for {@link StudentReward} entities.
+ * <p>Manages reward redemption records with synchronization capabilities.
+ * Exposes REST endpoints under '/student-rewards' with role-based access control.
+ *
+ * <p>Key features:
+ * <ul>
+ *     <li>Student reward redemption tracking</li>
+ *     <li>Internal synchronization for Google Sheets integration</li>
+ *     <li>Role-based access control for write operations</li>
+ * </ul>
+ *
+ * <p>Security constraints:
+ * <ul>
+ *     <li>Save: Requires STUDENT, TEACHER, or ADMIN role</li>
+ *     <li>Delete: ADMIN role only</li>
+ *     <li>Sync methods: Internal use only</li>
+ * </ul>
+ *
+ * <p>Usage notes:
+ * <ul>
+ *     <li>Students can redeem rewards via save operations</li>
+ *     <li>Teachers can record student reward redemptions</li>
+ *     <li>Sync methods used for Google Sheets integration</li>
+ * </ul>
+ *
+ * @see StudentReward
+ * @version 1.0
+ * @author Dylan Mercer
+ */
 @RepositoryRestResource(path = "student-rewards")
 public interface StudentRewardDAO extends JpaRepository<StudentReward, Long> {
+    /**
+     * Saves a student reward redemption record.
+     * <p>Requires STUDENT, TEACHER, or ADMIN role. Used for reward redemption.
+     *
+     * @param entity StudentReward to save
+     * @return Saved student reward record
+     */
     @NonNull
     @Override
     @PreAuthorize("hasAnyRole('STUDENT', 'TEACHER', 'ADMIN')")
@@ -28,6 +65,12 @@ public interface StudentRewardDAO extends JpaRepository<StudentReward, Long> {
     @PreAuthorize("hasRole('ADMIN')")
     void deleteAll(@NonNull Iterable<? extends StudentReward> entities);
 
+    /**
+     * Finds un-synced student rewards (internal use only).
+     * <p>Not exposed via REST API. Used for Google Sheets synchronization.
+     *
+     * @return List of unsynced student rewards
+     */
     @RestResource(exported = false)
     List<StudentReward> findBySyncedToSheetsFalse();
 }
