@@ -13,6 +13,32 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+/**
+ * Configures Spring Security for the application.
+ * <p>This security configuration:
+ * <ul>
+ *     <li>Disables CSRF protection for stateless API</li>
+ *     <li>Sets session management to stateless</li>
+ *     <li>Configures request authorization:
+ *          <ul>
+ *              <li>Permits public access to POST /api/public/brag-logs</li>
+ *              <li>Permits public access to /health and /public/**</li>
+ *              <li>Requires authentication for all other endpoints</li>
+ *          </ul>
+ *     </li>
+ *     <li>Adds custom filters:
+ *          <ul>
+ *              <li>{@link RateLimitFilter} as first filter for request throttling</li>
+ *              <li>{@link FirebaseAuthFilter} for Firebase authentication</li>
+ *          </ul>
+ *     </li>
+ * </ul>
+ *
+ * @see SecurityFilterChain
+ * @see FirebaseAuthFilter
+ * @version 1.0
+ * @author Dylan Mercer
+ */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(securedEnabled = true)
