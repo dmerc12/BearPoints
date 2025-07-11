@@ -17,6 +17,7 @@ import java.util.Collections;
  * @version 1.0
  */
 @Getter
+@SuppressWarnings({})
 public class FirebaseUserDetails implements UserDetails {
     private final User user;
 
