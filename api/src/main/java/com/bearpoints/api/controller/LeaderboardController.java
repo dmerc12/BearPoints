@@ -9,12 +9,25 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * Represents route controller responsible for returning brag log leaderboard.
+ * REST controller for leaderboard data retrieval.
+ * <p>Provides secure access to student point leaderboards filtered by timeframe.
+ *
+ * <p>Endpoint:
+ * <ul>
+ *     <li>{@code GET /api/leaderboard} - Retrieves current leaderboard</li>
+ * </ul>
+ *
+ * <p>Features:
+ * <ul>
+ *     <li>Requires STUDENT, TEACHER, or ADMIN role</li>
+ *     <li>Supports timeframe filtering (WEEK, MONTH, SEMESTER, YEAR)</li>
+ *     <li>Default timeframe is WEEK</li>
+ *     <li>Returns sorted list (highest points first)</li>
+ * </ul>
  *
  * @see LeaderboardService
  * @see LeaderboardEntryDTO
  * @see Timeframe
- *
  * @version 1.0
  * @author Dylan Mercer
  */
@@ -29,7 +42,13 @@ public class LeaderboardController {
         this.leaderboardService = leaderboardService;
     }
 
-    /** Internal brag log leaderboard retrieval route controller */
+    /**
+     * Retrieves current leaderboard data.
+     * <p>Returns list of students sorted by points in descending order.
+     *
+     * @param timeframe Filter period (optional, defaults to WEEK)
+     * @return List of leaderboard entries with student / teacher details
+     */
     @GetMapping
     public List<LeaderboardEntryDTO> getLeaderboard(
             @RequestParam(defaultValue = "WEEK") Timeframe timeframe) {
