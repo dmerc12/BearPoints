@@ -15,6 +15,28 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * Configures Firebase services for the application.
+ * <p>This configuration:
+ * <ul>
+ *     <li>Initializes Firebase using credentials from application properties</li>
+ *     <li>Provides {@link FirebaseAuth} bean for authentication services</li>
+ *     <li>Validates credentials during initialization</li>
+ * </ul>
+ *
+ * <p>Firebase credentials are provided via {@code firebase.credentials.json} property
+ * containing the service account JSON. The configuration ensures credentials:
+ * <ul>
+ *     <li>Are not empty or null</li>
+ *     <li>Are properly formatted JSON</li>
+ *     <li>Successfully initialize Firebase services</li>
+ * </ul>
+ *
+ * @see FirebaseApp
+ * @see FirebaseAuth
+ * @version 1.0
+ * @author Dylan Mercer
+ */
 @Configuration
 public class FirebaseConfig {
     @Value("${firebase.credentials.json}")
