@@ -27,6 +27,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Service implementation for interacting with Google Sheets API.
+ * Handles operations such as reading sheet data, appending rows, updating cells,
+ * clearing sheets, and batch updates.
+ *
+ * <p>Uses Google Service Account credentials for authentication.
+ *
+ * @see GoogleSheetsService
+ * @version 1.0
+ * @author Dylan Mercer
+ */
 @Service
 public class GoogleSheetsServiceImpl implements GoogleSheetsService {
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
@@ -40,6 +51,12 @@ public class GoogleSheetsServiceImpl implements GoogleSheetsService {
 
     private Sheets sheets;
 
+    /**
+     * Initializes Google Sheets API client using service account credentials.
+     *
+     * @throws GeneralSecurityException if there's a security-related error
+     * @throws IOException if there's an I/O error reading credentials
+     */
     @PostConstruct
     public void init() throws GeneralSecurityException, IOException {
         final NetHttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
@@ -51,6 +68,13 @@ public class GoogleSheetsServiceImpl implements GoogleSheetsService {
                 .setApplicationName("BearPoints API").build();
     }
 
+    /**
+     * Retrieves row count for a specific sheet.
+     *
+     * @param sheetName name of the sheet
+     * @return number of rows in the sheet
+     * @throws IOException if API call fails
+     */
     @Override
     public int getRowCount(String sheetName) throws IOException {
         ValueRange response = sheets.spreadsheets().values()
@@ -58,6 +82,13 @@ public class GoogleSheetsServiceImpl implements GoogleSheetsService {
         return response.getValues() != null ? response.getValues().size() : 0;
     }
 
+    /**
+     * Retrieves all data from a sheet.
+     *
+     * @param sheetName name of the sheet
+     * @return 2D list representing sheet data (rows x columns)
+     * @throws IOException if API call fails
+     */
     @Override
     public List<List<Object>> getSheetData(String sheetName) throws IOException {
         ValueRange response = sheets.spreadsheets().values()
@@ -65,6 +96,13 @@ public class GoogleSheetsServiceImpl implements GoogleSheetsService {
         return response.getValues() != null ? response.getValues() : new ArrayList<>();
     }
 
+    /**
+     * Appends multiple rows to a sheet.
+     *
+     * @param sheetName name of the sheet
+     * @param data rows to append (list of string lists)
+     * @throws IOException if API call fails
+     */
     @Override
     public void appendToSheet(String sheetName, List<List<String>> data) throws IOException {
         List<List<Object>> convertedData = data.stream()
@@ -78,6 +116,14 @@ public class GoogleSheetsServiceImpl implements GoogleSheetsService {
                 .execute();
     }
 
+    /**
+     * Updates a single row in a sheet.
+     *
+     * @param sheetName name of the sheet
+     * @param rowNumber 1-based row index
+     * @param data cell values for the row
+     * @throws IOException if API call fails
+     */
     @Override
     public void updateRow(String sheetName, int rowNumber, List<String> data) throws IOException {
         String range = sheetName + "!A" + rowNumber + ":Z" + rowNumber;
@@ -89,6 +135,12 @@ public class GoogleSheetsServiceImpl implements GoogleSheetsService {
                 .execute();
     }
 
+    /**
+     * Clears all data from a sheet.
+     *
+     * @param sheetName name of the sheet
+     * @throws IOException if API call fails
+     */
     @Override
     public void clearSheet(String sheetName) throws IOException {
         ClearValuesRequest request = new ClearValuesRequest();
@@ -97,6 +149,13 @@ public class GoogleSheetsServiceImpl implements GoogleSheetsService {
                 .execute();
     }
 
+    /**
+     * Performs batch updates on multiple rows.
+     *
+     * @param sheetName name of the sheet
+     * @param updates list of update requests
+     * @throws IOException if API call fails
+     */
     @Override
     public void batchUpdate(String sheetName, List<BatchUpdateRequest> updates) throws IOException {
         List<ValueRange> data = new ArrayList<>();
