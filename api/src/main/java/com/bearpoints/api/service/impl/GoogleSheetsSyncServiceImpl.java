@@ -27,6 +27,35 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+/**
+ * Service for synchronizing application data with Google Sheets.
+ *
+ * <p>Performs bidirectional synchronization between database entities and Google Sheets.
+ * Scheduled to run twice daily (8AM and 8PM) via cron jobs.
+ * Handles synchronization for:
+ * <ul>
+ *     <li>Users</li>
+ *     <li>Teachers</li>
+ *     <li>Students</li>
+ *     <li>BehaviorTypes</li>
+ *     <li>BragLogs</li>
+ *     <li>RewardItems</li>
+ *     <li>StudentRewards</li>
+ * </ul>
+ *
+ * <p>Features
+ * <ul>
+ *     <li>Batch processing with chunking (100 rows/chunk)</li>
+ *     <li>Retry mechanism with exponential backoff</li>
+ *     <li>Daily quota management</li>
+ *     <li>Bidirectional sync (DB -> Sheets and Sheets -> DB)</li>
+ *     <li>Row-level tracking using sheetRowId</li>
+ * </ul>
+ *
+ * @see GoogleSheetsSyncService
+ * @version 1.0
+ * @author Dylan Mercer
+ */
 @Service
 @Transactional
 public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
@@ -66,6 +95,10 @@ public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
         this.googleSheetsService = theGoogleSheetsService;
     }
 
+    /**
+     * Main synchronization method executed on schedule.
+     * Orchestrates synchronization of all entity types with quota checks.
+     */
     @Override
     @Scheduled(cron = "0 0 8,20 * * *")
     public void syncAllData() {
@@ -226,6 +259,17 @@ public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
         );
     }
 
+    /**
+     * Generic synchronization method for entities.
+     *
+     * @param <T> Entity type implementing Syncable
+     * @param sheetName Target Google Sheet name
+     * @param repositoryFindUnsynced Supplier for unsynced entities
+     * @param toRowConverter Converts entity to sheet row
+     * @param fromRowConverter Parses sheet row to entity
+     * @param repositorySave Consumer to save entities
+     * @param markAndSave Consumer to mark entities as synced
+     */
     private <T extends Syncable> void syncEntity(
             String sheetName,
             Supplier<List<T>> repositoryFindUnsynced,
@@ -269,16 +313,16 @@ public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
             List<T> unsyncedEntities,
             Consumer<T> repositorySave) throws IOException {
         List<List<Object>> updatedSheet = googleSheetsService.getSheetData(sheetName);
-        int newRowIndex = originalSize + 1;
         for (int i = originalSize; i < updatedSheet.size(); i++) {
             List<Object> row = updatedSheet.get(i);
             if (row == null || row.isEmpty() || row.getFirst() == null) continue;
             try {
                 Long id = Long.parseLong(row.getFirst().toString());
+                int finalI = i;
                 unsyncedEntities.stream()
                         .filter(e -> e.getId().equals(id) && e.getSheetRowId() == null)
                         .findFirst().ifPresent(entity -> {
-                            entity.setSheetRowId(newRowIndex + 1);
+                            entity.setSheetRowId(finalI + 1);
                             repositorySave.accept(entity);
                         });
             } catch (NumberFormatException e) {
@@ -305,7 +349,7 @@ public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
 
     private Optional<Teacher> parseTeacherFromRow(List<Object> row) {
         try {
-            if (row.size() < 5) return Optional.empty();
+            if (row.size() < 3) return Optional.empty();
             Teacher teacher = new Teacher();
             teacher.setId(Long.parseLong(row.getFirst().toString()));
             teacher.setGrade(GradeLevel.valueOf(row.get(1).toString()));
@@ -344,7 +388,7 @@ public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
 
     private Optional<BehaviorType> parseBehaviorTypeFromRow(List<Object> row) {
         try {
-            if (row.size() < 5) return Optional.empty();
+            if (row.size() < 4) return Optional.empty();
             BehaviorType behaviorType = new BehaviorType();
             behaviorType.setId(Long.parseLong(row.getFirst().toString()));
             behaviorType.setName(row.get(1).toString());
@@ -388,7 +432,7 @@ public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
 
     private Optional<RewardItem> parseRewardItemFromRow(List<Object> row) {
         try {
-            if (row.size() < 5) return Optional.empty();
+            if (row.size() < 4) return Optional.empty();
             RewardItem rewardItem = new RewardItem();
             rewardItem.setId(Long.parseLong(row.getFirst().toString()));
             rewardItem.setName(row.get(1).toString());
@@ -403,7 +447,7 @@ public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
 
     private Optional<StudentReward> parseStudentRewardFromRow(List<Object> row) {
         try {
-            if (row.size() < 5) return Optional.empty();
+            if (row.size() < 4) return Optional.empty();
             StudentReward studentReward = new StudentReward();
             studentReward.setId(Long.parseLong(row.getFirst().toString()));
             studentReward.setRedeemedAt(LocalDateTime.parse(row.get(1).toString(), DATE_FORMATTER));
@@ -444,13 +488,17 @@ public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
             List<Object> row = sheetData.get(i);
             if (row == null || row.isEmpty()) continue;
             int finalI = i;
-            parseRowId(row.getFirst(), i).ifPresent(id ->
-                    fromRowConverter.apply(row).ifPresent(newEntity -> {
-                if (!existsInDataBase(newEntity.getClass(), id)) {
-                    newEntity.setSheetRowId(finalI + 1);
-                    repositorySave.accept(newEntity);
+            parseRowId(row.getFirst(), i).ifPresent(id -> {
+                Optional<T> entityOpt = fromRowConverter.apply(row);
+                if (entityOpt.isPresent()) {
+                    entityOpt.ifPresent(newEntity -> {
+                        if (!existsInDataBase(newEntity.getClass(), id)) {
+                            newEntity.setSheetRowId(finalI + 1);
+                            repositorySave.accept(newEntity);
+                        }
+                    });
                 }
-            }));
+            });
         }
     }
 
@@ -518,38 +566,56 @@ public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
     }
 
     private void executeWithRetry(RunnableThrowing operation, String operationName) throws IOException {
-        int maxAttempts = 3;
-        for (int i = 0; i < maxAttempts; i++) {
-            try {
-                operation.run();
-                return;
-            } catch (GoogleJsonResponseException e) {
-                if (e.getStatusCode() == 429) {
-                    long waitTime = (long) Math.pow(2, i) * 1000;
-                    logger.warn("Quota exceeded for {}, retrying in {} ms", operationName, waitTime);
-                    try {
-                        Thread.sleep(waitTime);
-                    } catch (InterruptedException ex) {
-                        Thread.currentThread().interrupt();
-                        throw new IOException("Interrupted during backoff", ex);
-                    }
-                } else {
-                    throw e;
-                }
-            } catch (Exception e) {
-                if (i == maxAttempts - 1) {
-                    if (e instanceof IOException) throw (IOException) e;
-                    throw new IOException("Operation failed:", e);
-                }
-                long waitTime = (long) Math.pow(2, i) * 1000;
-                logger.warn("Error for {}, retrying in {} ms: {}", operationName, waitTime, e.getMessage());
-                try {
-                    Thread.sleep(waitTime);
-                } catch (InterruptedException ex) {
-                    Thread.currentThread().interrupt();
-                    throw new IOException("Interrupted during backoff", ex);
-                }
-            }
+        executeWithRetryInternal(operation, operationName, 0, 3);
+    }
+
+    private void executeWithRetryInternal(RunnableThrowing operation, String operationName, int attempt, int maxAttempts) throws IOException {
+        try {
+            operation.run();
+        } catch (GoogleJsonResponseException e) {
+            handleGoogleException(operation, operationName, attempt, maxAttempts, e);
+        } catch (Exception e) {
+            handleGenericException(operation, operationName, attempt, maxAttempts, e);
+        }
+    }
+
+    private void handleGoogleException(RunnableThrowing operation, String operationName, int attempt,
+                                       int maxAttempts, GoogleJsonResponseException e) throws IOException {
+        if (e.getStatusCode() == 429) {
+            handleQuotaExceeded(operation, operationName, attempt, maxAttempts, e);
+        } else {
+            throw e;
+        }
+    }
+
+    private void handleQuotaExceeded(RunnableThrowing operation, String operationName, int attempt,
+                                     int maxAttempts, GoogleJsonResponseException e) throws IOException {
+        if (attempt == maxAttempts - 1) {
+            throw new IOException("Quota exceeded for " + operationName + " after " + maxAttempts + " attempts", e);
+        }
+        long waitTime = (long) Math.pow(2, attempt) * 1000;
+        logger.warn("Quota exceeded for {}, retrying in {} ms: {}", operationName, waitTime, e.getMessage());
+        sleep(waitTime);
+        executeWithRetryInternal(operation, operationName, attempt + 1, maxAttempts);
+    }
+
+    private void handleGenericException(RunnableThrowing operation, String operationName, int attempt,
+                                     int maxAttempts, Exception e) throws IOException {
+        if (attempt == maxAttempts - 1) {
+            throw new IOException("Operation failed for " + operationName + " after " + maxAttempts + " attempts", e);
+        }
+        long waitTime = (long) Math.pow(2, attempt) * 1000;
+        logger.warn("Error for {}, retrying in {} ms: {}", operationName, waitTime, e.getMessage());
+        sleep(waitTime);
+        executeWithRetryInternal(operation, operationName, attempt + 1, maxAttempts);
+    }
+
+    private void sleep(long waitTime) throws IOException {
+        try {
+            Thread.sleep(waitTime);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Interrupted during backoff", ex);
         }
     }
 }
