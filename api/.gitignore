@@ -39,6 +39,8 @@ build/
 service-account.json
 firebase-service-account.json
 
-## IDE and Mac files ##
-.idea
+## Mac files ##
 .DS_Store
+
+# Log files
+logs/application.log.log
