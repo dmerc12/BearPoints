@@ -24,7 +24,7 @@ const HEALTH_CHECK_INTERVAL = 30000;
 api.interceptors.request.use(async (config) => {
     try {
         // Skip health check for health endpoint itself
-        if (config.url === '/health') return config;
+        if (config.url === '/api/health') return config;
         // Check health if needed
         if (!isHealthy || (Date.now() - lastHealthCheck > HEALTH_CHECK_INTERVAL)) {
             isHealthy = await checkHealth();
@@ -53,6 +53,10 @@ api.interceptors.request.use(async (config) => {
 
 // Response interceptor for retries
 api.interceptors.response.use(undefined, async (error: AxiosError) => {
+    if (!error.config) {
+        console.error('Request failed without config:', error);
+        return Promise.reject(error);
+    }
     const config = error.config as AxiosRequestConfig & { _retryCount?: number };
     // Initialize retry count
     config._retryCount = config._retryCount || 0;
@@ -80,7 +84,7 @@ api.interceptors.response.use(undefined, async (error: AxiosError) => {
  */
 const checkHealth = async (): Promise<boolean> => {
     try {
-        const response = await axios.get('/health', {
+        const response = await api.get('/health', {
             timeout: 3000,
         });
         // Spring Actuator health response structure
