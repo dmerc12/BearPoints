@@ -52,13 +52,15 @@ public class FirebaseConfig {
         if (!StringUtils.hasText(firebaseConfigJson)) {
             throw new IllegalArgumentException("Firebase credentials JSON is empty");
         }
-        InputStream serviceAccount = new ByteArrayInputStream(
-                firebaseConfigJson.getBytes(StandardCharsets.UTF_8)
-        );
-        GoogleCredentials credentials = GoogleCredentials.fromStream(serviceAccount);
-        FirebaseOptions options = FirebaseOptions.builder()
-                .setCredentials(credentials)
-                .build();
-        FirebaseApp.initializeApp(options);
+        if (FirebaseApp.getApps().isEmpty()) {
+            InputStream serviceAccount = new ByteArrayInputStream(
+                    firebaseConfigJson.getBytes(StandardCharsets.UTF_8)
+            );
+            GoogleCredentials credentials = GoogleCredentials.fromStream(serviceAccount);
+            FirebaseOptions options = FirebaseOptions.builder()
+                    .setCredentials(credentials)
+                    .build();
+            FirebaseApp.initializeApp(options);
+        }
     }
 }
