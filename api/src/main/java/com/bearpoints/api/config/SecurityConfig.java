@@ -23,26 +23,22 @@ import java.util.List;
  * <ul>
  *     <li>Disables CSRF protection for stateless API</li>
  *     <li>Sets session management to stateless</li>
- *     <li>Cross-Origin Resource Sharing (CORS) policies</li>
- *     <li>Configures request authorization:
- *          <ul>
- *              <li>Permits public access to POST /api/public/brag-logs</li>
- *              <li>Permits public access to /health and /public/**</li>
- *              <li>Requires authentication for all other endpoints</li>
- *          </ul>
- *     </li>
- *     <li>Adds custom filters:
+ *     <li>Configures Cross-Origin Resource Sharing (CORS) policies</li>
+ *     <li>Defines endpoint authorization rules</li>
+ *     <li>Adds custom authentication filter:
  *          <ul>
  *              <li>{@link FirebaseAuthFilter} for Firebase authentication</li>
  *          </ul>
  *     </li>
  * </ul>
  *
- * <p>Key configurations:
+ * <p>CORS configuration:
  * <ul>
- *     <li>Allows CORS requests from localhost:5173</li>
+ *     <li>Allows requests from localhost:5173</li>
  *     <li>Permits all HTTP methods and headers</li>
- *     <li>Enables credentials and sets 1-hour max age for preflight caching</li>
+ *     <li>Enables credentials support</li>
+ *     <li>Exposes Authorization header</li>
+ *     <li>Sets 1-hour max age for preflight caching</li>
  * </ul>
  *
  * @see SecurityFilterChain
