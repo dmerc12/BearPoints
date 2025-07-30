@@ -15,6 +15,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -93,6 +94,22 @@ public class FirebaseConfigTests {
     void initializeWithInvalidJson() {
         ReflectionTestUtils.setField(firebaseConfig, "firebaseConfigJson", "invalid-json");
         assertThrows(IOException.class, () -> firebaseConfig.initialize());
+    }
+
+    @Test
+    @DisplayName("Initialization skipped when FirebaseApp already initialized")
+    void initializeSkippedWithAlreadyInitialized() throws IOException {
+        try (
+                MockedStatic<GoogleCredentials> credentialsMock = mockStatic(GoogleCredentials.class);
+                MockedStatic<FirebaseOptions> optionsMock = mockStatic(FirebaseOptions.class);
+                MockedStatic<FirebaseApp> appMock = mockStatic(FirebaseApp.class)
+        ) {
+            when(FirebaseApp.getApps()).thenReturn(Collections.singletonList(mock(FirebaseApp.class)));
+            firebaseConfig.initialize();
+            appMock.verify(() -> FirebaseApp.initializeApp((String) any()), never());
+            credentialsMock.verifyNoMoreInteractions();
+            optionsMock.verifyNoInteractions();
+        }
     }
 
     @Test
