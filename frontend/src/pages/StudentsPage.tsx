@@ -1,24 +1,26 @@
 import { Container, Row, Button, Col, Spinner, Alert, Form } from 'react-bootstrap';
-import { getStudents, getTeachers, getCurrentUser } from '../services/api';
-import { Student, Teacher, UserDTO } from '../services/types';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { getStudents, getTeachers } from '../services/api';
 import QRCodesPrint from '../components/QRCodesPrint';
 import StudentTable from '../components/StudentTable';
-import { useState, useEffect, useRef } from 'react';
+import { Student, Teacher } from '../services/types';
 import { useReactToPrint } from 'react-to-print';
+import { useAppSelector } from '../store/hooks';
 import { useNavigate } from 'react-router-dom';
 import Auth from '../components/Auth';
 
 export default function StudentsPage () {
     const [ students, setStudents ] = useState<Student[]>([]);
     const [ teachers, setTeachers ] = useState<Teacher[]>([]);
-    const [ loading, setLoading ] = useState(false);
+    const [ loading, setLoading ] = useState(true);
     const [ error, setError ] = useState('');
-    const [ currentUser, setCurrentUser ] = useState<UserDTO | null>(null);
     const [ filter, setFilter ] = useState({
         teacher: '',
         nameSearch: '',
         grade: ''
     });
+
+    const currentUser = useAppSelector((state) => state.user.data);
 
     const navigate = useNavigate();
 
@@ -30,8 +32,6 @@ export default function StudentsPage () {
             try {
                 setLoading(true);
                 setError('');
-                const user = await getCurrentUser();
-                setCurrentUser(user);
                 const [studentsData, teachersData] = await Promise.all([
                     getStudents(),
                     getTeachers()
@@ -39,7 +39,7 @@ export default function StudentsPage () {
                 setStudents(studentsData);
                 setTeachers(teachersData);
             } catch (error) {
-                setError('Failed to load students');
+                setError('Failed to load students. Please try again later');
                 console.error('Failed to load students:', error);
             } finally {
                 setLoading(false);
@@ -47,34 +47,71 @@ export default function StudentsPage () {
         };
         fetchData().catch(error => {
             console.error('Unhandled fetch error:', error);
-            setError('An unexpected error occurred');
+            setError('An unexpected error occurred. Please try again later');
         });
     }, []);
+
+    useEffect(() => {
+        setFilter({
+            teacher: '',
+            nameSearch: '',
+            grade: ''
+        })
+    }, [students]);
+
+    const updateNameFilter = useCallback((value: string) => {
+        setFilter(prev => ({ ...prev, nameSearch: value }));
+    }, []);
+
+    const updateTeacherFilter = useCallback((value: string) => {
+        setFilter(prev => ({ ...prev, teacher: value }));
+    }, []);
+
+    const updateGradeFilter = useCallback((value: string) => {
+        setFilter(prev => ({ ...prev, grade: value }));
+    }, []);
+
+    const teacherNames = useMemo(() => {
+        return Array.from(new Set(teachers.map(t => {
+            const parts = t.name.split(' ');
+            return parts.length > 1 ? parts[parts.length - 1] : t.name;
+        })));
+    }, [teachers]);
+
+    const grades = useMemo(() => {
+        return Array.from(new Set(teachers.map(t => t.grade)))
+            .sort((a, b) => {
+                if (a === 'Pre-K') return -1;
+                if (b === 'Pre-K') return 1;
+                if (a === 'K') return -1;
+                if (b === 'K') return 1;
+                return a.localeCompare(b);
+            });
+    }, [teachers]);
+
+    const filteredStudents = useMemo(() => {
+        if (!students.length) return [];
+        const teacherIdFilter = currentUser?.teacherId;
+        const teacherFilter = filter.teacher.toLowerCase();
+        const nameFilter = filter.nameSearch.toLowerCase();
+        const gradeFilter = filter.grade;
+        return students.filter(student => {
+            if (teacherIdFilter && student.teacher.id !== teacherIdFilter) {
+                return false;
+            }
+            if (teacherFilter && !student.teacher.name.toLowerCase().includes(teacherFilter)) {
+                return false;
+            }
+            if (gradeFilter && student.grade !== gradeFilter) {
+                return false;
+            }
+            return !(nameFilter && !student.name.toLowerCase().includes(nameFilter));
+        });
+    }, [students, currentUser, filter]);
 
     const handleQRScan = (token: string) => {
         navigate(`/brag?token=${token}`);
     };
-
-    const teacherNames = Array.from(new Set(teachers.map(t => t.name.split(' ').pop() || t.name)));
-
-    const grades = Array.from(new Set(teachers.map(t => t.grade))).sort((a, b) => {
-        if (a === 'Pre-K') return -1;
-        if (b === 'Pre-K') return 1;
-        if (a === 'K') return -1;
-        if (b === 'K') return 1;
-        return a.localeCompare(b);
-    });
-
-    const filteredStudents = students
-        .filter(student =>
-            !currentUser?.teacherId || student.teacher.id === currentUser.teacherId)
-        .filter(student => {
-            const teacherMatch = filter.teacher === '' ||
-                student.teacher.name.toLowerCase().includes(filter.teacher.toLowerCase());
-            const gradeMatch = filter.grade === '' || student.grade === filter.grade;
-            const nameMatch = student.name.toLowerCase().includes(filter.nameSearch.toLowerCase());
-            return teacherMatch && gradeMatch && nameMatch;
-        });
 
     return (
         <Auth>
@@ -90,7 +127,7 @@ export default function StudentsPage () {
                         <Form.Control placeholder='Search by name'
                                       value={ filter.nameSearch }
                                       onChange={ (e) =>
-                                          setFilter({ ...filter, nameSearch: e.target.value }) }
+                                          updateNameFilter(e.target.value) }
                         />
                         <Form.Text className='text-muted'>Partial name matches accepted</Form.Text>
                     </Col>
@@ -98,7 +135,7 @@ export default function StudentsPage () {
                     <Col md={ 6 }>
                         <Form.Select value={ filter.teacher }
                                      onChange={ (e) =>
-                                         setFilter({ ...filter, teacher: e.target.value }) }
+                                         updateTeacherFilter(e.target.value) }
                         >
                             <option value=''>All Teachers</option>
                             { teacherNames.map(teacher => (
@@ -110,7 +147,7 @@ export default function StudentsPage () {
                     <Col md={ 6 }>
                         <Form.Select value={ filter.grade }
                                      onChange={ (e) =>
-                                         setFilter({ ...filter, grade: e.target.value }) }
+                                        updateGradeFilter(e.target.value) }
                         >
                             <option value=''>All Grades</option>
                             { grades.map(grade => (
@@ -145,18 +182,20 @@ export default function StudentsPage () {
                     </>
                 ) }
                 {/* Print QR codes button */ }
-                <Row className='mt-4'>
-                    <Col className='text-center'>
-                        <Button
-                            variant='primary'
-                            onClick={ () => reactToPrintFn() }
-                            disabled={ filteredStudents.length === 0 }
-                            className='no-print'
-                        >
-                            Print QR Codes ({ filteredStudents.length })
-                        </Button>
-                    </Col>
-                </Row>
+                {!loading && !error && filteredStudents.length > 0 && (
+                    <Row className='mt-4'>
+                        <Col className='text-center'>
+                            <Button
+                                variant='primary'
+                                onClick={ () => reactToPrintFn() }
+                                disabled={ filteredStudents.length === 0 }
+                                className='no-print'
+                            >
+                                Print QR Codes ({ filteredStudents.length })
+                            </Button>
+                        </Col>
+                    </Row>
+                )}
                 <QRCodesPrint ref={ contentRef } students={ filteredStudents } />
             </Container>
         </Auth>

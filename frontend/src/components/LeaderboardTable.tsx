@@ -1,6 +1,6 @@
+import { useState, useEffect, useMemo } from 'react';
 import { LeaderboardEntry } from '../services/types';
 import { Table, Pagination } from 'react-bootstrap';
-import { useState, useEffect } from 'react';
 
 interface LeaderboardTableProps {
     entries: LeaderboardEntry[];
@@ -10,17 +10,21 @@ interface LeaderboardTableProps {
 export default function LeaderboardTable ({ entries, itemsPerPage = 10 }: LeaderboardTableProps) {
     const [ currentPage, setCurrentPage ] = useState(1);
 
-    const safeEntries = Array.isArray(entries) ? entries : [];
-    const rankedEntries = safeEntries.map((entry, index) => ({
-        ...entry,
-        rank: index + 1,
-    }));
+    const rankedEntries = useMemo(() => {
+        const safeEntries = Array.isArray(entries) ? entries : [];
+        return safeEntries.map((entry, index) => ({
+            ...entry,
+            rank: index + 1,
+        }));
+    }, [entries]);
 
-    const totalItems = entries.length;
-    const totalPages = Math.ceil(totalItems / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const paginatedEntries = rankedEntries.slice(startIndex, endIndex);
+    const totalPages = Math.ceil(entries.length / itemsPerPage);
+
+    const paginatedEntries = useMemo(() => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        return rankedEntries.slice(startIndex, endIndex);
+    }, [rankedEntries, currentPage, itemsPerPage]);
 
     useEffect(() => {
         setCurrentPage(1);

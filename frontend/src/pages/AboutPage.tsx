@@ -1,7 +1,7 @@
 import { Container, Row, Col, Card, Button, ListGroup, Badge, Image } from 'react-bootstrap';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import bearMascot from '../assets/bear-mascot.png';
-import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 import { auth, login } from '../Auth';
 import { useState } from 'react';
 
@@ -9,20 +9,20 @@ export default function AboutPage () {
     const [user] = useAuthState(auth);
     const [signingIn, setSigningIn] = useState(false);
 
+    const navigate = useNavigate();
+
     const handleLogin = async () => {
         setSigningIn(true);
         try {
             await login();
-        } catch (error: unknown) {
-            let errorMessage = 'Login failed';
-            if (error instanceof Error) {
-                errorMessage += `: ${error.message}`;
-            }
-            toast.error(errorMessage);
+            console.log('Login successful, navigating to dashboard');
+            navigate('/dashboard');
+        } catch (error) {
+            console.error('Login failed:', error);
         } finally {
             setSigningIn(false);
         }
-    }
+    };
 
     const steps = [
         {
@@ -120,7 +120,7 @@ export default function AboutPage () {
                                 Staff members can start recognizing students today!
                             </Card.Text>
                             { user ? (
-                                <Button as='a' href='/students' variant='light' className='rounded-pill fs-6 fs-md-5 px-3 px-md-4 py-2'>
+                                <Button as='a' href='/dashboard' variant='light' className='rounded-pill fs-6 fs-md-5 px-3 px-md-4 py-2'>
                                     Go to Dashboard
                                 </Button>
                             ) : (

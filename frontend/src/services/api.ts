@@ -17,29 +17,19 @@ const api = axios.create({
 });
 
 // ============== HEALTH STATUS TRACKER ==============
-let isHealthy = true;
-let lastHealthCheck = 0;
-const HEALTH_CHECK_INTERVAL = 30000;
+let healthCheckInProgress = false;
+let lastHealthCheckStatus: boolean | null = null;
 
 api.interceptors.request.use(async (config) => {
     try {
         // Skip health check for health endpoint itself
-        if (config.url === '/api/health') return config;
-        // Check health if needed
-        if (!isHealthy || (Date.now() - lastHealthCheck > HEALTH_CHECK_INTERVAL)) {
-            isHealthy = await checkHealth();
-            lastHealthCheck = Date.now();
-        }
-        if (!isHealthy) {
-            return Promise.reject(new Error('Backend is unavailable'));
-        }
+        if (config.url  && config.url.includes('actuator/health')) return config;
         // Add auth token if user is logged in
         await auth.authStateReady();
         const user = auth.currentUser;
         if (user) {
             const token = await user.getIdToken();
             config.headers.Authorization = `Bearer ${token}`;
-            config.headers['Content-Type'] = 'application/json';
         }
         return config;
     } catch (error) {
@@ -58,7 +48,6 @@ api.interceptors.response.use(undefined, async (error: AxiosError) => {
         return Promise.reject(error);
     }
     const config = error.config as AxiosRequestConfig & { _retryCount?: number };
-    // Initialize retry count
     config._retryCount = config._retryCount || 0;
     // Only retry on network errors or 5xx status codes
     const isRetryable = !error.response ||
@@ -68,98 +57,120 @@ api.interceptors.response.use(undefined, async (error: AxiosError) => {
         // Exponential backoff with jitter: base 1s, max 8s
         const delay = Math.min(8000, 1000 * Math.pow(2, config._retryCount));
         const jitter = Math.random() * 500;
+        console.log(`Retrying request (attempt ${config._retryCount}) in ${delay + jitter}ms`);
         await new Promise (resolve => setTimeout(resolve, delay + jitter));
         return api(config);
-    }
-    // Update health status on final failure
-    if (isRetryable) {
-        isHealthy = false;
     }
     return Promise.reject(error);
 });
 
 /**
- *  Checks backend health status
+ *  Checks backend health status with recursion guard
  *  @returns Promise resolving to true if backend is healthy
  */
 const checkHealth = async (): Promise<boolean> => {
+    if (healthCheckInProgress) {
+        console.log('Health check already in progress. Skipping duplicate check.');
+        return lastHealthCheckStatus || false;
+    }
     try {
-        const response = await api.get('/health', {
+        healthCheckInProgress = true;
+        console.log('Starting health check')
+        const response = await api.get('actuator/health', {
             timeout: 3000,
         });
-        // Spring Actuator health response structure
-        return response.data?.status === "UP";
+        const isHealthy = response.data?.status === 'UP';
+        console.log(`Health check completed ${isHealthy ? 'UP' : 'DOWN'}`);
+        lastHealthCheckStatus = isHealthy;
+        return isHealthy;
     } catch (error) {
         console.error('Health check failed:', error);
+        lastHealthCheckStatus = false;
         return false;
+    } finally {
+        healthCheckInProgress = false;
     }
 };
 
-// Wrapper function for API calls with health awareness
+/**
+ * Ensures backend is healthy before making API calls
+ * Will retry health checks until backend is sup or max retries is reached
+ */
+const ensureBackendHealthy = async (maxRetries = 5, initialDelay = 2000): Promise<boolean> => {
+    let retries = 0;
+    let delay = initialDelay;
+    while (retries < maxRetries) {
+        const isHealthy = await checkHealth();
+        if (isHealthy) return true;
+        console.log(`Backend unhealthy. Retrying in ${delay}ms (${retries + 1}/${maxRetries})`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        delay *= 2;
+        retries++;
+    }
+    throw new Error(`Backend unavailable after ${maxRetries} retries`);
+}
+
+/**
+ * Wrapper function that ensures backend health before API calls and retries the call if backend becomes healthy
+ * @param apiCall API call to make
+ */
 const withHealthAwareRetry = async <T>(apiCall: () => Promise<T>): Promise<T> => {
     try {
         return await apiCall();
-    } catch (error: unknown) {
-        if (error instanceof Error && error.message === 'Backend is unavailable') {
-            // Wait for backend to wake up
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            isHealthy = await checkHealth();
-            if (isHealthy) {
-                return apiCall();
-            }
-        }
-        if (axios.isAxiosError(error)) {
-            console.error('API request failed:', error.response?.status, error.config?.url);
-            throw new Error(`API error: ${error.message}`);
-        }
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        throw new Error(`Request failed: ${errorMessage}`);
+    } catch (error) {
+        const isUnavailable = axios.isAxiosError(error) &&
+            (!error.response || error.response.status === 503);
+        if (!isUnavailable) throw error;
+        console.log('Backend unavailable, waiting for recovery...');
+        await ensureBackendHealthy();
+        console.log('Retrying API call after backend recovery');
+        return apiCall();
     }
 }
 
 // ============== USER API =================
 export const getCurrentUser = async (): Promise<UserDTO> => {
     return withHealthAwareRetry(() =>
-        api.get<UserDTO>('/users/me')
+        api.get<UserDTO>('api/users/me')
             .then(r => r.data));
 };
 
 // ============== STUDENT API =================
 export const getStudents = async (): Promise<Student[]> => {
     return withHealthAwareRetry(() =>
-        api.get<{ _embedded: { students: Student[] } }>('/students')
+        api.get<{ _embedded: { students: Student[] } }>('api/students')
             .then(r => r.data._embedded.students));
 };
 
 export const getStudentByToken = async (token: string): Promise<Student> => {
     return withHealthAwareRetry(() =>
-        api.get<Student>(`/students/search/findByToken?token=${token}`)
+        api.get<Student>(`api/students/search/findByToken?token=${token}`)
             .then(r => r.data));
 };
 
 // ============== BEHAVIOR API =================
 export const getActiveBehaviorTypes = async (): Promise<BehaviorType[]> => {
     return withHealthAwareRetry(() =>
-        api.get<{ _embedded: { behaviorTypes: BehaviorType[] } }>('/behavior-types?filter=active')
+        api.get<{ _embedded: { behaviorTypes: BehaviorType[] } }>('api/behavior-types?filter=active')
             .then(r => r.data._embedded.behaviorTypes));
 };
 
 // ============== BRAG LOG API =================
 export const submitPublicBragLog = async (data: BragLogRequest) => {
     return withHealthAwareRetry(() =>
-        api.post('/public/brag-logs', data));
+        api.post('api/public/brag-logs', data));
 };
 
 // ============== TEACHER API =================
 export const getTeachers = async (): Promise<Teacher[]> => {
     return withHealthAwareRetry(() =>
-        api.get<{ _embedded: { teachers: Teacher[] } }>('/teachers')
+        api.get<{ _embedded: { teachers: Teacher[] } }>('api/teachers')
             .then(r => r.data._embedded.teachers));
 }
 
 // ============== LEADERBOARD API =================
 export const getLeaderboard = async (timeframe: Timeframe): Promise<LeaderboardEntry[]> => {
     return withHealthAwareRetry(() =>
-        api.get<LeaderboardEntry[]>(`/leaderboard?timeframe=${timeframe}`)
+        api.get<LeaderboardEntry[]>(`api/leaderboard?timeframe=${timeframe}`)
             .then(r => r.data));
 }

@@ -1,8 +1,8 @@
 import { Container, Form, Spinner, Alert, Row, Col } from 'react-bootstrap';
 import { LeaderboardEntry, Timeframe } from '../services/types';
 import LeaderboardTable from '../components/LeaderboardTable';
+import { useEffect, useState, useMemo } from 'react';
 import { getLeaderboard } from '../services/api';
-import { useEffect, useState } from 'react';
 import Auth from '../components/Auth';
 
 export default function LeaderboardPage () {
@@ -35,17 +35,21 @@ export default function LeaderboardPage () {
         });
     }, [filters.timeframe]);
 
-    const filteredEntries = leaderboard.filter(entry => {
-        const teacherMatch = filters.teacher === '' ||
-            entry.teacherName.includes(filters.teacher);
-        const gradeMatch = filters.grade === '' ||
-            entry.grade === filters.grade;
-        return teacherMatch && gradeMatch;
-    });
+    const filteredEntries = useMemo(() => {
+        return leaderboard.filter(entry => {
+            const teacherMatch = filters.teacher === '' ||
+                entry.teacherName.includes(filters.teacher);
+            const gradeMatch = filters.grade === '' ||
+                entry.grade === filters.grade;
+            return teacherMatch && gradeMatch;
+        });
+    }, [leaderboard, filters.teacher, filters.grade]);
 
-    const uniqueTeachers = [...new Set(leaderboard.map(e => e.teacherName))];
+    const uniqueTeachers = useMemo(() =>
+        [...new Set(leaderboard.map(e => e.teacherName))], [leaderboard]);
 
-    const uniqueGrades = [...new Set(leaderboard.map(e => e.grade))];
+    const uniqueGrades = useMemo(() =>
+        [...new Set(leaderboard.map(e => e.grade))], [leaderboard]);
 
     return (
         <Auth>

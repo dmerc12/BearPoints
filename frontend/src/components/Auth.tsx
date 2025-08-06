@@ -1,44 +1,58 @@
+import {clearUser, setError, setUser} from '../store/slices/userSlice';
+import { Navigate, useLocation } from 'react-router-dom';
+import { useCallback, useEffect, useState } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { getCurrentUser } from '../services/api';
-import {UserDTO} from '../services/types.ts';
-import { useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { useAppDispatch } from '../store/hooks';
 import { Spinner } from 'react-bootstrap';
 import { auth } from '../Auth';
 import * as React from 'react';
+import {getCurrentUser} from "../services/api.ts";
 
 interface AuthProps {
     children: React.ReactNode;
 }
 
 export default function Auth ({ children }: AuthProps) {
-    const [ user, setUser ] = useState<User | null>(null);
-    const [ userData, setUserData ] = useState<UserDTO | null>(null);
     const [ loading, setLoading ] = useState(true);
+    const dispatch = useAppDispatch();
+    const location = useLocation();
 
-    useEffect(() => { 
-        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+    const handleAuthStateChanged = useCallback(async (currentUser: User | null) => {
+        try {
             if (currentUser) {
                 const token = await currentUser.getIdTokenResult();
                 const email = token.claims.email as string || '';
-                const isValidEmail = email.endsWith('@okcps.org')
-                if (!token.claims.email_verified || !isValidEmail) {
+                const isValidEmail = email.endsWith('@okcps.org');
+                if (!token.claims.email_verified && !isValidEmail) {
+                    console.warn('Email not verified or is invalid:', email);
                     await auth.signOut();
-                    setLoading(false);
-                    return;
+                    dispatch(clearUser());
+                } else {
+                    try {
+                        console.log('Fetching user data from API');
+                        const userData = await getCurrentUser();
+                        dispatch(setUser(userData));
+                    } catch (error) {
+                        console.error('Failed to fetch user data', error);
+                        dispatch(setError('Failed to fetch user data'));
+                    }
                 }
-                try {
-                    const userData = await getCurrentUser();
-                    setUserData(userData);
-                } catch (error) {
-                    console.error('Failed to fetch user data:', error);
-                }
+            } else {
+                console.log('No authenticated user');
+                dispatch(clearUser());
             }
-            setUser(currentUser);
+        } catch (error) {
+            console.error('Auth state change error', error);
+            dispatch(setError('Authentication error'));
+        } finally {
             setLoading(false);
-        });
+        }
+    }, [dispatch]);
+
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, handleAuthStateChanged);
         return () => unsubscribe();
-    }, []);
+    }, [handleAuthStateChanged]);
 
     if (loading) {
         return (
@@ -51,18 +65,9 @@ export default function Auth ({ children }: AuthProps) {
         );
     }
 
-    if (user && userData) {
-        if (window.location.pathname === '/dashboard') {
-            if (userData.role === 'TEACHER') {
-                return <Navigate to={'/dashboard/teacher'} />;
-            } else if (userData.role === 'STUDENT') {
-                return <Navigate to={'/dashboard/student'} />;
-            } else if (userData.role === 'ADMIN') {
-                return <Navigate to={'/dashboard/admin'} />;
-            }
-        }
-        return <>{children}</>
+    if (!auth.currentUser && location.pathname !== '/') {
+        return <Navigate to='/' replace />;
     }
 
-    return user ? <>{ children }</> : <Navigate to='/' />;
+    return <>{ children }</>;
 }
