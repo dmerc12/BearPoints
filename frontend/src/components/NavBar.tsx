@@ -1,35 +1,9 @@
 import { Navbar, Nav, Container } from 'react-bootstrap';
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { Link, useNavigate } from 'react-router-dom';
-import { auth, login } from '../Auth';
-import { useState } from 'react';
+import useLogin from '../hooks/useLogin';
+import { Link } from 'react-router-dom';
 
 export default function NavigationBar () {
-    const [ user ] = useAuthState(auth);
-    const [ signingIn, setSigningIn ] = useState(false);
-    const navigate = useNavigate();
-
-    const handleLogin = async () => {
-        setSigningIn(true);
-        try {
-            await login();
-            console.log('Login successful, navigating to dashboard');
-            navigate('/dashboard');
-        } catch (error) {
-            console.error('Login failed:', error);
-        } finally {
-            setSigningIn(false);
-        }
-    };
-
-    const handleLogout = async () => {
-        try {
-            await auth.signOut();
-            navigate('/');
-        } catch (error) {
-            console.error('Logout failed:', error);
-        }
-    }
+    const { user, signingIn, handleLogin, handleLogout } = useLogin();
 
     return (
         <Navbar bg='primary' variant='dark' expand='lg' className='fixed-top' id='mainNav' aria-label='Navigation bar for BearPoints'>
