@@ -1,31 +1,50 @@
-export type Timeframe = 'WEEK' | 'MONTH' | 'SEMESTER' | 'YEAR'
+export enum Timeframe {
+    'WEEK',
+    'MONTH',
+    'SEMESTER',
+    'YEAR'
+}
+
+export enum GradeLevel {
+    PRE_K = 'PRE_K',
+    K = 'K',
+    FIRST = 'FIRST',
+    SECOND = 'SECOND',
+    THIRD = 'THIRD',
+    FOURTH = 'FOURTH'
+}
+
+export enum Role {
+    STUDENT = 'STUDENT',
+    TEACHER = 'TEACHER',
+    ADMIN = 'ADMIN'
+}
 
 export interface UserDTO {
     id: number;
     email: string;
     firstName: string;
     lastName: string;
-    role: string;
+    role: Role;
     teacherId?: number;
     studentId?: number;
 }
 
 export interface Student {
     id: number;
-    name: string;
-    grade: string;
     points: number;
     token: string;
-    teacher: {
-        id: number;
-        name: string;
-    };
+    user: UserDTO;
+    teacher: Teacher;
+    bragLogs: BragLog[];
 }
 
 export interface Teacher {
     id: number;
-    name: string;
     grade: string;
+    user: UserDTO;
+    students: Student[];
+    bragLogs: BragLog[];
 }
 
 export interface BehaviorType {
@@ -37,18 +56,13 @@ export interface BehaviorType {
 
 export interface BragLog {
     id: number;
-    timestamp: string;
-    student: {
-        id: number;
-        name: string;
-    };
-    teacher: {
-        id: number;
-        name: string;
-    };
+    student: Student;
+    teacher: Teacher;
     behaviors: BehaviorType[];
     pointsGenerated: number;
     notes?: string;
+    timestamp: string;
+
 }
 
 export interface BragLogRequest {
