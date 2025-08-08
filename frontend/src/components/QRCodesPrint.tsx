@@ -1,3 +1,4 @@
+import { formatName, fullName } from '../utils/formatNames';
 import { Container, Row, Col, Card } from 'react-bootstrap';
 import { Student } from '../services/types';
 import { QRCodeSVG } from 'qrcode.react';
@@ -24,23 +25,20 @@ const QRCodesPrint = forwardRef<HTMLDivElement, QRCodesPrintProps>(
                         <h2 className='print-header pb-4'>BearPoints QR Codes</h2>
                         <Row className='row-cols-3 g-3'>
                             { group.map((student) => (
-                                <Col key={ student.token }>
+                                <Col key={student.token}>
                                     <Card className='h-100 text-center p-2'>
                                         <QRCodeSVG
-                                            value={ `${import.meta.env.VITE_APP_URL}/brag?token=${student.token}` }
-                                            size={ 100 }
+                                            value={`${import.meta.env.VITE_APP_URL}/brag?token=${student.token}`}
+                                            size={100}
                                             bgColor='#FFFFFF'
                                             fgColor='#000000'
                                             level='L'
                                             className='mx-auto'
                                         />
                                         <Card.Body className='p-1'>
-                                            <Card.Text className='mb-0'>{ student.name }</Card.Text>
-                                            <small className='text-muted'>
-                                                { student.teacher.name.split(' ').pop()
-                                                    || student.teacher.name }
-                                            </small><br />
-                                            <small className='text-muted'>{student.grade}</small>
+                                            <Card.Text className='mb-0'>{ fullName(student) }</Card.Text>
+                                            <small className='text-muted'>{ formatName(student.teacher) }</small><br/>
+                                            <small className='text-muted'>{student.teacher.grade}</small>
                                         </Card.Body>
                                     </Card>
                                 </Col>

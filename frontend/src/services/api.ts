@@ -1,8 +1,5 @@
-import {
-    UserDTO, Student, Teacher, BehaviorType,
-    BragLogRequest, Timeframe, LeaderboardEntry
-} from './types';
-import { auth } from '../Auth';
+import {BehaviorType, BragLogRequest, LeaderboardEntry, Student, Teacher, Timeframe, UserDTO} from './types';
+import {auth} from '../Auth';
 import axios, {AxiosError, AxiosRequestConfig} from 'axios';
 
 // ============== API with base URL ==============
@@ -128,11 +125,13 @@ const withHealthAwareRetry = async <T>(apiCall: () => Promise<T>): Promise<T> =>
     }
 }
 
+const fetchResource = async <T>(url: string): Promise<T> => {
+    return withHealthAwareRetry(() => api.get<T>(url).then(r => r.data))
+}
+
 // ============== USER API =================
 export const getCurrentUser = async (): Promise<UserDTO> => {
-    return withHealthAwareRetry(() =>
-        api.get<UserDTO>('api/users/me')
-            .then(r => r.data));
+    return fetchResource('api/users/me');
 };
 
 // ============== STUDENT API =================
@@ -163,9 +162,22 @@ export const submitPublicBragLog = async (data: BragLogRequest) => {
 
 // ============== TEACHER API =================
 export const getTeachers = async (): Promise<Teacher[]> => {
-    return withHealthAwareRetry(() =>
-        api.get<{ _embedded: { teachers: Teacher[] } }>('api/teachers')
-            .then(r => r.data._embedded.teachers));
+    return withHealthAwareRetry(async () => {
+        const response = await api.get<{ _embedded: { teachers: any[] } }>('api/teachers');
+        const teachers = response.data._embedded.teachers || [];
+        return await Promise.all(teachers.map(async teacher => {
+            if (teacher._links?.user?.href) {
+                try {
+                    const user = await fetchResource<UserDTO>(teacher._links.user.href);
+                    return {...teacher, user};
+                } catch (error) {
+                    console.error(`Failed to fetch user for teacher ${teacher.id}:`, error);
+                    return {...teacher, user: null};
+                }
+            }
+            return teacher;
+        }));
+    });
 }
 
 // ============== LEADERBOARD API =================

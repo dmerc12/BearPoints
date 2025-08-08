@@ -1,9 +1,11 @@
 import { Container, Row, Button, Col, Spinner, Alert, Form } from 'react-bootstrap';
+import { formatName, fullName, clearNameCaches } from '../utils/formatNames';
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { Student, Teacher, GradeLevel } from '../services/types';
 import { getStudents, getTeachers } from '../services/api';
 import QRCodesPrint from '../components/QRCodesPrint';
 import StudentTable from '../components/StudentTable';
-import { Student, Teacher } from '../services/types';
+import { formatGrade} from '../utils/formatGrades';
 import { useReactToPrint } from 'react-to-print';
 import { useAppSelector } from '../store/hooks';
 import { useNavigate } from 'react-router-dom';
@@ -32,6 +34,7 @@ export default function StudentsPage () {
             try {
                 setLoading(true);
                 setError('');
+                clearNameCaches();
                 const [studentsData, teachersData] = await Promise.all([
                     getStudents(),
                     getTeachers()
@@ -72,19 +75,16 @@ export default function StudentsPage () {
     }, []);
 
     const teacherNames = useMemo(() => {
-        return Array.from(new Set(teachers.map(t => {
-            const parts = t.name.split(' ');
-            return parts.length > 1 ? parts[parts.length - 1] : t.name;
-        })));
+        return Array.from(new Set(teachers.map(t => formatName(t))));
     }, [teachers]);
 
     const grades = useMemo(() => {
         return Array.from(new Set(teachers.map(t => t.grade)))
             .sort((a, b) => {
-                if (a === 'Pre-K') return -1;
-                if (b === 'Pre-K') return 1;
-                if (a === 'K') return -1;
-                if (b === 'K') return 1;
+                if (a === GradeLevel.PRE_K) return -1;
+                if (b === GradeLevel.PRE_K) return 1;
+                if (a === GradeLevel.K) return -1;
+                if (b === GradeLevel.K) return 1;
                 return a.localeCompare(b);
             });
     }, [teachers]);
@@ -96,16 +96,18 @@ export default function StudentsPage () {
         const nameFilter = filter.nameSearch.toLowerCase();
         const gradeFilter = filter.grade;
         return students.filter(student => {
+            const studentName = fullName(student).toLowerCase();
+            const teacherName = fullName(student.teacher).toLowerCase();
             if (teacherIdFilter && student.teacher.id !== teacherIdFilter) {
                 return false;
             }
-            if (teacherFilter && !student.teacher.name.toLowerCase().includes(teacherFilter)) {
+            if (teacherFilter && !teacherName.includes(teacherFilter)) {
                 return false;
             }
-            if (gradeFilter && student.grade !== gradeFilter) {
+            if (gradeFilter && student.teacher.grade !== gradeFilter) {
                 return false;
             }
-            return !(nameFilter && !student.name.toLowerCase().includes(nameFilter));
+            return !(nameFilter && !studentName.includes(nameFilter));
         });
     }, [students, currentUser, filter]);
 
@@ -151,7 +153,7 @@ export default function StudentsPage () {
                         >
                             <option value=''>All Grades</option>
                             { grades.map(grade => (
-                                <option key={ grade } value={ grade }>{ grade }</option>
+                                <option key={ grade } value={ grade }>{ formatGrade(grade) }</option>
                             )) }
                         </Form.Select>
                     </Col>
@@ -170,7 +172,9 @@ export default function StudentsPage () {
                 { !loading && !error && (
                     <>
                         { filteredStudents.length === 0 ? (
-                            <Alert variant='info' className='mt-4'>No students found matching the current filters</Alert>
+                            <Alert variant='info' className='mt-4'>
+                                No students found matching the current filters
+                            </Alert>
                         ) : (
                             <div className='border rounded-3 overflow-hidden'>
                                 <div className='m-2'>

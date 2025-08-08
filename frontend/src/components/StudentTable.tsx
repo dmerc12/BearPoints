@@ -1,5 +1,7 @@
+import { formatName, fullName } from '../utils/formatNames';
 import { useState, useMemo, useCallback } from 'react';
 import { Table, Pagination } from 'react-bootstrap';
+import { formatGrade} from '../utils/formatGrades';
 import { Student } from '../services/types';
 import { QRCodeSVG } from 'qrcode.react';
 
@@ -98,12 +100,9 @@ export default function StudentTable ({ students, onQRScan, itemsPerPage = 10 }:
                 <tbody>
                     { paginatedStudents.map((student) => (
                         <tr key={ student.token }>
-                            <td>{ student.name }</td>
-                            <td>{ student.grade }</td>
-                            <td>
-                                { student.teacher.name.split(' ').pop() ||
-                                    student.teacher.name }
-                            </td>
+                            <td>{ fullName(student) }</td>
+                            <td>{ formatGrade(student.teacher.grade) }</td>
+                            <td>{ formatName(student.teacher) || 'N/A' }</td>
                             <td>{ student.points }</td>
                             <td>
                                 <QRCodeSVG
