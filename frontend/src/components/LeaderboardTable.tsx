@@ -1,6 +1,8 @@
+import { formatName, fullName } from '../utils/formatNames';
 import { useState, useEffect, useMemo } from 'react';
 import { LeaderboardEntry } from '../services/types';
 import { Table, Pagination } from 'react-bootstrap';
+import { formatGrade } from '../utils/formatGrades';
 
 interface LeaderboardTableProps {
     entries: LeaderboardEntry[];
@@ -56,12 +58,12 @@ export default function LeaderboardTable ({ entries, itemsPerPage = 10 }: Leader
                 </thead>
                 <tbody>
                     { paginatedEntries.map((entry) => (
-                        <tr key={ entry.studentId }>
+                        <tr key={ entry.student.id }>
                             <td>{ entry.rank }</td>
                             <td>{ entry.points }</td>
-                            <td>{ entry.studentName }</td>
-                            <td>{ entry.teacherName }</td>
-                            <td>{ entry.grade }</td>
+                            <td>{ fullName(entry.student) }</td>
+                            <td>{ formatName(entry.teacher) }</td>
+                            <td>{ formatGrade(entry.grade) }</td>
                         </tr>
                     )) }
                 </tbody>

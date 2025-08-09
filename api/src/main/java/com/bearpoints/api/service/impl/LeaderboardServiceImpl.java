@@ -2,6 +2,7 @@ package com.bearpoints.api.service.impl;
 
 import com.bearpoints.api.dao.BragLogDAO;
 import com.bearpoints.api.dto.LeaderboardEntryDTO;
+import com.bearpoints.api.dto.PersonDTO;
 import com.bearpoints.api.entity.BragLog;
 import com.bearpoints.api.entity.Student;
 import com.bearpoints.api.entity.Timeframe;
@@ -61,11 +62,16 @@ public class LeaderboardServiceImpl implements LeaderboardService {
 
     private LeaderboardEntryDTO createEntryDTO(Student student, int points) {
         return new LeaderboardEntryDTO(
-                student.getId(),
-                student.getUser().getFirstName() + " " +
-                        student.getUser().getLastName(),
-                student.getTeacher().getUser().getFirstName() + " " +
-                        student.getTeacher().getUser().getLastName(),
+                new PersonDTO(
+                        student.getId(),
+                        student.getUser().getFirstName(),
+                        student.getUser().getLastName()
+                ),
+                new PersonDTO(
+                        student.getTeacher().getId(),
+                        student.getTeacher().getUser().getFirstName(),
+                        student.getTeacher().getUser().getLastName()
+                ),
                 student.getTeacher().getGrade().name(),
                 points
         );

@@ -47,7 +47,7 @@ public class LeaderboardController {
      * <p>Returns list of students sorted by points in descending order.
      *
      * @param timeframe Filter period (optional, defaults to WEEK)
-     * @return List of leaderboard entries with student / teacher details
+     * @return List of leaderboard entries with structured student/teacher details
      */
     @GetMapping
     public List<LeaderboardEntryDTO> getLeaderboard(

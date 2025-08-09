@@ -1,8 +1,8 @@
 export enum Timeframe {
-    'WEEK',
-    'MONTH',
-    'SEMESTER',
-    'YEAR'
+    WEEK = 'WEEK',
+    MONTH = 'MONTH',
+    SEMESTER = 'SEMESTER',
+    YEAR = 'YEAR'
 }
 
 export enum GradeLevel {
@@ -73,10 +73,15 @@ export interface BragLogRequest {
 }
 
 export interface LeaderboardEntry {
-    studentId: number;
-    studentName: string;
-    teacherName: string;
-    grade: string;
     points: number;
     rank?: number;
+    student: Person;
+    teacher: Person;
+    grade: string;
+}
+
+interface Person {
+    id: number;
+    firstName: string;
+    lastName: string;
 }

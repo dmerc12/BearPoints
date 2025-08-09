@@ -22,16 +22,25 @@ public class LeaderboardEntryDTOTests {
     @DisplayName("Constructor initializes all fields correctly")
     void shouldInitializeAllFieldsViaConstructor() {
         LeaderboardEntryDTO dto = new LeaderboardEntryDTO(
-                101L,
-                "John Smith",
-                "John Doe",
-                "5th Grade",
+                new PersonDTO(
+                        101L,
+                        "John",
+                        "Smith"
+                ),
+                new PersonDTO(
+                        203L,
+                        "John",
+                        "Doe"
+                ),
+                "THIRD",
                 150
         );
-        assertEquals(101L, dto.getStudentId());
-        assertEquals("John Smith", dto.getStudentName());
-        assertEquals("John Doe", dto.getTeacherName());
-        assertEquals("5th Grade", dto.getGrade());
+        assertEquals(101L, dto.getStudent().getId());
+        assertEquals("John", dto.getStudent().getFirstName());
+        assertEquals("Smith", dto.getStudent().getLastName());
+        assertEquals("John", dto.getTeacher().getFirstName());
+        assertEquals("Doe", dto.getTeacher().getLastName());
+        assertEquals("THIRD", dto.getGrade());
         assertEquals(150, dto.getPoints());
     }
 }

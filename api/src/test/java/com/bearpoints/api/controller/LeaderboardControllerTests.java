@@ -1,6 +1,7 @@
 package com.bearpoints.api.controller;
 
 import com.bearpoints.api.dto.LeaderboardEntryDTO;
+import com.bearpoints.api.dto.PersonDTO;
 import com.bearpoints.api.entity.Timeframe;
 import com.bearpoints.api.service.LeaderboardService;
 import org.junit.jupiter.api.BeforeEach;
@@ -53,9 +54,18 @@ public class LeaderboardControllerTests {
     @BeforeEach
     public void setup() {
         sampleLeaderboard = Arrays.asList(
-                new LeaderboardEntryDTO(1L, "Student One", "Teacher A", "THIRD", 150),
-                new LeaderboardEntryDTO(2L, "Student Two", "Teacher B", "FOURTH", 120),
-                new LeaderboardEntryDTO(3L, "Student Three", "Teacher C", "SECOND", 95)
+                new LeaderboardEntryDTO(
+                        new PersonDTO(1L, "Student", "One"),
+                        new PersonDTO(1L, "Teacher", "A"),
+                        "THIRD", 150),
+                new LeaderboardEntryDTO(
+                        new PersonDTO(2L, "Student", "Two"),
+                        new PersonDTO(2L, "Teacher", "B"),
+                        "FOURTH", 120),
+                new LeaderboardEntryDTO(
+                        new PersonDTO(3L, "Student", "Three"),
+                        new PersonDTO(3L, "Teacher", "C"),
+                        "SECOND", 95)
         );
     }
 
@@ -82,7 +92,10 @@ public class LeaderboardControllerTests {
             assertNotNull(response);
             assertEquals(3, response.size());
             assertEquals(150, response.getFirst().getPoints());
-            assertEquals("Student Three", response.get(2).getStudentName());
+            assertEquals("Student", response.getFirst().getStudent().getFirstName());
+            assertEquals("One", response.getFirst().getStudent().getLastName());
+            assertEquals("Teacher", response.getFirst().getTeacher().getFirstName());
+            assertEquals("A", response.getFirst().getTeacher().getLastName());
         }
 
         /**
@@ -101,7 +114,10 @@ public class LeaderboardControllerTests {
             List<LeaderboardEntryDTO> response = leaderboardController.getLeaderboard(Timeframe.MONTH);
             assertNotNull(response);
             assertEquals(3, response.size());
-            assertEquals("Teacher B", response.get(1).getTeacherName());
+            assertEquals("Student", response.get(1).getStudent().getFirstName());
+            assertEquals("Two", response.get(1).getStudent().getLastName());
+            assertEquals("Teacher", response.get(1).getTeacher().getFirstName());
+            assertEquals("B", response.get(1).getTeacher().getLastName());
         }
 
         /**

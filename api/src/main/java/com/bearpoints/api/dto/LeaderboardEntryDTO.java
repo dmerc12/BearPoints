@@ -9,9 +9,8 @@ import lombok.Getter;
  *
  * <p>Fields:
  * <ul>
- *     <li>{@code studentId} - Unique student identifier</li>
- *     <li>{@code studentName} - Combined first and last name</li>
- *     <li>{@code teacherName} - Student's teacher's name</li>
+ *     <li>{@code student} - Student information (id, first name, last name)</li>
+ *     <li>{@code teacher} - Teacher's information (id, first name, last name)</li>
  *     <li>{@code grade} - Student's grade level</li>
  *     <li>{@code points} - Current point total</li>
  * </ul>
@@ -22,9 +21,8 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class LeaderboardEntryDTO {
-    private Long studentId;
-    private String studentName;
-    private String teacherName;
+    private PersonDTO student;
+    private PersonDTO teacher;
     private String grade;
     private Integer points;
 }

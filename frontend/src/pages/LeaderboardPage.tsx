@@ -1,7 +1,9 @@
 import { Container, Form, Spinner, Alert, Row, Col } from 'react-bootstrap';
+import { formatName, clearNameCaches } from '../utils/formatNames';
 import { LeaderboardEntry, Timeframe } from '../services/types';
 import LeaderboardTable from '../components/LeaderboardTable';
 import { useEffect, useState, useMemo } from 'react';
+import { formatGrade } from '../utils/formatGrades';
 import { getLeaderboard } from '../services/api';
 import Auth from '../components/Auth';
 
@@ -11,7 +13,7 @@ export default function LeaderboardPage () {
     const [ error, setError ] = useState('');
     const [ filters, setFilters ] = useState({
         teacher: '',
-        timeframe: 'WEEK' as Timeframe,
+        timeframe: Timeframe.WEEK,
         grade: ''
     });
     
@@ -20,6 +22,7 @@ export default function LeaderboardPage () {
             try {
                 setLoading(true);
                 setError('');
+                clearNameCaches();
                 const data = await getLeaderboard(filters.timeframe);
                 setLeaderboard(data);
             } catch (error) {
@@ -38,7 +41,7 @@ export default function LeaderboardPage () {
     const filteredEntries = useMemo(() => {
         return leaderboard.filter(entry => {
             const teacherMatch = filters.teacher === '' ||
-                entry.teacherName.includes(filters.teacher);
+                formatName(entry.teacher).includes(filters.teacher);
             const gradeMatch = filters.grade === '' ||
                 entry.grade === filters.grade;
             return teacherMatch && gradeMatch;
@@ -46,10 +49,10 @@ export default function LeaderboardPage () {
     }, [leaderboard, filters.teacher, filters.grade]);
 
     const uniqueTeachers = useMemo(() =>
-        [...new Set(leaderboard.map(e => e.teacherName))], [leaderboard]);
+        [...new Set(leaderboard.map(e => formatName(e.teacher)))], [leaderboard]);
 
     const uniqueGrades = useMemo(() =>
-        [...new Set(leaderboard.map(e => e.grade))], [leaderboard]);
+        [...new Set(leaderboard.map(e => formatGrade(e.grade)))], [leaderboard]);
 
     return (
         <Auth>
@@ -69,10 +72,10 @@ export default function LeaderboardPage () {
                                              timeframe: e.target.value as Timeframe })) }
                                      style={ { maxWidth: '300px' } }
                         >
-                            <option value='WEEK'>Last Week</option>
-                            <option value='MONTH'>Last Month</option>
-                            <option value='SEMESTER'>Semester</option>
-                            <option value='YEAR'>Year</option>
+                            <option value={Timeframe.WEEK}>Last Week</option>
+                            <option value={Timeframe.MONTH}>Last Month</option>
+                            <option value={Timeframe.SEMESTER}>Semester</option>
+                            <option value={Timeframe.YEAR}>Year</option>
                         </Form.Select>
                     </Col>
                     {/* Teacher Filter */ }
