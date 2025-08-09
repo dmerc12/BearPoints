@@ -12,7 +12,6 @@ export default function useLogin() {
         setSigningIn(true);
         try {
             await login();
-            console.log('Login successful, navigating to dashboard');
             navigate('/dashboard');
         } catch (error) {
             console.error('Login failed:', error);
