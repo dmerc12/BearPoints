@@ -29,7 +29,6 @@ export default function Auth ({ children }: AuthProps) {
                     dispatch(clearUser());
                 } else {
                     try {
-                        console.log('Fetching user data from API');
                         const userData = await getCurrentUser();
                         dispatch(setUser(userData));
                     } catch (error) {

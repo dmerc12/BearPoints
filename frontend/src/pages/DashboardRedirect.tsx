@@ -14,7 +14,6 @@ export default function DashboardRedirect() {
                 console.log('No user data, redirecting to home');
                 navigate('/', { replace: true });
             } else {
-                console.log('Redirecting based on role:', userData.role);
                 switch (userData.role) {
                     case 'TEACHER':
                         navigate('/dashboard/teacher', { replace: true });
@@ -53,8 +52,6 @@ export default function DashboardRedirect() {
                         </Spinner>
                         <p>Loading Your Dashboard...</p>
                     </div>
-                    <h3>Debug Information</h3>
-                    <p>User data: { userData ? JSON.stringify(userData) : null }</p>
                     <p>You should be redirected automatically.</p>
                     <Button variant='primary' onClick={() => window.location.reload()}>
                         Refresh Page
