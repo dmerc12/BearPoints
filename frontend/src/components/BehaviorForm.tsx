@@ -1,5 +1,6 @@
 import { BragLogRequest, BehaviorType, Student } from '../services/types';
 import { Form, Alert, Spinner, Card, Button } from 'react-bootstrap';
+import { fullName } from '../utils/formatNames';
 import { FormEvent, useState } from 'react';
 
 interface BehaviorFormProps {
@@ -53,7 +54,7 @@ export default function BehaviorForm ({ onSubmit, student, behaviorTypes }: Beha
                 <Card.Body>
                     <Form onSubmit={ handleSubmit }>
                         <Form.Group className='mb-3' controlId='studentName'>
-                            <Form.Control type='text' value={ student.name } disabled aria-label='Student name' />
+                            <Form.Control type='text' value={ fullName(student) } disabled aria-label='Student name' />
                         </Form.Group>
                         <Form.Group className='mb-3' controlId='behaviors'>
                             <Form.Label>Behaviors</Form.Label>
@@ -61,7 +62,7 @@ export default function BehaviorForm ({ onSubmit, student, behaviorTypes }: Beha
                                 { behaviorTypes.filter(bt => bt.active)
                                     .map(behavior => (
                                         <Form.Check key={behavior.id} type='checkbox'
-                                                    label={`behavior.name (${behavior.pointValue} pts)`}
+                                                    label={`${behavior.name} (${behavior.pointValue} pts)`}
                                                     checked={selectedBehaviorIds.includes(behavior.id)}
                                                     onChange={() => toggleBehavior(behavior.id)}
                                                     aria-label={`Select ${behavior.name}`}
@@ -86,7 +87,7 @@ export default function BehaviorForm ({ onSubmit, student, behaviorTypes }: Beha
                                     disabled={ loading || selectedBehaviorIds.length === 0 }
                                     style={{ minWidth: '120px', minHeight: '48px' }}
                             >
-                                { loading ? <Spinner size='sm' /> : 'Submit' }
+                                { loading ? <Spinner size='sm' animation='border' /> : 'Submit' }
                             </Button>
                         </div>
                         { error && <Alert variant='danger' className='mt-3'>{ error }</Alert> }
