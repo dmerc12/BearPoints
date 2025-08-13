@@ -42,7 +42,7 @@ export interface Student {
 export interface Teacher {
     id: number;
     grade: string;
-    user: UserDTO;
+    user: UserDTO | null;
     students: Student[];
     bragLogs: BragLog[];
 }
@@ -84,4 +84,22 @@ interface Person {
     id: number;
     firstName: string;
     lastName: string;
+}
+
+export interface Link {
+    href: string;
+}
+
+export interface TeacherLinks {
+    self: Link;
+    bragLogs?: Link;
+    students?: Link;
+    user?: Link;
+    teacher?: Link;
+}
+
+export interface TeacherResource {
+    id: number;
+    grade: string;
+    _links: TeacherLinks;
 }

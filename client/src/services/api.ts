@@ -1,4 +1,13 @@
-import {BehaviorType, BragLogRequest, LeaderboardEntry, Student, Teacher, Timeframe, UserDTO} from './types';
+import {
+    BehaviorType,
+    BragLogRequest,
+    LeaderboardEntry,
+    Student,
+    Teacher,
+    TeacherResource,
+    Timeframe,
+    UserDTO
+} from './types';
 import {auth} from '../Auth';
 import axios, {AxiosError, AxiosRequestConfig} from 'axios';
 
@@ -163,20 +172,19 @@ export const submitPublicBragLog = async (data: BragLogRequest) => {
 // ============== TEACHER API =================
 export const getTeachers = async (): Promise<Teacher[]> => {
     return withHealthAwareRetry(async () => {
-        const response = await api.get<{ _embedded: { teachers: any[] } }>('api/teachers');
-        const teachers = response.data._embedded.teachers || [];
-        return await Promise.all(teachers.map(async teacher => {
-            if (teacher._links?.user?.href) {
-                try {
-                    const user = await fetchResource<UserDTO>(teacher._links.user.href);
-                    return {...teacher, user};
-                } catch (error) {
-                    console.error(`Failed to fetch user for teacher ${teacher.id}:`, error);
-                    return {...teacher, user: null};
-                }
-            }
-            return teacher;
-        }));
+        const response = await api.get<{ _embedded: { teachers: TeacherResource[] } }>('api/teachers');
+        const teacherResources = response.data._embedded.teachers || [];
+        return await Promise.all(teacherResources.map(async tr => {
+            const user = tr._links?.user?.href ?
+                await fetchResource<UserDTO>(tr._links.user.href).catch(() => null) : null;
+            return {
+                id: tr.id,
+                grade: tr.grade,
+                user: user,
+                students: [],
+                bragLogs: []
+            };
+        }))
     });
 }
 

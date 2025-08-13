@@ -8,6 +8,9 @@ interface NameSource {
 
 const getNameSource = (source: Teacher | Student | NameSource): NameSource => {
     if ('user' in source) {
+        if (!source.user) {
+            return { firstName: '', lastName: '' };
+        }
         return {
             firstName: source.user.firstName,
             lastName: source.user.lastName,
@@ -16,22 +19,9 @@ const getNameSource = (source: Teacher | Student | NameSource): NameSource => {
     return source;
 };
 
-const getNames = (source: Teacher | Student | NameSource) => {
-    if ('user' in source) {
-        return {
-            firstName: source.user.firstName,
-            lastName: source.user.lastName,
-        };
-    }
-    return {
-        firstName: source.firstName,
-        lastName: source.lastName,
-    };
-};
-
 const resolver = (source: Teacher | Student | NameSource) => {
     if ('id' in source) return source.id;
-    const names = getNames(source);
+    const names = getNameSource(source);
     return `${names.firstName || ''}-${names.lastName || ''}`;
 };
 
