@@ -1,7 +1,7 @@
 import { Container, Row, Button, Col, Spinner, Alert, Form } from 'react-bootstrap';
 import { formatName, fullName, clearNameCaches } from '../utils/formatNames';
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { Student, Teacher, GradeLevel } from '../services/types';
+import {Student, Teacher, GradeLevel } from '../services/types';
 import { getStudents, getTeachers } from '../services/api';
 import QRCodesPrint from '../components/QRCodesPrint';
 import StudentTable from '../components/StudentTable';
@@ -40,7 +40,7 @@ export default function StudentsPage () {
                     getTeachers()
                 ]);
                 setStudents(studentsData);
-                setTeachers(teachersData);
+                setTeachers(teachersData.teachers);
             } catch (error) {
                 setError('Failed to load students. Please try again later');
                 console.error('Failed to load students:', error);

@@ -1,7 +1,9 @@
 package com.bearpoints.api.dao;
 
+import com.bearpoints.api.dto.UserSummary;
 import com.bearpoints.api.entity.User;
 import io.micrometer.common.lang.NonNull;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.data.rest.core.annotation.RestResource;
@@ -35,7 +37,10 @@ import java.util.Optional;
  * @version 1.1
  * @author Dylan Mercer
  */
-@RepositoryRestResource(path = "users")
+@RepositoryRestResource(
+        path = "users",
+        excerptProjection = UserSummary.class
+)
 @PreAuthorize("isAuthenticated()")
 public interface UserDAO extends JpaRepository<User, Long> {
     /**
@@ -67,6 +72,7 @@ public interface UserDAO extends JpaRepository<User, Long> {
 
     @NonNull
     @Override
+    @Cacheable("users")
     @PreAuthorize("isAuthenticated()")
     List<User> findAll();
 

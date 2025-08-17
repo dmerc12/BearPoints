@@ -39,10 +39,16 @@ export interface Student {
     bragLogs: BragLog[];
 }
 
+export interface PaginatedTeachers {
+    teachers: Teacher[];
+    totalPages: number;
+    totalTeachers: number;
+}
+
 export interface Teacher {
     id: number;
     grade: string;
-    user: UserDTO | null;
+    user: UserDTO;
     students: Student[];
     bragLogs: BragLog[];
 }
@@ -86,20 +92,3 @@ interface Person {
     lastName: string;
 }
 
-export interface Link {
-    href: string;
-}
-
-export interface TeacherLinks {
-    self: Link;
-    bragLogs?: Link;
-    students?: Link;
-    user?: Link;
-    teacher?: Link;
-}
-
-export interface TeacherResource {
-    id: number;
-    grade: string;
-    _links: TeacherLinks;
-}

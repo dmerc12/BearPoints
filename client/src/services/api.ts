@@ -1,10 +1,9 @@
 import {
     BehaviorType,
     BragLogRequest,
-    LeaderboardEntry,
+    LeaderboardEntry, PaginatedTeachers, Role,
     Student,
     Teacher,
-    TeacherResource,
     Timeframe,
     UserDTO
 } from './types';
@@ -170,21 +169,41 @@ export const submitPublicBragLog = async (data: BragLogRequest) => {
 };
 
 // ============== TEACHER API =================
-export const getTeachers = async (): Promise<Teacher[]> => {
+export const getTeachers = async (page = 0, size = 100): Promise<PaginatedTeachers> => {
     return withHealthAwareRetry(async () => {
-        const response = await api.get<{ _embedded: { teachers: TeacherResource[] } }>('api/teachers');
-        const teacherResources = response.data._embedded.teachers || [];
-        return await Promise.all(teacherResources.map(async tr => {
-            const user = tr._links?.user?.href ?
-                await fetchResource<UserDTO>(tr._links.user.href).catch(() => null) : null;
-            return {
-                id: tr.id,
-                grade: tr.grade,
-                user: user,
+        const response = await api.get<{
+            _embedded: { teachers: Teacher[] },
+            page: { totalPages: number, totalElements: number }
+        }>(`api/teachers?projection=teacherSummary&page=${page}&size=${size}`);
+        return {
+            teachers: response.data._embedded.teachers.map(t => ({
+                id: t.id,
+                grade: t.grade,
+                user: {
+                    id: t.user.id,
+                    email: t.user.email,
+                    firstName: t.user.firstName,
+                    lastName: t.user.lastName,
+                    role: t.user.role as Role,
+                },
                 students: [],
-                bragLogs: []
-            };
-        }))
+                bragLogs: [],
+            })),
+            totalPages: response.data.page.totalPages,
+            totalTeachers: response.data.page.totalElements
+        };
+    });
+}
+
+export const getTeacher = async (id: number): Promise<Teacher> => {
+    return withHealthAwareRetry(async () => {
+        const response =
+            await api.get<Teacher>(`api/teachers/${id}?projection=teacherSummary`);
+        return {
+            ...response.data,
+            students: [],
+            bragLogs: [],
+        }
     });
 }
 

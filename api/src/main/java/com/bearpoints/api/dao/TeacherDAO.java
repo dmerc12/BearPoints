@@ -1,9 +1,11 @@
 package com.bearpoints.api.dao;
 
+import com.bearpoints.api.dto.TeacherSummary;
 import com.bearpoints.api.entity.GradeLevel;
 import com.bearpoints.api.entity.Teacher;
 import io.micrometer.common.lang.NonNull;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.data.rest.core.annotation.RestResource;
@@ -39,7 +41,10 @@ import java.util.Optional;
  * @version 1.1
  * @author Dylan Mercer
  */
-@RepositoryRestResource(path = "teachers")
+@RepositoryRestResource(
+        path = "teachers",
+        excerptProjection = TeacherSummary.class
+)
 public interface TeacherDAO extends JpaRepository<Teacher, Long> {
     /**
      * Finds a teacher by their associated user email.
@@ -68,9 +73,9 @@ public interface TeacherDAO extends JpaRepository<Teacher, Long> {
      */
     @NonNull
     @Override
+    @Cacheable("teachers")
     @PreAuthorize("isAuthenticated()")
     List<Teacher> findAll();
-
 
     @NonNull
     @Override
