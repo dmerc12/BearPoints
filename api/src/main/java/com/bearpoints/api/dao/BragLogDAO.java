@@ -1,5 +1,6 @@
 package com.bearpoints.api.dao;
 
+import com.bearpoints.api.dto.BragLogSummary;
 import com.bearpoints.api.entity.BragLog;
 import com.bearpoints.api.entity.Student;
 import io.micrometer.common.lang.NonNull;
@@ -37,7 +38,10 @@ import java.util.List;
  * @version 1.1
  * @author Dylan Mercer
  */
-@RepositoryRestResource(path = "brag-logs")
+@RepositoryRestResource(
+        path = "brag-logs",
+        excerptProjection = BragLogSummary.class
+)
 public interface BragLogDAO extends JpaRepository<BragLog, Long> {
     /**
      * Finds brag logs by associated student.
