@@ -1,5 +1,6 @@
 package com.bearpoints.api.dao;
 
+import com.bearpoints.api.dto.RewardItemSummary;
 import com.bearpoints.api.entity.RewardItem;
 import io.micrometer.common.lang.NonNull;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -33,7 +34,10 @@ import java.util.List;
  * @version 1.1
  * @author Dylan Mercer
  */
-@RepositoryRestResource(path = "reward-items")
+@RepositoryRestResource(
+        path = "reward-items",
+        excerptProjection = RewardItemSummary.class
+)
 public interface RewardItemDAO extends JpaRepository<RewardItem, Long> {
     /**
      * Finds all reward items ordered alphabetically by name.
