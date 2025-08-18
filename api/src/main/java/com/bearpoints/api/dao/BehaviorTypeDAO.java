@@ -1,5 +1,6 @@
 package com.bearpoints.api.dao;
 
+import com.bearpoints.api.dto.BehaviorTypeSummary;
 import com.bearpoints.api.entity.BehaviorType;
 import io.micrometer.common.lang.NonNull;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -31,7 +32,10 @@ import java.util.List;
  * @version 1.0
  * @author Dylan Mercer
  */
-@RepositoryRestResource(path = "behavior-types")
+@RepositoryRestResource(
+        path = "behavior-types",
+        excerptProjection = BehaviorTypeSummary.class
+)
 public interface BehaviorTypeDAO extends JpaRepository<BehaviorType, Long> {
     /**
      * Finds all active behavior types.
