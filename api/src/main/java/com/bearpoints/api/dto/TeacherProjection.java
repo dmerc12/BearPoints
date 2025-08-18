@@ -14,15 +14,15 @@ import org.springframework.data.rest.core.config.Projection;
  * <ul>
  *     <li>id - Unique teacher identifier</li>
  *     <li>grade - Teacher's assigned grade level</li>
- *     <li>user - Associated user details via UserSummary</li>
+ *     <li>user - Associated user details via UserProjection</li>
  * </ul>
- * @see UserSummary
+ * @see UserProjection
  * @version 1.0
  * @author Dylan Mercer
  */
-@Projection(name = "teacherSummary", types = Teacher.class)
-public interface TeacherSummary {
+@Projection(name = "teacherProjection", types = Teacher.class)
+public interface TeacherProjection {
     Long getId();
     GradeLevel getGrade();
-    UserSummary getUser();
+    UserProjection getUser();
 }

@@ -13,7 +13,7 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Unit tests for {@link BragLogSummary} projection.
+ * Unit tests for {@link BragLogProjection} projection.
  * <p>Verifies:
  * <ul>
  *     <li>Correct mapping of all brag log fields</li>
@@ -21,12 +21,12 @@ import static org.junit.jupiter.api.Assertions.*;
  *     <li>Graceful handling of missing relationships</li>
  *     <li>Correct timestamp mapping</li>
  * </ul>
- * @see BragLogSummary
+ * @see BragLogProjection
  * @version 1.0
  * @author Dylan Mercer
  */
-@DisplayName("Brag Log Summary Tests")
-public class BragLogSummaryTests {
+@DisplayName("Brag Log Projection Tests")
+public class BragLogProjectionTests {
     /**
      * Tests complete brag log data mapping.
      * <p>Verifies:
@@ -40,7 +40,7 @@ public class BragLogSummaryTests {
      */
     @Test
     @DisplayName("Should correctly map all brag log fields with nested projections")
-    void shouldReturnCorrectBragLogSummary() {
+    void shouldReturnCorrectBragLogProjection() {
         User studentUser = new User();
         studentUser.setId(1L);
         studentUser.setEmail("john.doe@example.com");
@@ -80,56 +80,56 @@ public class BragLogSummaryTests {
         bragLog.setNotes("Great teamwork during class project");
         bragLog.setTimestamp(LocalDateTime.now());
         ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
-        BragLogSummary projection = factory.createProjection(BragLogSummary.class, bragLog);
+        BragLogProjection projection = factory.createProjection(BragLogProjection.class, bragLog);
         assertEquals(bragLog.getId(), projection.getId());
         assertEquals(bragLog.getPointsGenerated(), projection.getPointsGenerated());
         assertEquals(bragLog.getNotes(), projection.getNotes());
         assertEquals(bragLog.getTimestamp(), projection.getTimestamp());
-        StudentSummary studentSummary = projection.getStudent();
-        assertNotNull(studentSummary);
-        assertEquals(student.getId(), studentSummary.getId());
-        assertEquals(student.getPoints(), studentSummary.getPoints());
-        TeacherSummary studentTeacherSummary = studentSummary.getTeacher();
-        assertNotNull(studentTeacherSummary);
-        assertEquals(teacher.getId(), studentTeacherSummary.getId());
-        assertEquals(teacher.getGrade(), studentTeacherSummary.getGrade());
-        UserSummary studentTeacherUserSummary = studentSummary.getUser();
-        assertNotNull(studentTeacherUserSummary);
-        assertEquals(studentUser.getId(), studentTeacherUserSummary.getId());
-        assertEquals(studentUser.getEmail(), studentTeacherUserSummary.getEmail());
-        assertEquals(studentUser.getFirstName(), studentTeacherUserSummary.getFirstName());
-        assertEquals(studentUser.getLastName(), studentTeacherUserSummary.getLastName());
-        assertEquals(studentUser.getRole().name(), studentTeacherUserSummary.getRole());
-        UserSummary studentUserSummary = studentSummary.getUser();
-        assertNotNull(studentUserSummary);
-        assertEquals(studentUser.getId(), studentUserSummary.getId());
-        assertEquals(studentUser.getEmail(), studentUserSummary.getEmail());
-        assertEquals(studentUser.getFirstName(), studentUserSummary.getFirstName());
-        assertEquals(studentUser.getLastName(), studentUserSummary.getLastName());
-        assertEquals(studentUser.getRole().name(), studentUserSummary.getRole());
-        TeacherSummary teacherSummary = projection.getTeacher();
-        assertNotNull(teacherSummary);
-        assertEquals(teacher.getId(), teacherSummary.getId());
-        assertEquals(teacher.getGrade(), teacherSummary.getGrade());
-        UserSummary teacherUserSummary = teacherSummary.getUser();
-        assertNotNull(teacherUserSummary);
-        assertEquals(teacherUser.getId(), teacherUserSummary.getId());
-        assertEquals(teacherUser.getEmail(), teacherUserSummary.getEmail());
-        assertEquals(teacherUser.getFirstName(), teacherUserSummary.getFirstName());
-        assertEquals(teacherUser.getLastName(), teacherUserSummary.getLastName());
-        assertEquals(teacherUser.getRole().name(), teacherUserSummary.getRole());
-        Set<BehaviorTypeSummary> behaviorSummaries = projection.getBehaviors();
-        assertNotNull(behaviorSummaries);
-        assertEquals(2, behaviorSummaries.size());
-        behaviorSummaries.forEach(behaviorSummary -> {
-            assertTrue(Objects.equals(behaviorSummary.getId(), behavior1.getId()) ||
-                    Objects.equals(behaviorSummary.getId(), behavior2.getId()));
-            if (Objects.equals(behaviorSummary.getId(), behavior1.getId())) {
-                assertEquals(behavior1.getName(), behaviorSummary.getName());
-                assertEquals(behavior1.getPointValue(), behaviorSummary.getPointValue());
+        StudentProjection studentProjection = projection.getStudent();
+        assertNotNull(studentProjection);
+        assertEquals(student.getId(), studentProjection.getId());
+        assertEquals(student.getPoints(), studentProjection.getPoints());
+        TeacherProjection studentTeacherProjection = studentProjection.getTeacher();
+        assertNotNull(studentTeacherProjection);
+        assertEquals(teacher.getId(), studentTeacherProjection.getId());
+        assertEquals(teacher.getGrade(), studentTeacherProjection.getGrade());
+        UserProjection studentTeacherUserProjection = studentProjection.getUser();
+        assertNotNull(studentTeacherUserProjection);
+        assertEquals(studentUser.getId(), studentTeacherUserProjection.getId());
+        assertEquals(studentUser.getEmail(), studentTeacherUserProjection.getEmail());
+        assertEquals(studentUser.getFirstName(), studentTeacherUserProjection.getFirstName());
+        assertEquals(studentUser.getLastName(), studentTeacherUserProjection.getLastName());
+        assertEquals(studentUser.getRole().name(), studentTeacherUserProjection.getRole());
+        UserProjection studentUserProjection = studentProjection.getUser();
+        assertNotNull(studentUserProjection);
+        assertEquals(studentUser.getId(), studentUserProjection.getId());
+        assertEquals(studentUser.getEmail(), studentUserProjection.getEmail());
+        assertEquals(studentUser.getFirstName(), studentUserProjection.getFirstName());
+        assertEquals(studentUser.getLastName(), studentUserProjection.getLastName());
+        assertEquals(studentUser.getRole().name(), studentUserProjection.getRole());
+        TeacherProjection teacherProjection = projection.getTeacher();
+        assertNotNull(teacherProjection);
+        assertEquals(teacher.getId(), teacherProjection.getId());
+        assertEquals(teacher.getGrade(), teacherProjection.getGrade());
+        UserProjection teacherUserProjection = teacherProjection.getUser();
+        assertNotNull(teacherUserProjection);
+        assertEquals(teacherUser.getId(), teacherUserProjection.getId());
+        assertEquals(teacherUser.getEmail(), teacherUserProjection.getEmail());
+        assertEquals(teacherUser.getFirstName(), teacherUserProjection.getFirstName());
+        assertEquals(teacherUser.getLastName(), teacherUserProjection.getLastName());
+        assertEquals(teacherUser.getRole().name(), teacherUserProjection.getRole());
+        Set<BehaviorTypeProjection> behaviorProjections = projection.getBehaviors();
+        assertNotNull(behaviorProjections);
+        assertEquals(2, behaviorProjections.size());
+        behaviorProjections.forEach(behaviorProjection -> {
+            assertTrue(Objects.equals(behaviorProjection.getId(), behavior1.getId()) ||
+                    Objects.equals(behaviorProjection.getId(), behavior2.getId()));
+            if (Objects.equals(behaviorProjection.getId(), behavior1.getId())) {
+                assertEquals(behavior1.getName(), behaviorProjection.getName());
+                assertEquals(behavior1.getPointValue(), behaviorProjection.getPointValue());
             } else {
-                assertEquals(behavior2.getName(), behaviorSummary.getName());
-                assertEquals(behavior2.getPointValue(), behaviorSummary.getPointValue());
+                assertEquals(behavior2.getName(), behaviorProjection.getName());
+                assertEquals(behavior2.getPointValue(), behaviorProjection.getPointValue());
             }
         });
     }
@@ -163,17 +163,17 @@ public class BragLogSummaryTests {
         bragLog.setPointsGenerated(3);
         bragLog.setTimestamp(LocalDateTime.now());
         ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
-        BragLogSummary projection = factory.createProjection(BragLogSummary.class, bragLog);
+        BragLogProjection projection = factory.createProjection(BragLogProjection.class, bragLog);
         assertEquals(bragLog.getId(), projection.getId());
         assertEquals(bragLog.getPointsGenerated(), projection.getPointsGenerated());
         assertEquals(bragLog.getNotes(), projection.getNotes());
         assertEquals(bragLog.getTimestamp(), projection.getTimestamp());
         assertNotNull(projection.getStudent());
         assertNotNull(projection.getTeacher());
-        Set<BehaviorTypeSummary> behaviors = projection.getBehaviors();
+        Set<BehaviorTypeProjection> behaviors = projection.getBehaviors();
         assertEquals(1, behaviors.size());
-        BehaviorTypeSummary behaviorSummary = behaviors.iterator().next();
-        assertEquals(behavior.getId(), behaviorSummary.getId());
-        assertEquals(behavior.getName(), behaviorSummary.getName());
+        BehaviorTypeProjection behaviorProjection = behaviors.iterator().next();
+        assertEquals(behavior.getId(), behaviorProjection.getId());
+        assertEquals(behavior.getName(), behaviorProjection.getName());
     }
 }

@@ -15,18 +15,18 @@ import java.time.LocalDateTime;
  * <ul>
  *     <li>id - Unique redemption identifier</li>
  *     <li>redeemedAt - Timestamp of redemption</li>
- *     <li>student - Associated student via StudentSummary</li>
- *     <li>rewardItem - Redeemed item via RewardItemSummary</li>
+ *     <li>student - Associated student via StudentProjection</li>
+ *     <li>rewardItem - Redeemed item via RewardItemProjection</li>
  * </ul>
- * @see StudentSummary
- * @see RewardItemSummary
+ * @see StudentProjection
+ * @see RewardItemProjection
  * @version 1.0
  * @author Dylan Mercer
  */
-@Projection(name = "studentRewardSummary", types = StudentReward.class)
-public interface StudentRewardSummary {
+@Projection(name = "studentRewardProjection", types = StudentReward.class)
+public interface StudentRewardProjection {
     Long getId();
     LocalDateTime getRedeemedAt();
-    StudentSummary getStudent();
-    RewardItemSummary getRewardItem();
+    StudentProjection getStudent();
+    RewardItemProjection getRewardItem();
 }

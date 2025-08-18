@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
- * Unit tests for {@link StudentRewardSummary} projection.
+ * Unit tests for {@link StudentRewardProjection} projection.
  * <p>Verifies:
  * <ul>
  *     <li>Correct mapping of all student reward fields</li>
@@ -22,12 +22,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  *     <li>Accurate timestamp mapping</li>
  *     <li>Graceful handling of missing relationships</li>
  * </ul>
- * @see StudentRewardSummary
+ * @see StudentRewardProjection
  * @version 1.0
  * @author Dylan Mercer
  */
-@DisplayName("Student Reward Summary Tests")
-public class StudentRewardSummaryTests {
+@DisplayName("Student Reward Projection Tests")
+public class StudentRewardProjectionTests {
     /**
      * Tests complete student reward data mapping.
      * <p>Verifies:
@@ -40,7 +40,7 @@ public class StudentRewardSummaryTests {
      */
     @Test
     @DisplayName("Should correctly map all student reward fields")
-    void shouldReturnCorrectStudentRewardSummary() {
+    void shouldReturnCorrectStudentRewardProjection() {
         Student student = new Student();
         student.setId(1L);
         RewardItem item = new RewardItem();
@@ -53,17 +53,17 @@ public class StudentRewardSummaryTests {
         reward.setStudent(student);
         reward.setRewardItem(item);
         ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
-        StudentRewardSummary projection = factory.createProjection(StudentRewardSummary.class, reward);
+        StudentRewardProjection projection = factory.createProjection(StudentRewardProjection.class, reward);
         assertEquals(reward.getId(), projection.getId());
         assertEquals(reward.getRedeemedAt(), projection.getRedeemedAt());
-        StudentSummary studentSummary = projection.getStudent();
-        assertNotNull(studentSummary);
-        assertEquals(student.getId(), studentSummary.getId());
-        RewardItemSummary itemSummary = projection.getRewardItem();
-        assertNotNull(itemSummary);
-        assertEquals(item.getId(), itemSummary.getId());
-        assertEquals(item.getName(), itemSummary.getName());
-        assertEquals(item.getPointCost(), itemSummary.getPointCost());
+        StudentProjection studentProjection = projection.getStudent();
+        assertNotNull(studentProjection);
+        assertEquals(student.getId(), studentProjection.getId());
+        RewardItemProjection itemProjection = projection.getRewardItem();
+        assertNotNull(itemProjection);
+        assertEquals(item.getId(), itemProjection.getId());
+        assertEquals(item.getName(), itemProjection.getName());
+        assertEquals(item.getPointCost(), itemProjection.getPointCost());
     }
 
     /**
@@ -88,7 +88,7 @@ public class StudentRewardSummaryTests {
         reward.setStudent(student);
         reward.setRewardItem(item);
         ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
-        StudentRewardSummary projection = factory.createProjection(StudentRewardSummary.class, reward);
+        StudentRewardProjection projection = factory.createProjection(StudentRewardProjection.class, reward);
         assertEquals(reward.getId(), projection.getId());
         assertEquals(reward.getRedeemedAt(), projection.getRedeemedAt());
         assertNotNull(projection.getStudent());

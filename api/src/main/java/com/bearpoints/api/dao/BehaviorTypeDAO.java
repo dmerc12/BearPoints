@@ -1,6 +1,6 @@
 package com.bearpoints.api.dao;
 
-import com.bearpoints.api.dto.BehaviorTypeSummary;
+import com.bearpoints.api.dto.BehaviorTypeProjection;
 import com.bearpoints.api.entity.BehaviorType;
 import io.micrometer.common.lang.NonNull;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -34,7 +34,7 @@ import java.util.List;
  */
 @RepositoryRestResource(
         path = "behavior-types",
-        excerptProjection = BehaviorTypeSummary.class
+        excerptProjection = BehaviorTypeProjection.class
 )
 public interface BehaviorTypeDAO extends JpaRepository<BehaviorType, Long> {
     /**

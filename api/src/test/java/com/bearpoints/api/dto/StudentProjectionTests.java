@@ -9,19 +9,19 @@ import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Unit tests for {@link StudentSummary} projection.
+ * Unit tests for {@link StudentProjection} projection.
  * <p>Verifies:
  * <ul>
  *     <li>Correct mapping of all student fields</li>
- *     <li>Proper handling of nested UserSummary and TeacherSummary projections</li>
+ *     <li>Proper handling of nested UserProjection and TeacherProjection projections</li>
  *     <li>Graceful handling of missing relationships</li>
  * </ul>
- * @see StudentSummary
+ * @see StudentProjection
  * @version 1.0
  * @author Dylan Mercer
  */
-@DisplayName("Student Summary Tests")
-public class StudentSummaryTests {
+@DisplayName("Student Projection Tests")
+public class StudentProjectionTests {
     /**
      * Tests complete student data mapping.
      * <p>Verifies:
@@ -33,7 +33,7 @@ public class StudentSummaryTests {
      */
     @Test
     @DisplayName("Should correctly map all student fields with nested projections")
-    void shouldReturnCorrectStudentSummary() {
+    void shouldReturnCorrectStudentProjection() {
         User user = new User();
         user.setId(1L);
         user.setEmail("john.doe@example.com");
@@ -57,28 +57,28 @@ public class StudentSummaryTests {
         student.setTeacher(teacher);
         student.setUser(user);
         ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
-        StudentSummary projection = factory.createProjection(StudentSummary.class, student);
+        StudentProjection projection = factory.createProjection(StudentProjection.class, student);
         assertEquals(student.getId(), projection.getId());
         assertEquals(student.getPoints(), projection.getPoints());
         assertEquals(student.getToken(), projection.getToken());
-        UserSummary userSummary = projection.getUser();
-        assertNotNull(userSummary);
-        assertEquals(user.getId(), userSummary.getId());
-        assertEquals(user.getEmail(), userSummary.getEmail());
-        assertEquals(user.getFirstName(), userSummary.getFirstName());
-        assertEquals(user.getLastName(), userSummary.getLastName());
-        assertEquals(user.getRole().name(), userSummary.getRole());
-        TeacherSummary teacherSummary = projection.getTeacher();
-        assertNotNull(teacherSummary);
-        assertEquals(teacher.getId(), teacherSummary.getId());
-        assertEquals(teacher.getGrade(), teacherSummary.getGrade());
-        UserSummary teacherUserSummary = teacherSummary.getUser();
-        assertNotNull(teacherUserSummary);
-        assertEquals(teacherUser.getId(), teacherUserSummary.getId());
-        assertEquals(teacherUser.getEmail(), teacherUserSummary.getEmail());
-        assertEquals(teacherUser.getFirstName(), teacherUserSummary.getFirstName());
-        assertEquals(teacherUser.getLastName(), teacherUserSummary.getLastName());
-        assertEquals(teacherUser.getRole().name(), teacherUserSummary.getRole());
+        UserProjection userProjection = projection.getUser();
+        assertNotNull(userProjection);
+        assertEquals(user.getId(), userProjection.getId());
+        assertEquals(user.getEmail(), userProjection.getEmail());
+        assertEquals(user.getFirstName(), userProjection.getFirstName());
+        assertEquals(user.getLastName(), userProjection.getLastName());
+        assertEquals(user.getRole().name(), userProjection.getRole());
+        TeacherProjection teacherProjection = projection.getTeacher();
+        assertNotNull(teacherProjection);
+        assertEquals(teacher.getId(), teacherProjection.getId());
+        assertEquals(teacher.getGrade(), teacherProjection.getGrade());
+        UserProjection teacherUserProjection = teacherProjection.getUser();
+        assertNotNull(teacherUserProjection);
+        assertEquals(teacherUser.getId(), teacherUserProjection.getId());
+        assertEquals(teacherUser.getEmail(), teacherUserProjection.getEmail());
+        assertEquals(teacherUser.getFirstName(), teacherUserProjection.getFirstName());
+        assertEquals(teacherUser.getLastName(), teacherUserProjection.getLastName());
+        assertEquals(teacherUser.getRole().name(), teacherUserProjection.getRole());
     }
 
     /**
@@ -99,7 +99,7 @@ public class StudentSummaryTests {
         student.setPoints(150);
         student.generateToken();
         ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
-        StudentSummary projection = factory.createProjection(StudentSummary.class, student);
+        StudentProjection projection = factory.createProjection(StudentProjection.class, student);
         assertEquals(student.getId(), projection.getId());
         assertEquals(student.getPoints(), projection.getPoints());
         assertEquals(student.getToken(), projection.getToken());

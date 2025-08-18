@@ -19,8 +19,8 @@ import org.springframework.data.rest.core.config.Projection;
  * @version 1.0
  * @author Dylan Mercer
  */
-@Projection(name = "behaviorTypeSummary", types = BehaviorType.class)
-public interface BehaviorTypeSummary {
+@Projection(name = "behaviorTypeProjection", types = BehaviorType.class)
+public interface BehaviorTypeProjection {
     Long getId();
     String getName();
     Integer getPointValue();

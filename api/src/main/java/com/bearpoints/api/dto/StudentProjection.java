@@ -13,19 +13,19 @@ import org.springframework.data.rest.core.config.Projection;
  *     <li>id - Unique student identifier</li>
  *     <li>points - Current point total</li>
  *     <li>token - Unique access token</li>
- *     <li>user - Associated user details via UserSummary</li>
- *     <li>teacher - Assigned teacher details via TeacherSummary</li>
+ *     <li>user - Associated user details via UserProjection</li>
+ *     <li>teacher - Assigned teacher details via TeacherProjection</li>
  * </ul>
- * @see UserSummary
- * @see TeacherSummary
+ * @see UserProjection
+ * @see TeacherProjection
  * @version 1.0
  * @author Dylan Mercer
  */
-@Projection(name = "studentSummary", types = Student.class)
-public interface StudentSummary {
+@Projection(name = "studentProjection", types = Student.class)
+public interface StudentProjection {
     Long getId();
     Integer getPoints();
     String getToken();
-    UserSummary getUser();
-    TeacherSummary getTeacher();
+    UserProjection getUser();
+    TeacherProjection getTeacher();
 }

@@ -10,19 +10,19 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
- * Unit tests for {@link RewardItemSummary} projection.
+ * Unit tests for {@link RewardItemProjection} projection.
  * <p>Verifies:
  * <ul>
  *     <li>Correct mapping of all reward item fields</li>
  *     <li>Proper handling of positive and zero values</li>
  *     <li>Graceful handling of null values</li>
  * </ul>
- * @see RewardItemSummary
+ * @see RewardItemProjection
  * @version 1.0
  * @author Dylan Mercer
  */
-@DisplayName("Reward Item Summary Tests")
-public class RewardItemSummaryTests {
+@DisplayName("Reward Item Projection Tests")
+public class RewardItemProjectionTests {
     /**
      * Tests complete reward item data mapping.
      * <p>Verifies:
@@ -34,14 +34,14 @@ public class RewardItemSummaryTests {
      */
     @Test
     @DisplayName("Should correctly map all reward item fields")
-    void shouldReturnCorrectRewardItemSummary() {
+    void shouldReturnCorrectRewardItemProjection() {
         RewardItem item = new RewardItem();
         item.setId(1L);
         item.setName("Homework Pass");
         item.setPointCost(50);
         item.setStock(10);
         ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
-        RewardItemSummary projection = factory.createProjection(RewardItemSummary.class, item);
+        RewardItemProjection projection = factory.createProjection(RewardItemProjection.class, item);
         assertEquals(item.getId(), projection.getId());
         assertEquals(item.getName(), projection.getName());
         assertEquals(item.getPointCost(), projection.getPointCost());
@@ -66,7 +66,7 @@ public class RewardItemSummaryTests {
         item.setPointCost(0);
         item.setStock(0);
         ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
-        RewardItemSummary projection = factory.createProjection(RewardItemSummary.class, item);
+        RewardItemProjection projection = factory.createProjection(RewardItemProjection.class, item);
         assertEquals(item.getId(), projection.getId());
         assertEquals(item.getName(), projection.getName());
         assertEquals(item.getPointCost(), projection.getPointCost());
@@ -88,7 +88,7 @@ public class RewardItemSummaryTests {
         RewardItem item = new RewardItem();
         item.setId(1L);
         ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
-        RewardItemSummary projection = factory.createProjection(RewardItemSummary.class, item);
+        RewardItemProjection projection = factory.createProjection(RewardItemProjection.class, item);
         assertEquals(item.getId(), projection.getId());
         assertNull(projection.getName());
         assertNull(projection.getPointCost());

@@ -11,19 +11,19 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
- * Unit tests for {@link UserSummary} projection.
+ * Unit tests for {@link UserProjection} projection.
  * <p>Verifies:
  * <ul>
  *     <li>Correct mapping of all user fields</li>
  *     <li>Proper role conversion</li>
  *     <li>Graceful handling of null values in optional fields</li>
  * </ul>
- * @see UserSummary
+ * @see UserProjection
  * @version 1.0
  * @author Dylan Mercer
  */
-@DisplayName("User Summary Tests")
-public class UserSummaryTests {
+@DisplayName("User Projection Tests")
+public class UserProjectionTests {
     /**
      * Tests complete user data mapping.
      * <p>Verifies:
@@ -35,7 +35,7 @@ public class UserSummaryTests {
      */
     @Test
     @DisplayName("Should correctly map all user fields")
-    void shouldReturnCorrectUserSummary() {
+    void shouldReturnCorrectUserProjection() {
         User user = new User();
         user.setId(1L);
         user.setEmail("john.doe@example.com");
@@ -43,7 +43,7 @@ public class UserSummaryTests {
         user.setLastName("Doe");
         user.setRole(Role.ADMIN);
         ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
-        UserSummary projection = factory.createProjection(UserSummary.class, user);
+        UserProjection projection = factory.createProjection(UserProjection.class, user);
         assertEquals(user.getId(), projection.getId());
         assertEquals(user.getEmail(), projection.getEmail());
         assertEquals(user.getFirstName(), projection.getFirstName());
@@ -52,7 +52,7 @@ public class UserSummaryTests {
     }
 
     /**
-     * Tests  user with partial data.
+     * Tests user with partial data.
      * <p>Verifies:
      * <ul>
      *     <li>Required id and role fields are always present</li>
@@ -67,7 +67,7 @@ public class UserSummaryTests {
         user.setId(2L);
         user.setRole(Role.STUDENT);
         ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
-        UserSummary projection = factory.createProjection(UserSummary.class, user);
+        UserProjection projection = factory.createProjection(UserProjection.class, user);
         assertEquals(user.getId(), projection.getId());
         assertNull(projection.getEmail());
         assertNull(projection.getFirstName());

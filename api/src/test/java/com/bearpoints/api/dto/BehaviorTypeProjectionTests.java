@@ -9,19 +9,19 @@ import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Unit tests for {@link BehaviorTypeSummary} projection.
+ * Unit tests for {@link BehaviorTypeProjection} projection.
  * <p>Verifies:
  * <ul>
  *     <li>Correct mapping of all behavior type fields</li>
  *     <li>Proper handling of active status</li>
  *     <li>Graceful handling of null values</li>
  * </ul>
- * @see BehaviorTypeSummary
+ * @see BehaviorTypeProjection
  * @version 1.0
  * @author Dylan Mercer
  */
-@DisplayName("Behavior Type Summary Tests")
-public class BehaviorTypeSummaryTests {
+@DisplayName("Behavior Type Projection Tests")
+public class BehaviorTypeProjectionTests {
     /**
      * Tests complete behavior type data mapping.
      * <p>Verifies:
@@ -33,14 +33,14 @@ public class BehaviorTypeSummaryTests {
      */
     @Test
     @DisplayName("Should correctly map all behavior type fields")
-    void shouldReturnCorrectBehaviorTypeSummary() {
+    void shouldReturnCorrectBehaviorTypeProjection() {
         BehaviorType behavior = new BehaviorType();
         behavior.setId(1L);
         behavior.setName("Helping others");
         behavior.setPointValue(3);
         behavior.setActive(true);
         ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
-        BehaviorTypeSummary projection = factory.createProjection(BehaviorTypeSummary.class, behavior);
+        BehaviorTypeProjection projection = factory.createProjection(BehaviorTypeProjection.class, behavior);
         assertEquals(behavior.getId(), projection.getId());
         assertEquals(behavior.getName(), projection.getName());
         assertEquals(behavior.getPointValue(), projection.getPointValue());
@@ -63,7 +63,7 @@ public class BehaviorTypeSummaryTests {
         behavior.setId(1L);
         behavior.setName("Participation");
         ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
-        BehaviorTypeSummary projection = factory.createProjection(BehaviorTypeSummary.class, behavior);
+        BehaviorTypeProjection projection = factory.createProjection(BehaviorTypeProjection.class, behavior);
         assertEquals(behavior.getId(), projection.getId());
         assertEquals(behavior.getName(), projection.getName());
         assertEquals(1, projection.getPointValue());
@@ -87,7 +87,7 @@ public class BehaviorTypeSummaryTests {
         behavior.setPointValue(2);
         behavior.setActive(false);
         ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
-        BehaviorTypeSummary projection = factory.createProjection(BehaviorTypeSummary.class, behavior);
+        BehaviorTypeProjection projection = factory.createProjection(BehaviorTypeProjection.class, behavior);
         assertEquals(behavior.getId(), projection.getId());
         assertEquals(behavior.getName(), projection.getName());
         assertEquals(behavior.getPointValue(), projection.getPointValue());

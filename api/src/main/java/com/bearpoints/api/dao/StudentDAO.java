@@ -1,6 +1,6 @@
 package com.bearpoints.api.dao;
 
-import com.bearpoints.api.dto.StudentSummary;
+import com.bearpoints.api.dto.StudentProjection;
 import com.bearpoints.api.entity.Teacher;
 import com.bearpoints.api.security.SecurityUtils;
 import com.bearpoints.api.entity.Student;
@@ -44,7 +44,7 @@ import java.util.Optional;
  */
 @RepositoryRestResource(
         path = "students",
-        excerptProjection = StudentSummary.class
+        excerptProjection = StudentProjection.class
 )
 public interface StudentDAO extends JpaRepository<Student, Long> {
     /**

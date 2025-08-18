@@ -1,6 +1,6 @@
 package com.bearpoints.api.dao;
 
-import com.bearpoints.api.dto.BragLogSummary;
+import com.bearpoints.api.dto.BragLogProjection;
 import com.bearpoints.api.entity.BragLog;
 import com.bearpoints.api.entity.Student;
 import io.micrometer.common.lang.NonNull;
@@ -40,7 +40,7 @@ import java.util.List;
  */
 @RepositoryRestResource(
         path = "brag-logs",
-        excerptProjection = BragLogSummary.class
+        excerptProjection = BragLogProjection.class
 )
 public interface BragLogDAO extends JpaRepository<BragLog, Long> {
     /**

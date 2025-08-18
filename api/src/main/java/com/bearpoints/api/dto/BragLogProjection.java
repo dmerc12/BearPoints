@@ -15,25 +15,25 @@ import java.util.Set;
  * <p>Fields:
  * <ul>
  *     <li>id - Unique log identifier</li>
- *     <li>student - Associated student via StudentSummary</li>
- *     <li>teacher - Associated teacher via TeacherSummary</li>
- *     <li>behaviors - Associated behaviors via BehaviorTypeSummary</li>
+ *     <li>student - Associated student via StudentProjection</li>
+ *     <li>teacher - Associated teacher via TeacherProjection</li>
+ *     <li>behaviors - Associated behaviors via BehaviorTypeProjection</li>
  *     <li>pointsGenerated - Total points earned</li>
  *     <li>notes - Optional notes</li>
  *     <li>timestamp - Creation timestamp</li>
  * </ul>
- * @see StudentSummary
- * @see TeacherSummary
- * @see BehaviorTypeSummary
+ * @see StudentProjection
+ * @see TeacherProjection
+ * @see BehaviorTypeProjection
  * @version 1.0
  * @author Dylan Mercer
  */
-@Projection(name = "bragLogSummary", types = BragLog.class)
-public interface BragLogSummary {
+@Projection(name = "bragLogProjection", types = BragLog.class)
+public interface BragLogProjection {
     Long getId();
-    StudentSummary getStudent();
-    TeacherSummary getTeacher();
-    Set<BehaviorTypeSummary> getBehaviors();
+    StudentProjection getStudent();
+    TeacherProjection getTeacher();
+    Set<BehaviorTypeProjection> getBehaviors();
     Integer getPointsGenerated();
     String getNotes();
     LocalDateTime getTimestamp();

@@ -21,8 +21,8 @@ import org.springframework.data.rest.core.config.Projection;
  * @version 1.0
  * @author Dylan Mercer
  */
-@Projection(name = "userSummary", types = User.class)
-public interface UserSummary {
+@Projection(name = "userProjection", types = User.class)
+public interface UserProjection {
     Long getId();
     String getEmail();
     String getFirstName();

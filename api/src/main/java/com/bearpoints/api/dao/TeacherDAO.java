@@ -1,6 +1,6 @@
 package com.bearpoints.api.dao;
 
-import com.bearpoints.api.dto.TeacherSummary;
+import com.bearpoints.api.dto.TeacherProjection;
 import com.bearpoints.api.entity.GradeLevel;
 import com.bearpoints.api.entity.Teacher;
 import io.micrometer.common.lang.NonNull;
@@ -43,7 +43,7 @@ import java.util.Optional;
  */
 @RepositoryRestResource(
         path = "teachers",
-        excerptProjection = TeacherSummary.class
+        excerptProjection = TeacherProjection.class
 )
 public interface TeacherDAO extends JpaRepository<Teacher, Long> {
     /**

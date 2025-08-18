@@ -19,8 +19,8 @@ import org.springframework.data.rest.core.config.Projection;
  * @version 1.0
  * @author Dylan Mercer
  */
-@Projection(name = "rewardItemSummary", types = RewardItem.class)
-public interface RewardItemSummary {
+@Projection(name = "rewardItemProjection", types = RewardItem.class)
+public interface RewardItemProjection {
     Long getId();
     String getName();
     Integer getPointCost();

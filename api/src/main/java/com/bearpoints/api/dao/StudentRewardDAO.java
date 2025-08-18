@@ -1,6 +1,6 @@
 package com.bearpoints.api.dao;
 
-import com.bearpoints.api.dto.StudentRewardSummary;
+import com.bearpoints.api.dto.StudentRewardProjection;
 import com.bearpoints.api.entity.StudentReward;
 import io.micrometer.common.lang.NonNull;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -42,7 +42,7 @@ import java.util.List;
  */
 @RepositoryRestResource(
         path = "student-rewards",
-        excerptProjection = StudentRewardSummary.class
+        excerptProjection = StudentRewardProjection.class
 )
 public interface StudentRewardDAO extends JpaRepository<StudentReward, Long> {
     /**
