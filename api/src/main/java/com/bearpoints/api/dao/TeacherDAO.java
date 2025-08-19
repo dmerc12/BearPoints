@@ -26,6 +26,7 @@ import java.util.Optional;
  *     <li>Any authenticated user can access read operations</li>
  *     <li>Internal synchronization methods</li>
  *     <li>Role-based access control for write operations</li>
+ *     <li>Uses {@link TeacherProjection} for condensed REST representations</li>
  * </ul>
  *
  * <p>Security constraints:
@@ -37,8 +38,12 @@ import java.util.Optional;
  *     <li>Internal sync method not exposed via REST</li>
  * </ul>
  *
+ * <p>Projection Usage:
+ * REST representations use {@link TeacherProjection} by default for condensed views.
+ *
  * @see Teacher
- * @version 1.1
+ * @see TeacherProjection
+ * @version 1.2
  * @author Dylan Mercer
  */
 @RepositoryRestResource(

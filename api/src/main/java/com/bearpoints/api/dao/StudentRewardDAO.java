@@ -20,6 +20,7 @@ import java.util.List;
  *     <li>Student reward redemption tracking</li>
  *     <li>Internal synchronization for Google Sheets integration</li>
  *     <li>Role-based access control for write operations</li>
+ *     <li>Uses {@link StudentRewardProjection} for condensed REST representations</li>
  * </ul>
  *
  * <p>Security constraints:
@@ -36,8 +37,12 @@ import java.util.List;
  *     <li>Sync methods used for Google Sheets integration</li>
  * </ul>
  *
+ * <p>Projection Usage:
+ * REST representations use {@link StudentRewardProjection} by default for condensed views.
+ *
  * @see StudentReward
- * @version 1.0
+ * @see StudentRewardProjection
+ * @version 1.1
  * @author Dylan Mercer
  */
 @RepositoryRestResource(

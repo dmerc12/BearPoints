@@ -23,6 +23,7 @@ import java.util.List;
  *     <li>Authenticated read access for all roles</li>
  *     <li>Internal synchronization methods</li>
  *     <li>Temporal filtering for reporting</li>
+ *     <li>Uses {@link BragLogProjection} for condensed REST representations</li>
  * </ul>
  *
  * <p>Security constraints:
@@ -34,8 +35,12 @@ import java.util.List;
  *     <li>Sync methods: Internal use only</li>
  * </ul>
  *
+ * <p>Projection Usage:
+ * REST representations use {@link BragLogProjection} by default for condensed views.
+ *
  * @see BragLog
- * @version 1.1
+ * @see BragLogProjection
+ * @version 1.2
  * @author Dylan Mercer
  */
 @RepositoryRestResource(

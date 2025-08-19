@@ -23,6 +23,7 @@ import java.util.Optional;
  *     <li>Public access to email-based user lookup</li>
  *     <li>Internal synchronization methods</li>
  *     <li>Role-based access control</li>
+ *     <li>Uses {@link UserProjection} for condensed REST representations</li>
  * </ul>
  *
  * <p>Security constraints:
@@ -33,8 +34,12 @@ import java.util.Optional;
  *     <li>All authenticated users can access user lists</li>
  * </ul>
  *
+ * <p>Projection Usage:
+ * REST representations use {@link UserProjection} by default for condensed views.
+ *
  * @see User
- * @version 1.1
+ * @see UserProjection
+ * @version 1.2
  * @author Dylan Mercer
  */
 @RepositoryRestResource(

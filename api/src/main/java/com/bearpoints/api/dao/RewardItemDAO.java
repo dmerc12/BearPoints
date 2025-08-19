@@ -21,6 +21,7 @@ import java.util.List;
  *     <li>Admin-only write operations</li>
  *     <li>Alphabetical ordering of items</li>
  *     <li>Internal synchronization methods</li>
+ *     <li>Uses {@link RewardItemProjection} for condensed REST representations</li>
  * </ul>
  *
  * <p>Security constraints:
@@ -30,8 +31,12 @@ import java.util.List;
  *     <li>Sync methods: Internal use only</li>
  * </ul>
  *
+ * <p>Projection Usage:
+ * REST representations use {@link RewardItemProjection} by default for condensed views.
+ *
  * @see RewardItem
- * @version 1.1
+ * @see RewardItemProjection
+ * @version 1.2
  * @author Dylan Mercer
  */
 @RepositoryRestResource(

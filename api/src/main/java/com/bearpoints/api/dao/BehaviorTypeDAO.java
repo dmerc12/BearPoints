@@ -20,6 +20,7 @@ import java.util.List;
  *     <li>Standard CRUD operations with ADMIN-only write access</li>
  *     <li>Public access to active behavior types</li>
  *     <li>Internal synchronization methods</li>
+ *     <li>Uses {@link BehaviorTypeProjection} for condensed REST representations</li>
  * </ul>
  *
  * <p>Security constraints:
@@ -28,8 +29,12 @@ import java.util.List;
  *     <li>Active behavior types lists is public</li>
  * </ul>
  *
+ * <p>Projection usage:
+ * REST representations use {@link BehaviorTypeProjection} by default for condensed views.
+ *
  * @see BehaviorType
- * @version 1.0
+ * @see BehaviorTypeProjection
+ * @version 1.1
  * @author Dylan Mercer
  */
 @RepositoryRestResource(

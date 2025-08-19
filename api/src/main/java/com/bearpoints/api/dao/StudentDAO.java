@@ -26,6 +26,7 @@ import java.util.Optional;
  *     <li>Token-based public access for student self-service</li>
  *     <li>Internal synchronization methods</li>
  *     <li>Classroom-based student filtering</li>
+ *     <li>Uses {@link StudentProjection} for condensed REST representations</li>
  * </ul>
  *
  * <p>Security constraints:
@@ -37,9 +38,13 @@ import java.util.Optional;
  *     <li>Delete operations: ADMIN only</li>
  * </ul>
  *
+ * <p>Projection Usage:
+ * REST representations use {@link StudentProjection} by default for condensed views.
+ *
  * @see Student
+ * @see StudentProjection
  * @see SecurityUtils#isOwnClassroom
- * @version 1.1
+ * @version 1.2
  * @author Dylan Mercer
  */
 @RepositoryRestResource(
