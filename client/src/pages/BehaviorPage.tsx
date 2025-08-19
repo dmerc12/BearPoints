@@ -29,7 +29,7 @@ export default function SubmitBehaviorPage () {
                     getActiveBehaviorTypes()
                 ]);
                 setStudent(studentData);
-                setBehaviorTypes(behaviorData);
+                setBehaviorTypes(behaviorData.behaviorTypes);
             } catch (error) {
                 toast.error('Failed to load student data')
                 console.error('Error fetching student:', error);

@@ -39,7 +39,7 @@ export default function StudentsPage () {
                     getStudents(),
                     getTeachers()
                 ]);
-                setStudents(studentsData);
+                setStudents(studentsData.students);
                 setTeachers(teachersData.teachers);
             } catch (error) {
                 setError('Failed to load students. Please try again later');

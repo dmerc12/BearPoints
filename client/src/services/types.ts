@@ -20,6 +20,12 @@ export enum Role {
     ADMIN = 'ADMIN'
 }
 
+export interface PaginatedUsers {
+    users: UserDTO[];
+    totalPages: number;
+    totalUsers: number;
+}
+
 export interface UserDTO {
     id: number;
     email: string;
@@ -30,13 +36,19 @@ export interface UserDTO {
     studentId?: number;
 }
 
+export interface PaginatedStudents {
+    students: Student[];
+    totalPages: number;
+    totalStudents: number;
+}
+
 export interface Student {
     id: number;
     points: number;
     token: string;
     user: UserDTO;
     teacher: Teacher;
-    bragLogs: BragLog[];
+    bragLogs?: BragLog[];
 }
 
 export interface PaginatedTeachers {
@@ -47,10 +59,16 @@ export interface PaginatedTeachers {
 
 export interface Teacher {
     id: number;
-    grade: string;
+    grade: GradeLevel;
     user: UserDTO;
-    students: Student[];
-    bragLogs: BragLog[];
+    students?: Student[];
+    bragLogs?: BragLog[];
+}
+
+export interface PaginatedBehaviorTypes {
+    behaviorTypes: BehaviorType[];
+    totalPages: number;
+    totalBehaviorTypes: number;
 }
 
 export interface BehaviorType {
@@ -58,6 +76,12 @@ export interface BehaviorType {
     name: string;
     pointValue: number;
     active: boolean;
+}
+
+export interface PaginatedBragLogs {
+    bragLogs: BragLog[];
+    totalPages: number;
+    totalBragLogs: number;
 }
 
 export interface BragLog {
@@ -68,7 +92,32 @@ export interface BragLog {
     pointsGenerated: number;
     notes?: string;
     timestamp: string;
+}
 
+export interface PaginatedRewardItems {
+    rewardItems: RewardItem[];
+    totalPages: number;
+    totalRewardItems: number;
+}
+
+export interface RewardItem {
+    id: number;
+    name: string;
+    pointCost: number;
+    stock: number;
+}
+
+export interface PaginatedStudentRewards {
+    studentRewards: StudentReward[];
+    totalPages: number;
+    totalStudentRewards: number;
+}
+
+export interface StudentReward {
+    id: number;
+    redeemedAt: string;
+    student: Student;
+    rewardItem: RewardItem;
 }
 
 export interface BragLogRequest {
@@ -91,4 +140,3 @@ interface Person {
     firstName: string;
     lastName: string;
 }
-

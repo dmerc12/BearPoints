@@ -1,11 +1,6 @@
 import {
-    BehaviorType,
-    BragLogRequest,
-    LeaderboardEntry, PaginatedTeachers, Role,
-    Student,
-    Teacher,
-    Timeframe,
-    UserDTO
+    LeaderboardEntry, PaginatedBehaviorTypes, PaginatedStudents, PaginatedTeachers,
+    Student, BragLogRequest, Timeframe, UserDTO
 } from './types';
 import {auth} from '../Auth';
 import axios, {AxiosError, AxiosRequestConfig} from 'axios';
@@ -137,29 +132,53 @@ const fetchResource = async <T>(url: string): Promise<T> => {
     return withHealthAwareRetry(() => api.get<T>(url).then(r => r.data))
 }
 
+const fetchPaginated = async <T>(
+    url: string,
+    resourceName: keyof T,
+): Promise<T> => {
+    return withHealthAwareRetry(async () => {
+        interface HalResponse {
+            _embedded: Record<string, unknown[]>;
+            page: { totalPages: number, totalElements: number }
+        }
+        const response = await api.get<HalResponse>(url);
+        const embeddedKey = Object.keys(response.data._embedded).find(
+            key => key.toLowerCase().includes(resourceName as string)
+        ) || resourceName as string;
+        const resources = response.data._embedded[embeddedKey] || [];
+        const totalKey = `total${String(resourceName).charAt(0).toUpperCase() + 
+            String(resourceName).slice(1)}` as keyof T;
+        return {
+            [resourceName]: resources,
+            totalPages: response.data.page.totalPages,
+            [totalKey]: response.data.page.totalElements
+        } as unknown as T;
+    });
+};
+
 // ============== USER API =================
 export const getCurrentUser = async (): Promise<UserDTO> => {
     return fetchResource('api/users/me');
 };
 
 // ============== STUDENT API =================
-export const getStudents = async (): Promise<Student[]> => {
-    return withHealthAwareRetry(() =>
-        api.get<{ _embedded: { students: Student[] } }>('api/students')
-            .then(r => r.data._embedded.students));
+export const getStudents = async (page = 0, size = 100): Promise<PaginatedStudents> => {
+    return await fetchPaginated<PaginatedStudents>(
+        `api/students?projection=studentProjection&page=${page}&size=${size}`,
+        'students'
+    );
 };
 
 export const getStudentByToken = async (token: string): Promise<Student> => {
-    return withHealthAwareRetry(() =>
-        api.get<Student>(`api/students/search/findByToken?token=${token}`)
-            .then(r => r.data));
+    return await fetchResource<Student>(`api/students/search/findByToken?token=${token}&projection=studentProjection`);
 };
 
 // ============== BEHAVIOR API =================
-export const getActiveBehaviorTypes = async (): Promise<BehaviorType[]> => {
-    return withHealthAwareRetry(() =>
-        api.get<{ _embedded: { behaviorTypes: BehaviorType[] } }>('api/behavior-types?filter=active')
-            .then(r => r.data._embedded.behaviorTypes));
+export const getActiveBehaviorTypes = async (page = 0, size = 100): Promise<PaginatedBehaviorTypes> => {
+    return await fetchPaginated<PaginatedBehaviorTypes>(
+        `api/behavior-types/search/findByActiveTrue?projection=behaviorTypeProjection&page=${page}&size=${size}`,
+        'behaviorTypes'
+    );
 };
 
 // ============== BRAG LOG API =================
@@ -170,46 +189,13 @@ export const submitPublicBragLog = async (data: BragLogRequest) => {
 
 // ============== TEACHER API =================
 export const getTeachers = async (page = 0, size = 100): Promise<PaginatedTeachers> => {
-    return withHealthAwareRetry(async () => {
-        const response = await api.get<{
-            _embedded: { teachers: Teacher[] },
-            page: { totalPages: number, totalElements: number }
-        }>(`api/teachers?projection=teacherSummary&page=${page}&size=${size}`);
-        return {
-            teachers: response.data._embedded.teachers.map(t => ({
-                id: t.id,
-                grade: t.grade,
-                user: {
-                    id: t.user.id,
-                    email: t.user.email,
-                    firstName: t.user.firstName,
-                    lastName: t.user.lastName,
-                    role: t.user.role as Role,
-                },
-                students: [],
-                bragLogs: [],
-            })),
-            totalPages: response.data.page.totalPages,
-            totalTeachers: response.data.page.totalElements
-        };
-    });
-}
-
-export const getTeacher = async (id: number): Promise<Teacher> => {
-    return withHealthAwareRetry(async () => {
-        const response =
-            await api.get<Teacher>(`api/teachers/${id}?projection=teacherSummary`);
-        return {
-            ...response.data,
-            students: [],
-            bragLogs: [],
-        }
-    });
+    return await fetchPaginated<PaginatedTeachers>(
+        `api/teachers?projection=teacherProjection&page=${page}&size=${size}`,
+        'teachers'
+    );
 }
 
 // ============== LEADERBOARD API =================
 export const getLeaderboard = async (timeframe: Timeframe): Promise<LeaderboardEntry[]> => {
-    return withHealthAwareRetry(() =>
-        api.get<LeaderboardEntry[]>(`api/leaderboard?timeframe=${timeframe}`)
-            .then(r => r.data));
+    return await fetchResource<LeaderboardEntry[]>(`api/leaderboard?timeframe=${timeframe}`);
 }
