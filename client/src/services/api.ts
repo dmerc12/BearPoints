@@ -1,9 +1,9 @@
 import {
-    LeaderboardEntry, PaginatedBehaviorTypes, PaginatedStudents, PaginatedTeachers,
-    Student, BragLogRequest, Timeframe, UserDTO
+    PaginatedBehaviorTypes, PaginatedStudents, PaginatedTeachers, PaginatedUsers, PaginatedBragLogs, PaginatedRewardItems, PaginatedStudentRewards,
+    Student, BragLogRequest, BehaviorType, Teacher, UserDTO, BragLog, RewardItem, StudentReward, LeaderboardEntry, Timeframe
 } from './types';
-import {auth} from '../Auth';
-import axios, {AxiosError, AxiosRequestConfig} from 'axios';
+import axios, { AxiosError, AxiosRequestConfig } from 'axios';
+import { auth } from '../Auth';
 
 // ============== API with base URL ==============
 const api = axios.create({
@@ -157,8 +157,30 @@ const fetchPaginated = async <T>(
 };
 
 // ============== USER API =================
+export const getUsers = async (page = 0, size = 100): Promise<PaginatedUsers> => {
+    return await fetchPaginated<PaginatedUsers>(
+        `api/users?projection=userProjection&page=${page}&size=${size}`,
+        'users'
+    )    ;
+};
+
 export const getCurrentUser = async (): Promise<UserDTO> => {
     return fetchResource('api/users/me');
+};
+
+export const createUser = async (userData: Partial<UserDTO>): Promise<UserDTO> => {
+    return await withHealthAwareRetry(() =>
+        api.post<UserDTO>(`api/users`, userData).then(r => r.data));
+};
+
+export const updateUser = async (id: number, userData: Partial<UserDTO>): Promise<UserDTO> => {
+    return await withHealthAwareRetry(() =>
+        api.patch<UserDTO>(`api/users/${id}`, userData).then(r => r.data));
+};
+
+export const deleteUser = async (id: number): Promise<void> => {
+    return await withHealthAwareRetry(() =>
+        api.delete(`api/users/${id}`));
 };
 
 // ============== STUDENT API =================
@@ -173,7 +195,29 @@ export const getStudentByToken = async (token: string): Promise<Student> => {
     return await fetchResource<Student>(`api/students/search/findByToken?token=${token}&projection=studentProjection`);
 };
 
+export const createStudent = async (studentData: Partial<Student>): Promise<Student> => {
+    return await withHealthAwareRetry(() =>
+        api.post<Student>(`api/students`, studentData).then(r => r.data));
+};
+
+export const updateStudent = async (id: number, studentData: Partial<Student>): Promise<Student> => {
+    return await withHealthAwareRetry(() =>
+        api.patch<Student>(`api/students/${id}`, studentData).then(r => r.data));
+};
+
+export const deleteStudent = async (id: number): Promise<void> => {
+    return await withHealthAwareRetry(() =>
+        api.delete(`api/students/${id}`));
+};
+
 // ============== BEHAVIOR API =================
+export const getBehaviorTypes = async (page = 0, size = 100): Promise<PaginatedBehaviorTypes> => {
+    return await fetchPaginated<PaginatedBehaviorTypes>(
+        `api/behavior-types?projection=behaviorTypeProjection&page=${page}&size=${size}`,
+        'behaviorTypes'
+    );
+};
+
 export const getActiveBehaviorTypes = async (page = 0, size = 100): Promise<PaginatedBehaviorTypes> => {
     return await fetchPaginated<PaginatedBehaviorTypes>(
         `api/behavior-types/search/findByActiveTrue?projection=behaviorTypeProjection&page=${page}&size=${size}`,
@@ -181,7 +225,44 @@ export const getActiveBehaviorTypes = async (page = 0, size = 100): Promise<Pagi
     );
 };
 
+export const createBehaviorType = async (behaviorData: Partial<BehaviorType>): Promise<BehaviorType> => {
+    return await withHealthAwareRetry(() =>
+        api.post<BehaviorType>(`api/behavior-types`, behaviorData).then(r => r.data));
+};
+
+export const updateBehaviorType = async (id: number, behaviorData: Partial<BehaviorType>): Promise<BehaviorType> => {
+    return await withHealthAwareRetry(() =>
+        api.patch<BehaviorType>(`api/behavior-types/${id}`, behaviorData).then(r => r.data));
+};
+
+export const deleteBehaviorType = async (id: number): Promise<void> => {
+    return await withHealthAwareRetry(() =>
+        api.delete(`api/behavior-types/${id}`));
+};
+
 // ============== BRAG LOG API =================
+export const getBragLogs = async (page = 0, size = 100): Promise<PaginatedBragLogs> => {
+    return await fetchPaginated<PaginatedBragLogs>(
+        `api/brag-logs?projection=bragLogProjection&page=${page}&size=${size}`,
+        'bragLogs'
+    );
+};
+
+export const createBragLog = async (bragLogData: Partial<BragLog>): Promise<BragLog> => {
+    return await withHealthAwareRetry(() =>
+        api.post<BragLog>(`api/brag-logs`, bragLogData).then(r => r.data));
+};
+
+export const updateBragLog = async (id: number, bragLogData: Partial<BragLog>): Promise<BragLog> => {
+    return await withHealthAwareRetry(() =>
+        api.patch<BragLog>(`api/brag-logs/${id}`, bragLogData).then(r => r.data));
+};
+
+export const deleteBragLog = async (id: number): Promise<void> => {
+    return await withHealthAwareRetry(() =>
+        api.delete(`api/brag-logs/${id}`));
+};
+
 export const submitPublicBragLog = async (data: BragLogRequest) => {
     return withHealthAwareRetry(() =>
         api.post('api/public/brag-logs', data));
@@ -195,7 +276,68 @@ export const getTeachers = async (page = 0, size = 100): Promise<PaginatedTeache
     );
 }
 
+export const createTeacher = async (teacherData: Partial<Teacher>): Promise<Teacher> => {
+    return await withHealthAwareRetry(() =>
+        api.post<Teacher>(`api/teachers`, teacherData).then(r => r.data));
+};
+
+export const updateTeacher = async (id: number, teacherData: Partial<Teacher>): Promise<Teacher> => {
+    return await withHealthAwareRetry(() =>
+        api.patch<Teacher>(`api/teachers/${id}`, teacherData).then(r => r.data));
+};
+
+export const deleteTeacher = async (id: number): Promise<void> => {
+    return await withHealthAwareRetry(() =>
+        api.delete(`api/teachers/${id}`));
+};
+
 // ============== LEADERBOARD API =================
 export const getLeaderboard = async (timeframe: Timeframe): Promise<LeaderboardEntry[]> => {
     return await fetchResource<LeaderboardEntry[]>(`api/leaderboard?timeframe=${timeframe}`);
 }
+
+// ============== REWARD ITEM API =================
+export const getRewardItems = async (page = 0, size = 100): Promise<PaginatedRewardItems> => {
+    return await fetchPaginated<PaginatedRewardItems>(
+        `api/reward-items?projection=rewardItemProjection&page=${page}&size=${size}`,
+        'rewardItems'
+    );
+};
+
+export const createRewardItem = async (rewardItemData: Partial<RewardItem>): Promise<RewardItem> => {
+    return await withHealthAwareRetry(() =>
+        api.post<RewardItem>(`api/reward-items`, rewardItemData).then(r => r.data));
+};
+
+export const updateRewardItem = async (id: number, rewardItemData: Partial<RewardItem>): Promise<RewardItem> => {
+    return await withHealthAwareRetry(() =>
+        api.patch<RewardItem>(`api/reward-items/${id}`, rewardItemData).then(r => r.data));
+};
+
+export const deleteRewardItem = async (id: number): Promise<void> => {
+    return await withHealthAwareRetry(() =>
+        api.delete(`api/reward-items/${id}`));
+};
+
+// ============== STUDENT REWARD API =================
+export const getStudentRewards = async (page = 0, size = 100): Promise<PaginatedStudentRewards> => {
+    return await fetchPaginated<PaginatedStudentRewards>(
+        `api/student-rewards?projection=studentRewardProjection&page=${page}&size=${size}`,
+        'studentRewards'
+    );
+};
+
+export const createStudentReward = async (studentRewardData: Partial<StudentReward>): Promise<StudentReward> => {
+    return await withHealthAwareRetry(() =>
+        api.post<StudentReward>(`api/student-rewards`, studentRewardData).then(r => r.data));
+};
+
+export const updateStudentReward = async (id: number, studentRewardData: Partial<StudentReward>): Promise<StudentReward> => {
+    return await withHealthAwareRetry(() =>
+        api.patch<StudentReward>(`api/student-rewards/${id}`, studentRewardData).then(r => r.data));
+};
+
+export const deleteStudentReward = async (id: number): Promise<void> => {
+    return await withHealthAwareRetry(() =>
+        api.delete(`api/student-rewards/${id}`));
+};
