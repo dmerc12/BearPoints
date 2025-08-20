@@ -1,18 +1,24 @@
+import {Table, Pagination, Spinner, Alert, Container, Button} from 'react-bootstrap';
+import { useAppDispatch, useAppSelector } from '../store/hooks.ts';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { fetchStudents } from '../store/slices/studentsSlice.ts';
 import { formatName, fullName } from '../utils/formatNames';
-import { useState, useMemo, useCallback } from 'react';
-import { Table, Pagination } from 'react-bootstrap';
-import { formatGrade} from '../utils/formatGrades';
-import { Student } from '../services/types';
+import { formatGrade } from '../utils/formatGrades';
 import { QRCodeSVG } from 'qrcode.react';
 
 interface StudentTableProps {
-    students: Student[];
     onQRScan?: (token: string) => void;
     itemsPerPage?: number;
 }
 
-export default function StudentTable ({ students, onQRScan, itemsPerPage = 10 }: StudentTableProps) {
+export default function StudentTable ({ onQRScan, itemsPerPage = 10 }: StudentTableProps) {
+    const dispatch = useAppDispatch();
+    const { students, loading, error } = useAppSelector(state => state.students);
     const [ currentPage, setCurrentPage ] = useState(1);
+
+    useEffect(() => {
+        dispatch(fetchStudents({ page: 0, size: 1000 }));
+    }, [dispatch]);
 
     const totalPages = Math.ceil(students.length / itemsPerPage);
 
@@ -84,6 +90,31 @@ export default function StudentTable ({ students, onQRScan, itemsPerPage = 10 }:
     const handleNext = useCallback(() => {
         setCurrentPage(prev => Math.min(totalPages, prev + 1));
     }, [totalPages]);
+
+    if (loading) {
+        return (
+            <Container className='d-flex justify-content-center align-items-center' style={{ minHeight: '200px' }}>
+                <Spinner animation='border' variant='primary'>
+                    <span className='visually-hidden'>Loading...</span>
+                </Spinner>
+                <span className='ms-2'>Loading students...</span>
+            </Container>
+        );
+    }
+
+    if (error) {
+        return (
+            <Alert variant='danger' className='text-center'>
+                <Alert.Heading>Error Loading Students</Alert.Heading>
+                <p>{error}</p>
+                <Button variant='outline-danger' onClick={() =>
+                    dispatch(fetchStudents({ page: 0, size: 1000, force: true }))}
+                >
+                    Retry
+                </Button>
+            </Alert>
+        );
+    }
 
     return (
         <div className='table-responsive'>
