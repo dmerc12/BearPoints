@@ -1,19 +1,19 @@
-import {clearUser, setError, setUser} from '../store/slices/userSlice';
+import { Spinner, Alert, Button, Container, Row, Col } from 'react-bootstrap';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { fetchCurrentUser } from '../store/slices/userSlice';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useCallback, useEffect, useState } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { useAppDispatch } from '../store/hooks';
-import { Spinner } from 'react-bootstrap';
+import { clearUser } from '../store/slices/userSlice';
+import { useCallback, useEffect } from 'react';
 import { auth } from '../Auth';
 import * as React from 'react';
-import {getCurrentUser} from "../services/api.ts";
 
 interface AuthProps {
     children: React.ReactNode;
 }
 
 export default function Auth ({ children }: AuthProps) {
-    const [ loading, setLoading ] = useState(true);
+    const { data: user, loading, error } = useAppSelector(state => state.user);
     const dispatch = useAppDispatch();
     const location = useLocation();
 
@@ -28,13 +28,7 @@ export default function Auth ({ children }: AuthProps) {
                     await auth.signOut();
                     dispatch(clearUser());
                 } else {
-                    try {
-                        const userData = await getCurrentUser();
-                        dispatch(setUser(userData));
-                    } catch (error) {
-                        console.error('Failed to fetch user data', error);
-                        dispatch(setError('Failed to fetch user data'));
-                    }
+                    dispatch(fetchCurrentUser({ force: true }));
                 }
             } else {
                 console.log('No authenticated user');
@@ -42,9 +36,6 @@ export default function Auth ({ children }: AuthProps) {
             }
         } catch (error) {
             console.error('Auth state change error', error);
-            dispatch(setError('Authentication error'));
-        } finally {
-            setLoading(false);
         }
     }, [dispatch]);
 
@@ -55,16 +46,45 @@ export default function Auth ({ children }: AuthProps) {
 
     if (loading) {
         return (
-            <div className='text-center my-4'>
-                <Spinner animation='border' role='status'>
-                    <span className='visually-hidden'>Loading...</span>
-                </Spinner>
-                <p>Loading...</p>
-            </div>
+            <Container className='d-flex justify-content-center align-items-center min-vh-100'>
+                <Row>
+                    <Col className='text-center'>
+                        <Spinner animation='border' variant='primary'>
+                            <span className='visually-hidden'>Loading...</span>
+                        </Spinner>
+                        <p className='mt-3'>Authenticating...</p>
+                    </Col>
+                </Row>
+            </Container>
         );
     }
 
-    if (!auth.currentUser && location.pathname !== '/') {
+    if (error) {
+        return (
+            <Container className='mt-5'>
+                <Row className='justify-content-center'>
+                    <Col md={6}>
+                        <Alert variant='danger' className='text-center'>
+                            <Alert.Heading>Authentication Error</Alert.Heading>
+                            <p>{error}</p>
+                            <hr />
+                            <div className='d-flex justify-content-center'>
+                                <Button
+                                    variant='outline-danger'
+                                    onClick={() =>
+                                        dispatch(fetchCurrentUser({ force: true }))}
+                                >
+                                    Retry Authentication
+                                </Button>
+                            </div>
+                        </Alert>
+                    </Col>
+                </Row>
+            </Container>
+        );
+    }
+
+    if (!user && location.pathname !== '/') {
         return <Navigate to='/' replace />;
     }
 
