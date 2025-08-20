@@ -47,6 +47,9 @@ api.interceptors.response.use(undefined, async (error: AxiosError) => {
         console.error('Request failed without config:', error);
         return Promise.reject(error);
     }
+    if (error.code === 'ERR_CANCELED') {
+        return Promise.reject(error);
+    }
     const config = error.config as AxiosRequestConfig & { _retryCount?: number };
     config._retryCount = config._retryCount || 0;
     // Only retry on network errors or 5xx status codes
@@ -68,7 +71,7 @@ api.interceptors.response.use(undefined, async (error: AxiosError) => {
  *  Checks backend health status with recursion guard
  *  @returns Promise resolving to true if backend is healthy
  */
-const checkHealth = async (): Promise<boolean> => {
+const checkHealth = async (signal?: AbortSignal): Promise<boolean> => {
     if (healthCheckInProgress) {
         console.log('Health check already in progress. Skipping duplicate check.');
         return lastHealthCheckStatus || false;
@@ -78,6 +81,7 @@ const checkHealth = async (): Promise<boolean> => {
         console.log('Starting health check')
         const response = await api.get('actuator/health', {
             timeout: 3000,
+            signal
         });
         const isHealthy = response.data?.status === 'UP';
         console.log(`Health check completed ${isHealthy ? 'UP' : 'DOWN'}`);
@@ -96,11 +100,11 @@ const checkHealth = async (): Promise<boolean> => {
  * Ensures backend is healthy before making API calls
  * Will retry health checks until backend is sup or max retries is reached
  */
-const ensureBackendHealthy = async (maxRetries = 5, initialDelay = 2000): Promise<boolean> => {
+const ensureBackendHealthy = async (maxRetries = 5, initialDelay = 2000, signal?: AbortSignal): Promise<boolean> => {
     let retries = 0;
     let delay = initialDelay;
     while (retries < maxRetries) {
-        const isHealthy = await checkHealth();
+        const isHealthy = await checkHealth(signal);
         if (isHealthy) return true;
         console.log(`Backend unhealthy. Retrying in ${delay}ms (${retries + 1}/${maxRetries})`);
         await new Promise(resolve => setTimeout(resolve, delay));
@@ -128,20 +132,21 @@ const withHealthAwareRetry = async <T>(apiCall: () => Promise<T>): Promise<T> =>
     }
 }
 
-const fetchResource = async <T>(url: string): Promise<T> => {
-    return withHealthAwareRetry(() => api.get<T>(url).then(r => r.data))
+const fetchResource = async <T>(url: string, signal?: AbortSignal): Promise<T> => {
+    return withHealthAwareRetry(() => api.get<T>(url, { signal }).then(r => r.data))
 }
 
 const fetchPaginated = async <T>(
     url: string,
     resourceName: keyof T,
+    signal?: AbortSignal
 ): Promise<T> => {
     return withHealthAwareRetry(async () => {
         interface HalResponse {
             _embedded: Record<string, unknown[]>;
             page: { totalPages: number, totalElements: number }
         }
-        const response = await api.get<HalResponse>(url);
+        const response = await api.get<HalResponse>(url, { signal });
         const embeddedKey = Object.keys(response.data._embedded).find(
             key => key.toLowerCase().includes(resourceName as string)
         ) || resourceName as string;
@@ -157,187 +162,195 @@ const fetchPaginated = async <T>(
 };
 
 // ============== USER API =================
-export const getUsers = async (page = 0, size = 100): Promise<PaginatedUsers> => {
+export const getUsers = async (page = 0, size = 100, signal?: AbortSignal): Promise<PaginatedUsers> => {
     return await fetchPaginated<PaginatedUsers>(
         `api/users?projection=userProjection&page=${page}&size=${size}`,
-        'users'
-    )    ;
+        'users',
+        signal
+    );
 };
 
-export const getCurrentUser = async (): Promise<UserDTO> => {
-    return fetchResource('api/users/me');
+export const getCurrentUser = async (signal?: AbortSignal): Promise<UserDTO> => {
+    return fetchResource('api/users/me', signal);
 };
 
-export const createUser = async (userData: Partial<UserDTO>): Promise<UserDTO> => {
+export const createUser = async (userData: Partial<UserDTO>, signal?: AbortSignal): Promise<UserDTO> => {
     return await withHealthAwareRetry(() =>
-        api.post<UserDTO>(`api/users`, userData).then(r => r.data));
+        api.post<UserDTO>(`api/users`, userData, { signal }).then(r => r.data));
 };
 
-export const updateUser = async (id: number, userData: Partial<UserDTO>): Promise<UserDTO> => {
+export const updateUser = async (id: number, userData: Partial<UserDTO>, signal?: AbortSignal): Promise<UserDTO> => {
     return await withHealthAwareRetry(() =>
-        api.patch<UserDTO>(`api/users/${id}`, userData).then(r => r.data));
+        api.patch<UserDTO>(`api/users/${id}`, userData, { signal }).then(r => r.data));
 };
 
-export const deleteUser = async (id: number): Promise<void> => {
+export const deleteUser = async (id: number, signal?: AbortSignal): Promise<void> => {
     return await withHealthAwareRetry(() =>
-        api.delete(`api/users/${id}`));
+        api.delete(`api/users/${id}`, { signal }));
 };
 
 // ============== STUDENT API =================
-export const getStudents = async (page = 0, size = 100): Promise<PaginatedStudents> => {
+export const getStudents = async (page = 0, size = 100, signal?: AbortSignal): Promise<PaginatedStudents> => {
     return await fetchPaginated<PaginatedStudents>(
         `api/students?projection=studentProjection&page=${page}&size=${size}`,
-        'students'
+        'students',
+        signal
     );
 };
 
-export const getStudentByToken = async (token: string): Promise<Student> => {
-    return await fetchResource<Student>(`api/students/search/findByToken?token=${token}&projection=studentProjection`);
+export const getStudentByToken = async (token: string, signal?: AbortSignal): Promise<Student> => {
+    return await fetchResource<Student>(`api/students/search/findByToken?token=${token}&projection=studentProjection`, signal);
 };
 
-export const createStudent = async (studentData: Partial<Student>): Promise<Student> => {
+export const createStudent = async (studentData: Partial<Student>, signal?: AbortSignal): Promise<Student> => {
     return await withHealthAwareRetry(() =>
-        api.post<Student>(`api/students`, studentData).then(r => r.data));
+        api.post<Student>(`api/students`, studentData, { signal }).then(r => r.data));
 };
 
-export const updateStudent = async (id: number, studentData: Partial<Student>): Promise<Student> => {
+export const updateStudent = async (id: number, studentData: Partial<Student>, signal?: AbortSignal): Promise<Student> => {
     return await withHealthAwareRetry(() =>
-        api.patch<Student>(`api/students/${id}`, studentData).then(r => r.data));
+        api.patch<Student>(`api/students/${id}`, studentData, { signal }).then(r => r.data));
 };
 
-export const deleteStudent = async (id: number): Promise<void> => {
+export const deleteStudent = async (id: number, signal?: AbortSignal): Promise<void> => {
     return await withHealthAwareRetry(() =>
-        api.delete(`api/students/${id}`));
+        api.delete(`api/students/${id}`, { signal }));
 };
 
 // ============== BEHAVIOR API =================
-export const getBehaviorTypes = async (page = 0, size = 100): Promise<PaginatedBehaviorTypes> => {
+export const getBehaviorTypes = async (page = 0, size = 100, signal?: AbortSignal): Promise<PaginatedBehaviorTypes> => {
     return await fetchPaginated<PaginatedBehaviorTypes>(
         `api/behavior-types?projection=behaviorTypeProjection&page=${page}&size=${size}`,
-        'behaviorTypes'
+        'behaviorTypes',
+        signal
     );
 };
 
-export const getActiveBehaviorTypes = async (page = 0, size = 100): Promise<PaginatedBehaviorTypes> => {
+export const getActiveBehaviorTypes = async (page = 0, size = 100, signal?: AbortSignal): Promise<PaginatedBehaviorTypes> => {
     return await fetchPaginated<PaginatedBehaviorTypes>(
         `api/behavior-types/search/findByActiveTrue?projection=behaviorTypeProjection&page=${page}&size=${size}`,
-        'behaviorTypes'
+        'behaviorTypes',
+        signal
     );
 };
 
-export const createBehaviorType = async (behaviorData: Partial<BehaviorType>): Promise<BehaviorType> => {
+export const createBehaviorType = async (behaviorData: Partial<BehaviorType>, signal?: AbortSignal): Promise<BehaviorType> => {
     return await withHealthAwareRetry(() =>
-        api.post<BehaviorType>(`api/behavior-types`, behaviorData).then(r => r.data));
+        api.post<BehaviorType>(`api/behavior-types`, behaviorData, { signal }).then(r => r.data));
 };
 
-export const updateBehaviorType = async (id: number, behaviorData: Partial<BehaviorType>): Promise<BehaviorType> => {
+export const updateBehaviorType = async (id: number, behaviorData: Partial<BehaviorType>, signal?: AbortSignal): Promise<BehaviorType> => {
     return await withHealthAwareRetry(() =>
-        api.patch<BehaviorType>(`api/behavior-types/${id}`, behaviorData).then(r => r.data));
+        api.patch<BehaviorType>(`api/behavior-types/${id}`, behaviorData, { signal }).then(r => r.data));
 };
 
-export const deleteBehaviorType = async (id: number): Promise<void> => {
+export const deleteBehaviorType = async (id: number, signal?: AbortSignal): Promise<void> => {
     return await withHealthAwareRetry(() =>
-        api.delete(`api/behavior-types/${id}`));
+        api.delete(`api/behavior-types/${id}`, { signal }));
 };
 
 // ============== BRAG LOG API =================
-export const getBragLogs = async (page = 0, size = 100): Promise<PaginatedBragLogs> => {
+export const getBragLogs = async (page = 0, size = 100, signal?: AbortSignal): Promise<PaginatedBragLogs> => {
     return await fetchPaginated<PaginatedBragLogs>(
         `api/brag-logs?projection=bragLogProjection&page=${page}&size=${size}`,
-        'bragLogs'
+        'bragLogs',
+        signal
     );
 };
 
-export const createBragLog = async (bragLogData: Partial<BragLog>): Promise<BragLog> => {
+export const createBragLog = async (bragLogData: Partial<BragLog>, signal?: AbortSignal): Promise<BragLog> => {
     return await withHealthAwareRetry(() =>
-        api.post<BragLog>(`api/brag-logs`, bragLogData).then(r => r.data));
+        api.post<BragLog>(`api/brag-logs`, bragLogData, { signal }).then(r => r.data));
 };
 
-export const updateBragLog = async (id: number, bragLogData: Partial<BragLog>): Promise<BragLog> => {
+export const updateBragLog = async (id: number, bragLogData: Partial<BragLog>, signal?: AbortSignal): Promise<BragLog> => {
     return await withHealthAwareRetry(() =>
-        api.patch<BragLog>(`api/brag-logs/${id}`, bragLogData).then(r => r.data));
+        api.patch<BragLog>(`api/brag-logs/${id}`, bragLogData, { signal }).then(r => r.data));
 };
 
-export const deleteBragLog = async (id: number): Promise<void> => {
+export const deleteBragLog = async (id: number, signal?: AbortSignal): Promise<void> => {
     return await withHealthAwareRetry(() =>
-        api.delete(`api/brag-logs/${id}`));
+        api.delete(`api/brag-logs/${id}`, { signal }));
 };
 
-export const submitPublicBragLog = async (data: BragLogRequest) => {
+export const submitPublicBragLog = async (data: BragLogRequest, signal?: AbortSignal) => {
     return withHealthAwareRetry(() =>
-        api.post('api/public/brag-logs', data));
+        api.post('api/public/brag-logs', data, { signal }));
 };
 
 // ============== TEACHER API =================
-export const getTeachers = async (page = 0, size = 100): Promise<PaginatedTeachers> => {
+export const getTeachers = async (page = 0, size = 100, signal?: AbortSignal): Promise<PaginatedTeachers> => {
     return await fetchPaginated<PaginatedTeachers>(
         `api/teachers?projection=teacherProjection&page=${page}&size=${size}`,
-        'teachers'
+        'teachers',
+        signal
     );
 }
 
-export const createTeacher = async (teacherData: Partial<Teacher>): Promise<Teacher> => {
+export const createTeacher = async (teacherData: Partial<Teacher>, signal?: AbortSignal): Promise<Teacher> => {
     return await withHealthAwareRetry(() =>
-        api.post<Teacher>(`api/teachers`, teacherData).then(r => r.data));
+        api.post<Teacher>(`api/teachers`, teacherData, { signal }).then(r => r.data));
 };
 
-export const updateTeacher = async (id: number, teacherData: Partial<Teacher>): Promise<Teacher> => {
+export const updateTeacher = async (id: number, teacherData: Partial<Teacher>, signal?: AbortSignal): Promise<Teacher> => {
     return await withHealthAwareRetry(() =>
-        api.patch<Teacher>(`api/teachers/${id}`, teacherData).then(r => r.data));
+        api.patch<Teacher>(`api/teachers/${id}`, teacherData, { signal }).then(r => r.data));
 };
 
-export const deleteTeacher = async (id: number): Promise<void> => {
+export const deleteTeacher = async (id: number, signal?: AbortSignal): Promise<void> => {
     return await withHealthAwareRetry(() =>
-        api.delete(`api/teachers/${id}`));
+        api.delete(`api/teachers/${id}`, { signal }));
 };
 
 // ============== LEADERBOARD API =================
-export const getLeaderboard = async (timeframe: Timeframe): Promise<LeaderboardEntry[]> => {
-    return await fetchResource<LeaderboardEntry[]>(`api/leaderboard?timeframe=${timeframe}`);
+export const getLeaderboard = async (timeframe: Timeframe, signal?: AbortSignal): Promise<LeaderboardEntry[]> => {
+    return await fetchResource<LeaderboardEntry[]>(`api/leaderboard?timeframe=${timeframe}`, signal);
 }
 
 // ============== REWARD ITEM API =================
-export const getRewardItems = async (page = 0, size = 100): Promise<PaginatedRewardItems> => {
+export const getRewardItems = async (page = 0, size = 100, signal?: AbortSignal): Promise<PaginatedRewardItems> => {
     return await fetchPaginated<PaginatedRewardItems>(
         `api/reward-items?projection=rewardItemProjection&page=${page}&size=${size}`,
-        'rewardItems'
+        'rewardItems',
+        signal
     );
 };
 
-export const createRewardItem = async (rewardItemData: Partial<RewardItem>): Promise<RewardItem> => {
+export const createRewardItem = async (rewardItemData: Partial<RewardItem>, signal?: AbortSignal): Promise<RewardItem> => {
     return await withHealthAwareRetry(() =>
-        api.post<RewardItem>(`api/reward-items`, rewardItemData).then(r => r.data));
+        api.post<RewardItem>(`api/reward-items`, rewardItemData, { signal }).then(r => r.data));
 };
 
-export const updateRewardItem = async (id: number, rewardItemData: Partial<RewardItem>): Promise<RewardItem> => {
+export const updateRewardItem = async (id: number, rewardItemData: Partial<RewardItem>, signal?: AbortSignal): Promise<RewardItem> => {
     return await withHealthAwareRetry(() =>
-        api.patch<RewardItem>(`api/reward-items/${id}`, rewardItemData).then(r => r.data));
+        api.patch<RewardItem>(`api/reward-items/${id}`, rewardItemData, { signal }).then(r => r.data));
 };
 
-export const deleteRewardItem = async (id: number): Promise<void> => {
+export const deleteRewardItem = async (id: number, signal?: AbortSignal): Promise<void> => {
     return await withHealthAwareRetry(() =>
-        api.delete(`api/reward-items/${id}`));
+        api.delete(`api/reward-items/${id}`, { signal }));
 };
 
 // ============== STUDENT REWARD API =================
-export const getStudentRewards = async (page = 0, size = 100): Promise<PaginatedStudentRewards> => {
+export const getStudentRewards = async (page = 0, size = 100, signal?: AbortSignal): Promise<PaginatedStudentRewards> => {
     return await fetchPaginated<PaginatedStudentRewards>(
         `api/student-rewards?projection=studentRewardProjection&page=${page}&size=${size}`,
-        'studentRewards'
+        'studentRewards',
+        signal
     );
 };
 
-export const createStudentReward = async (studentRewardData: Partial<StudentReward>): Promise<StudentReward> => {
+export const createStudentReward = async (studentRewardData: Partial<StudentReward>, signal?: AbortSignal): Promise<StudentReward> => {
     return await withHealthAwareRetry(() =>
-        api.post<StudentReward>(`api/student-rewards`, studentRewardData).then(r => r.data));
+        api.post<StudentReward>(`api/student-rewards`, studentRewardData, { signal }).then(r => r.data));
 };
 
-export const updateStudentReward = async (id: number, studentRewardData: Partial<StudentReward>): Promise<StudentReward> => {
+export const updateStudentReward = async (id: number, studentRewardData: Partial<StudentReward>, signal?: AbortSignal): Promise<StudentReward> => {
     return await withHealthAwareRetry(() =>
-        api.patch<StudentReward>(`api/student-rewards/${id}`, studentRewardData).then(r => r.data));
+        api.patch<StudentReward>(`api/student-rewards/${id}`, studentRewardData, { signal }).then(r => r.data));
 };
 
-export const deleteStudentReward = async (id: number): Promise<void> => {
+export const deleteStudentReward = async (id: number, signal?: AbortSignal): Promise<void> => {
     return await withHealthAwareRetry(() =>
-        api.delete(`api/student-rewards/${id}`));
+        api.delete(`api/student-rewards/${id}`, { signal }));
 };
