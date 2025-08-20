@@ -43,21 +43,12 @@ const userSlice = createSlice({
     name: 'user',
     initialState,
     reducers: {
-        setUser: (state, action: PayloadAction<UserDTO>) => {
-            state.data = action.payload;
-            state.loading = false;
-            state.error = null;
-            state.lastFetched = Date.now();
-        },
         clearUser: (state) => {
             state.data = null;
             state.loading = false;
             state.error = null;
             state.lastFetched = null;
         },
-        invalidateUserCache: (state) => {
-            state.lastFetched = null;
-        }
     },
     extraReducers: (builder) => {
         builder
@@ -85,7 +76,7 @@ const userSlice = createSlice({
                 state.loading = false;
                 state.data = action.payload;
                 state.error = null;
-                state.lastFetched = null;
+                state.lastFetched = Date.now();
             })
             .addCase(modifyUser.rejected, (state, action) => {
                 state.loading = false;
@@ -96,5 +87,5 @@ const userSlice = createSlice({
     }
 });
 
-export const { setUser, clearUser, invalidateUserCache } = userSlice.actions;
+export const { clearUser } = userSlice.actions;
 export default userSlice.reducer;
