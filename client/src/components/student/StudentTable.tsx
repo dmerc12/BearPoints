@@ -6,6 +6,7 @@ import { fetchStudents } from '../../store/slices/studentsSlice.ts';
 import { GradeLevel, Student, Role } from '../../services/types.ts';
 import BaseTable, { TableColumn } from '../BaseTable.tsx';
 import { formatGrade } from '../../utils/formatGrades.ts';
+import { CreateStudentModal } from './CreateStudentModal';
 import { useReactToPrint } from 'react-to-print';
 import { useNavigate } from 'react-router-dom';
 import QRCodesPrint from './QRCodesPrint.tsx';
@@ -275,24 +276,14 @@ export default function StudentTable ({ itemsPerPage = 10, showFilters = true, s
                 onRetry={() => dispatch(fetchStudents({ page: 0, size: 1000, force: true }))}
                 size={size}
             />
-            {/* Create Student Modal */}
-            <Modal show={showCreateModal} onHide={handleCloseModals}>
-                <Modal.Header closeButton>
-                    <Modal.Title>Create Student</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    {/* Add form for creating a student here */}
-                    <p>Student creation form would go here</p>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={handleCloseModals}>
-                        Cancel
-                    </Button>
-                    <Button variant="primary" onClick={handleCloseModals}>
-                        Create
-                    </Button>
-                </Modal.Footer>
-            </Modal>
+            <CreateStudentModal
+                show={showCreateModal}
+                onCancel={handleCloseModals}
+                onSuccess={() => {
+                    handleCloseModals();
+                    dispatch(fetchStudents({ page: 0, size: 1000, force: true }));
+                }}
+            />
 
             {/* Edit Student Modal */}
             <Modal show={!!editingStudent} onHide={handleCloseModals}>
@@ -304,10 +295,10 @@ export default function StudentTable ({ itemsPerPage = 10, showFilters = true, s
                     <p>Editing student: {editingStudent ? fullName(editingStudent) : ''}</p>
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button variant="secondary" onClick={handleCloseModals}>
+                    <Button variant='secondary' onClick={handleCloseModals}>
                         Cancel
                     </Button>
-                    <Button variant="primary" onClick={handleCloseModals}>
+                    <Button variant='primary' onClick={handleCloseModals}>
                         Save Changes
                     </Button>
                 </Modal.Footer>
@@ -322,10 +313,10 @@ export default function StudentTable ({ itemsPerPage = 10, showFilters = true, s
                     Are you sure you want to delete {deletingStudent ? fullName(deletingStudent) : ''}?
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button variant="secondary" onClick={handleCloseModals}>
+                    <Button variant='secondary' onClick={handleCloseModals}>
                         Cancel
                     </Button>
-                    <Button variant="danger" onClick={handleConfirmDelete}>
+                    <Button variant='danger' onClick={handleConfirmDelete}>
                         Delete
                     </Button>
                 </Modal.Footer>

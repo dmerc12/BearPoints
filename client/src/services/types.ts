@@ -27,7 +27,7 @@ export interface PaginatedUsers {
 }
 
 export interface UserDTO {
-    id: number;
+    id: number | null;
     email: string;
     firstName: string;
     lastName: string;
