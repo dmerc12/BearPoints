@@ -7,6 +7,7 @@ import { GradeLevel, Student, Role } from '../../services/types.ts';
 import BaseTable, { TableColumn } from '../BaseTable.tsx';
 import { formatGrade } from '../../utils/formatGrades.ts';
 import { CreateStudentModal } from './CreateStudentModal';
+import { EditStudentModal } from './EditStudentModal';
 import { useReactToPrint } from 'react-to-print';
 import { useNavigate } from 'react-router-dom';
 import QRCodesPrint from './QRCodesPrint.tsx';
@@ -285,24 +286,15 @@ export default function StudentTable ({ itemsPerPage = 10, showFilters = true, s
                 }}
             />
 
-            {/* Edit Student Modal */}
-            <Modal show={!!editingStudent} onHide={handleCloseModals}>
-                <Modal.Header closeButton>
-                    <Modal.Title>Edit Student</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    {/* Add form for editing a student here */}
-                    <p>Editing student: {editingStudent ? fullName(editingStudent) : ''}</p>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant='secondary' onClick={handleCloseModals}>
-                        Cancel
-                    </Button>
-                    <Button variant='primary' onClick={handleCloseModals}>
-                        Save Changes
-                    </Button>
-                </Modal.Footer>
-            </Modal>
+            <EditStudentModal 
+                show={!!editingStudent}
+                student={editingStudent}
+                onCancel={handleCloseModals}
+                onSuccess={() => {
+                    handleCloseModals();
+                    dispatch(fetchStudents({ page: 0, size: 1000, force: true }));
+                }}
+            />
 
             {/* Delete Confirmation Modal */}
             <Modal show={!!deletingStudent} onHide={handleCloseModals}>
