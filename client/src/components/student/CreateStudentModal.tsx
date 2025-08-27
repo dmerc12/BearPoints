@@ -1,10 +1,9 @@
-import { useAppSelector, useAppDispatch } from '../../store/hooks.ts';
-import { fetchTeachers } from '../../store/slices/teachersSlice.ts';
-import { addStudent } from '../../store/slices/studentsSlice.ts';
+import { addStudent } from '../../store/slices/studentsSlice';
 import { Student, Role, Teacher } from '../../services/types';
+import { useStudentForm } from '../../hooks/useStudentForm';
 import { Form, Row, Col, Alert } from 'react-bootstrap';
-import { fullName } from '../../utils/formatNames.ts';
-import React, { useEffect, useState } from 'react';
+import { useAppDispatch } from '../../store/hooks';
+import { fullName } from '../../utils/formatNames';
 import BaseModal from '../BaseModal';
 
 interface CreateStudentModalProps {
@@ -15,74 +14,9 @@ interface CreateStudentModalProps {
 
 export function CreateStudentModal({ show, onCancel, onSuccess }: CreateStudentModalProps) {
     const dispatch = useAppDispatch();
-    const { loading: studentsLoading, error: studentsError } = useAppSelector(
-        state => state.students);
-    const { teachers, loading: teachersLoading, error: teachersError } = useAppSelector(
-        state => state.teachers);
-    const currentUser = useAppSelector(
-        state => state.user.data);
-    const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-    const [formData, setFormData] = useState({
-        firstName: '',
-        lastName: '',
-        email: '',
-        teacherId: '',
-    });
 
-    const isAdmin = currentUser?.role === Role.ADMIN;
-    const isTeacher = currentUser?.role === Role.TEACHER;
-    const error = studentsError || teachersError;
-
-    useEffect(() => {
-        if (show && isAdmin && teachers.length === 0) {
-            dispatch(fetchTeachers({ page: 0, size: 1000, force: true }));
-        }
-    }, [show, isAdmin, dispatch, teachers.length]);
-
-    useEffect(() => {
-        if (show && isTeacher && currentUser?.teacherId) {
-            setFormData(prev => ({
-                ...prev,
-                teacherId: currentUser.teacherId ? currentUser.teacherId.toString() : '',
-            }));
-        }
-    }, [show, isTeacher, currentUser]);
-
-    const handleChange = (name: string, value: string | number) => {
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-        if (formErrors[name]) {
-            setFormErrors(prev => {
-                const newErrors = { ...prev };
-                delete newErrors[name];
-                return newErrors;
-            });
-        }
-    }
-
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        handleChange(e.target.name, e.target.value);
-    };
-
-    const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        handleChange(e.target.name, e.target.value);
-    };
-
-    const validateForm = () => {
-        const errors: Record<string, string> = {};
-        if (!formData.firstName.trim()) errors.firstName = 'First name is required';
-        if (!formData.lastName.trim()) errors.lastName = 'Last name is required';
-        if (!formData.email.trim()) {
-            errors.email = 'Email is required';
-        } else if (!formData.email.endsWith('@okcps.org')) {
-            errors.email = 'Email must be from @okcps.org domain';
-        }
-        if (!formData.teacherId.trim()) errors.teacherId = 'Teacher Id is required';
-        setFormErrors(errors);
-        return Object.keys(errors).length === 0;
-    };
+    const { formData, formErrors, teachers, isAdmin, error, isLoading, handleInputChange, handleSelectChange,
+        validateForm, resetForm } = useStudentForm({ show });
 
     const handleSubmit = () => {
         if (!validateForm()) return;
@@ -95,39 +29,23 @@ export function CreateStudentModal({ show, onCancel, onSuccess }: CreateStudentM
         }
         const studentData: Partial<Student> = {
             user: userData,
-            teacher: {
-                id: parseInt(formData.teacherId)
-            } as Teacher
+            teacher: { id: parseInt(formData.teacherId) } as Teacher
         };
         dispatch(addStudent(studentData))
             .unwrap()
             .then(() => {
                 onSuccess();
-                setFormData({
-                    firstName: '',
-                    lastName: '',
-                    email: '',
-                    teacherId: '',
-                });
-                setFormErrors({});
+                resetForm();
             }).catch((err: Error) => {
                 console.log('Failed to create student:', err);
         });
     };
 
     const handleClose = () => {
-        setFormData({
-            firstName: '',
-            lastName: '',
-            email: '',
-            teacherId: '',
-        });
-        setFormErrors({});
+        resetForm();
         onCancel();
     };
-
-    const isLoading = studentsLoading || teachersLoading;
-
+    
     return (
         <BaseModal
             title='Create Student'
@@ -195,7 +113,7 @@ export function CreateStudentModal({ show, onCancel, onSuccess }: CreateStudentM
                 {isAdmin && (
                     <Form.Group className='mb-3'>
                         <Form.Label>Teacher *</Form.Label>
-                        {teachersLoading ? (
+                        {isLoading ? (
                             <Form.Control  type='text' value='Loading teachers...' disabled />
                         ) : (
                             <Form.Select
@@ -206,7 +124,7 @@ export function CreateStudentModal({ show, onCancel, onSuccess }: CreateStudentM
                                 disabled={isLoading}
                             >
                                 <option value=''>Select a teacher</option>
-                                {teachers.map(teacher => (
+                                {teachers.map((teacher: Teacher) => (
                                     <option key={teacher.id} value={teacher.id}>
                                         {fullName(teacher)}
                                     </option>
