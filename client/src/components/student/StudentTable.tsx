@@ -1,16 +1,17 @@
-import { formatName, fullName, clearNameCaches } from '../../utils/formatNames.ts';
-import { Row, Button, Col, Form, ButtonGroup, Modal } from 'react-bootstrap';
+import { formatName, fullName, clearNameCaches } from '../../utils/formatNames';
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { useAppDispatch, useAppSelector } from '../../store/hooks.ts';
-import { fetchStudents } from '../../store/slices/studentsSlice.ts';
-import { GradeLevel, Student, Role } from '../../services/types.ts';
-import BaseTable, { TableColumn } from '../BaseTable.tsx';
-import { formatGrade } from '../../utils/formatGrades.ts';
+import { Row, Button, Col, Form, ButtonGroup } from 'react-bootstrap';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fetchStudents } from '../../store/slices/studentsSlice';
+import { GradeLevel, Student, Role } from '../../services/types';
 import { CreateStudentModal } from './CreateStudentModal';
+import { DeleteStudentModal } from './DeleteStudentModal';
+import { formatGrade } from '../../utils/formatGrades';
 import { EditStudentModal } from './EditStudentModal';
+import BaseTable, { TableColumn } from '../BaseTable';
 import { useReactToPrint } from 'react-to-print';
 import { useNavigate } from 'react-router-dom';
-import QRCodesPrint from './QRCodesPrint.tsx';
+import QRCodesPrint from './QRCodesPrint';
 import { QRCodeSVG } from 'qrcode.react';
 
 interface StudentTableProps {
@@ -118,13 +119,6 @@ export default function StudentTable ({ itemsPerPage = 10, showFilters = true, s
         setEditingStudent(null);
         setDeletingStudent(null);
     }, []);
-
-    const handleConfirmDelete = useCallback(() => {
-        if (deletingStudent) {
-            console.log('Deleting student:', deletingStudent);
-            handleCloseModals();
-        }
-    }, [deletingStudent, handleCloseModals]);
 
     const columns: TableColumn<Student>[] = useMemo(() => [
         {
@@ -285,7 +279,6 @@ export default function StudentTable ({ itemsPerPage = 10, showFilters = true, s
                     dispatch(fetchStudents({ page: 0, size: 1000, force: true }));
                 }}
             />
-
             <EditStudentModal 
                 show={!!editingStudent}
                 student={editingStudent}
@@ -295,24 +288,15 @@ export default function StudentTable ({ itemsPerPage = 10, showFilters = true, s
                     dispatch(fetchStudents({ page: 0, size: 1000, force: true }));
                 }}
             />
-
-            {/* Delete Confirmation Modal */}
-            <Modal show={!!deletingStudent} onHide={handleCloseModals}>
-                <Modal.Header closeButton>
-                    <Modal.Title>Confirm Delete</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    Are you sure you want to delete {deletingStudent ? fullName(deletingStudent) : ''}?
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant='secondary' onClick={handleCloseModals}>
-                        Cancel
-                    </Button>
-                    <Button variant='danger' onClick={handleConfirmDelete}>
-                        Delete
-                    </Button>
-                </Modal.Footer>
-            </Modal>
+            <DeleteStudentModal 
+                show={!!deletingStudent} 
+                student={deletingStudent} 
+                onCancel={handleCloseModals} 
+                onSuccess={() => {
+                    handleCloseModals();
+                    dispatch(fetchStudents({ page: 0, size: 1000, force: true }));
+                }}
+            />
             <div style={{ display: 'none' }}>
                 <QRCodesPrint ref={ contentRef } students={ filteredStudents } />
             </div>
