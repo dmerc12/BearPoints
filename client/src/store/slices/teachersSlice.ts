@@ -1,7 +1,7 @@
 import { getTeachers, createTeacher, updateTeacher, deleteTeacher } from '../../services/api';
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { PaginatedTeachers, Teacher } from '../../services/types';
-import {RootState} from "../index.ts";
+import { RootState } from '../index.ts';
 
 interface TeachersState {
     teachers: Teacher[];
