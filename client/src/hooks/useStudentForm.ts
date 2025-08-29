@@ -1,7 +1,8 @@
 import { useAppSelector, useAppDispatch } from '../store/hooks';
 import { fetchTeachers } from '../store/slices/teachersSlice';
-import React, { useEffect, useState } from 'react';
+import { createFormHandlers } from '../utils/handleChange';
 import { Student, Role } from '../services/types';
+import { useEffect, useState } from 'react';
 
 export interface StudentFormData {
     firstName: string;
@@ -60,27 +61,7 @@ export const useStudentForm = ({ show, isEdit = false, student }: UseStudentForm
         }
     }, [show, isEdit, student, isTeacher, currentUser]);
 
-    const handleChange = (name: string, value: string | number) => {
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-        if (formErrors[name]) {
-            setFormErrors(prev => {
-                const newErrors = { ...prev };
-                delete newErrors[name];
-                return newErrors;
-            });
-        }
-    }
-
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        handleChange(e.target.name, e.target.value);
-    };
-
-    const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        handleChange(e.target.name, e.target.value);
-    };
+    const { handleInputChange, handleSelectChange } = createFormHandlers(setFormData, setFormErrors);
 
     const validateForm = () => {
         const errors: Record<string, string> = {};
