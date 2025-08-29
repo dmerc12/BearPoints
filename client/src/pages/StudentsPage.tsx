@@ -1,4 +1,4 @@
-import StudentTable from '../components/student/StudentTable.tsx';
+import StudentTable from '../components/students/StudentTable.tsx';
 import { Container, Row, Col } from 'react-bootstrap';
 import Auth from '../components/Auth';
 
