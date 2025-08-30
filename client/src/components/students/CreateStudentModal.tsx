@@ -94,7 +94,7 @@ export function CreateStudentModal({ show, onCancel, onSuccess }: CreateStudentM
                     </Col>
                 </Row>
                 <Form.Group className='mb-3'>
-                    <Form.Label>Email *</Form.Label>
+                    <Form.Label>Email</Form.Label>
                     <Form.Control
                         type='email'
                         name='email'
@@ -112,7 +112,7 @@ export function CreateStudentModal({ show, onCancel, onSuccess }: CreateStudentM
                 </Form.Group>
                 {isAdmin && (
                     <Form.Group className='mb-3'>
-                        <Form.Label>Teacher *</Form.Label>
+                        <Form.Label>Teacher</Form.Label>
                         {isLoading ? (
                             <Form.Control  type='text' value='Loading teachers...' disabled />
                         ) : (

@@ -110,7 +110,7 @@ export function EditStudentModal({ show, student, onCancel, onSuccess }: EditStu
                     </Col>
                 </Row>
                 <Form.Group className='mb-3'>
-                    <Form.Label>Email *</Form.Label>
+                    <Form.Label>Email</Form.Label>
                     <Form.Control
                         type='email'
                         name='email'
@@ -128,7 +128,7 @@ export function EditStudentModal({ show, student, onCancel, onSuccess }: EditStu
                 </Form.Group>
                 {(isAdmin || isTeacher) && (
                     <Form.Group className='mb-3'>
-                        <Form.Label>Teacher *</Form.Label>
+                        <Form.Label>Teacher</Form.Label>
                         {isTeacher ? (
                             <Form.Control type='text'
                                           value={student?.teacher ? fullName(student?.teacher) : 'Loading'}
