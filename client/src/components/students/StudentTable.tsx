@@ -1,14 +1,17 @@
 import { formatName, fullName, clearNameCaches } from '../../utils/formatNames';
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { Row, Button, Col, Form, ButtonGroup } from 'react-bootstrap';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchStudents } from '../../store/slices/studentsSlice';
-import { GradeLevel, Student, Role } from '../../services/types';
+import { Row, Button, Col, ButtonGroup } from 'react-bootstrap';
 import { CreateStudentModal } from './CreateStudentModal';
 import { DeleteStudentModal } from './DeleteStudentModal';
+import { TeacherFilter } from '../filters/TeacherFilter';
 import { formatGrade } from '../../utils/formatGrades';
 import { EditStudentModal } from './EditStudentModal';
 import BaseTable, { TableColumn } from '../BaseTable';
+import { Student, Role } from '../../services/types';
+import { GradeFilter } from '../filters/GradeFilter';
+import { NameFilter } from '../filters/NameFilter';
 import { useReactToPrint } from 'react-to-print';
 import { useNavigate } from 'react-router-dom';
 import QRCodesPrint from './QRCodesPrint';
@@ -82,14 +85,7 @@ export default function StudentTable ({ itemsPerPage = 10, showFilters = true, s
 
     const grades = useMemo(() => {
         const teacherGrades = students.map(student => student.teacher.grade);
-        return Array.from(new Set(teacherGrades))
-            .sort((a, b) => {
-                if (a === GradeLevel.PRE_K) return -1;
-                if (b === GradeLevel.PRE_K) return 1;
-                if (a === GradeLevel.K) return -1;
-                if (b === GradeLevel.K) return 1;
-                return a.localeCompare(b);
-            });
+        return Array.from(new Set(teacherGrades));
     }, [students]);
 
     const qrCodeSize = useMemo(() => {
@@ -195,38 +191,25 @@ export default function StudentTable ({ itemsPerPage = 10, showFilters = true, s
         if (!showFilters) return null;
         return (
             <Row className='mb-3 g-3'>
-                {/* Name Search */ }
                 <Col md={ 6 }>
-                    <Form.Control placeholder='Search by name'
-                                  value={ filters.nameSearch }
-                                  onChange={ (e) =>
-                                      updateNameFilter(e.target.value) }
+                    <NameFilter
+                        value={filters.nameSearch}
+                        onChange={updateNameFilter}
                     />
-                    <Form.Text className='text-muted'>Partial name matches accepted</Form.Text>
                 </Col>
-                {/* Teacher Filter */ }
                 <Col md={ 6 }>
-                    <Form.Select value={ filters.teacher }
-                                 onChange={ (e) =>
-                                     updateTeacherFilter(e.target.value) }
-                    >
-                        <option value=''>All Teachers</option>
-                        { teacherNames.map(teacher => (
-                            <option key={ teacher } value={ teacher }>{ teacher }</option>
-                        )) }
-                    </Form.Select>
+                    <TeacherFilter
+                        value={filters.teacher}
+                        onChange={updateTeacherFilter}
+                        teachers={teacherNames}
+                    />
                 </Col>
-                {/* Grade Filter */ }
                 <Col md={ 6 }>
-                    <Form.Select value={ filters.grade }
-                                 onChange={ (e) =>
-                                     updateGradeFilter(e.target.value) }
-                    >
-                        <option value=''>All Grades</option>
-                        { grades.map(grade => (
-                            <option key={ grade } value={ grade }>{ formatGrade(grade) }</option>
-                        )) }
-                    </Form.Select>
+                    <GradeFilter
+                        value={filters.grade}
+                        onChange={updateGradeFilter}
+                        items={grades}
+                    />
                 </Col>
             </Row>
         );
