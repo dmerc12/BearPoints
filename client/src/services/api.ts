@@ -1,6 +1,22 @@
 import {
-    PaginatedBehaviorTypes, PaginatedStudents, PaginatedTeachers, PaginatedUsers, PaginatedBragLogs, PaginatedRewardItems, PaginatedStudentRewards,
-    Student, BragLogRequest, BehaviorType, Teacher, UserDTO, BragLog, RewardItem, StudentReward, LeaderboardEntry, Timeframe
+    PaginatedBehaviorTypes,
+    PaginatedStudents,
+    PaginatedTeachers,
+    PaginatedUsers,
+    PaginatedBragLogs,
+    PaginatedRewardItems,
+    PaginatedStudentRewards,
+    Student,
+    BragLogRequest,
+    BehaviorType,
+    Teacher,
+    UserDTO,
+    BragLog,
+    RewardItem,
+    StudentReward,
+    LeaderboardEntry,
+    Timeframe,
+    Role
 } from './types';
 import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 import { auth } from '../Auth';
@@ -161,14 +177,14 @@ const fetchPaginated = async <T>(
     });
 };
 
-// ============== USER API =================
-export const getUsers = async (page = 0, size = 100, signal?: AbortSignal): Promise<PaginatedUsers> => {
+// ============== ADMIN API =================
+export const getUsersByRole = async (role: Role, page = 0, size = 100, signal?: AbortSignal): Promise<PaginatedUsers> => {
     return await fetchPaginated<PaginatedUsers>(
-        `api/users?projection=userProjection&page=${page}&size=${size}`,
+        `api/users/search/byRole?role=${role}&page=${page}&size=${size}&projection=userProjection`,
         'users',
         signal
     );
-};
+}
 
 export const getCurrentUser = async (signal?: AbortSignal): Promise<UserDTO> => {
     return fetchResource('api/users/me', signal);
