@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -60,6 +62,18 @@ public class UserDAOTests {
         assertTrue(result.isPresent());
         assertEquals(testUser.getFirstName(), result.get().getFirstName());
         assertEquals(testUser.getRole(), result.get().getRole());
+    }
+
+    @Test
+    @DisplayName("findByRole returns correct users")
+    void shouldFindUsersByRole() {
+        Page<User> result = userDAO.findByRole(testUser.getRole(), Pageable.ofSize(1));
+        assertFalse(result.isEmpty());
+        User firstUser = result.getContent().getFirst();
+        assertEquals(testUser.getFirstName(), firstUser.getFirstName());
+        assertEquals(testUser.getLastName(), firstUser.getLastName());
+        assertEquals(testUser.getEmail(), firstUser.getEmail());
+        assertEquals(testUser.getRole(), firstUser.getRole());
     }
 
     @Test

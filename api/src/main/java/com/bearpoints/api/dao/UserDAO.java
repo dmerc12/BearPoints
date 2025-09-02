@@ -1,10 +1,14 @@
 package com.bearpoints.api.dao;
 
 import com.bearpoints.api.dto.UserProjection;
+import com.bearpoints.api.entity.Role;
 import com.bearpoints.api.entity.User;
 import io.micrometer.common.lang.NonNull;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.repository.query.Param;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.data.rest.core.annotation.RestResource;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -58,6 +62,25 @@ public interface UserDAO extends JpaRepository<User, Long> {
     @PreAuthorize("permitAll()")
     Optional<User> findByEmail(String email);
 
+    /**
+     * Finds users by role with pagination support.
+     * <p>Exposed as REST endpoint at /users/search/byRole?role={role}&page={page}&size={size}
+     * <p>Accessible to any authenticated users.
+     *
+     * @param role User role to filter by
+     * @param pageable Pagination information
+     * @return Paginated list of users with the specified role
+     */
+    @PreAuthorize("isAuthenticated()")
+    @RestResource(path = "byRole", rel = "byRole")
+    Page<User> findByRole(@Param("role") Role role, Pageable pageable);
+
+    @NonNull
+    @Override
+    @Cacheable("users")
+    @PreAuthorize("isAuthenticated()")
+    List<User> findAll();
+
     @NonNull
     @Override
     @PreAuthorize("hasRole('ADMIN') or " + "(hasRole('TEACHER') and #entity.role.name() == 'STUDENT')")
@@ -74,12 +97,6 @@ public interface UserDAO extends JpaRepository<User, Long> {
     @Override
     @PreAuthorize("hasRole('ADMIN')")
     void deleteAll(@NonNull Iterable<? extends User> entities);
-
-    @NonNull
-    @Override
-    @Cacheable("users")
-    @PreAuthorize("isAuthenticated()")
-    List<User> findAll();
 
     /**
      * Finds un-synchronized users (internal use only).
