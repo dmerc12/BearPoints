@@ -1,8 +1,9 @@
+import { studentValidationRules } from '../utils/validationRules';
 import { useAppSelector, useAppDispatch } from '../store/hooks';
 import { fetchTeachers } from '../store/slices/teachersSlice';
-import { createFormHandlers } from '../utils/handleChange';
 import { Student, Role } from '../services/types';
-import { useEffect, useState } from 'react';
+import { useForm } from './useForm';
+import { useEffect } from 'react';
 
 export interface StudentFormData {
     firstName: string;
@@ -26,13 +27,14 @@ export const useStudentForm = ({ show, isEdit = false, student }: UseStudentForm
     const currentUser = useAppSelector(
         state => state.user.data);
 
-    const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-    const [formData, setFormData] = useState<StudentFormData>({
+    const initialData: StudentFormData = {
         firstName: '',
         lastName: '',
         email: '',
         teacherId: '',
-    });
+    };
+
+    const form = useForm({ initialData, validationRules: studentValidationRules });
 
     const isAdmin = currentUser?.role === Role.ADMIN;
     const isTeacher = currentUser?.role === Role.TEACHER;
@@ -47,46 +49,22 @@ export const useStudentForm = ({ show, isEdit = false, student }: UseStudentForm
 
     useEffect(() => {
         if(show && isEdit && student) {
-            setFormData({
+            form.setFormData({
                 firstName: student.user.firstName,
                 lastName: student.user.lastName,
                 email: student.user.email,
                 teacherId: student.teacher.id.toString()
             });
         } else if (show && isTeacher && currentUser?.teacherId) {
-            setFormData(prev => ({
+            form.setFormData(prev => ({
                 ...prev,
                 teacherId: currentUser.teacherId ? currentUser.teacherId.toString() : '',
             }));
         }
-    }, [show, isEdit, student, isTeacher, currentUser]);
+    }, [show, isEdit, student, isTeacher, currentUser, form.setFormData, form]);
 
-    const { handleInputChange, handleSelectChange } = createFormHandlers(setFormData, setFormErrors);
-
-    const validateForm = () => {
-        const errors: Record<string, string> = {};
-        if (!formData.firstName.trim()) errors.firstName = 'First name is required';
-        if (!formData.lastName.trim()) errors.lastName = 'Last name is required';
-        if (!formData.email.trim()) {
-            errors.email = 'Email is required';
-        } else if (!formData.email.endsWith('@okcps.org')) {
-            errors.email = 'Email must be from @okcps.org domain';
-        }
-        if (!formData.teacherId.trim()) errors.teacherId = 'Teacher Id is required';
-        setFormErrors(errors);
-        return Object.keys(errors).length === 0;
-    };
-
-    const resetForm = () => {
-        setFormData({
-            firstName: '',
-            lastName: '',
-            email: '',
-            teacherId: '',
-        });
-        setFormErrors({});
-    }
-
-    return { formData, setFormData, formErrors, setFormErrors, teachers, currentUser, isAdmin, isTeacher, error,
-        isLoading, handleInputChange, handleSelectChange, validateForm, resetForm };
+    return { formData: form.formData, setFormData: form.setFormData, formErrors: form.formErrors,
+        setFormErrors: form.setFormErrors, teachers, currentUser, isAdmin, isTeacher, error, isLoading,
+        handleInputChange: form.handleInputChange, handleSelectChange: form.handleSelectChange,
+        validateForm: form.validateForm, resetForm: form.resetForm };
 };
