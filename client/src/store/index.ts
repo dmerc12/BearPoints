@@ -6,13 +6,13 @@ import bragLogsReducer from './slices/bragLogsSlice';
 import teachersReducer from './slices/teachersSlice';
 import studentsReducer from './slices/studentsSlice';
 import { configureStore } from '@reduxjs/toolkit';
-import usersReducer from './slices/usersSlice';
+import adminsReducer from './slices/adminsSlice';
 import userReducer from './slices/userSlice';
 
 export const store = configureStore({
     reducer: {
         user: userReducer,
-        users: usersReducer,
+        admins: adminsReducer,
         teachers: teachersReducer,
         students: studentsReducer,
         behaviorTypes: behaviorTypesReducer,
