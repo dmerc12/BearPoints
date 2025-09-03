@@ -59,5 +59,5 @@ export const useStudentForm = ({ show, isEdit = false, student }: UseStudentForm
     return { formData: form.formData, setFormData: form.setFormData, formErrors: form.formErrors,
         setFormErrors: form.setFormErrors, teachers, currentUser, isAdmin, isTeacher, error, isLoading,
         handleInputChange: form.handleInputChange, handleSelectChange: form.handleSelectChange,
-        validateForm: form.validateForm, resetForm: form.resetForm };
+        handleCheckboxChange: form.handleCheckboxChange, validateForm: form.validateForm, resetForm: form.resetForm };
 };

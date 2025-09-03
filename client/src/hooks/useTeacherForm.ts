@@ -41,6 +41,6 @@ export const useTeacherForm = ({ show, isEdit = false, teacher }: UseTeacherForm
     
     return { formData: form.formData, setFormData: form.setFormData, formErrors: form.formErrors, 
         setFormErrors: form.setFormErrors, currentUser, isAdmin, isTeacher, error, loading, 
-        handleInputChange: form.handleInputChange, handleSelectChange: form.handleSelectChange, 
-        validateForm: form.validateForm, resetForm: form.resetForm };
+        handleInputChange: form.handleInputChange, handleSelectChange: form.handleSelectChange,
+        handleCheckboxChange: form.handleCheckboxChange, validateForm: form.validateForm, resetForm: form.resetForm };
 };

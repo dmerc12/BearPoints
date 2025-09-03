@@ -1,4 +1,4 @@
-import {createFormHandlers} from '../utils/handleChange';
+import { createFormHandlers } from '../utils/handleChange';
 import React, { useState, useCallback } from 'react';
 
 export type FormData = Record<string, unknown>;
@@ -38,7 +38,7 @@ export function useForm<T>({ initialData, validationRules, onSubmit }: UseFormPr
         return Object.keys(errors).length === 0;
     }, [validationRules, validateField, formData]);
 
-    const { handleInputChange, handleSelectChange } = createFormHandlers(setFormData, setFormErrors);
+    const { handleInputChange, handleSelectChange, handleCheckboxChange } = createFormHandlers(setFormData, setFormErrors);
 
     const handleSubmit = useCallback(async (e?: React.FormEvent) => {
         e?.preventDefault();
@@ -62,6 +62,6 @@ export function useForm<T>({ initialData, validationRules, onSubmit }: UseFormPr
         setFormErrors({});
     }, [initialData]);
 
-    return { formData, formErrors, isSubmitting, handleInputChange, handleSelectChange, handleSubmit,
-        validateForm, resetForm, setFormData, setFormErrors };
+    return { formData, formErrors, isSubmitting, handleInputChange, handleSelectChange, handleCheckboxChange,
+        handleSubmit, validateForm, resetForm, setFormData, setFormErrors };
 }

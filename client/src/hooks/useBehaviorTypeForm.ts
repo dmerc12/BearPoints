@@ -37,5 +37,6 @@ export const useBehaviorTypeForm = ({ show, isEdit = false, behaviorType }: UseB
 
     return { formData: form.formData, setFormData: form.setFormData, formErrors: form.formErrors,
         setFormErrors: form.setFormErrors, currentUser, error, loading, handleInputChange: form.handleInputChange,
-        handleSelectChange: form.handleSelectChange, validateForm: form.validateForm, resetForm: form.resetForm };
+        handleSelectChange: form.handleSelectChange, handleCheckboxChange: form.handleCheckboxChange,
+        validateForm: form.validateForm, resetForm: form.resetForm };
 }
