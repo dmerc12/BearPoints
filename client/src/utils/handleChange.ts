@@ -3,12 +3,13 @@ import React, { Dispatch, SetStateAction } from 'react';
 export interface FormHandlers {
     handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     handleSelectChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+    handleCheckboxChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 export const createFormHandlers =
     <T>(setFormData: Dispatch<SetStateAction<T>>, setFormErrors: Dispatch<SetStateAction<Record<string, string>>>)
         : FormHandlers => {
-    const handleChange = (name: string, value: string | number) => {
+    const handleChange = (name: string, value: string | number | boolean) => {
         setFormData(prev => ({
             ...prev,
             [name]: value
@@ -28,5 +29,9 @@ export const createFormHandlers =
         handleChange(e.target.name, e.target.value);
     };
 
-    return { handleInputChange, handleSelectChange };
+    const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        handleChange(e.target.name, e.target.checked);
+    };
+
+    return { handleInputChange, handleSelectChange, handleCheckboxChange };
 };
