@@ -1,7 +1,7 @@
-import { BehaviorTypeFormData, behaviorTypeValidationRules } from "../utils/validationRules.ts";
-import { BehaviorType } from "../services/types.ts";
-import { useAppSelector } from "../store/hooks.ts";
-import { useForm } from './useForm.ts';
+import { BehaviorTypeFormData, behaviorTypeValidationRules } from '../utils/validationRules';
+import { BehaviorType } from '../services/types';
+import { useAppSelector } from '../store/hooks';
+import { useForm } from './useForm';
 import { useEffect } from 'react';
 
 export interface UseBehaviorTypeFormProps {
