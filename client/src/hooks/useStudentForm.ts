@@ -1,16 +1,9 @@
-import { studentValidationRules } from '../utils/validationRules';
+import { StudentFormData, studentValidationRules } from '../utils/validationRules';
 import { useAppSelector, useAppDispatch } from '../store/hooks';
 import { fetchTeachers } from '../store/slices/teachersSlice';
 import { Student, Role } from '../services/types';
 import { useForm } from './useForm';
 import { useEffect } from 'react';
-
-export interface StudentFormData {
-    firstName: string;
-    lastName: string;
-    email: string;
-    teacherId: string;
-}
 
 export interface UseStudentFormProps {
     show: boolean;

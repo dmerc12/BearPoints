@@ -1,15 +1,8 @@
-import { teacherValidationRules } from '../utils/validationRules';
+import { TeacherFormData, teacherValidationRules } from '../utils/validationRules';
 import { Teacher, Role } from '../services/types';
 import { useAppSelector } from '../store/hooks';
 import { useForm } from './useForm';
 import { useEffect } from 'react';
-
-export interface TeacherFormData {
-    firstName: string;
-    lastName: string;
-    email: string;
-    grade: string | null;
-}
 
 export interface UseTeacherFormProps {
     show: boolean;
