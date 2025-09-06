@@ -7,10 +7,11 @@ interface BehaviorTypeFormProps {
     formErrors: Record<string, string>;
     loading: boolean;
     onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    onSelectChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
     onCheckboxChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-export function BehaviorTypeForm({ formData, formErrors, loading, onInputChange, onCheckboxChange }: BehaviorTypeFormProps) {
+export function BehaviorTypeForm({ formData, formErrors, loading, onInputChange, onSelectChange, onCheckboxChange }: BehaviorTypeFormProps) {
     return (
         <Form>
             <Row>
@@ -34,16 +35,19 @@ export function BehaviorTypeForm({ formData, formErrors, loading, onInputChange,
                 <Col md={4}>
                     <Form.Group className='mb-3'>
                         <Form.Label>Point Value</Form.Label>
-                        <Form.Control
-                            type='number'
+                        <Form.Select
                             name='pointValue'
                             value={formData.pointValue}
-                            onChange={onInputChange}
+                            onChange={onSelectChange}
                             isInvalid={!!formErrors.pointValue}
                             disabled={loading}
-                            min={1}
-                            max={5}
-                        />
+                        >
+                            <option value={1}>1 Point</option>
+                            <option value={2}>2 Points</option>
+                            <option value={3}>3 Points</option>
+                            <option value={4}>4 Points</option>
+                            <option value={5}>5 Points</option>
+                        </Form.Select>
                         <Form.Control.Feedback type='invalid'>
                             {formErrors.pointValue}
                         </Form.Control.Feedback>

@@ -14,7 +14,7 @@ interface CreateBehaviorTypeModalProps {
 export function CreateBehaviorTypeModal({ show, onCancel, onSuccess }: CreateBehaviorTypeModalProps) {
     const dispatch = useAppDispatch();
 
-    const { formData, formErrors, error, loading, handleInputChange, handleCheckboxChange,
+    const { formData, formErrors, error, loading, handleInputChange, handleSelectChange, handleCheckboxChange,
         validateForm, resetForm } = useBehaviorTypeForm({ show });
 
     const handleSubmit = () => {
@@ -57,6 +57,7 @@ export function CreateBehaviorTypeModal({ show, onCancel, onSuccess }: CreateBeh
                 formErrors={formErrors}
                 loading={loading}
                 onInputChange={handleInputChange}
+                onSelectChange={handleSelectChange}
                 onCheckboxChange={handleCheckboxChange}
             />
         </BaseModal>

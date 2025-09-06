@@ -17,8 +17,8 @@ interface EditBehaviorTypeModalProps {
 export function EditBehaviorTypeModal({ show, behaviorType, onCancel, onSuccess }: EditBehaviorTypeModalProps) {
     const dispatch = useAppDispatch();
 
-    const { formData, formErrors, setFormErrors, error, loading, handleInputChange, handleCheckboxChange, 
-        validateForm, resetForm } = useBehaviorTypeForm({ show, isEdit: true, behaviorType });
+    const { formData, formErrors, setFormErrors, error, loading, handleInputChange, handleSelectChange,
+        handleCheckboxChange, validateForm, resetForm } = useBehaviorTypeForm({ show, isEdit: true, behaviorType });
     
     useEffect(() => {
         if (show && behaviorType && behaviorType.active === undefined) {
@@ -71,7 +71,8 @@ export function EditBehaviorTypeModal({ show, behaviorType, onCancel, onSuccess 
                 formData={formData} 
                 formErrors={formErrors} 
                 loading={loading} 
-                onInputChange={handleInputChange} 
+                onInputChange={handleInputChange}
+                onSelectChange={handleSelectChange}
                 onCheckboxChange={handleCheckboxChange} 
             />
         </BaseModal>
