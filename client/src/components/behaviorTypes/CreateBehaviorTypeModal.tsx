@@ -1,5 +1,5 @@
 import { addBehaviorType } from '../../store/slices/behaviorTypesSlice';
-import { useBehaviorTypeForm } from '../../hooks/useBehaviorTypeForm';
+import { useBehaviorTypeForm } from '../../hooks/behaviorTypeHooks';
 import { BehaviorTypeForm } from './BehaviorTypeForm';
 import { useAppDispatch } from '../../store/hooks';
 import { Alert } from 'react-bootstrap';
