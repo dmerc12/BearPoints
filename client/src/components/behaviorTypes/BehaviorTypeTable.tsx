@@ -1,14 +1,14 @@
 import { formatBehaviorTypeStatus, getBehaviorTypeStatusVariant } from '../../utils/formatBehaviorType';
 import { fetchBehaviorTypes } from '../../store/slices/behaviorTypesSlice';
 import { Row, Button, Col, ButtonGroup, Badge } from 'react-bootstrap';
+import { useBehaviorTypeTable } from '../../hooks/behaviorTypeHooks';
 import { CreateBehaviorTypeModal } from './CreateBehaviorTypeModal';
 import { DeleteBehaviorTypeModal } from './DeleteBehaviorTypeModal';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { EditBehaviorTypeModal } from './EditBehaviorTypeModal';
-import { useState, useMemo, useCallback, useEffect } from 'react';
-import { PointValueFilter} from '../filters/PointValueFilter';
-import { BehaviorType, Role } from '../../services/types'
-import { StatusFilter } from '../filters/StatusFilter';
+import { BehaviorType, Role } from '../../services/types';
+import { useMemo, useEffect, useCallback } from 'react';
+import { SelectFilter } from '../filters/SelectFilter';
 import BaseTable, { TableColumn } from '../BaseTable';
 import { NameFilter } from '../filters/NameFilter';
 
@@ -20,23 +20,31 @@ interface BehaviorTypeTableProps {
 
 export default function BehaviorTypeTable({ itemsPerPage = 10, showFilters = true, size = 'm' }: BehaviorTypeTableProps) {
     const dispatch = useAppDispatch();
-    const { behaviorTypes, loading ,error } = useAppSelector(state => state.behaviorTypes);
-    const currentUser = useAppSelector(state => state.user.data);
+    const { behaviorTypes, loading ,error } = useAppSelector(state =>
+        state.behaviorTypes);
+    const currentUser = useAppSelector(state =>
+        state.user.data);
 
-    const [showCreateModal, setShowCreateModal] = useState(false);
-    const [editingBehaviorType, setEditingBehaviorType] = useState<BehaviorType | null>(null);
-    const [deletingBehaviorType, setDeletingBehaviorType] = useState<BehaviorType | null>(null);
-    const [filters, setFilters] = useState({
-        nameSearch: '',
-        statusFilter: '',
-        pointValueFilter: '',
-    });
+    const {
+        filters, updateFilter, showCreateModal, editingItem: editingBehaviorType, deletingItem: deletingBehaviorType,
+        handleCreateItem: handleCreateBehaviorType, handleEditItem: handleEditBehaviorType,
+        handleDeleteItem: handleDeleteBehaviorType, handleCloseModals
+    } = useBehaviorTypeTable();
 
     useEffect(() => {
         dispatch(fetchBehaviorTypes({ page: 0, size: 1000 }));
     }, [dispatch]);
 
     const isAdmin = useMemo(() => currentUser?.role === Role.ADMIN, [currentUser]);
+
+    const retryFetch = useCallback(() => {
+        dispatch(fetchBehaviorTypes({ page: 0, size: 1000, force: true }));
+    }, [dispatch]);
+
+    const handleSuccess = useCallback(() => {
+        handleCloseModals();
+        retryFetch();
+    }, [handleCloseModals, retryFetch]);
 
     const filteredBehaviorTypes = useMemo(() => {
         if (!behaviorTypes.length) return [];
@@ -51,45 +59,6 @@ export default function BehaviorTypeTable({ itemsPerPage = 10, showFilters = tru
             return nameMatches && statusMatches && pointValueMatches;
         });
     }, [behaviorTypes, filters]);
-
-    const handleCreateBehaviorType = useCallback(()=> {
-        setShowCreateModal(true);
-    }, []);
-
-    const handleEditBehaviorType = useCallback((behaviorType: BehaviorType)=> {
-        setEditingBehaviorType(behaviorType);
-    }, []);
-
-    const handleDeleteBehaviorType = useCallback((behaviorType: BehaviorType)=> {
-        setDeletingBehaviorType(behaviorType);
-    }, []);
-
-    const handleCloseModals = useCallback(() => {
-        setShowCreateModal(false);
-        setEditingBehaviorType(null);
-        setDeletingBehaviorType(null);
-    }, []);
-
-    const updateNameFilter = useCallback((value: string) => {
-        setFilters(prev => ({
-            ...prev,
-            nameSearch: value
-        }));
-    }, []);
-
-    const updateStatusFilter = useCallback((value: string) => {
-        setFilters(prev => ({
-            ...prev,
-            statusFilter: value
-        }));
-    }, []);
-
-    const updatePointValueFilter = useCallback((value: string) => {
-        setFilters(prev => ({
-            ...prev,
-            pointValueFilter: value
-        }));
-    }, []);
 
     const columns: TableColumn<BehaviorType>[] = useMemo(() => [
         {
@@ -138,21 +107,34 @@ export default function BehaviorTypeTable({ itemsPerPage = 10, showFilters = tru
                 <Col md={4}>
                     <NameFilter
                         value={filters.nameSearch}
-                        onChange={updateNameFilter}
+                        onChange={(value) => updateFilter('nameSearch', value)}
                         label='Behavior Type Name'
                         placeholder='Search by behavior type name'
                     />
                 </Col>
                 <Col md={4}>
-                    <StatusFilter
+                    <SelectFilter
                         value={filters.statusFilter}
-                        onChange={updateStatusFilter}
+                        onChange={(value) => updateFilter('statusFilter', value)}
+                        label='Status'
+                        options={[
+                            { value: 'true', label: 'Active' },
+                            { value: 'false', label: 'Inactive' }
+                        ]}
                     />
                 </Col>
                 <Col md={4}>
-                    <PointValueFilter
+                    <SelectFilter
                         value={filters.pointValueFilter}
-                        onChange={updatePointValueFilter}
+                        onChange={(value) => updateFilter('pointValueFilter', value)}
+                        label='Point Value'
+                        options={[
+                            { value: '1', label: '1 Point' },
+                            { value: '2', label: '2 Points' },
+                            { value: '3', label: '3 Points' },
+                            { value: '4', label: '4 Points' },
+                            { value: '5', label: '5 Points' },
+                        ]}
                     />
                 </Col>
             </Row>
@@ -186,36 +168,28 @@ export default function BehaviorTypeTable({ itemsPerPage = 10, showFilters = tru
             itemsPerPage={itemsPerPage}
             renderFilters={renderFilters}
             renderHeader={renderHeader}
-            onRetry={() => {
-                dispatch(fetchBehaviorTypes({ page: 0, size: 1000, force: true }));
-            }}
+            onRetry={retryFetch}
             size={size}
+            showCreateButton={isAdmin}
+            createButtonText='Create Behavior Type'
+            onCreateClick={handleCreateBehaviorType}
           />
           <CreateBehaviorTypeModal
               show={showCreateModal}
               onCancel={handleCloseModals}
-              onSuccess={() => {
-                handleCloseModals();
-                dispatch(fetchBehaviorTypes({ page: 0, size: 1000, force: true }));
-              }}
+              onSuccess={handleSuccess}
           />
           <EditBehaviorTypeModal
               show={!!editingBehaviorType}
               behaviorType={editingBehaviorType}
               onCancel={handleCloseModals}
-              onSuccess={() => {
-                handleCloseModals();
-                dispatch(fetchBehaviorTypes({ page: 0, size: 1000, force: true }));
-              }}
+              onSuccess={handleSuccess}
           />
           <DeleteBehaviorTypeModal
               show={!!deletingBehaviorType}
               behaviorType={deletingBehaviorType}
               onCancel={handleCloseModals}
-              onSuccess={() => {
-                  handleCloseModals();
-                  dispatch(fetchBehaviorTypes({ page: 0, size: 1000, force: true }));
-              }}
+              onSuccess={handleSuccess}
           />
         </>
     );
