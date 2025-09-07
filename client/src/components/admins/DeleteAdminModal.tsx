@@ -1,5 +1,4 @@
-import { useAppDispatch, useAppSelector } from '../../store';
-import { removeAdmin } from '../../store/slices/adminsSlice';
+import { useAppDispatch, useAppSelector, removeAdmin } from '../../store';
 import { formatRole, fullName } from '../../utils';
 import { Role, UserDTO } from '../../services';
 import { useEffect, useState } from 'react';

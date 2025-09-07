@@ -1,14 +1,8 @@
-import { commonPersonValidationRules } from '../utils';
-import { useAppSelector } from '../store';
+import { CommonPersonFormData, commonPersonValidationRules } from '../utils';
+import { RootState, useAppSelector, fetchAdmins } from '../store';
+import { useForm, useTable } from './index';
 import { UserDTO } from '../services';
-import { useForm } from './useForm';
 import { useEffect } from 'react';
-
-export interface AdminFormData {
-    firstName: string;
-    lastName: string;
-    email: string;
-}
 
 export interface UseAdminFormProps {
     show: boolean;
@@ -20,7 +14,7 @@ export const useAdminForm = ({ show, isEdit = false, admin }: UseAdminFormProps)
     const { loading, error } = useAppSelector(state => state.admins);
     const currentUser = useAppSelector(state => state.user.data);
 
-    const initialData: AdminFormData = {
+    const initialData: CommonPersonFormData = {
         firstName: '',
         lastName: '',
         email: ''
@@ -39,10 +33,23 @@ export const useAdminForm = ({ show, isEdit = false, admin }: UseAdminFormProps)
                 email: admin.email,
             });
         }
-    }, [show, isEdit, admin, form.setFormData, form]);
+    }, [show, isEdit, admin, form]);
 
-    return { formData: form.formData, setFormData: form.setFormData, formErrors: form.formErrors,
+    return {
+        formData: form.formData, setFormData: form.setFormData, formErrors: form.formErrors,
         setFormErrors: form.setFormErrors, currentUser, error, loading, handleInputChange: form.handleInputChange,
         handleSelectChange: form.handleSelectChange, handleCheckboxChange: form.handleCheckboxChange,
-        validateForm: form.validateForm, resetForm: form.resetForm };
+        validateForm: form.validateForm, resetForm: form.resetForm
+    };
+}
+
+export function useAdminTable() {
+    return useTable<UserDTO, { nameSearch: string; emailSearch: string }>({
+        fetchAction: fetchAdmins,
+        selector: (state: RootState) => state.admins,
+        initialFilters: {
+            nameSearch: '',
+            emailSearch: '',
+        }
+    });
 }

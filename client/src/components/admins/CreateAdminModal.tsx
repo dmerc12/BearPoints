@@ -1,10 +1,8 @@
-import { addAdmin } from '../../store/slices/adminsSlice';
-import { useAdminForm } from '../../hooks/useAdminForm';
-import { useAppDispatch } from '../../store';
-import { AdminForm } from './AdminForm';
+import { useAppDispatch, addAdmin } from '../../store';
+import { BaseModal, AdminForm } from '../index';
+import { useAdminForm } from '../../hooks';
 import { Alert } from 'react-bootstrap';
 import { Role } from '../../services';
-import { BaseModal } from '../index';
 
 interface CreateAdminModalProps {
     show: boolean;
@@ -15,7 +13,8 @@ interface CreateAdminModalProps {
 export function CreateAdminModal({ show, onCancel, onSuccess }: CreateAdminModalProps) {
     const dispatch = useAppDispatch();
     
-    const { formData, formErrors, error, loading, handleInputChange, validateForm, resetForm } = useAdminForm({ show });
+    const { formData, formErrors, error, loading, handleInputChange,
+        validateForm, resetForm } = useAdminForm({ show });
     
     const handleSubmit = () => {
         if (!validateForm()) return;

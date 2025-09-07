@@ -1,15 +1,10 @@
-import { formatRole, fullName, clearNameCaches } from '../../utils';
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { CreateAdminModal, EditAdminModal, DeleteAdminModal, TextFilter, BaseTable, TableColumn  } from '../index';
 import { Row, Button, Col, ButtonGroup } from 'react-bootstrap';
-import { fetchAdmins } from '../../store/slices/adminsSlice';
-import { useAppDispatch, useAppSelector } from '../../store';
-import { CreateAdminModal } from './CreateAdminModal';
-import { DeleteAdminModal } from './DeleteAdminModal';
-import BaseTable, { TableColumn } from '../BaseTable';
+import { formatRole, fullName } from '../../utils';
 import { UserDTO, Role } from '../../services';
-import { EmailFilter } from '../filters/EmailFilter';
-import { NameFilter } from '../filters/NameFilter';
-import { EditAdminModal } from './EditAdminModal';
+import { useAppSelector } from '../../store';
+import { useAdminTable } from '../../hooks';
+import { useMemo, useEffect } from 'react';
 
 interface AdminTableProps {
     itemsPerPage?: number;
@@ -18,24 +13,22 @@ interface AdminTableProps {
 }
 
 export default function AdminTable({ itemsPerPage = 10, showFilters = true, size = 'm' }: AdminTableProps) {
-    const dispatch = useAppDispatch();
-    const { admins, loading, error } = useAppSelector(state => state.admins);
     const currentUser = useAppSelector(state => state.user.data);
 
-    const [showCreateModal, setShowCreateModal] = useState(false);
-    const [editingAdmin, setEditingAdmin] = useState<UserDTO | null>(null);
-    const [deletingAdmin, setDeletingAdmin] = useState<UserDTO | null>(null);
-    const [filters, setFilters] = useState({
-        nameSearch: '',
-        emailSearch: ''
-    });
+    const isAdmin = useMemo(() => currentUser?.role === Role.ADMIN, [currentUser]);
+
+    const {
+        data: admins, loading, error, filters, updateFilter, resetFilters,
+        showCreateModal, editingItem: editingAdmin, deletingItem: deletingAdmin,
+        handleCreateItem: handleCreateAdmin, handleEditItem: handleEditAdmin,
+        handleDeleteItem: handleDeleteAdmin, handleCloseModals, retryFetch, handleSuccess,
+    } = useAdminTable();
 
     useEffect(() => {
-        clearNameCaches();
-        dispatch(fetchAdmins({ page: 0, size: 1000 }));
-    }, [dispatch]);
-    
-    const isAdmin = useMemo(() => currentUser?.role === Role.ADMIN, [currentUser]);
+        return () => {
+            resetFilters();
+        };
+    }, [resetFilters]);
     
     const filteredAdmins = useMemo(() => {
         if(!admins.length) return [];
@@ -49,38 +42,6 @@ export default function AdminTable({ itemsPerPage = 10, showFilters = true, size
             return nameMatches && emailMatches;
         });
     }, [admins, filters]);
-    
-    const handleCreateAdmin = useCallback(() => {
-        setShowCreateModal(true);
-    }, []);
-    
-    const handleEditAdmin = useCallback((admin: UserDTO) => {
-        setEditingAdmin(admin);
-    }, []);
-    
-    const handleDeleteAdmin = useCallback((admin: UserDTO) => {
-        setDeletingAdmin(admin);
-    }, []);
-    
-    const handleCloseModals = useCallback(() => {
-        setShowCreateModal(false);
-        setEditingAdmin(null);
-        setDeletingAdmin(null);
-    }, []);
-    
-    const updateNameFilter = useCallback((value: string) => {
-        setFilters(prev => ({
-            ...prev,
-            nameSearch: value
-        }));
-    }, []);
-
-    const updateEmailFilter = useCallback((value: string) => {
-        setFilters(prev => ({
-            ...prev,
-            emailSearch: value
-        }));
-    }, []);
     
     const columns: TableColumn<UserDTO>[] = useMemo(() => [
         {
@@ -123,15 +84,19 @@ export default function AdminTable({ itemsPerPage = 10, showFilters = true, size
         return (
             <Row className='mb-3 g-3'>
                 <Col md={6}>
-                    <NameFilter
+                    <TextFilter
                         value={filters.nameSearch}
-                        onChange={updateNameFilter}
+                        onChange={(value) => updateFilter('nameSearch', value)}
+                        label='Search By Name'
+                        placeholder='Search by name...'
                     />
                 </Col>
                 <Col md={6}>
-                    <EmailFilter
+                    <TextFilter
                         value={filters.emailSearch}
-                        onChange={updateEmailFilter}
+                        onChange={(value) => updateFilter('emailSearch', value)}
+                        label='Search By Email'
+                        placeholder='Search by email...'
                     />
                 </Col>
             </Row>
@@ -165,36 +130,28 @@ export default function AdminTable({ itemsPerPage = 10, showFilters = true, size
                 itemsPerPage={itemsPerPage}
                 renderFilters={renderFilters}
                 renderHeader={renderHeader}
-                onRetry={() => {
-                    dispatch(fetchAdmins({ page: 0, size: 1000, force: true }));
-                }}
+                onRetry={retryFetch}
                 size={size}
+                showCreateButton={isAdmin}
+                createButtonText='Create Administrator'
+                onCreateClick={handleCreateAdmin}
             />
             <CreateAdminModal
                 show={showCreateModal}
                 onCancel={handleCloseModals}
-                onSuccess={() => {
-                    handleCloseModals();
-                    dispatch(fetchAdmins({ page: 0, size: 1000, force: true }));
-                }}
+                onSuccess={handleSuccess}
             />
             <EditAdminModal
                 show={!!editingAdmin}
                 admin={editingAdmin}
                 onCancel={handleCloseModals}
-                onSuccess={() => {
-                    handleCloseModals();
-                    dispatch(fetchAdmins({ page: 0, size: 1000, force: true }));
-                }}
+                onSuccess={handleSuccess}
             />
             <DeleteAdminModal
                 show={!!deletingAdmin}
                 admin={deletingAdmin}
                 onCancel={handleCloseModals}
-                onSuccess={() => {
-                    handleCloseModals();
-                    dispatch(fetchAdmins({ page: 0, size: 1000, force: true }));
-                }}
+                onSuccess={handleSuccess}
             />
         </>
     );

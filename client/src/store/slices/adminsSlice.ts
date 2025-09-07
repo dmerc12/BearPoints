@@ -1,31 +1,39 @@
-import { getUsersByRole, createUser, updateUser, deleteUser } from '../../services/api';
+import {
+    getUsersByRole, createUser, updateUser, deleteUser,
+    PaginatedUsers, UserDTO, Role
+} from '../../services';
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { PaginatedUsers, UserDTO, Role } from '../../services/types';
 import { RootState } from '../index';
 
 interface AdminsState {
-    admins: UserDTO[];
+    data: UserDTO[];
     loading: boolean;
     error: string | null;
     pagination: {
         totalPages: number;
-        totalAdmins: number;
+        totalElements: number;
     };
     lastFetched: number | null;
 }
 
 const initialState: AdminsState = {
-    admins: [],
+    data: [],
     loading: false,
     error: null,
     pagination: {
         totalPages: 0,
-        totalAdmins: 0
+        totalElements: 0
     },
     lastFetched: null
 };
 
 const CACHE_DURATION = 5 * 60 * 1000;
+
+interface CacheResponse {
+    data: UserDTO[];
+    totalPages: number;
+    totalElements: number;
+}
 
 export const fetchAdmins = createAsyncThunk(
     'admins/fetchAdmins',
@@ -35,10 +43,10 @@ export const fetchAdmins = createAsyncThunk(
         const isCacheValid = lastFetched && (Date.now() - lastFetched) < CACHE_DURATION;
         if (isCacheValid && !params.force) {
             return {
-                users: state.admins.admins,
+                data: state.admins.data,
                 totalPages: state.admins.pagination.totalPages,
-                totalUsers: state.admins.pagination.totalAdmins
-            };
+                totalElements: state.admins.pagination.totalElements
+            } as CacheResponse;
         }
         return await getUsersByRole(Role.ADMIN, params.page, params.size, signal);
     }
@@ -89,13 +97,21 @@ const adminsSlice = createSlice({
                state.loading = true;
                state.error = null;
            })
-           .addCase(fetchAdmins.fulfilled, (state, action: PayloadAction<PaginatedUsers>) => {
+           .addCase(fetchAdmins.fulfilled, (state, action: PayloadAction<PaginatedUsers | CacheResponse>) => {
                state.loading = false;
-               state.admins = action.payload.users;
-               state.pagination = {
-                   totalPages: action.payload.totalPages,
-                   totalAdmins: action.payload.totalUsers
-               };
+               if ('users' in action.payload) {
+                   state.data = action.payload.users;
+                   state.pagination = {
+                       totalPages: action.payload.totalPages,
+                       totalElements: action.payload.totalUsers
+                   };
+               } else {
+                   state.data = action.payload.data;
+                   state.pagination = {
+                       totalPages: action.payload.totalPages,
+                       totalElements: action.payload.totalElements
+                   };
+               }
                state.lastFetched = Date.now();
            })
            .addCase(fetchAdmins.rejected, (state, action) => {
@@ -108,7 +124,7 @@ const adminsSlice = createSlice({
            })
            .addCase(addAdmin.fulfilled, (state, action: PayloadAction<UserDTO>) => {
                state.loading = false;
-               state.admins.push(action.payload);
+               state.data.push(action.payload);
                state.lastFetched = null;
            })
            .addCase(addAdmin.rejected, (state, action) => {
@@ -121,9 +137,9 @@ const adminsSlice = createSlice({
            })
            .addCase(modifyAdmin.fulfilled, (state, action: PayloadAction<UserDTO>) => {
                state.loading = false;
-               const index = state.admins.findIndex(admin => admin.id === action.payload.id);
+               const index = state.data.findIndex(admin => admin.id === action.payload.id);
                if (index !== -1) {
-                   state.admins[index] = action.payload;
+                   state.data[index] = action.payload;
                }
                state.lastFetched = null;
            })
@@ -137,7 +153,7 @@ const adminsSlice = createSlice({
            })
            .addCase(removeAdmin.fulfilled, (state, action: PayloadAction<number>) => {
                state.loading = false;
-               state.admins = state.admins.filter(admin => admin.id !== action.payload);
+               state.data = state.data.filter(admin => admin.id !== action.payload);
                state.lastFetched = null;
            })
            .addCase(removeAdmin.rejected, (state, action) => {

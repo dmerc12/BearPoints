@@ -1,9 +1,9 @@
-import { AdminFormData } from '../../hooks/useAdminForm';
+import { CommonPersonFormData } from '../../utils';
 import { Form, Row, Col } from 'react-bootstrap';
 import React from 'react';
 
 interface AdminFormProps {
-    formData: AdminFormData;
+    formData: CommonPersonFormData;
     formErrors: Record<string, string>;
     loading: boolean;
     onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;

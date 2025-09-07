@@ -30,6 +30,7 @@ export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 export { useAppDispatch, useAppSelector } from './hooks';
 export {
+    fetchAdmins, addAdmin, modifyAdmin, removeAdmin, resetAdmins, clearAdminsError,
     fetchBehaviorTypes, addBehaviorType, modifyBehaviorType, removeBehaviorType,
     resetBehaviorTypes, clearBehaviorTypesError,
 } from './slices';
