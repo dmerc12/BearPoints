@@ -1,5 +1,5 @@
-import { Table, Pagination, Spinner, Alert, Container, Button } from "react-bootstrap";
-import React, { useState, useMemo, useCallback } from "react";
+import { Table, Pagination, Spinner, Alert, Container, Button } from 'react-bootstrap';
+import React, { useState, useMemo, useCallback } from 'react';
 
 interface BaseTableProps<T> {
     data: T[];
@@ -11,6 +11,9 @@ interface BaseTableProps<T> {
     renderHeader?: () => React.ReactNode;
     onRetry?: () => void;
     size?: 's' | 'm' | 'l';
+    showCreateButton?: boolean;
+    createButtonText?: string;
+    onCreateClick?: () => void;
 }
 
 export interface TableColumn<T> {
@@ -20,7 +23,9 @@ export interface TableColumn<T> {
     className?: string;
 }
 
-export default function BaseTable<T>({ data, loading, error, columns, renderFilters, renderHeader, onRetry, size = 'm', itemsPerPage = 10 }: BaseTableProps<T>) {
+export default function BaseTable<T>({ data, loading, error, columns, renderFilters, renderHeader, onRetry, size = 'm',
+                                         itemsPerPage = 10, showCreateButton = false, createButtonText = 'Create',
+                                         onCreateClick }: BaseTableProps<T>) {
     const [currentPage, setCurrentPage] = useState(1);
 
     const totalPages = Math.ceil(data.length / itemsPerPage);
@@ -50,7 +55,9 @@ export default function BaseTable<T>({ data, loading, error, columns, renderFilt
         }
         if (startPage > 1) {
             items.push(
-                <Pagination.Item key={1} active={1 === currentPage} onClick={() => setCurrentPage(1)}>
+                <Pagination.Item key={1} active={1 === currentPage}
+                                 onClick={() => setCurrentPage(1)}
+                >
                     1
                 </Pagination.Item>
             );
@@ -94,9 +101,28 @@ export default function BaseTable<T>({ data, loading, error, columns, renderFilt
         setCurrentPage(prev => Math.min(totalPages, prev + 1));
     }, [totalPages]);
 
+    const defaultHeader = useMemo(() => {
+        return (
+            <div className='m-2 d-flex justify-content-between align-items-center'>
+                <span>Showing {data.length} items</span>
+                {showCreateButton && onCreateClick && (
+                    <Button variant='primary'
+                            onClick={onCreateClick}
+                            className='me-2'
+                            size={size === 's' ? 'sm' : undefined}
+                    >
+                        {createButtonText}
+                    </Button>
+                )}
+            </div>
+        );
+    }, [data.length, showCreateButton, onCreateClick, createButtonText, size]);
+
     if (loading) {
         return (
-            <Container className='d-flex justify-content-center align-items-center' style={{ minHeight: '200px' }}>
+            <Container className='d-flex justify-content-center align-items-center'
+                       style={{ minHeight: '200px' }}
+            >
                 <Spinner animation='border' variant='primary'>
                     <span className='visually-hidden'>Loading...</span>
                 </Spinner>
@@ -111,7 +137,9 @@ export default function BaseTable<T>({ data, loading, error, columns, renderFilt
                 <Alert.Heading>Error</Alert.Heading>
                 <p>{error}</p>
                 {onRetry && (
-                    <Button variant='outline-danger' onClick={onRetry}>
+                    <Button variant='outline-danger'
+                            onClick={onRetry}
+                    >
                         Retry
                     </Button>
                 )}
@@ -122,8 +150,10 @@ export default function BaseTable<T>({ data, loading, error, columns, renderFilt
     return (
         <div className={`table-responsive ${size === 's' ? 'table-sm' : ''}`}>
             { renderFilters && renderFilters() }
-            { renderHeader && renderHeader() }
-            <Table striped bordered hover responsive className={`text-center align-middle ${size === 's' ? 'table-sm' : ''}`}>
+            { renderHeader ? renderHeader() : defaultHeader }
+            <Table striped bordered hover responsive
+                   className={`text-center align-middle ${size === 's' ? 'table-sm' : ''}`}
+            >
                 <thead>
                     <tr>
                         {columns.map(column => (
