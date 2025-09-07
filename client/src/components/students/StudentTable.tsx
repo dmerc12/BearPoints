@@ -1,19 +1,18 @@
-import { formatName, fullName, clearNameCaches } from '../../utils/formatNames';
+import { formatName, fullName, clearNameCaches, formatGrade } from '../../utils';
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { useAppDispatch, useAppSelector } from '../../store';
 import { fetchStudents } from '../../store/slices/studentsSlice';
 import { Row, Button, Col, ButtonGroup } from 'react-bootstrap';
 import { CreateStudentModal } from './CreateStudentModal';
 import { DeleteStudentModal } from './DeleteStudentModal';
 import { TeacherFilter } from '../filters/TeacherFilter';
-import { formatGrade } from '../../utils/formatGrades';
 import { EditStudentModal } from './EditStudentModal';
 import BaseTable, { TableColumn } from '../BaseTable';
-import { Student, Role } from '../../services/types';
 import { GradeFilter } from '../filters/GradeFilter';
 import { NameFilter } from '../filters/NameFilter';
 import { useReactToPrint } from 'react-to-print';
 import { useNavigate } from 'react-router-dom';
+import { Student, Role } from '../../services';
 import QRCodesPrint from './QRCodesPrint';
 import { QRCodeSVG } from 'qrcode.react';
 

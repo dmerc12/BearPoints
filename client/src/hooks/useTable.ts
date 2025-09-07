@@ -1,6 +1,5 @@
-import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { RootState, useAppDispatch, useAppSelector } from '../store';
 import { useState, useCallback, useEffect } from 'react';
-import { RootState } from '../store';
 
 export interface TableFilters {
     [key: string]: string;

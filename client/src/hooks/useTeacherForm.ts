@@ -1,6 +1,6 @@
-import { TeacherFormData, teacherValidationRules } from '../utils/validationRules';
-import { Teacher, Role } from '../services/types';
-import { useAppSelector } from '../store/hooks';
+import { TeacherFormData, teacherValidationRules } from '../utils';
+import { Teacher, Role } from '../services';
+import { useAppSelector } from '../store';
 import { useForm } from './useForm';
 import { useEffect } from 'react';
 

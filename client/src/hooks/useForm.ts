@@ -1,5 +1,5 @@
-import { createFormHandlers } from '../utils/handleChange';
 import React, { useState, useCallback } from 'react';
+import { createFormHandlers } from '../utils';
 
 export type FormData = Record<string, unknown>;
 

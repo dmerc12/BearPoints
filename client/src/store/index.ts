@@ -28,3 +28,8 @@ export const store = configureStore({
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
+export { useAppDispatch, useAppSelector } from './hooks';
+export {
+    fetchBehaviorTypes, addBehaviorType, modifyBehaviorType, removeBehaviorType,
+    resetBehaviorTypes, clearBehaviorTypesError,
+} from './slices';

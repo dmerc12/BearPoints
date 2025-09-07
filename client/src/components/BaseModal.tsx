@@ -1,4 +1,4 @@
-import {Modal, Button, ButtonGroup, ModalProps } from 'react-bootstrap';
+import { Modal, Button, ButtonGroup, ModalProps } from 'react-bootstrap';
 import React from 'react';
 
 interface BaseModalProps extends ModalProps {

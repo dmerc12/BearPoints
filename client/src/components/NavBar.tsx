@@ -1,6 +1,6 @@
 import { Navbar, Nav, Container } from 'react-bootstrap';
-import useLogin from '../hooks/useLogin';
 import { Link } from 'react-router-dom';
+import { useLogin } from '../hooks';
 
 export default function NavigationBar () {
     const { user, signingIn, handleLogin, handleLogout } = useLogin();

@@ -1,6 +1,5 @@
-import { formatGrade } from '../../utils/formatGrades';
-import { sortGrades } from '../../utils/sortGrades';
-import { GradeLevel } from '../../services/types';
+import { sortGrades, formatGrade } from '../../utils';
+import { GradeLevel } from '../../services';
 import { Form } from 'react-bootstrap';
 
 interface GradeFilterProps {

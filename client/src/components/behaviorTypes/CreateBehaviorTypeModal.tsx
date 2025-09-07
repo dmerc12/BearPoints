@@ -1,9 +1,7 @@
-import { addBehaviorType } from '../../store/slices/behaviorTypesSlice';
-import { useBehaviorTypeForm } from '../../hooks/behaviorTypeHooks';
-import { BehaviorTypeForm } from './BehaviorTypeForm';
-import { useAppDispatch } from '../../store/hooks';
+import { useAppDispatch, addBehaviorType } from '../../store';
+import { BaseModal, BehaviorTypeForm } from '../index';
+import { useBehaviorTypeForm } from '../../hooks';
 import { Alert } from 'react-bootstrap';
-import BaseModal from '../BaseModal';
 
 interface CreateBehaviorTypeModalProps {
     show: boolean;

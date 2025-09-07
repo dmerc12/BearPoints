@@ -1,14 +1,13 @@
-import { fullName, clearNameCaches } from '../../utils/formatNames';
-import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { formatRole, fullName, clearNameCaches } from '../../utils';
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Row, Button, Col, ButtonGroup } from 'react-bootstrap';
 import { fetchAdmins } from '../../store/slices/adminsSlice';
+import { useAppDispatch, useAppSelector } from '../../store';
 import { CreateAdminModal } from './CreateAdminModal';
 import { DeleteAdminModal } from './DeleteAdminModal';
 import BaseTable, { TableColumn } from '../BaseTable';
-import { UserDTO, Role } from '../../services/types';
+import { UserDTO, Role } from '../../services';
 import { EmailFilter } from '../filters/EmailFilter';
-import { formatRole } from '../../utils/formatRole';
 import { NameFilter } from '../filters/NameFilter';
 import { EditAdminModal } from './EditAdminModal';
 

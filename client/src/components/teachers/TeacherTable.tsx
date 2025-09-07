@@ -1,16 +1,15 @@
-import { fullName, clearNameCaches } from '../../utils/formatNames';
-import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fullName, clearNameCaches, formatGrade } from '../../utils';
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { fetchTeachers } from '../../store/slices/teachersSlice';
 import { Row, Button, Col, ButtonGroup } from 'react-bootstrap';
+import { useAppDispatch, useAppSelector } from '../../store';
 import { CreateTeacherModal } from './CreateTeacherModal';
 import { DeleteTeacherModal } from './DeleteTeacherModal';
-import { formatGrade } from '../../utils/formatGrades';
-import BaseTable, { TableColumn } from '../BaseTable';
 import { EditTeacherModal } from './EditTeacherModal';
-import { Teacher, Role } from '../../services/types';
 import { GradeFilter } from '../filters/GradeFilter';
 import { NameFilter } from '../filters/NameFilter';
+import { BaseTable, TableColumn } from '../index';
+import { Teacher, Role } from '../../services';
 
 interface TeacherTableProps {
     itemsPerPage?: number;

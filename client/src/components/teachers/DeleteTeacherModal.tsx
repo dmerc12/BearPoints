@@ -1,11 +1,10 @@
-import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { removeTeacher } from '../../store/slices/teachersSlice';
-import { formatGrade } from '../../utils/formatGrades';
-import { Teacher, Role } from '../../services/types';
-import { fullName } from '../../utils/formatNames';
+import { useAppDispatch, useAppSelector } from '../../store';
+import { fullName, formatGrade } from '../../utils';
+import { Teacher, Role } from '../../services';
 import { useEffect, useState } from 'react';
 import { Alert } from 'react-bootstrap';
-import BaseModal from '../BaseModal';
+import { BaseModal } from '../index';
 
 interface DeleteTeacherModalProps {
     show: boolean;

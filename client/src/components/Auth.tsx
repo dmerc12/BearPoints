@@ -1,5 +1,5 @@
 import { Spinner, Alert, Button, Container, Row, Col } from 'react-bootstrap';
-import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { useAppDispatch, useAppSelector } from '../store';
 import { fetchCurrentUser } from '../store/slices/userSlice';
 import { Navigate, useLocation } from 'react-router-dom';
 import { onAuthStateChanged, User } from 'firebase/auth';

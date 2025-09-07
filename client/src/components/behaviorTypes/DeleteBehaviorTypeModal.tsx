@@ -1,9 +1,8 @@
-import { removeBehaviorType } from '../../store/slices/behaviorTypesSlice';
-import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { BehaviorType, Role } from '../../services/types';
+import { useAppDispatch, useAppSelector, removeBehaviorType } from '../../store';
+import { BehaviorType, Role } from '../../services';
 import { useEffect, useState } from 'react';
 import { Alert } from 'react-bootstrap';
-import BaseModal from '../BaseModal';
+import { BaseModal } from '../index';
 
 interface DeleteBehaviorTypeModal {
     show: boolean;

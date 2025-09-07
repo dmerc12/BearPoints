@@ -1,8 +1,7 @@
-import { BehaviorTypeFormData, behaviorTypeValidationRules } from '../utils/validationRules';
-import { useTableFilters, useTableModals } from './tableHooks';
-import { BehaviorType } from '../services/types';
-import { useAppSelector } from '../store/hooks';
-import { useForm } from './useForm';
+import { BehaviorTypeFormData, behaviorTypeValidationRules } from '../utils';
+import { RootState, useAppSelector, fetchBehaviorTypes } from '../store';
+import { useTable, useForm } from './index';
+import { BehaviorType } from '../services';
 import { useEffect } from 'react';
 
 export interface UseBehaviorTypeFormProps {
@@ -34,7 +33,7 @@ export const useBehaviorTypeForm = ({ show, isEdit = false, behaviorType }: UseB
                 active: behaviorType.active
             });
         }
-    }, [show, isEdit, behaviorType, form.setFormData, form]);
+    }, [show, isEdit, behaviorType, form]);
 
     return { 
         formData: form.formData, setFormData: form.setFormData, formErrors: form.formErrors,
@@ -45,18 +44,21 @@ export const useBehaviorTypeForm = ({ show, isEdit = false, behaviorType }: UseB
 }
 
 export function useBehaviorTypeTable() {
-    const { filters, updateFilter, resetFilters } = useTableFilters({
-        nameSearch: '',
-        statusFilter: '',
-        pointValueFilter: '',
+    return useTable<BehaviorType, { nameSearch: string; statusFilter: string; pointValueFilter: string }>({
+        fetchAction: fetchBehaviorTypes,
+        selector: (state: RootState) => state.behaviorTypes,
+        initialFilters: {
+            nameSearch: '',
+            statusFilter: '',
+            pointValueFilter: ''
+        }
     });
-    
-    const { showCreateModal, editingItem, deletingItem, handleCreateItem, handleEditItem, 
-        handleDeleteItem, handleCloseModals } = useTableModals<BehaviorType>();
-
-    return {
-        filters, updateFilter, resetFilters, showCreateModal, editingItem, deletingItem, handleCreateItem,
-        handleEditItem, handleDeleteItem, handleCloseModals 
-    };
 }
 
+export function formatBehaviorTypeStatus(active: boolean): string {
+    return active ? 'Active' : 'Inactive';
+}
+
+export function getBehaviorTypeStatusVariant(active: boolean): string {
+    return active ? 'success' : 'secondary';
+}

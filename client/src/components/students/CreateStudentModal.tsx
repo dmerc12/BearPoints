@@ -1,10 +1,10 @@
 import { addStudent } from '../../store/slices/studentsSlice';
-import { Student, Role, Teacher } from '../../services/types';
 import { useStudentForm } from '../../hooks/useStudentForm';
 import { Form, Row, Col, Alert } from 'react-bootstrap';
-import { useAppDispatch } from '../../store/hooks';
-import { fullName } from '../../utils/formatNames';
-import BaseModal from '../BaseModal';
+import { Student, Role, Teacher } from '../../services';
+import { useAppDispatch } from '../../store';
+import { fullName } from '../../utils';
+import { BaseModal } from '../index';
 
 interface CreateStudentModalProps {
     show: boolean;

@@ -1,31 +1,39 @@
-import { getBehaviorTypes, createBehaviorType, updateBehaviorType, deleteBehaviorType } from '../../services/api';
+import {
+    getBehaviorTypes, createBehaviorType, updateBehaviorType, deleteBehaviorType,
+    PaginatedBehaviorTypes, BehaviorType
+} from '../../services';
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { PaginatedBehaviorTypes, BehaviorType } from '../../services/types';
-import {RootState} from "../index.ts";
+import { RootState } from '../index';
 
 interface BehaviorTypesState {
-    behaviorTypes: BehaviorType[];
+    data: BehaviorType[];
     loading: boolean;
     error: string | null;
     pagination: {
         totalPages: number;
-        totalBehaviorTypes: number;
+        totalElements: number;
     };
     lastFetched: number | null;
 }
 
 const initialState: BehaviorTypesState = {
-    behaviorTypes: [],
+    data: [],
     loading: false,
     error: null,
     pagination: {
         totalPages: 0,
-        totalBehaviorTypes: 0
+        totalElements: 0
     },
     lastFetched: null
 };
 
 const CACHE_DURATION = 5 * 60 * 1000;
+
+interface CacheResponse {
+    data: BehaviorType[];
+    totalPages: number;
+    totalElements: number;
+}
 
 export const fetchBehaviorTypes = createAsyncThunk(
     'behaviorTypes/fetchBehaviorTypes',
@@ -35,10 +43,10 @@ export const fetchBehaviorTypes = createAsyncThunk(
         const isCacheValid = lastFetched && (Date.now() - lastFetched) < CACHE_DURATION;
         if (isCacheValid && !params.force) {
             return {
-                behaviorTypes: state.behaviorTypes.behaviorTypes,
+                data: state.behaviorTypes.data,
                 totalPages: state.behaviorTypes.pagination.totalPages,
-                totalBehaviorTypes: state.behaviorTypes.pagination.totalBehaviorTypes
-            };
+                totalElements: state.behaviorTypes.pagination.totalElements
+            } as CacheResponse;
         }
         return await getBehaviorTypes(params.page, params.size, signal);
     }
@@ -81,14 +89,24 @@ const behaviorTypesSlice = createSlice({
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(fetchBehaviorTypes.fulfilled, (state, action: PayloadAction<PaginatedBehaviorTypes>) => {
-                state.loading = false;
-                state.behaviorTypes = action.payload.behaviorTypes;
-                state.pagination = {
-                    totalPages: action.payload.totalPages,
-                    totalBehaviorTypes: action.payload.totalBehaviorTypes
-                };
-                state.lastFetched = Date.now();
+            .addCase(fetchBehaviorTypes.fulfilled, (
+                state,
+                action: PayloadAction<PaginatedBehaviorTypes | CacheResponse>) => {
+                    state.loading = false;
+                    if ('behaviorTypes' in action.payload) {
+                        state.data = action.payload.behaviorTypes;
+                        state.pagination = {
+                            totalPages: action.payload.totalPages,
+                            totalElements: action.payload.totalBehaviorTypes
+                        };
+                    } else {
+                        state.data = action.payload.data;
+                        state.pagination = {
+                            totalPages: action.payload.totalPages,
+                            totalElements: action.payload.totalElements
+                        };
+                    }
+                    state.lastFetched = Date.now();
             })
             .addCase(fetchBehaviorTypes.rejected, (state, action) => {
                 state.loading = false;
@@ -100,7 +118,7 @@ const behaviorTypesSlice = createSlice({
             })
             .addCase(addBehaviorType.fulfilled, (state, action: PayloadAction<BehaviorType>) => {
                 state.loading = false;
-                state.behaviorTypes.push(action.payload);
+                state.data.push(action.payload);
                 state.lastFetched = null;
             })
             .addCase(addBehaviorType.rejected, (state, action) => {
@@ -113,9 +131,9 @@ const behaviorTypesSlice = createSlice({
             })
             .addCase(modifyBehaviorType.fulfilled, (state, action: PayloadAction<BehaviorType>) => {
                 state.loading = false;
-                const index = state.behaviorTypes.findIndex(behaviorType => behaviorType.id === action.payload.id);
+                const index = state.data.findIndex(behaviorType => behaviorType.id === action.payload.id);
                 if (index !== -1) {
-                    state.behaviorTypes[index] = action.payload;
+                    state.data[index] = action.payload;
                 }
                 state.lastFetched = null;
             })
@@ -129,7 +147,7 @@ const behaviorTypesSlice = createSlice({
             })
             .addCase(removeBehaviorType.fulfilled, (state, action: PayloadAction<number>) => {
                 state.loading = false;
-                state.behaviorTypes = state.behaviorTypes.filter(behaviorType => behaviorType.id !== action.payload);
+                state.data = state.data.filter(behaviorType => behaviorType.id !== action.payload);
                 state.lastFetched = null;
             })
             .addCase(removeBehaviorType.rejected, (state, action) => {

@@ -1,7 +1,7 @@
-import { StudentFormData, studentValidationRules } from '../utils/validationRules';
-import { useAppSelector, useAppDispatch } from '../store/hooks';
+import { StudentFormData, studentValidationRules } from '../utils';
 import { fetchTeachers } from '../store/slices/teachersSlice';
-import { Student, Role } from '../services/types';
+import { useAppSelector, useAppDispatch } from '../store';
+import { Student, Role } from '../services';
 import { useForm } from './useForm';
 import { useEffect } from 'react';
 

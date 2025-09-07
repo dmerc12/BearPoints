@@ -1,4 +1,4 @@
-import {GradeLevel} from '../services/types';
+import { GradeLevel } from '../services';
 
 export function formatGrade(grade: GradeLevel | string): string {
     switch (grade) {

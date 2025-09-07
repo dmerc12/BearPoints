@@ -1,6 +1,6 @@
-import { BragLogRequest, BehaviorType, Student } from '../services/types';
+import { BragLogRequest, BehaviorType, Student } from '../services';
 import { Form, Alert, Spinner, Card, Button } from 'react-bootstrap';
-import { fullName } from '../utils/formatNames';
+import { fullName } from '../utils';
 import { FormEvent, useState } from 'react';
 
 interface BehaviorFormProps {

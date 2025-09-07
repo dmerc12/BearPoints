@@ -1,10 +1,10 @@
 import { addAdmin } from '../../store/slices/adminsSlice';
 import { useAdminForm } from '../../hooks/useAdminForm';
-import { useAppDispatch } from '../../store/hooks';
-import { Role } from '../../services/types';
+import { useAppDispatch } from '../../store';
 import { AdminForm } from './AdminForm';
 import { Alert } from 'react-bootstrap';
-import BaseModal from '../BaseModal';
+import { Role } from '../../services';
+import { BaseModal } from '../index';
 
 interface CreateAdminModalProps {
     show: boolean;

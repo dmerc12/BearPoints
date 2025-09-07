@@ -1,10 +1,10 @@
-import { Teacher, Role, GradeLevel } from '../../services/types';
 import { addTeacher } from '../../store/slices/teachersSlice';
 import { useTeacherForm } from '../../hooks/useTeacherForm';
-import { useAppDispatch } from '../../store/hooks';
+import { Teacher, Role, GradeLevel } from '../../services';
+import { useAppDispatch } from '../../store';
 import { TeacherForm } from './TeacherForm';
 import { Alert } from 'react-bootstrap';
-import BaseModal from '../BaseModal';
+import { BaseModal } from '../index';
 
 interface CreateTeacherModalProps {
     show: boolean;

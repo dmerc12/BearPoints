@@ -1,10 +1,10 @@
-import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { removeStudent } from '../../store/slices/studentsSlice';
-import { Student, Role } from '../../services/types';
-import { fullName } from '../../utils/formatNames';
+import { useAppDispatch, useAppSelector } from '../../store';
+import { Student, Role } from '../../services';
 import { useEffect, useState } from 'react';
 import { Alert } from 'react-bootstrap';
-import BaseModal from '../BaseModal';
+import { fullName } from '../../utils';
+import { BaseModal } from '../index';
 
 interface DeleteStudentModalProps {
     show: boolean;

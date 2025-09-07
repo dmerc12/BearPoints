@@ -1,6 +1,6 @@
-import { commonPersonValidationRules } from '../utils/validationRules';
-import { useAppSelector } from '../store/hooks';
-import { UserDTO } from '../services/types';
+import { commonPersonValidationRules } from '../utils';
+import { useAppSelector } from '../store';
+import { UserDTO } from '../services';
 import { useForm } from './useForm';
 import { useEffect } from 'react';
 

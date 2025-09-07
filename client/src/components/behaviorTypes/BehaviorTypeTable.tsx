@@ -1,16 +1,10 @@
-import { formatBehaviorTypeStatus, getBehaviorTypeStatusVariant } from '../../utils/formatBehaviorType';
-import { fetchBehaviorTypes } from '../../store/slices/behaviorTypesSlice';
+import { useBehaviorTypeTable, formatBehaviorTypeStatus, getBehaviorTypeStatusVariant } from '../../hooks';
+import { CreateBehaviorTypeModal, EditBehaviorTypeModal, DeleteBehaviorTypeModal,
+    TableColumn, BaseTable, SelectFilter, TextFilter } from '../index';
 import { Row, Button, Col, ButtonGroup, Badge } from 'react-bootstrap';
-import { useBehaviorTypeTable } from '../../hooks/behaviorTypeHooks';
-import { CreateBehaviorTypeModal } from './CreateBehaviorTypeModal';
-import { DeleteBehaviorTypeModal } from './DeleteBehaviorTypeModal';
-import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { EditBehaviorTypeModal } from './EditBehaviorTypeModal';
-import { BehaviorType, Role } from '../../services/types';
-import { useMemo, useEffect, useCallback } from 'react';
-import { SelectFilter } from '../filters/SelectFilter';
-import BaseTable, { TableColumn } from '../BaseTable';
-import { NameFilter } from '../filters/NameFilter';
+import { BehaviorType, Role } from '../../services';
+import { useAppSelector } from '../../store';
+import { useMemo, useEffect } from 'react';
 
 interface BehaviorTypeTableProps {
     itemsPerPage?: number;
@@ -19,32 +13,23 @@ interface BehaviorTypeTableProps {
 }
 
 export default function BehaviorTypeTable({ itemsPerPage = 10, showFilters = true, size = 'm' }: BehaviorTypeTableProps) {
-    const dispatch = useAppDispatch();
-    const { behaviorTypes, loading ,error } = useAppSelector(state =>
-        state.behaviorTypes);
     const currentUser = useAppSelector(state =>
         state.user.data);
 
+    const isAdmin = useMemo(() => currentUser?.role === Role.ADMIN, [currentUser]);
+
     const {
-        filters, updateFilter, showCreateModal, editingItem: editingBehaviorType, deletingItem: deletingBehaviorType,
+        data: behaviorTypes, loading, error, filters, updateFilter, resetFilters,
+        showCreateModal, editingItem: editingBehaviorType, deletingItem: deletingBehaviorType,
         handleCreateItem: handleCreateBehaviorType, handleEditItem: handleEditBehaviorType,
-        handleDeleteItem: handleDeleteBehaviorType, handleCloseModals
+        handleDeleteItem: handleDeleteBehaviorType, handleCloseModals, retryFetch, handleSuccess,
     } = useBehaviorTypeTable();
 
     useEffect(() => {
-        dispatch(fetchBehaviorTypes({ page: 0, size: 1000 }));
-    }, [dispatch]);
-
-    const isAdmin = useMemo(() => currentUser?.role === Role.ADMIN, [currentUser]);
-
-    const retryFetch = useCallback(() => {
-        dispatch(fetchBehaviorTypes({ page: 0, size: 1000, force: true }));
-    }, [dispatch]);
-
-    const handleSuccess = useCallback(() => {
-        handleCloseModals();
-        retryFetch();
-    }, [handleCloseModals, retryFetch]);
+        return () => {
+            resetFilters();
+        };
+    }, [resetFilters]);
 
     const filteredBehaviorTypes = useMemo(() => {
         if (!behaviorTypes.length) return [];
@@ -105,11 +90,11 @@ export default function BehaviorTypeTable({ itemsPerPage = 10, showFilters = tru
         return (
             <Row className='mb-4 g-3'>
                 <Col md={4}>
-                    <NameFilter
+                    <TextFilter
                         value={filters.nameSearch}
                         onChange={(value) => updateFilter('nameSearch', value)}
-                        label='Behavior Type Name'
-                        placeholder='Search by behavior type name'
+                        label='Search Behavior Types'
+                        placeholder='Search by name...'
                     />
                 </Col>
                 <Col md={4}>

@@ -1,6 +1,6 @@
-import { formatName, fullName } from '../../utils/formatNames.ts';
 import { Container, Row, Col, Card } from 'react-bootstrap';
-import { Student } from '../../services/types.ts';
+import { formatName, fullName } from '../../utils';
+import { Student } from '../../services';
 import { QRCodeSVG } from 'qrcode.react';
 import { forwardRef } from 'react';
 import '../../print.css';

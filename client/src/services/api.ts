@@ -17,7 +17,7 @@ import {
     LeaderboardEntry,
     Timeframe,
     Role
-} from './types';
+} from './index';
 import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 import { auth } from '../Auth';
 

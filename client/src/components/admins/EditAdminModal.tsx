@@ -1,10 +1,10 @@
 import { modifyAdmin } from '../../store/slices/adminsSlice';
 import { useAdminForm } from '../../hooks/useAdminForm';
-import { Role, UserDTO } from '../../services/types';
-import { useAppDispatch } from '../../store/hooks';
+import { Role, UserDTO } from '../../services';
+import { useAppDispatch } from '../../store';
 import { AdminForm } from './AdminForm';
 import { Alert } from 'react-bootstrap';
-import BaseModal from '../BaseModal';
+import { BaseModal } from '../index';
 import { useEffect } from 'react';
 
 interface EditAdminModalProps {

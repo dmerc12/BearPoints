@@ -1,4 +1,4 @@
-import { ValidationRule } from '../hooks/useForm';
+import { ValidationRule } from '../hooks';
 
 export interface CommonPersonFormData {
     firstName: string;

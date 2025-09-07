@@ -1,10 +1,8 @@
-import { modifyBehaviorType } from '../../store/slices/behaviorTypesSlice';
-import { useBehaviorTypeForm } from '../../hooks/behaviorTypeHooks';
-import { BehaviorTypeForm } from './BehaviorTypeForm';
-import { BehaviorType } from '../../services/types';
-import { useAppDispatch } from '../../store/hooks';
+import { useAppDispatch, modifyBehaviorType } from '../../store';
+import { BaseModal, BehaviorTypeForm } from '../index';
+import { useBehaviorTypeForm } from '../../hooks';
+import { BehaviorType } from '../../services';
 import { Alert } from 'react-bootstrap';
-import BaseModal from '../BaseModal';
 import { useEffect } from 'react';
 
 interface EditBehaviorTypeModalProps {

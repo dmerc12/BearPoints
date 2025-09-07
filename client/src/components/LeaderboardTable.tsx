@@ -1,10 +1,9 @@
 import { Alert, Button, ButtonGroup, Container, Pagination, Spinner, Table } from 'react-bootstrap';
 import { fetchLeaderboard, setTimeframe } from '../store/slices/leaderboardSlice.ts';
-import { useAppDispatch, useAppSelector } from '../store/hooks.ts';
-import { formatName, fullName } from '../utils/formatNames';
+import { formatName, fullName, formatGrade } from '../utils';
+import { useAppDispatch, useAppSelector } from '../store';
 import { useEffect, useMemo, useState } from 'react';
-import { formatGrade } from '../utils/formatGrades';
-import { Timeframe } from '../services/types';
+import { Timeframe } from '../services';
 
 interface LeaderboardTableProps {
     itemsPerPage?: number;

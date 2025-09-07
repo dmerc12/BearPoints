@@ -1,11 +1,10 @@
-import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { useAppDispatch, useAppSelector } from '../../store';
 import { removeAdmin } from '../../store/slices/adminsSlice';
-import { Role, UserDTO } from '../../services/types';
-import { formatRole } from '../../utils/formatRole';
-import { fullName } from '../../utils/formatNames';
+import { formatRole, fullName } from '../../utils';
+import { Role, UserDTO } from '../../services';
 import { useEffect, useState } from 'react';
 import { Alert } from 'react-bootstrap';
-import BaseModal from '../BaseModal';
+import { BaseModal } from '../index';
 
 interface DeleteAdminModalProps {
     show: boolean;
