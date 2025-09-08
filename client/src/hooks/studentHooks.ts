@@ -1,8 +1,7 @@
+import { RootState, useAppSelector, useAppDispatch, fetchTeachers, fetchStudents } from '../store';
 import { StudentFormData, studentValidationRules } from '../utils';
-import { fetchTeachers } from '../store/slices/teachersSlice';
-import { useAppSelector, useAppDispatch } from '../store';
 import { Student, Role } from '../services';
-import { useForm } from './useForm';
+import { useForm, useTable } from './index';
 import { useEffect } from 'react';
 
 export interface UseStudentFormProps {
@@ -15,7 +14,7 @@ export const useStudentForm = ({ show, isEdit = false, student }: UseStudentForm
     const dispatch = useAppDispatch();
     const { loading: studentsLoading, error: studentsError } = useAppSelector(
         state => state.students);
-    const { teachers, loading: teachersLoading, error: teachersError } = useAppSelector(
+    const { data: teachers, loading: teachersLoading, error: teachersError } = useAppSelector(
         state => state.teachers);
     const currentUser = useAppSelector(
         state => state.user.data);
@@ -56,8 +55,22 @@ export const useStudentForm = ({ show, isEdit = false, student }: UseStudentForm
         }
     }, [show, isEdit, student, isTeacher, currentUser, form.setFormData, form]);
 
-    return { formData: form.formData, setFormData: form.setFormData, formErrors: form.formErrors,
+    return {
+        formData: form.formData, setFormData: form.setFormData, formErrors: form.formErrors,
         setFormErrors: form.setFormErrors, teachers, currentUser, isAdmin, isTeacher, error, isLoading,
         handleInputChange: form.handleInputChange, handleSelectChange: form.handleSelectChange,
-        handleCheckboxChange: form.handleCheckboxChange, validateForm: form.validateForm, resetForm: form.resetForm };
+        handleCheckboxChange: form.handleCheckboxChange, validateForm: form.validateForm, resetForm: form.resetForm
+    };
 };
+
+export function useStudentTable() {
+    return useTable<Student, { nameSearch: string, teacherFilter: string; gradeFilter: string }>({
+        fetchAction: fetchStudents,
+        selector: (state: RootState) => state.students,
+        initialFilters: {
+            nameSearch: '',
+            teacherFilter: '',
+            gradeFilter: ''
+        }
+    });
+}

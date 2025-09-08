@@ -1,8 +1,7 @@
-import { modifyStudent } from '../../store/slices/studentsSlice';
-import { useStudentForm } from '../../hooks/useStudentForm';
+import { useAppDispatch, modifyStudent } from '../../store';
 import { Form, Row, Col, Alert } from 'react-bootstrap';
 import { Student, Role, Teacher } from '../../services';
-import { useAppDispatch } from '../../store';
+import { useStudentForm } from '../../hooks';
 import { fullName } from '../../utils';
 import { BaseModal } from '../index';
 import { useEffect } from 'react';
@@ -17,9 +16,11 @@ interface EditStudentModalProps {
 export function EditStudentModal({ show, student, onCancel, onSuccess }: EditStudentModalProps) {
     const dispatch = useAppDispatch();
 
-    const { formData, formErrors, setFormErrors, teachers, currentUser,
+    const {
+        formData, formErrors, setFormErrors, teachers, currentUser,
         isAdmin, isTeacher, error, isLoading, handleInputChange, handleSelectChange,
-        validateForm, resetForm } = useStudentForm({ show, isEdit: true, student });
+        validateForm, resetForm
+    } = useStudentForm({ show, isEdit: true, student });
 
     useEffect(() => {
         if (show && isTeacher && student && student.teacher.id !== currentUser?.teacherId) {

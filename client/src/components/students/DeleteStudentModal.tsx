@@ -1,5 +1,4 @@
-import { removeStudent } from '../../store/slices/studentsSlice';
-import { useAppDispatch, useAppSelector } from '../../store';
+import { useAppDispatch, useAppSelector, removeStudent } from '../../store';
 import { Student, Role } from '../../services';
 import { useEffect, useState } from 'react';
 import { Alert } from 'react-bootstrap';

@@ -31,7 +31,8 @@ export type AppDispatch = typeof store.dispatch;
 export { useAppDispatch, useAppSelector } from './hooks';
 export {
     fetchAdmins, addAdmin, modifyAdmin, removeAdmin, resetAdmins, clearAdminsError,
-    fetchTeachers, addTeacher, modifyTeacher, removeTeacher, resetTeachers,
+    fetchTeachers, addTeacher, modifyTeacher, removeTeacher, resetTeachers, clearTeachersError,
+    fetchStudents, addStudent, modifyStudent, removeStudent, resetStudents, clearStudentsError,
     fetchBehaviorTypes, addBehaviorType, modifyBehaviorType, removeBehaviorType,
     resetBehaviorTypes, clearBehaviorTypesError,
 } from './slices';

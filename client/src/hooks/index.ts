@@ -4,4 +4,5 @@ export { type UseBehaviorTypeFormProps, useBehaviorTypeForm, useBehaviorTypeTabl
     formatBehaviorTypeStatus, getBehaviorTypeStatusVariant } from './behaviorTypeHooks';
 export { type UseAdminFormProps, useAdminForm, useAdminTable } from './adminHooks';
 export { type UseTeacherFormProps, useTeacherForm, useTeacherTable } from './teacherHooks';
+export { type UseStudentFormProps, useStudentForm, useStudentTable } from './studentHooks';
 export { default as useLogin } from './useLogin';

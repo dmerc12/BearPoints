@@ -1,18 +1,14 @@
-import { formatName, fullName, clearNameCaches, formatGrade } from '../../utils';
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { useAppDispatch, useAppSelector } from '../../store';
-import { fetchStudents } from '../../store/slices/studentsSlice';
+import { 
+    CreateStudentModal, EditStudentModal, DeleteStudentModal, BaseTable, TableColumn, TextFilter, SelectFilter 
+} from '../index';
+import {formatName, fullName, clearNameCaches, formatGrade, sortGrades} from '../../utils';
+import { useMemo, useCallback, useEffect, useRef } from 'react';
 import { Row, Button, Col, ButtonGroup } from 'react-bootstrap';
-import { CreateStudentModal } from './CreateStudentModal';
-import { DeleteStudentModal } from './DeleteStudentModal';
-import { TeacherFilter } from '../filters/TeacherFilter';
-import { EditStudentModal } from './EditStudentModal';
-import BaseTable, { TableColumn } from '../BaseTable';
-import { GradeFilter } from '../filters/GradeFilter';
-import { NameFilter } from '../filters/NameFilter';
 import { useReactToPrint } from 'react-to-print';
 import { useNavigate } from 'react-router-dom';
 import { Student, Role } from '../../services';
+import { useStudentTable } from '../../hooks';
+import { useAppSelector } from '../../store';
 import QRCodesPrint from './QRCodesPrint';
 import { QRCodeSVG } from 'qrcode.react';
 
@@ -26,18 +22,20 @@ interface StudentTableProps {
 
 export default function StudentTable ({ itemsPerPage = 10, showFilters = true, showPrintButton = true,
                                           showQRCodes = true, size = 'm' }: StudentTableProps) {
-    const dispatch = useAppDispatch();
-    const { students, loading, error } = useAppSelector(state => state.students);
     const currentUser = useAppSelector(state => state.user.data);
-    const [ filters, setFilters ] = useState({
-        teacher: '',
-        nameSearch: '',
-        grade: ''
-    });
 
-    const [showCreateModal, setShowCreateModal] = useState(false);
-    const [editingStudent, setEditingStudent] = useState<Student | null>(null);
-    const [deletingStudent, setDeletingStudent] = useState<Student | null>(null);
+    const isAdmin = useMemo(() => currentUser?.role === Role.ADMIN, [currentUser]);
+    const isTeacher = useMemo(() => currentUser?.role === Role.TEACHER, [currentUser]);
+    const canManageStudent = useCallback((student: Student) => {
+        return isAdmin || (isTeacher && student.teacher.id === currentUser?.teacherId);
+    }, [isAdmin, isTeacher, currentUser]);
+
+    const {
+        data: students, loading, error, filters, updateFilter, resetFilters,
+        showCreateModal, editingItem: editingStudent, deletingItem: deletingStudent,
+        handleCreateItem: handleCreateStudent, handleEditItem: handleEditStudent,
+        handleDeleteItem: handleDeleteStudent, handleCloseModals, retryFetch, handleSuccess,
+    } = useStudentTable();
 
     const navigate = useNavigate();
     const contentRef = useRef<HTMLDivElement>(null);
@@ -45,22 +43,17 @@ export default function StudentTable ({ itemsPerPage = 10, showFilters = true, s
 
     useEffect(() => {
         clearNameCaches();
-        dispatch(fetchStudents({ page: 0, size: 1000 }));
-    }, [dispatch]);
-
-    const isAdmin = useMemo(() => currentUser?.role === Role.ADMIN, [currentUser]);
-    const isTeacher = useMemo(() => currentUser?.role === Role.TEACHER, [currentUser]);
-
-    const canManageStudent = useCallback((student: Student) => {
-        return isAdmin || (isTeacher && student.teacher.id === currentUser?.teacherId);
-    }, [isAdmin, isTeacher, currentUser]);
+        return () => {
+            resetFilters();
+        }
+    }, [resetFilters]);
 
     const filteredStudents = useMemo(() => {
         if (!students.length) return [];
         const teacherIdFilter = currentUser?.teacherId;
-        const teacherFilter = filters.teacher.toLowerCase();
+        const teacherFilter = filters.teacherFilter.toLowerCase();
         const nameFilter = filters.nameSearch.toLowerCase();
-        const gradeFilter = filters.grade;
+        const gradeFilter = filters.gradeFilter;
         return students.filter(student => {
             const studentName = fullName(student).toLowerCase();
             const teacherName = fullName(student.teacher).toLowerCase();
@@ -96,25 +89,7 @@ export default function StudentTable ({ itemsPerPage = 10, showFilters = true, s
     const handleQRScan = useCallback((token: string) => {
         navigate(`/brag?token=${token}`);
     }, [navigate]);
-
-    const handleCreateStudent = useCallback(() => {
-        setShowCreateModal(true);
-    }, []);
-
-    const handleEditStudent = useCallback((student: Student) => {
-        setEditingStudent(student);
-    }, []);
-
-    const handleDeleteStudent = useCallback((student: Student) => {
-        setDeletingStudent(student);
-    }, []);
-
-    const handleCloseModals = useCallback(() => {
-        setShowCreateModal(false);
-        setEditingStudent(null);
-        setDeletingStudent(null);
-    }, []);
-
+    
     const columns: TableColumn<Student>[] = useMemo(() => [
         {
             key: 'name',
@@ -174,40 +149,39 @@ export default function StudentTable ({ itemsPerPage = 10, showFilters = true, s
         handleEditStudent, handleDeleteStudent]
     );
     
-    const updateNameFilter = useCallback((value: string) => {
-        setFilters(prev => ({ ...prev, nameSearch: value }));
-    }, []);
-
-    const updateTeacherFilter = useCallback((value: string) => {
-        setFilters(prev => ({ ...prev, teacher: value }));
-    }, []);
-
-    const updateGradeFilter = useCallback((value: string) => {
-        setFilters(prev => ({ ...prev, grade: value }));
-    }, []);
-    
     const renderFilters = () => {
         if (!showFilters) return null;
+        const teacherOptions = teacherNames.map(teacher => (
+            { value: teacher, label: teacher }
+        ));
+        const sortedGrades = sortGrades(grades);
+        const gradeOptions = sortedGrades.map(grade => (
+            { value: grade, label: formatGrade(grade) }
+        ));
         return (
             <Row className='mb-3 g-3'>
                 <Col md={ 6 }>
-                    <NameFilter
+                    <TextFilter
                         value={filters.nameSearch}
-                        onChange={updateNameFilter}
+                        onChange={(value) => updateFilter('nameSearch', value)}
+                        label='Search Students'
+                        placeholder='Search by name...'
                     />
                 </Col>
                 <Col md={ 6 }>
-                    <TeacherFilter
-                        value={filters.teacher}
-                        onChange={updateTeacherFilter}
-                        teachers={teacherNames}
+                    <SelectFilter
+                        value={filters.teacherFilter}
+                        onChange={(value) => updateFilter('teacherFilter', value)}
+                        label='Teacher'
+                        options={teacherOptions}
                     />
                 </Col>
                 <Col md={ 6 }>
-                    <GradeFilter
-                        value={filters.grade}
-                        onChange={updateGradeFilter}
-                        items={grades}
+                    <SelectFilter
+                        value={filters.gradeFilter}
+                        onChange={(value) => updateFilter('gradeFilter', value)}
+                        label='Grade'
+                        options={gradeOptions}
                     />
                 </Col>
             </Row>
@@ -250,34 +224,25 @@ export default function StudentTable ({ itemsPerPage = 10, showFilters = true, s
                 itemsPerPage={itemsPerPage}
                 renderFilters={renderFilters}
                 renderHeader={renderHeader}
-                onRetry={() => dispatch(fetchStudents({ page: 0, size: 1000, force: true }))}
+                onRetry={retryFetch}
                 size={size}
             />
             <CreateStudentModal
                 show={showCreateModal}
                 onCancel={handleCloseModals}
-                onSuccess={() => {
-                    handleCloseModals();
-                    dispatch(fetchStudents({ page: 0, size: 1000, force: true }));
-                }}
+                onSuccess={handleSuccess}
             />
             <EditStudentModal 
                 show={!!editingStudent}
                 student={editingStudent}
                 onCancel={handleCloseModals}
-                onSuccess={() => {
-                    handleCloseModals();
-                    dispatch(fetchStudents({ page: 0, size: 1000, force: true }));
-                }}
+                onSuccess={handleSuccess}
             />
             <DeleteStudentModal 
                 show={!!deletingStudent} 
                 student={deletingStudent} 
                 onCancel={handleCloseModals} 
-                onSuccess={() => {
-                    handleCloseModals();
-                    dispatch(fetchStudents({ page: 0, size: 1000, force: true }));
-                }}
+                onSuccess={handleSuccess}
             />
             <div style={{ display: 'none' }}>
                 <QRCodesPrint ref={ contentRef } students={ filteredStudents } />

@@ -1,8 +1,7 @@
-import { addStudent } from '../../store/slices/studentsSlice';
-import { useStudentForm } from '../../hooks/useStudentForm';
+import { useAppDispatch, addStudent } from '../../store';
 import { Form, Row, Col, Alert } from 'react-bootstrap';
 import { Student, Role, Teacher } from '../../services';
-import { useAppDispatch } from '../../store';
+import { useStudentForm  } from '../../hooks';
 import { fullName } from '../../utils';
 import { BaseModal } from '../index';
 
@@ -15,8 +14,10 @@ interface CreateStudentModalProps {
 export function CreateStudentModal({ show, onCancel, onSuccess }: CreateStudentModalProps) {
     const dispatch = useAppDispatch();
 
-    const { formData, formErrors, teachers, isAdmin, error, isLoading, handleInputChange, handleSelectChange,
-        validateForm, resetForm } = useStudentForm({ show });
+    const {
+        formData, formErrors, teachers, isAdmin, error, isLoading, handleInputChange, handleSelectChange,
+        validateForm, resetForm
+    } = useStudentForm({ show });
 
     const handleSubmit = () => {
         if (!validateForm()) return;
