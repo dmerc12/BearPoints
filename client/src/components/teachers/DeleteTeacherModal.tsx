@@ -1,5 +1,4 @@
-import { removeTeacher } from '../../store/slices/teachersSlice';
-import { useAppDispatch, useAppSelector } from '../../store';
+import { useAppDispatch, useAppSelector, removeTeacher } from '../../store';
 import { fullName, formatGrade } from '../../utils';
 import { Teacher, Role } from '../../services';
 import { useEffect, useState } from 'react';

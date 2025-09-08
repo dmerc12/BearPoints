@@ -1,6 +1,6 @@
 import {
     getBehaviorTypes, createBehaviorType, updateBehaviorType, deleteBehaviorType,
-    PaginatedBehaviorTypes, BehaviorType
+    PaginatedBehaviorTypes, BehaviorType, CacheResponse
 } from '../../services';
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../index';
@@ -29,12 +29,6 @@ const initialState: BehaviorTypesState = {
 
 const CACHE_DURATION = 5 * 60 * 1000;
 
-interface CacheResponse {
-    data: BehaviorType[];
-    totalPages: number;
-    totalElements: number;
-}
-
 export const fetchBehaviorTypes = createAsyncThunk(
     'behaviorTypes/fetchBehaviorTypes',
     async (params: { page: number, size: number, force?: boolean }, { getState, signal }) => {
@@ -46,7 +40,7 @@ export const fetchBehaviorTypes = createAsyncThunk(
                 data: state.behaviorTypes.data,
                 totalPages: state.behaviorTypes.pagination.totalPages,
                 totalElements: state.behaviorTypes.pagination.totalElements
-            } as CacheResponse;
+            } as CacheResponse<BehaviorType>;
         }
         return await getBehaviorTypes(params.page, params.size, signal);
     }
@@ -91,7 +85,7 @@ const behaviorTypesSlice = createSlice({
             })
             .addCase(fetchBehaviorTypes.fulfilled, (
                 state,
-                action: PayloadAction<PaginatedBehaviorTypes | CacheResponse>) => {
+                action: PayloadAction<PaginatedBehaviorTypes | CacheResponse<BehaviorType>>) => {
                     state.loading = false;
                     if ('behaviorTypes' in action.payload) {
                         state.data = action.payload.behaviorTypes;

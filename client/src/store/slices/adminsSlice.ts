@@ -1,6 +1,6 @@
 import {
     getUsersByRole, createUser, updateUser, deleteUser,
-    PaginatedUsers, UserDTO, Role
+    PaginatedUsers, UserDTO, Role, CacheResponse
 } from '../../services';
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../index';
@@ -29,12 +29,6 @@ const initialState: AdminsState = {
 
 const CACHE_DURATION = 5 * 60 * 1000;
 
-interface CacheResponse {
-    data: UserDTO[];
-    totalPages: number;
-    totalElements: number;
-}
-
 export const fetchAdmins = createAsyncThunk(
     'admins/fetchAdmins',
     async (params: { page: number, size: number, force?: boolean }, { getState, signal }) => {
@@ -46,7 +40,7 @@ export const fetchAdmins = createAsyncThunk(
                 data: state.admins.data,
                 totalPages: state.admins.pagination.totalPages,
                 totalElements: state.admins.pagination.totalElements
-            } as CacheResponse;
+            } as CacheResponse<UserDTO>;
         }
         return await getUsersByRole(Role.ADMIN, params.page, params.size, signal);
     }
@@ -97,22 +91,24 @@ const adminsSlice = createSlice({
                state.loading = true;
                state.error = null;
            })
-           .addCase(fetchAdmins.fulfilled, (state, action: PayloadAction<PaginatedUsers | CacheResponse>) => {
-               state.loading = false;
-               if ('users' in action.payload) {
-                   state.data = action.payload.users;
-                   state.pagination = {
-                       totalPages: action.payload.totalPages,
-                       totalElements: action.payload.totalUsers
-                   };
-               } else {
-                   state.data = action.payload.data;
-                   state.pagination = {
-                       totalPages: action.payload.totalPages,
-                       totalElements: action.payload.totalElements
-                   };
-               }
-               state.lastFetched = Date.now();
+           .addCase(fetchAdmins.fulfilled, (
+               state,
+               action: PayloadAction<PaginatedUsers | CacheResponse<UserDTO>>) => {
+                   state.loading = false;
+                   if ('users' in action.payload) {
+                       state.data = action.payload.users;
+                       state.pagination = {
+                           totalPages: action.payload.totalPages,
+                           totalElements: action.payload.totalUsers
+                       };
+                   } else {
+                       state.data = action.payload.data;
+                       state.pagination = {
+                           totalPages: action.payload.totalPages,
+                           totalElements: action.payload.totalElements
+                       };
+                   }
+                   state.lastFetched = Date.now();
            })
            .addCase(fetchAdmins.rejected, (state, action) => {
                state.loading = false;

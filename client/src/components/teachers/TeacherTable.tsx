@@ -1,15 +1,13 @@
-import { fullName, clearNameCaches, formatGrade } from '../../utils';
-import { useState, useMemo, useCallback, useEffect } from 'react';
-import { fetchTeachers } from '../../store/slices/teachersSlice';
+import {
+    CreateTeacherModal, EditTeacherModal, DeleteTeacherModal,
+    BaseTable, TableColumn, TextFilter, SelectFilter
+} from '../index';
+import { fullName, formatGrade, sortGrades } from '../../utils';
 import { Row, Button, Col, ButtonGroup } from 'react-bootstrap';
-import { useAppDispatch, useAppSelector } from '../../store';
-import { CreateTeacherModal } from './CreateTeacherModal';
-import { DeleteTeacherModal } from './DeleteTeacherModal';
-import { EditTeacherModal } from './EditTeacherModal';
-import { GradeFilter } from '../filters/GradeFilter';
-import { NameFilter } from '../filters/NameFilter';
-import { BaseTable, TableColumn } from '../index';
+import { useMemo, useCallback, useEffect } from 'react';
 import { Teacher, Role } from '../../services';
+import { useTeacherTable } from '../../hooks';
+import { useAppSelector } from '../../store';
 
 interface TeacherTableProps {
     itemsPerPage?: number;
@@ -18,22 +16,7 @@ interface TeacherTableProps {
 }
 
 export default function TeacherTable({ itemsPerPage = 10, showFilters = true, size = 'm' }: TeacherTableProps) {
-    const dispatch = useAppDispatch();
-    const { teachers, loading, error } = useAppSelector(state => state.teachers);
     const currentUser = useAppSelector(state => state.user.data);
-
-    const [showCreateModal, setShowCreateModal] = useState(false);
-    const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
-    const [deletingTeacher, setDeletingTeacher] = useState<Teacher | null>(null);
-    const [filters, setFilters] = useState({
-        nameSearch: '',
-        grade: ''
-    });
-
-    useEffect(() => {
-        clearNameCaches();
-        dispatch(fetchTeachers({ page: 0, size: 1000 }));
-    }, [dispatch]);
 
     const isAdmin = useMemo(() => currentUser?.role === Role.ADMIN, [currentUser]);
     const isTeacher = useMemo(() => currentUser?.role === Role.TEACHER, [currentUser]);
@@ -41,10 +24,23 @@ export default function TeacherTable({ itemsPerPage = 10, showFilters = true, si
         return isAdmin || (isTeacher && teacher.user.id === currentUser?.id);
     }, [isAdmin, isTeacher, currentUser]);
 
+    const {
+        data: teachers, loading, error, filters, updateFilter, resetFilters,
+        showCreateModal, editingItem: editingTeacher, deletingItem: deletingTeacher,
+        handleCreateItem: handleCreateTeacher, handleEditItem: handleEditTeacher,
+        handleDeleteItem: handleDeleteTeacher, handleCloseModals, retryFetch, handleSuccess,
+    } = useTeacherTable();
+
+    useEffect(() => {
+        return () => {
+            resetFilters();
+        };
+    }, [resetFilters]);
+
     const filteredTeachers = useMemo(() => {
         if (!teachers.length) return [];
         const nameFilter = filters.nameSearch.toLowerCase();
-        const gradeFilter = filters.grade;
+        const gradeFilter = filters.gradeFilter;
         return teachers.filter(teacher => {
             const teacherName = fullName(teacher.user).toLowerCase();
             if (gradeFilter && teacher.grade !== gradeFilter) {
@@ -52,30 +48,12 @@ export default function TeacherTable({ itemsPerPage = 10, showFilters = true, si
             }
             return !(nameFilter && !teacherName.includes(nameFilter));
         });
-    }, [teachers, filters])
+    }, [teachers, filters]);
 
     const grades = useMemo(() => {
         const teacherGrades = teachers.map(teacher => teacher.grade);
         return Array.from(new Set(teacherGrades));
     }, [teachers]);
-
-    const handleCreateTeacher = useCallback(() => {
-        setShowCreateModal(true);
-    }, []);
-
-    const handleEditTeacher = useCallback((teacher: Teacher) => {
-        setEditingTeacher(teacher);
-    }, []);
-
-    const handleDeleteTeacher = useCallback((teacher: Teacher) => {
-        setDeletingTeacher(teacher);
-    }, []);
-
-    const handleCloseModals = useCallback(() => {
-        setShowCreateModal(false);
-        setEditingTeacher(null);
-        setDeletingTeacher(null);
-    }, []);
 
     const columns: TableColumn<Teacher>[] = useMemo(() => [
         {
@@ -117,35 +95,28 @@ export default function TeacherTable({ itemsPerPage = 10, showFilters = true, si
         }] : []
     ], [isAdmin, isTeacher, canManageTeacher, handleEditTeacher, handleDeleteTeacher]);
 
-    const updateNameFilter = useCallback((value: string) => {
-        setFilters(prev => ({
-            ...prev,
-            nameSearch: value
-        }));
-    }, []);
-
-    const updateGradeFilter = useCallback((value: string) => {
-        setFilters(prev => ({
-            ...prev,
-            grade: value
-        }));
-    }, []);
-
     const renderFilters = () => {
         if (!showFilters) return null;
+        const sortedGrades = sortGrades(grades);
+        const gradeOptions = sortedGrades.map(grade => (
+            { value: grade, label: formatGrade(grade) }
+        ));
         return (
             <Row className='mb-3 g-3'>
                 <Col md={6}>
-                    <NameFilter
+                    <TextFilter
                         value={filters.nameSearch}
-                        onChange={updateNameFilter}
+                        onChange={(value) => updateFilter('nameSearch', value)}
+                        label='Search Teachers'
+                        placeholder='Search by name...'
                     />
                 </Col>
                 <Col md={6}>
-                    <GradeFilter
-                        value={filters.grade}
-                        onChange={updateGradeFilter}
-                        items={grades}
+                    <SelectFilter
+                        value={filters.gradeFilter}
+                        onChange={(value) => updateFilter('gradeFilter', value)}
+                        label='Grade'
+                        options={gradeOptions}
                     />
                 </Col>
             </Row>
@@ -179,35 +150,29 @@ export default function TeacherTable({ itemsPerPage = 10, showFilters = true, si
                 itemsPerPage={itemsPerPage}
                 renderFilters={renderFilters}
                 renderHeader={renderHeader}
-                onRetry={() =>
-                    dispatch(fetchTeachers({ page: 0, size: 1000, force: true }))}
+                onRetry={retryFetch}
                 size={size}
+                showCreateButton={isAdmin}
+                createButtonText='Create Teacher'
+                onCreateClick={handleCreateTeacher}
+
             />
             <CreateTeacherModal
                 show={showCreateModal}
                 onCancel={handleCloseModals}
-                onSuccess={() => {
-                    handleCloseModals();
-                    dispatch(fetchTeachers({ page: 0, size: 1000, force: true }));
-                }}
+                onSuccess={handleSuccess}
             />
             <EditTeacherModal
                 show={!!editingTeacher}
                 teacher={editingTeacher}
                 onCancel={handleCloseModals}
-                onSuccess={() => {
-                    handleCloseModals();
-                    dispatch(fetchTeachers({ page: 0, size: 1000, force: true }));
-                }}
+                onSuccess={handleSuccess}
             />
             <DeleteTeacherModal
                 show={!!deletingTeacher}
                 teacher={deletingTeacher}
                 onCancel={handleCloseModals}
-                onSuccess={() => {
-                    handleCloseModals();
-                    dispatch(fetchTeachers({ page: 0, size: 1000, force: true }));
-                }}
+                onSuccess={handleSuccess}
             />
         </>
     );

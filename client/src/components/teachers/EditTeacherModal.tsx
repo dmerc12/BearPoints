@@ -1,10 +1,8 @@
-import { modifyTeacher } from '../../store/slices/teachersSlice';
-import { useTeacherForm } from '../../hooks/useTeacherForm';
 import { Teacher, Role, GradeLevel } from '../../services';
-import { useAppDispatch } from '../../store';
-import { TeacherForm } from './TeacherForm';
+import { useAppDispatch, modifyTeacher } from '../../store';
+import { BaseModal, TeacherForm } from '../index';
+import { useTeacherForm } from '../../hooks';
 import { Alert } from 'react-bootstrap';
-import { BaseModal } from '../index';
 import { useEffect } from 'react';
 
 interface EditTeacherModalProps {

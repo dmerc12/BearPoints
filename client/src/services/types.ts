@@ -1,3 +1,9 @@
+export interface CacheResponse<T> {
+    data: T[];
+    totalPages: number;
+    totalElements: number;
+}
+
 export enum Timeframe {
     WEEK = 'WEEK',
     MONTH = 'MONTH',

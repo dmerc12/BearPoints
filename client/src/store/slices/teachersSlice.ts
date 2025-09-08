@@ -1,26 +1,28 @@
-import { getTeachers, createTeacher, updateTeacher, deleteTeacher } from '../../services/api';
+import {
+    getTeachers, createTeacher, updateTeacher, deleteTeacher,
+    PaginatedTeachers, Teacher, CacheResponse
+} from '../../services';
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { PaginatedTeachers, Teacher } from '../../services/types';
-import { RootState } from '../index.ts';
+import { RootState } from '../index';
 
 interface TeachersState {
-    teachers: Teacher[];
+    data: Teacher[];
     loading: boolean;
     error: string | null;
     pagination: {
         totalPages: number;
-        totalTeachers: number;
+        totalElements: number;
     };
     lastFetched: number | null;
 }
 
 const initialState: TeachersState = {
-    teachers: [],
+    data: [],
     loading: false,
     error: null,
     pagination: {
         totalPages: 0,
-        totalTeachers: 0
+        totalElements: 0
     },
     lastFetched: null
 };
@@ -35,10 +37,10 @@ export const fetchTeachers = createAsyncThunk(
         const isCacheValid = lastFetched && (Date.now() - lastFetched) < CACHE_DURATION;
         if (isCacheValid && !params.force) {
             return {
-                teachers: state.teachers.teachers,
+                data: state.teachers.data,
                 totalPages: state.teachers.pagination.totalPages,
-                totalTeachers: state.teachers.pagination.totalTeachers
-            };
+                totalElements: state.teachers.pagination.totalElements
+            } as CacheResponse<Teacher>;
         }
         return await getTeachers(params.page, params.size, signal);
     }
@@ -81,14 +83,24 @@ const teachersSlice = createSlice({
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(fetchTeachers.fulfilled, (state, action: PayloadAction<PaginatedTeachers>) => {
-                state.loading = false;
-                state.teachers = action.payload.teachers;
-                state.pagination = {
-                    totalPages: action.payload.totalPages,
-                    totalTeachers: action.payload.totalTeachers
-                };
-                state.lastFetched = Date.now();
+            .addCase(fetchTeachers.fulfilled, (
+                state,
+                action: PayloadAction<PaginatedTeachers | CacheResponse<Teacher>>) => {
+                    state.loading = false;
+                    if ('teachers' in action.payload) {
+                        state.data = action.payload.teachers;
+                        state.pagination = {
+                            totalPages: action.payload.totalPages,
+                            totalElements: action.payload.totalTeachers
+                        };
+                    } else {
+                        state.data = action.payload.data;
+                        state.pagination = {
+                            totalPages: action.payload.totalPages,
+                            totalElements: action.payload.totalElements
+                        };
+                    }
+                    state.lastFetched = Date.now();
             })
             .addCase(fetchTeachers.rejected, (state, action) => {
                 state.loading = false;
@@ -100,7 +112,7 @@ const teachersSlice = createSlice({
             })
             .addCase(addTeacher.fulfilled, (state, action: PayloadAction<Teacher>) => {
                 state.loading = false;
-                state.teachers.push(action.payload);
+                state.data.push(action.payload);
                 state.lastFetched = null;
             })
             .addCase(addTeacher.rejected, (state, action) => {
@@ -113,9 +125,9 @@ const teachersSlice = createSlice({
             })
             .addCase(modifyTeacher.fulfilled, (state, action: PayloadAction<Teacher>) => {
                 state.loading = false;
-                const index = state.teachers.findIndex(teacher => teacher.id === action.payload.id);
+                const index = state.data.findIndex(teacher => teacher.id === action.payload.id);
                 if (index !== -1) {
-                    state.teachers[index] = action.payload;
+                    state.data[index] = action.payload;
                 }
                 state.lastFetched = null;
             })
@@ -129,7 +141,7 @@ const teachersSlice = createSlice({
             })
             .addCase(removeTeacher.fulfilled, (state, action: PayloadAction<number>) => {
                 state.loading = false;
-                state.teachers = state.teachers.filter(teacher => teacher.id !== action.payload);
+                state.data = state.data.filter(teacher => teacher.id !== action.payload);
                 state.lastFetched = null;
             })
             .addCase(removeTeacher.rejected, (state, action) => {

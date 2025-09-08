@@ -3,4 +3,5 @@ export { type TableFilters, type UseTableOptions, useTable } from './useTable';
 export { type UseBehaviorTypeFormProps, useBehaviorTypeForm, useBehaviorTypeTable,
     formatBehaviorTypeStatus, getBehaviorTypeStatusVariant } from './behaviorTypeHooks';
 export { type UseAdminFormProps, useAdminForm, useAdminTable } from './adminHooks';
+export { type UseTeacherFormProps, useTeacherForm, useTeacherTable } from './teacherHooks';
 export { default as useLogin } from './useLogin';

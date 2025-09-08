@@ -1,7 +1,7 @@
 import { TeacherFormData, teacherValidationRules } from '../utils';
+import { RootState, useAppSelector, fetchTeachers } from '../store';
 import { Teacher, Role } from '../services';
-import { useAppSelector } from '../store';
-import { useForm } from './useForm';
+import { useForm, useTable } from './index';
 import { useEffect } from 'react';
 
 export interface UseTeacherFormProps {
@@ -37,10 +37,23 @@ export const useTeacherForm = ({ show, isEdit = false, teacher }: UseTeacherForm
                 grade: teacher.grade
             });
         }
-    }, [show, isEdit, teacher, form.setFormData, form]);
+    }, [show, isEdit, teacher, form]);
     
-    return { formData: form.formData, setFormData: form.setFormData, formErrors: form.formErrors, 
+    return {
+        formData: form.formData, setFormData: form.setFormData, formErrors: form.formErrors,
         setFormErrors: form.setFormErrors, currentUser, isAdmin, isTeacher, error, loading, 
         handleInputChange: form.handleInputChange, handleSelectChange: form.handleSelectChange,
-        handleCheckboxChange: form.handleCheckboxChange, validateForm: form.validateForm, resetForm: form.resetForm };
+        handleCheckboxChange: form.handleCheckboxChange, validateForm: form.validateForm, resetForm: form.resetForm
+    };
 };
+
+export function useTeacherTable() {
+    return useTable<Teacher, { nameSearch: string; gradeFilter: string }>({
+        fetchAction: fetchTeachers,
+        selector: (state: RootState) => state.teachers,
+        initialFilters: {
+            nameSearch: '',
+            gradeFilter: '',
+        }
+    });
+}
