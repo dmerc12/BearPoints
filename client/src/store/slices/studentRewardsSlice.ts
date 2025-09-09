@@ -1,26 +1,28 @@
-import { getStudentRewards, createStudentReward, updateStudentReward, deleteStudentReward } from '../../services/api';
+import { 
+    getStudentRewards, createStudentReward, updateStudentReward, deleteStudentReward,
+    PaginatedStudentRewards, StudentReward, CacheResponse
+} from '../../services';
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { PaginatedStudentRewards, StudentReward } from '../../services/types';
-import {RootState} from "../index.ts";
+import {RootState} from '../index';
 
 interface StudentRewardsState {
-    studentRewards: StudentReward[];
+    data: StudentReward[];
     loading: boolean;
     error: string | null;
     pagination: {
         totalPages: number;
-        totalStudentRewards: number;
+        totalElements: number;
     };
     lastFetched: number | null;
 }
 
 const initialState: StudentRewardsState = {
-    studentRewards: [],
+    data: [],
     loading: false,
     error: null,
     pagination: {
         totalPages: 0,
-        totalStudentRewards: 0
+        totalElements: 0
     },
     lastFetched: null
 };
@@ -35,10 +37,10 @@ export const fetchStudentRewards = createAsyncThunk(
         const isCacheValid = lastFetched && (Date.now() - lastFetched) < CACHE_DURATION;
         if (isCacheValid && !params.force) {
             return {
-                studentRewards: state.studentRewards.studentRewards,
+                data: state.studentRewards.data,
                 totalPages: state.studentRewards.pagination.totalPages,
-                totalStudentRewards: state.studentRewards.pagination.totalStudentRewards
-            };
+                totalElements: state.studentRewards.pagination.totalElements
+            } as CacheResponse<StudentReward>;
         }
         return await getStudentRewards(params.page, params.size, signal);
     }
@@ -81,14 +83,24 @@ const studentRewardsSlice = createSlice({
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(fetchStudentRewards.fulfilled, (state, action: PayloadAction<PaginatedStudentRewards>) => {
-                state.loading = false;
-                state.studentRewards = action.payload.studentRewards;
-                state.pagination = {
-                    totalPages: action.payload.totalPages,
-                    totalStudentRewards: action.payload.totalStudentRewards
-                };
-                state.lastFetched = Date.now();
+            .addCase(fetchStudentRewards.fulfilled, (
+                state,
+                action: PayloadAction<PaginatedStudentRewards | CacheResponse<StudentReward>>) => {
+                    state.loading = false;
+                    if ('studentRewards' in action.payload) {
+                        state.data = action.payload.studentRewards;
+                        state.pagination = {
+                            totalPages: action.payload.totalPages,
+                            totalElements: action.payload.totalStudentRewards
+                        };
+                    } else {
+                        state.data = action.payload.data;
+                        state.pagination = {
+                            totalPages: action.payload.totalPages,
+                            totalElements: action.payload.totalElements
+                        };
+                    }
+                    state.lastFetched = Date.now();
             })
             .addCase(fetchStudentRewards.rejected, (state, action) => {
                 state.loading = false;
@@ -100,7 +112,7 @@ const studentRewardsSlice = createSlice({
             })
             .addCase(addStudentReward.fulfilled, (state, action: PayloadAction<StudentReward>) => {
                 state.loading = false;
-                state.studentRewards.push(action.payload);
+                state.data.push(action.payload);
                 state.lastFetched = null;
             })
             .addCase(addStudentReward.rejected, (state, action) => {
@@ -113,9 +125,9 @@ const studentRewardsSlice = createSlice({
             })
             .addCase(modifyStudentReward.fulfilled, (state, action: PayloadAction<StudentReward>) => {
                 state.loading = false;
-                const index = state.studentRewards.findIndex(studentReward => studentReward.id === action.payload.id);
+                const index = state.data.findIndex(studentReward => studentReward.id === action.payload.id);
                 if (index !== -1) {
-                    state.studentRewards[index] = action.payload;
+                    state.data[index] = action.payload;
                 }
                 state.lastFetched = null;
             })
@@ -129,7 +141,7 @@ const studentRewardsSlice = createSlice({
             })
             .addCase(removeStudentReward.fulfilled, (state, action: PayloadAction<number>) => {
                 state.loading = false;
-                state.studentRewards = state.studentRewards.filter(studentReward => studentReward.id !== action.payload);
+                state.data = state.data.filter(studentReward => studentReward.id !== action.payload);
                 state.lastFetched = null;
             })
             .addCase(removeStudentReward.rejected, (state, action) => {

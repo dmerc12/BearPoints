@@ -1,7 +1,6 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
-import { getCurrentUser, updateUser } from '../../services/api.ts';
-import { UserDTO } from '../../services/types.ts';
-import { RootState } from '../index.ts';
+import { getCurrentUser, updateUser, UserDTO } from '../../services';
+import { RootState } from '../index';
 
 interface UserState {
     data: UserDTO | null;

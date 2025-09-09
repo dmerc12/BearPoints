@@ -1,7 +1,6 @@
-import {LeaderboardEntry, Timeframe} from '../../services/types';
-import {createAsyncThunk, createSlice, PayloadAction} from "@reduxjs/toolkit";
-import {getLeaderboard} from "../../services/api.ts";
-import {RootState} from "../index.ts";
+import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { getLeaderboard, LeaderboardEntry, Timeframe } from '../../services';
+import { RootState } from '../index';
 
 interface LeaderboardState {
     entries: LeaderboardEntry[];
@@ -72,14 +71,16 @@ const leaderboardSlice = createSlice({
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(fetchLeaderboard.fulfilled, (state, action: PayloadAction<{ data: LeaderboardEntry[], timeframe: Timeframe}>) => {
-                state.loading = false;
-                const { data, timeframe } = action.payload;
-                state.cachedEntries[timeframe] = data;
-                state.lastFetched[timeframe] = Date.now();
-                if (state.currentTimeframe === timeframe) {
-                    state.entries = data;
-                }
+            .addCase(fetchLeaderboard.fulfilled, (
+                state,
+                action: PayloadAction<{ data: LeaderboardEntry[], timeframe: Timeframe}>) => {
+                    state.loading = false;
+                    const { data, timeframe } = action.payload;
+                    state.cachedEntries[timeframe] = data;
+                    state.lastFetched[timeframe] = Date.now();
+                    if (state.currentTimeframe === timeframe) {
+                        state.entries = data;
+                    }
             })
             .addCase(fetchLeaderboard.rejected, (state, action) => {
                 state.loading = false;

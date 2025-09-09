@@ -1,26 +1,28 @@
-import { getBragLogs, createBragLog, updateBragLog, deleteBragLog } from '../../services/api';
+import { 
+    getBragLogs, createBragLog, updateBragLog, deleteBragLog,
+    PaginatedBragLogs, BragLog, CacheResponse
+} from '../../services';
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { PaginatedBragLogs, BragLog } from '../../services/types';
-import {RootState} from "../index.ts";
+import { RootState } from '../index';
 
 interface BragLogsState {
-    bragLogs: BragLog[];
+    data: BragLog[];
     loading: boolean;
     error: string | null;
     pagination: {
         totalPages: number;
-        totalBragLogs: number;
+        totalElements: number;
     };
     lastFetched: number | null;
 }
 
 const initialState: BragLogsState = {
-    bragLogs: [],
+    data: [],
     loading: false,
     error: null,
     pagination: {
         totalPages: 0,
-        totalBragLogs: 0
+        totalElements: 0
     },
     lastFetched: null
 };
@@ -35,10 +37,10 @@ export const fetchBragLogs = createAsyncThunk(
         const isCacheValid = lastFetched && (Date.now() - lastFetched) < CACHE_DURATION;
         if (isCacheValid && !params.force) {
             return {
-                bragLogs: state.bragLogs.bragLogs,
+                data: state.bragLogs.data,
                 totalPages: state.bragLogs.pagination.totalPages,
-                totalBragLogs: state.bragLogs.pagination.totalBragLogs
-            };
+                totalElements: state.bragLogs.pagination.totalElements
+            } as CacheResponse<BragLog>;
         }
         return await getBragLogs(params.page, params.size, signal);
     }
@@ -81,14 +83,24 @@ const bragLogsSlice = createSlice({
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(fetchBragLogs.fulfilled, (state, action: PayloadAction<PaginatedBragLogs>) => {
-                state.loading = false;
-                state.bragLogs = action.payload.bragLogs;
-                state.pagination = {
-                    totalPages: action.payload.totalPages,
-                    totalBragLogs: action.payload.totalBragLogs
-                };
-                state.lastFetched = Date.now();
+            .addCase(fetchBragLogs.fulfilled, (
+                state, 
+                action: PayloadAction<PaginatedBragLogs | CacheResponse<BragLog>>) => {
+                    state.loading = false;
+                    if ('bragLogs' in action.payload) {
+                        state.data = action.payload.bragLogs;
+                        state.pagination = {
+                            totalPages: action.payload.totalPages,
+                            totalElements: action.payload.totalBragLogs
+                        };
+                    } else  {
+                        state.data = action.payload.data
+                        state.pagination = {
+                            totalPages: action.payload.totalPages,
+                            totalElements: action.payload.totalElements
+                        };
+                    }
+                    state.lastFetched = Date.now();
             })
             .addCase(fetchBragLogs.rejected, (state, action) => {
                 state.loading = false;
@@ -100,7 +112,7 @@ const bragLogsSlice = createSlice({
             })
             .addCase(addBragLog.fulfilled, (state, action: PayloadAction<BragLog>) => {
                 state.loading = false;
-                state.bragLogs.push(action.payload);
+                state.data.push(action.payload);
                 state.lastFetched = null;
             })
             .addCase(addBragLog.rejected, (state, action) => {
@@ -113,9 +125,9 @@ const bragLogsSlice = createSlice({
             })
             .addCase(modifyBragLog.fulfilled, (state, action: PayloadAction<BragLog>) => {
                 state.loading = false;
-                const index = state.bragLogs.findIndex(bragLog => bragLog.id === action.payload.id);
+                const index = state.data.findIndex(bragLog => bragLog.id === action.payload.id);
                 if (index !== -1) {
-                    state.bragLogs[index] = action.payload;
+                    state.data[index] = action.payload;
                 }
                 state.lastFetched = null;
             })
@@ -129,7 +141,7 @@ const bragLogsSlice = createSlice({
             })
             .addCase(removeBragLog.fulfilled, (state, action: PayloadAction<number>) => {
                 state.loading = false;
-                state.bragLogs = state.bragLogs.filter(bragLog => bragLog.id !== action.payload);
+                state.data = state.data.filter(bragLog => bragLog.id !== action.payload);
                 state.lastFetched = null;
             })
             .addCase(removeBragLog.rejected, (state, action) => {

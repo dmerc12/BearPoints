@@ -1,26 +1,28 @@
-import { getRewardItems, createRewardItem, updateRewardItem, deleteRewardItem } from '../../services/api';
+import { 
+    getRewardItems, createRewardItem, updateRewardItem, deleteRewardItem,
+    PaginatedRewardItems, RewardItem, CacheResponse
+} from '../../services';
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { PaginatedRewardItems, RewardItem } from '../../services/types';
-import { RootState } from "../index";
+import { RootState } from '../index';
 
 interface RewardItemsState {
-    rewardItems: RewardItem[];
+    data: RewardItem[];
     loading: boolean;
     error: string | null;
     pagination: {
         totalPages: number;
-        totalRewardItems: number;
+        totalElements: number;
     };
     lastFetched: number | null;
 }
 
 const initialState: RewardItemsState = {
-    rewardItems: [],
+    data: [],
     loading: false,
     error: null,
     pagination: {
         totalPages: 0,
-        totalRewardItems: 0
+        totalElements: 0
     },
     lastFetched: null,
 };
@@ -35,10 +37,10 @@ export const fetchRewardItems = createAsyncThunk(
         const isCacheValid = lastFetched && (Date.now() - lastFetched) < CACHE_DURATION;
         if (isCacheValid && !params.force) {
             return {
-                rewardItems: state.rewardItems.rewardItems,
+                data: state.rewardItems.data,
                 totalPages: state.rewardItems.pagination.totalPages,
-                totalRewardItems: state.rewardItems.pagination.totalRewardItems
-            };
+                totalElements: state.rewardItems.pagination.totalElements
+            } as CacheResponse<RewardItem>;
         }
         return await getRewardItems(params.page, params.size, signal);
     }
@@ -81,14 +83,24 @@ const rewardItemsSlice = createSlice({
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(fetchRewardItems.fulfilled, (state, action: PayloadAction<PaginatedRewardItems>) => {
-                state.loading = false;
-                state.rewardItems = action.payload.rewardItems;
-                state.pagination = {
-                    totalPages: action.payload.totalPages,
-                    totalRewardItems: action.payload.totalRewardItems
-                };
-                state.lastFetched = Date.now();
+            .addCase(fetchRewardItems.fulfilled, (
+                state, 
+                action: PayloadAction<PaginatedRewardItems | CacheResponse<RewardItem>>) => {
+                    state.loading = false;
+                    if ('rewardItems' in action.payload) {
+                        state.data = action.payload.rewardItems;
+                        state.pagination = {
+                            totalPages: action.payload.totalPages,
+                            totalElements: action.payload.totalRewardItems
+                        };
+                    } else {
+                        state.data = action.payload.data;
+                        state.pagination = {
+                            totalPages: action.payload.totalPages,
+                            totalElements: action.payload.totalElements
+                        };
+                    }
+                    state.lastFetched = Date.now();
             })
             .addCase(fetchRewardItems.rejected, (state, action) => {
                 state.loading = false;
@@ -100,7 +112,7 @@ const rewardItemsSlice = createSlice({
             })
             .addCase(addRewardItem.fulfilled, (state, action: PayloadAction<RewardItem>) => {
                 state.loading = false;
-                state.rewardItems.push(action.payload);
+                state.data.push(action.payload);
                 state.lastFetched = null;
             })
             .addCase(addRewardItem.rejected, (state, action) => {
@@ -113,9 +125,9 @@ const rewardItemsSlice = createSlice({
             })
             .addCase(modifyRewardItem.fulfilled, (state, action: PayloadAction<RewardItem>) => {
                 state.loading = false;
-                const index = state.rewardItems.findIndex(rewardItem => rewardItem.id === action.payload.id);
+                const index = state.data.findIndex(rewardItem => rewardItem.id === action.payload.id);
                 if (index !== -1) {
-                    state.rewardItems[index] = action.payload;
+                    state.data[index] = action.payload;
                 }
                 state.lastFetched = null;
             })
@@ -129,7 +141,7 @@ const rewardItemsSlice = createSlice({
             })
             .addCase(removeRewardItem.fulfilled, (state, action: PayloadAction<number>) => {
                 state.loading = false;
-                state.rewardItems = state.rewardItems.filter(rewardItem => rewardItem.id !== action.payload);
+                state.data = state.data.filter(rewardItem => rewardItem.id !== action.payload);
                 state.lastFetched = null;
             })
             .addCase(removeRewardItem.rejected, (state, action) => {
