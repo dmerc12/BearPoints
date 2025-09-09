@@ -1,5 +1,5 @@
 import { RootState, useAppSelector, useAppDispatch, fetchTeachers, fetchStudents } from '../store';
-import { StudentFormData, studentValidationRules } from '../utils';
+import { fullName, StudentFormData, studentValidationRules } from '../utils';
 import { Student, Role } from '../services';
 import { useForm, useTable } from './index';
 import { useEffect } from 'react';
@@ -33,6 +33,12 @@ export const useStudentForm = ({ show, isEdit = false, student }: UseStudentForm
     const error = studentsError || teachersError;
     const isLoading = studentsLoading || teachersLoading;
 
+    const teacherDisplayValue = isTeacher && currentUser?.teacherId
+        ? teachers.find(t => t.id === currentUser.teacherId)
+            ? fullName(teachers.find(t => t.id === currentUser.teacherId)!)
+            : 'Loading...'
+        : 'N/A';
+
     useEffect(() => {
         if (show && isAdmin && teachers.length === 0) {
             dispatch(fetchTeachers({ page: 0, size: 1000, force: true }));
@@ -56,7 +62,7 @@ export const useStudentForm = ({ show, isEdit = false, student }: UseStudentForm
     }, [show, isEdit, student, isTeacher, currentUser, form.setFormData, form]);
 
     return {
-        formData: form.formData, setFormData: form.setFormData, formErrors: form.formErrors,
+        formData: form.formData, setFormData: form.setFormData, formErrors: form.formErrors, teacherDisplayValue,
         setFormErrors: form.setFormErrors, teachers, currentUser, isAdmin, isTeacher, error, isLoading,
         handleInputChange: form.handleInputChange, handleSelectChange: form.handleSelectChange,
         handleCheckboxChange: form.handleCheckboxChange, validateForm: form.validateForm, resetForm: form.resetForm
