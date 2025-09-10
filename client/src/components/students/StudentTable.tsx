@@ -1,6 +1,5 @@
-import { 
-    CreateStudentModal, EditStudentModal, DeleteStudentModal, BaseTable, TableColumn, TextFilter, SelectFilter 
-} from '../index';
+import { CreateStudentModal, EditStudentModal, DeleteStudentModal, BaseTable, TableColumn, TextFilter,
+    SelectFilter, QRCodesPrint } from '../index';
 import {formatName, fullName, clearNameCaches, formatGrade, sortGrades} from '../../utils';
 import { useMemo, useCallback, useEffect, useRef } from 'react';
 import { Row, Button, Col, ButtonGroup } from 'react-bootstrap';
@@ -9,7 +8,6 @@ import { useNavigate } from 'react-router-dom';
 import { Student, Role } from '../../services';
 import { useStudentTable } from '../../hooks';
 import { useAppSelector } from '../../store';
-import QRCodesPrint from './QRCodesPrint';
 import { QRCodeSVG } from 'qrcode.react';
 
 interface StudentTableProps {

@@ -1,10 +1,8 @@
 import { Container, Form, Spinner, Alert, Row, Col } from 'react-bootstrap';
-import { formatName, clearNameCaches } from '../utils/formatNames';
-import { LeaderboardEntry, Timeframe } from '../services/types';
+import { formatName, clearNameCaches, formatGrade } from '../utils';
+import { getLeaderboard, LeaderboardEntry, Timeframe } from '../services';
 import LeaderboardTable from '../components/LeaderboardTable';
 import { useEffect, useState, useMemo } from 'react';
-import { formatGrade } from '../utils/formatGrades';
-import { getLeaderboard } from '../services/api';
 import Auth from '../components/Auth';
 
 export default function LeaderboardPage () {

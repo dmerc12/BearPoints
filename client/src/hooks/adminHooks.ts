@@ -1,5 +1,5 @@
-import { CommonPersonFormData, commonPersonValidationRules } from '../utils';
 import { RootState, useAppSelector, fetchAdmins } from '../store';
+import { PersonFormData, personValidationRules } from '../utils';
 import { useForm, useTable } from './index';
 import { UserDTO } from '../services';
 import { useEffect } from 'react';
@@ -14,7 +14,7 @@ export const useAdminForm = ({ show, isEdit = false, admin }: UseAdminFormProps)
     const { loading, error } = useAppSelector(state => state.admins);
     const currentUser = useAppSelector(state => state.user.data);
 
-    const initialData: CommonPersonFormData = {
+    const initialData: PersonFormData = {
         firstName: '',
         lastName: '',
         email: ''
@@ -22,7 +22,7 @@ export const useAdminForm = ({ show, isEdit = false, admin }: UseAdminFormProps)
     
     const form = useForm({
         initialData,
-        validationRules: commonPersonValidationRules
+        validationRules: personValidationRules
     });
 
     useEffect(() => {

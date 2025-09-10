@@ -1,7 +1,6 @@
 import { Alert, Button, ButtonGroup, Container, Pagination, Spinner, Table } from 'react-bootstrap';
-import { fetchLeaderboard, setTimeframe } from '../store/slices/leaderboardSlice.ts';
+import { fetchLeaderboard, setTimeframe, useAppDispatch, useAppSelector } from '../store';
 import { formatName, fullName, formatGrade } from '../utils';
-import { useAppDispatch, useAppSelector } from '../store';
 import { useEffect, useMemo, useState } from 'react';
 import { Timeframe } from '../services';
 

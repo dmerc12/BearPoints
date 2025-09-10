@@ -1,4 +1,4 @@
-import { Teacher, Student } from '../services';
+import { Teacher, Student } from '../../services';
 import { memoize } from 'lodash';
 
 interface NameSource {

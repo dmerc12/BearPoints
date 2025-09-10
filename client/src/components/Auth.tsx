@@ -1,9 +1,7 @@
+import { useAppDispatch, useAppSelector, fetchCurrentUser, clearUser } from '../store';
 import { Spinner, Alert, Button, Container, Row, Col } from 'react-bootstrap';
-import { useAppDispatch, useAppSelector } from '../store';
-import { fetchCurrentUser } from '../store/slices/userSlice';
 import { Navigate, useLocation } from 'react-router-dom';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { clearUser } from '../store/slices/userSlice';
 import { useCallback, useEffect } from 'react';
 import { auth } from '../Auth';
 import * as React from 'react';
