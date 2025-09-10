@@ -1,8 +1,9 @@
-import { useBehaviorTypeTable, formatBehaviorTypeStatus, getBehaviorTypeStatusVariant } from '../../hooks';
+import { formatBehaviorTypeStatus, getBehaviorTypeStatusVariant } from '../../utils';
 import { CreateBehaviorTypeModal, EditBehaviorTypeModal, DeleteBehaviorTypeModal,
     TableColumn, BaseTable, SelectFilter, TextFilter } from '../index';
 import { Row, Button, Col, ButtonGroup, Badge } from 'react-bootstrap';
 import { BehaviorType, Role } from '../../services';
+import { useBehaviorTypeTable } from '../../hooks';
 import { useAppSelector } from '../../store';
 import { useMemo, useEffect } from 'react';
 
