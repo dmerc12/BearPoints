@@ -1,4 +1,4 @@
-import { Role } from '../services';
+import { Role } from '../../services';
 
 export function formatRole(role: Role): string {
     switch (role) {

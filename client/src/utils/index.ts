@@ -1,11 +1,10 @@
 export {
-    type CommonPersonFormData, type TeacherFormData, type StudentFormData, type BehaviorTypeFormData,
-    type BragLogFormData,
-    commonPersonValidationRules, teacherValidationRules, studentValidationRules, behaviorTypeValidationRules,
+    personValidationRules, teacherValidationRules, studentValidationRules, behaviorTypeValidationRules,
     bragLogValidationRules
 } from './validationRules';
+export {
+    type PersonFormData, type TeacherFormData, type StudentFormData, type BehaviorTypeFormData, type BragLogFormData
+} from './formDataTypes';
+export { formatName, fullName, clearNameCaches, formatRole, formatGrade } from './formatters';
 export { createFormHandlers } from './handleChange';
-export { formatGrade } from './formatGrades';
-export { formatName, fullName, clearNameCaches } from './formatNames';
-export { formatRole } from './formatRole';
-export { sortGrades } from './sortGrades';
+export { sortGrades } from './sorters';

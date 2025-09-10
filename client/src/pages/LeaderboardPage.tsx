@@ -1,9 +1,9 @@
 import { Container, Form, Spinner, Alert, Row, Col } from 'react-bootstrap';
-import { formatName, clearNameCaches } from '../utils/formatNames';
+import { formatName, clearNameCaches } from '../utils/formatters/formatNames.ts';
 import { LeaderboardEntry, Timeframe } from '../services/types';
 import LeaderboardTable from '../components/LeaderboardTable';
 import { useEffect, useState, useMemo } from 'react';
-import { formatGrade } from '../utils/formatGrades';
+import { formatGrade } from '../utils/formatters/formatGrades.ts';
 import { getLeaderboard } from '../services/api';
 import Auth from '../components/Auth';
 

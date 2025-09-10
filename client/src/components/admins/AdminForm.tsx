@@ -1,9 +1,9 @@
-import { CommonPersonFormData } from '../../utils';
+import { PersonFormData } from '../../utils';
 import { Form, Row, Col } from 'react-bootstrap';
 import React from 'react';
 
 interface AdminFormProps {
-    formData: CommonPersonFormData;
+    formData: PersonFormData;
     formErrors: Record<string, string>;
     loading: boolean;
     onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;

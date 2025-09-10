@@ -1,4 +1,4 @@
-import { GradeLevel } from '../services';
+import { GradeLevel } from '../../services';
 
 export function sortGrades(grades: (GradeLevel | string)[]) {
     return [...grades].sort((a, b) => {
