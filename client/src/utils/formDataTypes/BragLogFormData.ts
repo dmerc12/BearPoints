@@ -1,7 +1,7 @@
 export interface BragLogFormData {
     studentId: string;
     teacherId: string;
-    behaviorIs: string[];
+    behaviorIds: string[];
     notes?: string;
     pointsGenerated?: number;
 }

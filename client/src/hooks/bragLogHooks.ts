@@ -1,8 +1,8 @@
 import { RootState, useAppSelector, fetchBragLogs } from '../store';
 import { BragLogFormData, bragLogValidationRules } from '../utils';
+import { useEffect, useMemo, useState } from 'react';
+import { BragLog, Role, Student } from '../services';
 import { useTable, useForm } from './index';
-import React, { useEffect } from 'react';
-import { BragLog } from '../services';
 
 export interface UseBragLogFormProps {
     show: boolean;
@@ -17,10 +17,14 @@ export const useBragLogForm = ({ show, isEdit = false, bragLog }: UseBragLogForm
     const { data: teachers } = useAppSelector(state => state.teachers);
     const currentUser = useAppSelector(state => state.user.data);
 
+    const [filteredStudents, setFilteredStudents] = useState<Student[]>(students);
+
+    const isAdmin = useMemo(() => currentUser?.role === Role.ADMIN, [currentUser]);
+
     const initialData: BragLogFormData = {
         studentId: '',
         teacherId: '',
-        behaviorIs: [],
+        behaviorIds: [],
         notes: '',
         pointsGenerated: 0
     };
@@ -35,7 +39,7 @@ export const useBragLogForm = ({ show, isEdit = false, bragLog }: UseBragLogForm
             form.setFormData({
                 studentId: bragLog.student.id.toString(),
                 teacherId: bragLog.teacher.id.toString(),
-                behaviorIs: bragLog.behaviors.map(b => b.id.toString()),
+                behaviorIds: bragLog.behaviors.map(b => b.id.toString()),
                 notes: bragLog.notes || '',
                 pointsGenerated: bragLog.pointsGenerated
             });
@@ -43,9 +47,43 @@ export const useBragLogForm = ({ show, isEdit = false, bragLog }: UseBragLogForm
     }, [show, isEdit, bragLog, form]);
 
     useEffect(() => {
-        if (form.formData.behaviorIs && behaviorTypes.length > 0) {
+        if (form.formData.teacherId) {
+            const filtered = students.filter(student =>
+                student.teacher.id.toString() === form.formData.teacherId
+            );
+            setFilteredStudents(filtered);
+            if (form.formData.studentId) {
+                const currentStudent = students.find(s =>
+                    s.id.toString() === form.formData.studentId);
+                if (currentStudent && currentStudent.teacher.id.toLocaleString() !== form.formData.teacherId) {
+                    form.setFormData(prev => ({
+                        ...prev,
+                        studentId: ''
+                    }));
+                }
+            }
+        } else {
+            setFilteredStudents(students);
+        }
+    }, [form, students]);
+
+    useEffect(() => {
+        if (form.formData.studentId && !isEdit) {
+            const selectedStudent = students.find(s =>
+                s.id.toString() === form.formData.studentId);
+            if (selectedStudent) {
+                form.setFormData(prev => ({
+                    ...prev,
+                    teacherId: selectedStudent.teacher.id.toString()
+                }));
+            }
+        }
+    }, [form, students, isEdit]);
+
+    useEffect(() => {
+        if (form.formData.behaviorIds && behaviorTypes.length > 0) {
             const selectedBehaviors = behaviorTypes.filter(bt =>
-                form.formData.behaviorIs.includes(bt.id.toString())
+                form.formData.behaviorIds.includes(bt.id.toString())
             );
             const totalPoints = selectedBehaviors.reduce((sum, bt) =>
                 sum + bt.pointValue, 0);
@@ -56,24 +94,28 @@ export const useBragLogForm = ({ show, isEdit = false, bragLog }: UseBragLogForm
         }
     }, [form, behaviorTypes]);
 
-    const handleMultiSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
+    const toggleBehavior = (behaviorId: string) => {
+        const currentBehaviorIds = form.formData.behaviorIds;
+        const newBehaviorIds = currentBehaviorIds.includes(behaviorId)
+            ? currentBehaviorIds.filter(id => id !== behaviorId)
+            : [...currentBehaviorIds, behaviorId];
         form.setFormData(prev => ({
             ...prev,
-            [e.target.name]: selectedOptions,
+            behaviorIds: newBehaviorIds
         }));
         form.setFormErrors(prev => {
             const newErrors = { ...prev };
-            delete newErrors[e.target.name];
+            delete newErrors.behaviorIds;
             return newErrors;
         });
     };
 
     return {
         formData: form.formData, setFormData: form.setFormData, formErrors: form.formErrors,
-        setFormErrors: form.setFormErrors, currentUser, error, loading, students, teachers, handleMultiSelectChange,
+        setFormErrors: form.setFormErrors, currentUser, error, loading, isAdmin, students: filteredStudents, teachers,
         behaviorTypes: behaviorTypes.filter(bt => bt.active), handleInputChange: form.handleInputChange,
-        handleSelectChange: form.handleSelectChange, validateForm: form.validateForm, resetForm: form.resetForm
+        handleSelectChange: form.handleSelectChange, toggleBehavior, validateForm: form.validateForm,
+        resetForm: form.resetForm
     };
 }
 
