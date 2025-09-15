@@ -9,6 +9,7 @@ export {
     type PublicBragLogFormData
 } from './formDataTypes';
 export {
+    api, fetchResource, fetchPaginated, withHealthAwareRetry, ensureBackendHealthy, checkHealth,
     getUsersByRole, getCurrentUser, createUser, updateUser, deleteUser,
     getTeachers, createTeacher, updateTeacher, deleteTeacher,
     getStudentByToken, getStudents, createStudent, updateStudent, deleteStudent,
