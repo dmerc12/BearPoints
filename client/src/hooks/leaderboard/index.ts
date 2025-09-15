@@ -1,0 +1,1 @@
+export { useLeaderboardTable } from './useLeaderboardTable';

@@ -7,7 +7,7 @@ export { BehaviorTypeForm, CreateBehaviorTypeModal, EditBehaviorTypeModal,
     DeleteBehaviorTypeModal, BehaviorTypeTable } from './behaviorTypes';
 export { BragLogForm, CreateBragLogModal, EditBragLogModal, DeleteBragLogModal, BragLogTable,
     PublicBragLogForm } from './bragLogs';
-export { default as LeaderboardTable } from './LeaderboardTable';
+export { LeaderboardTable, LeaderboardFilters, LeaderboardTimeframeSelector } from './leaderboard';
 export { default as Auth } from './Auth';
 export { default as BaseModal } from './BaseModal';
 export { default as BaseTable, type TableColumn } from './BaseTable';

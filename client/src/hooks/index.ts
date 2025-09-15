@@ -5,4 +5,5 @@ export { type UseTeacherFormProps, useTeacherForm, useTeacherTable } from './tea
 export { type UseStudentFormProps, useStudentForm, useStudentTable } from './studentHooks';
 export { type UseBehaviorTypeFormProps, useBehaviorTypeForm, useBehaviorTypeTable } from './behaviorTypeHooks';
 export { type UseBragLogFormProps, useBragLogForm, useBragLogTable } from './bragLogHooks';
+export { useLeaderboardTable } from './leaderboard';
 export { default as useLogin } from './useLogin';
