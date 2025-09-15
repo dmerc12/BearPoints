@@ -1,4 +1,4 @@
-import { BehaviorTypeFormData } from '../../utils';
+import { BehaviorTypeFormData } from '../../services';
 import { Form, Row, Col } from 'react-bootstrap';
 import React from 'react';
 

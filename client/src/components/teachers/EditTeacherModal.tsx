@@ -1,5 +1,5 @@
-import { Teacher, Role, GradeLevel } from '../../services';
 import { useAppDispatch, modifyTeacher } from '../../store';
+import { Teacher, Role, GradeLevel } from '../../services';
 import { BaseModal, TeacherForm } from '../index';
 import { useTeacherForm } from '../../hooks';
 import { Alert } from 'react-bootstrap';

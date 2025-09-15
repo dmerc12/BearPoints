@@ -1,6 +1,6 @@
-import { fullName, StudentFormData } from '../../utils';
+import { Teacher, StudentFormData } from '../../services';
 import { Form, Row, Col, Alert } from 'react-bootstrap';
-import { Teacher } from '../../services';
+import { fullName } from '../../utils';
 import React from 'react';
 
 interface StudentFormProps {

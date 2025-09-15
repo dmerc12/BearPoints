@@ -1,7 +1,7 @@
 import { RootState, useAppSelector, fetchAdmins } from '../store';
-import { PersonFormData, personValidationRules } from '../utils';
+import { UserDTO, PersonFormData } from '../services';
+import { personValidationRules } from '../utils';
 import { useForm, useTable } from './index';
-import { UserDTO } from '../services';
 import { useEffect } from 'react';
 
 export interface UseAdminFormProps {

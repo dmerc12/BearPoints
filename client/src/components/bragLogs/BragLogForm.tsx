@@ -1,6 +1,6 @@
-import { Student, Teacher, BehaviorType } from '../../services';
-import { BragLogFormData, fullName } from '../../utils';
+import { Student, Teacher, BehaviorType, BragLogFormData } from '../../services';
 import { Form, Row, Col, Card } from 'react-bootstrap';
+import { fullName } from '../../utils';
 import React from 'react';
 
 interface BragLogFormProps {

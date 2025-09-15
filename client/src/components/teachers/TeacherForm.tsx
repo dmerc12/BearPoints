@@ -1,6 +1,6 @@
-import { TeacherFormData, formatGrade } from '../../utils';
+import { GradeLevel, TeacherFormData } from '../../services';
 import { Form, Row, Col } from 'react-bootstrap';
-import { GradeLevel } from '../../services';
+import { formatGrade } from '../../utils';
 import React from 'react';
 
 interface TeacherFormProps {

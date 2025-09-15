@@ -1,6 +1,6 @@
 import { RootState, useAppSelector, fetchTeachers } from '../store';
-import { TeacherFormData, teacherValidationRules } from '../utils';
-import { Teacher, Role } from '../services';
+import { Teacher, Role, TeacherFormData } from '../services';
+import { teacherValidationRules } from '../utils';
 import { useForm, useTable } from './index';
 import { useEffect } from 'react';
 

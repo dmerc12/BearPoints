@@ -1,8 +1,8 @@
 import { Button, Spinner } from 'react-bootstrap';
-import { useAppSelector } from '../store/hooks';
 import { useNavigate } from 'react-router-dom';
+import { useAppSelector } from '../store';
+import { Auth } from '../components';
 import { useEffect } from 'react';
-import Auth from "../components/Auth.tsx";
 
 export default function DashboardRedirect() {
     const { data: userData, loading, error } = useAppSelector((state) => state.user);

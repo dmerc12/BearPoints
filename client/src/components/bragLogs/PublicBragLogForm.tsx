@@ -1,8 +1,9 @@
 import {Form, Alert, Spinner, Card, Button, Container} from 'react-bootstrap';
 import { useAppDispatch, addPublicBragLog } from '../../store';
-import { fullName, PublicBragLogFormData } from '../../utils';
+import { PublicBragLogFormData } from '../../services';
 import { useBragLogForm } from '../../hooks';
 import { FormEvent, useState } from 'react';
+import { fullName } from '../../utils';
 import { BragLogForm } from '../index';
 
 interface BehaviorFormProps {

@@ -5,6 +5,10 @@ export {
     type PaginatedStudentRewards, type BragLogRequest, type LeaderboardEntry
 } from './types';
 export {
+    type PersonFormData, type TeacherFormData, type StudentFormData, type BehaviorTypeFormData, type BragLogFormData,
+    type PublicBragLogFormData
+} from './formDataTypes';
+export {
     getUsersByRole, getCurrentUser, createUser, updateUser, deleteUser,
     getTeachers, createTeacher, updateTeacher, deleteTeacher,
     getStudentByToken, getStudents, createStudent, updateStudent, deleteStudent,

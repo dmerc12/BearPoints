@@ -1,5 +1,5 @@
 import { Form, Row, Col } from 'react-bootstrap';
-import { PersonFormData } from '../../utils';
+import { PersonFormData } from '../../services';
 import React from 'react';
 
 interface AdminFormProps {

@@ -1,7 +1,7 @@
-import { BehaviorTypeFormData, behaviorTypeValidationRules } from '../utils';
 import { RootState, useAppSelector, fetchBehaviorTypes } from '../store';
+import { BehaviorType, BehaviorTypeFormData } from '../services';
+import { behaviorTypeValidationRules } from '../utils';
 import { useTable, useForm } from './index';
-import { BehaviorType } from '../services';
 import { useEffect } from 'react';
 
 export interface UseBehaviorTypeFormProps {

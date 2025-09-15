@@ -1,6 +1,5 @@
-import StudentTable from '../components/students/StudentTable.tsx';
+import { StudentTable, Auth } from '../components';
 import { Container, Row, Col } from 'react-bootstrap';
-import Auth from '../components/Auth';
 
 export default function StudentsPage () {
     return (
