@@ -3,7 +3,7 @@ import { StudentDashboard } from "./pages/StudentDashboard.tsx";
 import { TeacherDashboard } from "./pages/TeacherDashboard.tsx";
 import DashboardRedirect from "./pages/DashboardRedirect.tsx";
 import { AdminDashboard } from "./pages/AdminDashboard.tsx";
-import SubmitBehaviorPage from './pages/BehaviorPage';
+import BearBragPage from './pages/BearBragPage.tsx';
 import LeaderboardPage from './pages/LeaderboardPage';
 import NavigationBar from './components/NavBar';
 import StudentsPage from './pages/StudentsPage';
@@ -21,7 +21,7 @@ function App() {
               <Routes>
                   <Route path="/" element={<AboutPage />} />
                   <Route path="/students" element={<StudentsPage />} />
-                  <Route path="/brag" element={<SubmitBehaviorPage />} />
+                  <Route path="/brag" element={<BearBragPage />} />
                   <Route path="/leaderboard" element={<LeaderboardPage />} />
                   <Route path="/dashboard" element={<DashboardRedirect />} />
                   <Route path="/dashboard/teacher" element={<TeacherDashboard />} />

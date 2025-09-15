@@ -3,3 +3,4 @@ export { CreateBragLogModal } from './CreateBragLogModal';
 export { EditBragLogModal } from './EditBragLogModal';
 export { DeleteBragLogModal } from './DeleteBragLogModal';
 export { default as BragLogTable } from './BragLogTable.tsx';
+export { default as PublicBragLogForm } from './PublicBragLogForm';

@@ -5,7 +5,8 @@ export { StudentForm, CreateStudentModal, EditStudentModal, DeleteStudentModal, 
     StudentTable } from './students';
 export { BehaviorTypeForm, CreateBehaviorTypeModal, EditBehaviorTypeModal,
     DeleteBehaviorTypeModal, BehaviorTypeTable } from './behaviorTypes';
-export { BragLogForm, CreateBragLogModal, EditBragLogModal, DeleteBragLogModal, BragLogTable } from './bragLogs';
+export { BragLogForm, CreateBragLogModal, EditBragLogModal, DeleteBragLogModal, BragLogTable,
+    PublicBragLogForm } from './bragLogs';
 export { default as LeaderboardTable } from './LeaderboardTable';
 export { default as Auth } from './Auth';
 export { default as BaseModal } from './BaseModal';

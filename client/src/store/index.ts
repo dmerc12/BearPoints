@@ -35,7 +35,7 @@ export {
     fetchTeachers, addTeacher, modifyTeacher, removeTeacher, resetTeachers, clearTeachersError,
     fetchStudents, addStudent, modifyStudent, removeStudent, resetStudents, clearStudentsError,
     fetchBehaviorTypes, addBehaviorType, modifyBehaviorType, removeBehaviorType, resetBehaviorTypes, clearBehaviorTypesError,
-    fetchBragLogs, addBragLog, modifyBragLog, removeBragLog, resetBragLogs, clearBragLogsError,
+    fetchBragLogs, addBragLog, addPublicBragLog, modifyBragLog, removeBragLog, resetBragLogs, clearBragLogsError,
     fetchRewardItems, addRewardItem, modifyRewardItem, removeRewardItem, resetRewardItems, clearRewardItemsError,
     fetchStudentRewards, addStudentReward, modifyStudentReward, removeStudentReward, resetStudentRewards, clearStudentRewardsError,
     fetchLeaderboard, setTimeframe, resetLeaderboard, clearTimeframeCache, clearLeaderboardError

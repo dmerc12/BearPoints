@@ -15,7 +15,7 @@ export {
     clearBehaviorTypesError
 } from './behaviorTypesSlice';
 export {
-    fetchBragLogs, addBragLog, modifyBragLog, removeBragLog, resetBragLogs, clearBragLogsError
+    fetchBragLogs, addBragLog, addPublicBragLog, modifyBragLog, removeBragLog, resetBragLogs, clearBragLogsError
 } from './bragLogsSlice';
 export {
     fetchRewardItems, addRewardItem, modifyRewardItem, removeRewardItem, resetRewardItems, clearRewardItemsError

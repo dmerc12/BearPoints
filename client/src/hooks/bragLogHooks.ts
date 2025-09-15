@@ -8,9 +8,12 @@ export interface UseBragLogFormProps {
     show: boolean;
     isEdit?: boolean;
     bragLog?: BragLog | null;
+    isPublic?: boolean;
+    studentToken?: string;
 }
 
-export const useBragLogForm = ({ show, isEdit = false, bragLog }: UseBragLogFormProps) => {
+export const useBragLogForm = ({ show, isEdit = false, bragLog, isPublic = false,
+                                   studentToken }: UseBragLogFormProps) => {
     const { loading, error } = useAppSelector(state => state.bragLogs);
     const { data: behaviorTypes } = useAppSelector(state => state.behaviorTypes);
     const { data: students } = useAppSelector(state => state.students);
@@ -18,6 +21,7 @@ export const useBragLogForm = ({ show, isEdit = false, bragLog }: UseBragLogForm
     const currentUser = useAppSelector(state => state.user.data);
 
     const [filteredStudents, setFilteredStudents] = useState<Student[]>(students);
+    const [publicStudent, setPublicStudent] = useState<Student | null>(null);
 
     const isAdmin = useMemo(() => currentUser?.role === Role.ADMIN, [currentUser]);
 
@@ -33,6 +37,20 @@ export const useBragLogForm = ({ show, isEdit = false, bragLog }: UseBragLogForm
         initialData,
         validationRules: bragLogValidationRules
     });
+
+    useEffect(() => {
+        if (isPublic && studentToken && students.length > 0) {
+            const student = students.find(s => s.token === studentToken);
+            if (student) {
+                setPublicStudent(student);
+                form.setFormData(prev => ({
+                    ...prev,
+                    studentId: student.id.toString(),
+                    teacherId: student.teacher.id.toString()
+                }));
+            }
+        }
+    }, [isPublic, studentToken, students, form]);
 
     useEffect(() => {
         if (show && isEdit && bragLog) {
@@ -115,7 +133,7 @@ export const useBragLogForm = ({ show, isEdit = false, bragLog }: UseBragLogForm
         setFormErrors: form.setFormErrors, currentUser, error, loading, isAdmin, students: filteredStudents, teachers,
         behaviorTypes: behaviorTypes.filter(bt => bt.active), handleInputChange: form.handleInputChange,
         handleSelectChange: form.handleSelectChange, toggleBehavior, validateForm: form.validateForm,
-        resetForm: form.resetForm
+        resetForm: form.resetForm, publicStudent
     };
 }
 

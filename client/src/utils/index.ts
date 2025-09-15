@@ -3,7 +3,8 @@ export {
     bragLogValidationRules
 } from './validationRules';
 export {
-    type PersonFormData, type TeacherFormData, type StudentFormData, type BehaviorTypeFormData, type BragLogFormData
+    type PersonFormData, type TeacherFormData, type StudentFormData, type BehaviorTypeFormData, type BragLogFormData,
+    type PublicBragLogFormData
 } from './formDataTypes';
 export {
     formatName, fullName, clearNameCaches, formatRole, formatGrade, formatBehaviorTypeStatus,

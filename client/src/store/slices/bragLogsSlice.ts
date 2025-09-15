@@ -1,6 +1,6 @@
 import { 
-    getBragLogs, createBragLog, updateBragLog, deleteBragLog,
-    PaginatedBragLogs, BragLog, CacheResponse
+    getBragLogs, createBragLog, updateBragLog, deleteBragLog, submitPublicBragLog,
+    PaginatedBragLogs, BragLog, CacheResponse, BragLogRequest
 } from '../../services';
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../index';
@@ -50,6 +50,13 @@ export const addBragLog = createAsyncThunk(
     'bragLogs/addBragLog',
     async (bragLogData: Partial<BragLog>, { signal }) => {
         return await createBragLog(bragLogData, signal);
+    }
+);
+
+export const addPublicBragLog = createAsyncThunk(
+    'bragLogs/addPublicBragLog',
+    async (data: BragLogRequest, { signal }) => {
+        return await submitPublicBragLog(data, signal);
     }
 );
 
@@ -118,6 +125,18 @@ const bragLogsSlice = createSlice({
             .addCase(addBragLog.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.error.message || 'Failed to add bragLog'
+            })
+            .addCase(addPublicBragLog.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(addPublicBragLog.fulfilled, (state) => {
+                state.loading = false;
+                state.lastFetched = null;
+            })
+            .addCase(addPublicBragLog.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.error.message || 'Public submission failed'
             })
             .addCase(modifyBragLog.pending, (state) => {
                 state.loading = true;

@@ -8,6 +8,8 @@ interface BragLogFormProps {
     formErrors: Record<string, string>;
     loading: boolean;
     isAdmin: boolean;
+    isPublic?: boolean;
+    publicStudent?: Student | null;
     students: Student[];
     teachers: Teacher[];
     behaviorTypes: BehaviorType[];
@@ -16,80 +18,115 @@ interface BragLogFormProps {
     onToggleBehavior: (behaviorId: string) => void;
 }
 
-export function BragLogForm({ formData, formErrors, loading, students, teachers, behaviorTypes, isAdmin, onInputChange,
-                                onSelectChange, onToggleBehavior }: BragLogFormProps) {
+export function BragLogForm({ formData, formErrors, loading, students, teachers, behaviorTypes, isAdmin,
+                                isPublic = false, publicStudent = null, onInputChange, onSelectChange,
+                                onToggleBehavior }: BragLogFormProps) {
     const selectedTeacher = teachers.find(t => t.id.toString() === formData.teacherId);
     const teacherName = selectedTeacher ? fullName(selectedTeacher) : '';
+
+    const displayStudent = isPublic && publicStudent
+        ? publicStudent
+        : students.find(s => s.id.toString() === formData.studentId);
+    const studentName = displayStudent ? fullName(displayStudent) : '';
 
     return (
         <Form>
             <Row>
-                {isAdmin && (
-                    <Col md={6}>
-                        <Form.Group className='mb-3'>
-                            <Form.Label>Teacher</Form.Label>
-                            <Form.Select name='teacherId'
-                                         value={formData.teacherId}
-                                         onChange={onSelectChange}
-                                         isInvalid={!!formErrors.teacherId}
-                                         disabled={loading}
-                            >
-                                <option value=''>Select a teacher</option>
-                                {teachers.map(teacher => (
-                                    <option key={teacher.id} value={teacher.id}>
-                                        {fullName(teacher)}
-                                    </option>
-                                ))}
-                            </Form.Select>
-                            <Form.Text className='text-muted'>
-                                Selecting a teacher will filter the students list
-                            </Form.Text>
-                            <Form.Control.Feedback type='invalid'>
-                                {formErrors.teacherId}
-                            </Form.Control.Feedback>
-                        </Form.Group>
-                    </Col>
-                )}
-                <Col md={6}>
-                    <Form.Group className='mb-3'>
-                        <Form.Label>Student</Form.Label>
-                        <Form.Select name='studentId'
-                                     value={formData.studentId}
-                                     onChange={onSelectChange}
-                                     isInvalid={!!formErrors.studentId}
-                                     disabled={loading}
-                        >
-                            <option value=''>Select a student</option>
-                            {students.map(student => (
-                                <option key={student.id} value={student.id}>
-                                    {fullName(student)}
-                                </option>
-                            ))}
-                        </Form.Select>
-                        <Form.Control.Feedback type='invalid'>
-                            {formErrors.studentId}
-                        </Form.Control.Feedback>
-                        {!isAdmin && (
-                            <Form.Text className='text-muted'>
-                                Teacher will automatically set based on student selection
-                            </Form.Text>
+                {isPublic ? (
+                    <>
+                        <Col md={6}>
+                            <Form.Group className='mb-3'>
+                                <Form.Label>Student</Form.Label>
+                                <Form.Control
+                                    type='text'
+                                    value={studentName}
+                                    readOnly
+                                    disabled
+                                />
+                            </Form.Group>
+                        </Col>
+                        <Col md={6}>
+                            <Form.Group className='mb-3'>
+                                <Form.Label>Teacher</Form.Label>
+                                <Form.Control
+                                    type='text'
+                                    value={teacherName}
+                                    readOnly
+                                    disabled
+                                />
+                            </Form.Group>
+                        </Col>
+                    </>
+                ) : (
+                    <>
+                        {isAdmin && (
+                            <Col md={6}>
+                                <Form.Group className='mb-3'>
+                                    <Form.Label>Teacher</Form.Label>
+                                    <Form.Select name='teacherId'
+                                                 value={formData.teacherId}
+                                                 onChange={onSelectChange}
+                                                 isInvalid={!!formErrors.teacherId}
+                                                 disabled={loading}
+                                    >
+                                        <option value=''>Select a teacher</option>
+                                        {teachers.map(teacher => (
+                                            <option key={teacher.id} value={teacher.id}>
+                                                {fullName(teacher)}
+                                            </option>
+                                        ))}
+                                    </Form.Select>
+                                    <Form.Text className='text-muted'>
+                                        Selecting a teacher will filter the students list
+                                    </Form.Text>
+                                    <Form.Control.Feedback type='invalid'>
+                                        {formErrors.teacherId}
+                                    </Form.Control.Feedback>
+                                </Form.Group>
+                            </Col>
                         )}
-                    </Form.Group>
-                </Col>
-                {!isAdmin && (
-                    <Col md={6}>
-                        <Form.Group className='mb-3'>
-                            <Form.Label>Teacher</Form.Label>
-                            <Form.Control type='text'
-                                          value={teacherName}
-                                          readOnly
-                                          disabled
-                            />
-                            <Form.Text className='text-muted'>
-                                Automatically set based on student selection
-                            </Form.Text>
-                        </Form.Group>
-                    </Col>
+                        <Col md={6}>
+                            <Form.Group className='mb-3'>
+                                <Form.Label>Student</Form.Label>
+                                <Form.Select name='studentId'
+                                             value={formData.studentId}
+                                             onChange={onSelectChange}
+                                             isInvalid={!!formErrors.studentId}
+                                             disabled={loading}
+                                >
+                                    <option value=''>Select a student</option>
+                                    {students.map(student => (
+                                        <option key={student.id} value={student.id}>
+                                            {fullName(student)}
+                                        </option>
+                                    ))}
+                                </Form.Select>
+                                <Form.Control.Feedback type='invalid'>
+                                    {formErrors.studentId}
+                                </Form.Control.Feedback>
+                                {!isAdmin && (
+                                    <Form.Text className='text-muted'>
+                                        Teacher will automatically set based on student selection
+                                    </Form.Text>
+                                )}
+                            </Form.Group>
+                        </Col>
+                        {!isAdmin && !isPublic && (
+                            <Col md={6}>
+                                <Form.Group className='mb-3'>
+                                    <Form.Label>Teacher</Form.Label>
+                                    <Form.Control type='text'
+                                                  value={teacherName}
+                                                  readOnly
+                                                  disabled
+                                    />
+                                    <Form.Text className='text-muted'>
+                                        Automatically set based on student selection
+                                    </Form.Text>
+                                </Form.Group>
+                            </Col>
+                        )}
+                    </>
                 )}
             </Row>
             <Form.Group className='mb-3'>
