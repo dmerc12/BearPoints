@@ -10,4 +10,4 @@ export { BragLogForm, CreateBragLogModal, EditBragLogModal, DeleteBragLogModal, 
 export { LeaderboardTable, LeaderboardFilters, LeaderboardTimeframeSelector } from './leaderboard';
 export { default as Auth } from './Auth';
 export { default as BaseModal } from './BaseModal';
-export { default as BaseTable, type TableColumn } from './BaseTable';
+export { type FilterConfig, type HeaderConfig, default as BaseTable } from './BaseTable';

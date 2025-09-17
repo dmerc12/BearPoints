@@ -1,81 +1,192 @@
 import { RootState, useAppDispatch, useAppSelector } from '../store';
-import { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 
 export interface TableFilters {
     [key: string]: string;
 }
 
+export interface TableHelpers<T> {
+    handleEditItem?: (item: T) => void;
+    handleDeleteItem?: (item: T) => void;
+}
+
+export interface TableColumn<T> {
+    key: string;
+    header: string;
+    render: (item: T, helpers?: TableHelpers<T>) => React.ReactNode;
+    className?: string;
+    sortable?: boolean;
+}
+
 export interface UseTableOptions<T, F extends TableFilters> {
-    fetchAction: (params: { page: number; size: number; force?: boolean }) => unknown;
     selector: (state: RootState) => {
         data: T[];
         loading: boolean;
         error: string | null;
     };
     initialFilters: F;
+    mode?: 'read-only' | 'crud';
+    fetchAction?: (params: { page: number; size: number; force?: boolean }) => unknown;
+    rankingFunction?: (data: T[]) => T[];
+    filterFunction?: (data: T[], filters: F) => T[];
+    page?: number;
+    itemsPerPage?: number;
+    columnsBuilder?: (helpers: TableHelpers<T>) => TableColumn<T>[];
+    defaultColumns?: TableColumn<T>[];
 }
 
-export function useTable<T, F extends TableFilters>({ fetchAction, selector, initialFilters }: UseTableOptions<T, F>) {
+export function useTable<T, F extends TableFilters>(
+    { selector, initialFilters, mode = 'read-only', fetchAction, rankingFunction, filterFunction,
+        page = 0, itemsPerPage = 1000, columnsBuilder, defaultColumns = [] }: UseTableOptions<T, F>) {
     const dispatch = useAppDispatch();
     const { data, loading, error } = useAppSelector(selector);
 
     const [filters, setFilters] = useState<F>(initialFilters);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [sortField, setSortField] = useState<string>('');
+    const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [editingItem, setEditingItem] = useState<T | null>(null);
     const [deletingItem, setDeletingItem] = useState<T | null>(null);
 
     // Fetch data on mount
     useEffect(() => {
-        dispatch(fetchAction({ page: 0, size: 1000 }) as never);
-    }, [dispatch, fetchAction]);
+        if (fetchAction) {
+            dispatch(fetchAction({ page: page, size: itemsPerPage }) as never);
+        }
+    }, [dispatch, fetchAction, page, itemsPerPage]);
+
+    const helpers = useMemo(() => ({
+        handleEditItem: mode === 'crud' ? (item: T) => setEditingItem(item) : undefined,
+        handleDeleteItem: mode === 'crud' ? (item: T) => setDeletingItem(item) : undefined,
+    }), [mode]);
+
+    const columns = useMemo(() => {
+        if (columnsBuilder) {
+            return columnsBuilder(helpers);
+        }
+        return defaultColumns;
+    }, [columnsBuilder, helpers, defaultColumns]);
+
+    const rankedData = useMemo(() => {
+        if (rankingFunction) {
+            return rankingFunction(data);
+        }
+        return data;
+    }, [data, rankingFunction]);
+
+    const sortedData = useMemo(() => {
+        if (!sortField) return rankedData;
+        return [...rankedData].sort((a, b) => {
+            const aValue = a[sortField as keyof T];
+            const bValue = b[sortField as keyof T];
+            if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+            if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+            return 0;
+        });
+    }, [rankedData, sortField, sortDirection]);
+
+    const filteredData = useMemo(() => {
+        if (filterFunction) {
+            return filterFunction(sortedData, filters);
+        }
+        return sortedData;
+    }, [sortedData, filters, filterFunction]);
+
+    const paginatedData = useMemo(() => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        return filteredData.slice(startIndex, endIndex);
+    }, [filteredData, currentPage, itemsPerPage]);
+
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+
+    const handleSort = useCallback((field: string) => {
+        if (sortField === field) {
+            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortField(field);
+            setSortDirection('asc');
+        }
+    }, [sortField, sortDirection]);
 
     const updateFilter = useCallback((filterKey: keyof F, value: string) => {
         setFilters(prev => ({
             ...prev,
             [filterKey]: value,
         }));
+        setCurrentPage(1);
     }, []);
 
     const resetFilters = useCallback(() => {
         setFilters(initialFilters);
+        setCurrentPage(1);
     }, [initialFilters]);
 
     const handleCreateItem = useCallback(() => {
-        setShowCreateModal(true);
-    }, []);
+        if (mode === 'crud') {
+            setShowCreateModal(true);
+        }
+    }, [mode]);
 
     const handleEditItem = useCallback((item: T) => {
-        setEditingItem(item);
-    }, []);
+        if (mode === 'crud') {
+            setEditingItem(item);
+        }
+    }, [mode]);
 
     const handleDeleteItem = useCallback((item: T) => {
-        setDeletingItem(item);
-    }, []);
+        if (mode === 'crud') {
+            setDeletingItem(item);
+        }
+    }, [mode]);
 
     const handleCloseModals = useCallback(() => {
-        setShowCreateModal(false);
-        setEditingItem(null);
-        setDeletingItem(null);
-    }, []);
+        if (mode === 'crud') {
+            setShowCreateModal(false);
+            setEditingItem(null);
+            setDeletingItem(null);
+        }
+    }, [mode]);
 
     const retryFetch = useCallback(() => {
-        dispatch(fetchAction({ page: 0, size: 1000, force: true }) as never);
-    }, [dispatch, fetchAction]);
+        if (fetchAction) {
+            dispatch(fetchAction({ page: page, size: itemsPerPage, force: true }) as never);
+        }
+    }, [dispatch, fetchAction, page, itemsPerPage]);
 
     const handleSuccess = useCallback(() => {
-        handleCloseModals();
-        retryFetch();
-    }, [handleCloseModals, retryFetch]);
+        if (mode === 'crud') {
+            handleCloseModals();
+            retryFetch();
+        }
+    }, [mode, handleCloseModals, retryFetch]);
 
-    return {
+    const baseReturn = {
         // Data
-        data, loading, error,
+        data: paginatedData, allData: filteredData, sortedData, totalCount: filteredData.length, loading, error,
+        // Columns
+        columns,
         // Filters
         filters, updateFilter, resetFilters,
-        // Modals
-        showCreateModal, editingItem, deletingItem,
-        handleCreateItem, handleEditItem, handleDeleteItem, handleCloseModals,
-        // Utilities
-        retryFetch, handleSuccess
+        // Sorting
+        sortField, sortDirection, handleSort,
+        // Pagination
+        currentPage, setCurrentPage, totalPages, page, itemsPerPage,
+        // Data refresh
+        retry: retryFetch,
     };
+
+    if (mode === 'crud') {
+        return {
+            ...baseReturn,
+            // CRUD state
+            showCreateModal, editingItem, deletingItem,
+            // CRUD actions
+            handleCreateItem, handleEditItem, handleDeleteItem, handleCloseModals, handleSuccess
+        };
+    }
+
+    return baseReturn;
 }
