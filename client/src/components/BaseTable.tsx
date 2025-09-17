@@ -1,41 +1,60 @@
-import { Table, Pagination, Spinner, Alert, Container, Button } from 'react-bootstrap';
-import React, { useState, useMemo, useCallback } from 'react';
+import { Table, Pagination, Spinner, Alert, Container, Button, Row, Col } from 'react-bootstrap';
+import { TableColumn, TableFilters } from '../hooks';
+import React, { useMemo, useCallback } from 'react';
+import { TextFilter, SelectFilter } from './index';
+
+export interface FilterConfig {
+    key: string;
+    type: 'text' | 'select' | 'date';
+    label: string;
+    placeholder?: string;
+    options?: Array<{value: string; label: string}>;
+    showHelpText?: boolean;
+    helpText?: string;
+}
+
+export interface HeaderConfig {
+    title: string;
+    itemName: string;
+    showCreateButton?: boolean;
+    createButtonText?: string;
+    additionalElements?: React.ReactNode;
+}
 
 interface BaseTableProps<T> {
     data: T[];
     loading: boolean;
     error: string | null;
     columns: TableColumn<T>[];
-    itemsPerPage?: number;
-    renderFilters?: () => React.ReactNode;
-    renderHeader?: () => React.ReactNode;
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    onPageChange: (page: number) => void;
     onRetry?: () => void;
     size?: 's' | 'm' | 'l';
     showCreateButton?: boolean;
     createButtonText?: string;
     onCreateClick?: () => void;
+    renderFilters?: () => React.ReactNode;
+    renderHeader?: () => React.ReactNode;
+    sortField?: string;
+    sortDirection?: 'asc' | 'desc';
+    onSort?: (field: string) => void;
+    filtersConfig?: FilterConfig[];
+    headerConfig?: HeaderConfig;
+    filters?: TableFilters;
+    updateFilter?: (key: string, value: string) => void;
+    hidePagination?: boolean;
+    emptyMessage?: string;
 }
 
-export interface TableColumn<T> {
-    key: string;
-    header: string;
-    render: (item: T) => React.ReactNode;
-    className?: string;
-}
-
-export default function BaseTable<T>({ data, loading, error, columns, renderFilters, renderHeader, onRetry, size = 'm',
-                                         itemsPerPage = 10, showCreateButton = false, createButtonText = 'Create',
-                                         onCreateClick }: BaseTableProps<T>) {
-    const [currentPage, setCurrentPage] = useState(1);
-
-    const totalPages = Math.ceil(data.length / itemsPerPage);
-
-    const paginatedData = useMemo(() => {
-        if (data.length === 0) return [];
-        const startIndex = (currentPage - 1) * itemsPerPage;
-        const endIndex = Math.min(startIndex + itemsPerPage, data.length);
-        return data.slice(startIndex, endIndex);
-    }, [data, currentPage, itemsPerPage]);
+export default function BaseTable<T>(props: BaseTableProps<T>) {
+    const {
+        data, loading, error, columns, currentPage, totalPages, totalCount, onPageChange, onRetry, size = 'm',
+        showCreateButton = false, createButtonText = 'Create', onCreateClick, renderFilters, renderHeader,
+        sortField, sortDirection, onSort, filtersConfig, headerConfig, filters, updateFilter, hidePagination = false,
+        emptyMessage = 'Nothing found matching the current filters'
+    } = props;
 
     const renderPaginationItems = () => {
         const items = [];
@@ -55,8 +74,9 @@ export default function BaseTable<T>({ data, loading, error, columns, renderFilt
         }
         if (startPage > 1) {
             items.push(
-                <Pagination.Item key={1} active={1 === currentPage}
-                                 onClick={() => setCurrentPage(1)}
+                <Pagination.Item key={1}
+                                 active={1 === currentPage}
+                                 onClick={() => onPageChange(1)}
                 >
                     1
                 </Pagination.Item>
@@ -70,7 +90,7 @@ export default function BaseTable<T>({ data, loading, error, columns, renderFilt
                 <Pagination.Item
                     key={number}
                     active={number === currentPage}
-                    onClick={() => setCurrentPage(number)}
+                    onClick={() => onPageChange(number)}
                 >
                     {number}
                 </Pagination.Item>
@@ -84,7 +104,7 @@ export default function BaseTable<T>({ data, loading, error, columns, renderFilt
                 <Pagination.Item
                     key={totalPages}
                     active={totalPages === currentPage}
-                    onClick={() => setCurrentPage(totalPages)}
+                    onClick={() => onPageChange(totalPages)}
                 >
                     {totalPages}
                 </Pagination.Item>
@@ -94,14 +114,75 @@ export default function BaseTable<T>({ data, loading, error, columns, renderFilt
     };
 
     const handlePrev = useCallback(() => {
-        setCurrentPage(prev => Math.max(1, prev - 1));
-    }, []);
+        onPageChange(Math.max(1, currentPage - 1));
+    }, [currentPage, onPageChange]);
 
     const handleNext = useCallback(() => {
-        setCurrentPage(prev => Math.min(totalPages, prev + 1));
-    }, [totalPages]);
+        onPageChange(Math.min(totalPages, currentPage + 1));
+    }, [totalPages, currentPage, onPageChange]);
+
+    const generatedFilters = useMemo(() => {
+        if (renderFilters || !filtersConfig || !updateFilter) return null;
+        return (
+            <Row className='mb-3 g-3'>
+                {filtersConfig.map((filter) => {
+                    if (filter.type === 'text') {
+                        return (
+                            <Col key={filter.key} md={4}>
+                                <TextFilter value={filters?.[filter.key] || ''}
+                                            onChange={(value) => updateFilter(filter.key, value)}
+                                            label={filter.label}
+                                            placeholder={filter.placeholder}
+                                            showHelpText={filter.showHelpText}
+                                            helpText={filter.helpText}
+                                />
+                            </Col>
+                        );
+                    } else if (filter.type === 'select') {
+                        return (
+                            <Col key={filter.key} md={4}>
+                                <SelectFilter value={filters?.[filter.key] || ''}
+                                              onChange={(value) => updateFilter(filter.key, value)}
+                                              label={filter.label}
+                                              options={filter.options || []}
+                                />
+                            </Col>
+                        );
+                    }
+                    return null;
+                })}
+            </Row>
+        );
+    }, [filtersConfig, filters, updateFilter, renderFilters]);
+
+    const generatedHeader = useMemo(() => {
+        if (renderHeader || !headerConfig) return null;
+        return (
+            <div className='d-flex justify-content-between align-items-center mb-3'>
+                <div>
+                    <h2>{headerConfig.title}</h2>
+                    <p className='text-muted'>
+                        Showing {data.length} of {totalCount} {headerConfig.itemName}
+                    </p>
+                </div>
+                <div>
+                    {headerConfig.showCreateButton && onCreateClick && (
+                        <Button variant='primary'
+                                onClick={onCreateClick}
+                                className='me-2'
+                                size={size === 's' ? 'sm' : undefined}
+                        >
+                            {headerConfig.createButtonText || `Create ${headerConfig.itemName}`}
+                        </Button>
+                    )}
+                    {headerConfig.additionalElements}
+                </div>
+            </div>
+        );
+    }, [headerConfig, data.length, totalCount, onCreateClick, size, renderHeader]);
 
     const defaultHeader = useMemo(() => {
+        if (generatedHeader) return generatedHeader;
         return (
             <div className='m-2 d-flex justify-content-between align-items-center'>
                 <span>Showing {data.length} items</span>
@@ -116,7 +197,13 @@ export default function BaseTable<T>({ data, loading, error, columns, renderFilt
                 )}
             </div>
         );
-    }, [data.length, showCreateButton, onCreateClick, createButtonText, size]);
+    }, [generatedHeader, data.length, showCreateButton, onCreateClick, createButtonText, size]);
+
+    const handleHeaderClick = useCallback((column: TableColumn<T>) => {
+        if (column.sortable && onSort) {
+            onSort(column.key);
+        }
+    }, [onSort]);
 
     if (loading) {
         return (
@@ -149,16 +236,25 @@ export default function BaseTable<T>({ data, loading, error, columns, renderFilt
 
     return (
         <div className={`table-responsive ${size === 's' ? 'table-sm' : ''}`}>
-            { renderFilters && renderFilters() }
-            { renderHeader ? renderHeader() : defaultHeader }
+            { generatedFilters || renderFilters?.() }
+            { generatedHeader || renderHeader?.() || defaultHeader }
             <Table striped bordered hover responsive
                    className={`text-center align-middle ${size === 's' ? 'table-sm' : ''}`}
             >
                 <thead>
                     <tr>
                         {columns.map(column => (
-                            <th key={column.key} className={column.className}>
+                            <th key={column.key}
+                                className={column.className}
+                                onClick={() => handleHeaderClick(column)}
+                                style={{ cursor: column.sortable ? 'pointer' : 'default', position: 'relative' }}
+                            >
                                 {column.header}
+                                {column.sortable && sortField === column.key && (
+                                    <span className='ms-1'>
+                                        {sortDirection === 'asc' ? '↑' : '↓'}
+                                    </span>
+                                )}
                             </th>
                         ))}
                     </tr>
@@ -168,15 +264,17 @@ export default function BaseTable<T>({ data, loading, error, columns, renderFilt
                     <tr>
                         <td colSpan={columns.length}>
                             <Alert variant='info' className='mt-4 mb-0'>
-                                Nothing found matching the current filters
+                                {emptyMessage}
                             </Alert>
                         </td>
                     </tr>
                 ) : (
-                    paginatedData.map((item, index) => (
+                    data.map((item, index) => (
                         <tr key={ index }>
                             {columns.map(column => (
-                                <td key={column.key} className={column.className}>
+                                <td key={column.key}
+                                    className={column.className}
+                                >
                                     {column.render(item)}
                                 </td>
                             ))}
@@ -185,12 +283,16 @@ export default function BaseTable<T>({ data, loading, error, columns, renderFilt
                 )}
                 </tbody>
             </Table>
-            { totalPages > 1 && (
+            { !hidePagination && totalPages > 1 && (
                 <div className='d-flex justify-content-center mt-3'>
                     <Pagination className='flex-wrap'>
-                        <Pagination.Prev onClick={handlePrev} disabled={currentPage === 1} />
+                        <Pagination.Prev onClick={handlePrev}
+                                         disabled={currentPage === 1}
+                        />
                         {renderPaginationItems()}
-                        <Pagination.Next onClick={handleNext} disabled={currentPage === totalPages} />
+                        <Pagination.Next onClick={handleNext}
+                                         disabled={currentPage === totalPages}
+                        />
                     </Pagination>
                 </div>
             )}
