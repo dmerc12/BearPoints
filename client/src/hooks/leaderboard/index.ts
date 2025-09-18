@@ -1,1 +1,1 @@
-export { useLeaderboardTable } from './useLeaderboardTable';
+export { type UseLeaderboardTableProps ,useLeaderboardTable } from './useLeaderboardTable';

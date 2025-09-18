@@ -6,7 +6,9 @@ interface LeaderboardTimeframeSelectorProps {
     onTimeframeChange: (timeframe: Timeframe) => void;
 }
 
-export function LeaderboardTimeframeSelector({ currentTimeframe, onTimeframeChange }: LeaderboardTimeframeSelectorProps) {
+export function LeaderboardTimeframeSelector(props: LeaderboardTimeframeSelectorProps) {
+    const { currentTimeframe, onTimeframeChange } = props;
+
     return (
         <div className='mb-3 text-center'>
             <ButtonGroup className='mb-3'>

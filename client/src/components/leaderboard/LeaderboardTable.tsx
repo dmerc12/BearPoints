@@ -1,4 +1,4 @@
-import { LeaderboardFilters, LeaderboardTimeframeSelector, BaseTable } from '../index';
+import { LeaderboardTimeframeSelector, BaseTable } from '../index';
 import { useLeaderboardTable } from '../../hooks';
 import { LeaderboardEntry } from '../../services';
 import { Container } from 'react-bootstrap';
@@ -9,41 +9,38 @@ interface LeaderboardTableProps {
 
 export default function LeaderboardTable ({ itemsPerPage = 10 }: LeaderboardTableProps) {
     const {
-        loading, error, currentTimeframe, filters, filteredEntries, teacherOptions, gradeOptions,
-        columns, handleFilterChange, handleTimeframeChange, retry
-    } = useLeaderboardTable();
+        loading, error, data, allData, columns, filters, updateFilter, currentPage, totalPages, setCurrentPage,
+        retry, currentTimeframe, handleTimeframeChange, filtersConfig
+    } = useLeaderboardTable({ itemsPerPage: itemsPerPage });
 
-    const renderHeader = () => (
-        <div className='text-center mb-4'>
-            <h1>Leaderboard</h1>
+    const headerConfig = {
+        title: 'Leaderboard',
+        itemName: 'entries',
+        showCreateButton: false,
+        additionalElements: (
             <LeaderboardTimeframeSelector
                 currentTimeframe={currentTimeframe}
                 onTimeframeChange={handleTimeframeChange}
             />
-        </div>
-    );
-
-    const renderFilters = () => (
-        <LeaderboardFilters
-            teacherFilter={filters.teacherFilter}
-            gradeFilter={filters.gradeFilter}
-            teacherOptions={teacherOptions}
-            gradeOptions={gradeOptions}
-            onFilterChange={handleFilterChange}
-        />
-    );
+        ),
+    };
 
     return (
         <Container fluid className='mt-3 pt-2 px-lg-5 mb-4'>
             <BaseTable<LeaderboardEntry>
-                data={filteredEntries}
+                data={data}
                 loading={loading}
                 error={error}
                 columns={columns}
-                itemsPerPage={itemsPerPage}
-                renderHeader={renderHeader}
-                renderFilters={renderFilters}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalCount={allData.length}
+                onPageChange={setCurrentPage}
                 onRetry={retry}
+                filtersConfig={filtersConfig}
+                headerConfig={headerConfig}
+                filters={filters}
+                updateFilter={updateFilter}
             />
         </Container>
     );
