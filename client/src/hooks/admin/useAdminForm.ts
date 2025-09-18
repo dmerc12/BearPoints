@@ -1,7 +1,7 @@
-import { RootState, useAppSelector, fetchAdmins } from '../store';
-import { UserDTO, PersonFormData } from '../services';
-import { personValidationRules } from '../utils';
-import { useForm, useTable } from './index';
+import { UserDTO, PersonFormData } from '../../services';
+import { personValidationRules } from '../../utils';
+import { useAppSelector } from '../../store';
+import { useForm } from '../index';
 import { useEffect } from 'react';
 
 export interface UseAdminFormProps {
@@ -19,7 +19,7 @@ export const useAdminForm = ({ show, isEdit = false, admin }: UseAdminFormProps)
         lastName: '',
         email: ''
     };
-    
+
     const form = useForm({
         initialData,
         validationRules: personValidationRules
@@ -41,15 +41,4 @@ export const useAdminForm = ({ show, isEdit = false, admin }: UseAdminFormProps)
         handleSelectChange: form.handleSelectChange, handleCheckboxChange: form.handleCheckboxChange,
         validateForm: form.validateForm, resetForm: form.resetForm
     };
-}
-
-export function useAdminTable() {
-    return useTable<UserDTO, { nameSearch: string; emailSearch: string }>({
-        fetchAction: fetchAdmins,
-        selector: (state: RootState) => state.admins,
-        initialFilters: {
-            nameSearch: '',
-            emailSearch: '',
-        }
-    });
 }
