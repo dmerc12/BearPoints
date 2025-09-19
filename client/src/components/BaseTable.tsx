@@ -21,7 +21,7 @@ export interface HeaderConfig {
     additionalElements?: React.ReactNode;
 }
 
-interface BaseTableProps<T> {
+export interface BaseTableProps<T> {
     data: T[];
     loading: boolean;
     error: string | null;

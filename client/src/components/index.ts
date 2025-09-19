@@ -1,5 +1,6 @@
 export { SelectFilter, TextFilter } from './filters';
-export { AdminForm, CreateAdminModal, EditAdminModal, DeleteAdminModal, AdminTable } from './admins';
+export { AdminForm, CreateAdminModal, EditAdminModal, DeleteAdminModal,
+    type AdminTableProps, AdminTable } from './admins';
 export { TeacherForm, CreateTeacherModal, EditTeacherModal, DeleteTeacherModal, TeacherTable } from './teachers';
 export { StudentForm, CreateStudentModal, EditStudentModal, DeleteStudentModal, QRCodesPrint,
     StudentTable } from './students';
@@ -10,5 +11,6 @@ export { BragLogForm, CreateBragLogModal, EditBragLogModal, DeleteBragLogModal, 
 export { LeaderboardTable, LeaderboardTimeframeSelector } from './leaderboard';
 export { default as Auth } from './Auth';
 export { default as BaseModal } from './BaseModal';
-export { type FilterConfig, type HeaderConfig, default as BaseTable } from './BaseTable';
-export { ManagementButtons } from './ManagementButtons';
+export { type FilterConfig, type HeaderConfig, type BaseTableProps, default as BaseTable } from './BaseTable';
+export { type ManagementButtonsProps, ManagementButtons } from './ManagementButtons';
+export { type CrudTableProps, CrudTable } from './CrudTable';
