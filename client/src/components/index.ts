@@ -11,3 +11,4 @@ export { LeaderboardTable, LeaderboardTimeframeSelector } from './leaderboard';
 export { default as Auth } from './Auth';
 export { default as BaseModal } from './BaseModal';
 export { type FilterConfig, type HeaderConfig, default as BaseTable } from './BaseTable';
+export { ManagementButtons } from './ManagementButtons';

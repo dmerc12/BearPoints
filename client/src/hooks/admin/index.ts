@@ -1,2 +1,2 @@
 export { type UseAdminFormProps, useAdminForm } from './useAdminForm';
-export { useAdminTable } from './useAdminTable';
+export { type UseAdminTableProps, useAdminTable } from './useAdminTable';
