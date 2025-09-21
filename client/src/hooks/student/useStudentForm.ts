@@ -1,7 +1,7 @@
-import { RootState, useAppSelector, useAppDispatch, fetchTeachers, fetchStudents } from '../store';
-import { Student, Role, StudentFormData } from '../services';
-import { fullName, studentValidationRules } from '../utils';
-import { useForm, useTable } from './index';
+import { useAppSelector, useAppDispatch, fetchTeachers } from '../../store';
+import { Student, Role, StudentFormData } from '../../services';
+import { fullName, studentValidationRules } from '../../utils';
+import { useForm } from '../index';
 import { useEffect } from 'react';
 
 export interface UseStudentFormProps {
@@ -68,15 +68,3 @@ export const useStudentForm = ({ show, isEdit = false, student }: UseStudentForm
         handleCheckboxChange: form.handleCheckboxChange, validateForm: form.validateForm, resetForm: form.resetForm
     };
 };
-
-export function useStudentTable() {
-    return useTable<Student, { nameSearch: string, teacherFilter: string; gradeFilter: string }>({
-        fetchAction: fetchStudents,
-        selector: (state: RootState) => state.students,
-        initialFilters: {
-            nameSearch: '',
-            teacherFilter: '',
-            gradeFilter: ''
-        }
-    });
-}
