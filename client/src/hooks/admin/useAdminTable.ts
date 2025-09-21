@@ -11,22 +11,9 @@ export interface UseAdminTableProps {
 export function useAdminTable({ itemsPerPage = 10 }: UseAdminTableProps) {
     const dispatch = useAppDispatch();
     const currentUser = useAppSelector(state => state.user.data);
-
     const isAdmin = useMemo(() => currentUser?.role === Role.ADMIN, [currentUser]);
 
     const initialFilters = { nameSearch: '', emailSearch: '' };
-
-    const filterFunction = useCallback((data: UserDTO[], filters: { nameSearch: string, emailSearch: string }) => {
-        return data.filter((admin: UserDTO) => {
-            const nameFilter = filters.nameSearch.toLowerCase();
-            const emailFilter = filters.emailSearch.toLowerCase();
-            const adminName = fullName(admin).toLowerCase();
-            const adminEmail = admin.email.toLowerCase();
-            const nameMatches = !nameFilter || adminName.includes(nameFilter);
-            const emailMatches = !emailFilter || adminEmail.includes(emailFilter);
-            return nameMatches && emailMatches;
-        });
-    }, []);
 
     const columnsBuilder = useCallback(() => [
         {
@@ -49,18 +36,14 @@ export function useAdminTable({ itemsPerPage = 10 }: UseAdminTableProps) {
         },
     ], []);
 
-    const fetchAction = useCallback(({ page, size, force }: { page: number; size: number; force?: boolean }) => {
+    const fetchAction = useCallback(({ page, size, force }
+                                     : { page: number; size: number; force?: boolean }) => {
         dispatch(fetchAdmins({ page, size, force: force || false }) as never);
     }, [dispatch]);
 
-    const table = useTable({
-        selector: (state: RootState) => ({
-            data: state.admins.data,
-            loading: state.admins.loading,
-            error: state.admins.error
-        }),
+    const table = useTable<UserDTO, typeof initialFilters>({
+        selector: (state: RootState) => state.admins,
         initialFilters,
-        filterFunction,
         columnsBuilder,
         fetchAction,
         itemsPerPage,
@@ -107,5 +90,5 @@ export function useAdminTable({ itemsPerPage = 10 }: UseAdminTableProps) {
         };
     }, [crudTable]);
 
-    return { ...crudTable, filtersConfig, headerConfig, isAdmin, baseColumns: table.columns };
+    return { ...crudTable, filtersConfig, headerConfig, isAdmin };
 }
