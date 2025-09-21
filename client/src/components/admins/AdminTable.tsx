@@ -12,10 +12,10 @@ export default function AdminTable(props: AdminTableProps) {
     const { itemsPerPage = 10, showFilters = true, size = 'm' } = props;
 
     const {
-        data, loading, error, filters, updateFilter, isAdmin, baseColumns, headerConfig,
+        data, loading, error, filters, updateFilter, isAdmin, columns,
         showCreateModal, editingItem, deletingItem, handleCreateItem, handleEditItem, handleDeleteItem,
-        handleCloseModals, retry, handleSuccess, filtersConfig,
-        currentPage, totalPages, setCurrentPage, allData
+        handleCloseModals, retry, handleSuccess, filtersConfig, headerConfig,
+        currentPage, totalPages, setCurrentPage, totalCount
     } = useAdminTable({ itemsPerPage });
 
     return (
@@ -23,10 +23,10 @@ export default function AdminTable(props: AdminTableProps) {
             data={data}
             loading={loading}
             error={error}
-            columns={baseColumns}
+            columns={columns}
             currentPage={currentPage}
             totalPages={totalPages}
-            totalCount={allData.length}
+            totalCount={totalCount}
             onPageChange={setCurrentPage}
             onRetry={retry}
             filtersConfig={showFilters ? filtersConfig : undefined}
