@@ -19,8 +19,8 @@ export interface CrudTableProps<T> {
     filters?: TableFilters;
     updateFilter?: (key: string, value: string) => void;
     // CRUD-specific props
-    canEdit: boolean;
-    canDelete: boolean;
+    canEdit: boolean | ((item: T) => boolean);
+    canDelete: boolean | ((item: T) => boolean);
     onEditItem: (item: T) => void;
     onDeleteItem: (item: T) => void;
     onCreateClick: () => void;
@@ -38,22 +38,32 @@ export function CrudTable<T>(props: CrudTableProps<T>) {
         onCreateClick, createModal, editModal, deleteModal,
         actionColumnHeader = 'Actions', managementButtonsSize = 'sm'
     } = props;
+
     const tableColumns = useMemo(() => {
-        if (!canEdit && !canDelete) return columns;
+        const hasEditCapability = canEdit || typeof canEdit === 'function';
+        const hasDeleteCapability = canDelete || typeof canDelete === 'function';
+        if (!hasEditCapability && !hasDeleteCapability) {
+            return columns;
+        }
         return [
             ...columns,
             {
                 key: 'actions',
                 header: actionColumnHeader,
-                render: (item: T) => (
-                    <ManagementButtons
-                        onEdit={() => onEditItem(item)}
-                        onDelete={() => onDeleteItem(item)}
-                        size={managementButtonsSize}
-                        showEdit={canEdit}
-                        showDelete={canDelete}
-                    />
-                )
+                render: (item: T) => {
+                    const itemCanEdit = typeof canEdit === 'function' ? canEdit(item) : canEdit;
+                    const itemCanDelete = typeof canDelete === 'function' ? canDelete(item) : canDelete;
+                    if (!itemCanEdit && !itemCanDelete) return null;
+                    return (
+                        <ManagementButtons
+                            onEdit={() => onEditItem(item)}
+                            onDelete={() => onDeleteItem(item)}
+                            size={managementButtonsSize}
+                            showEdit={itemCanEdit}
+                            showDelete={itemCanDelete}
+                        />
+                    )
+                }
             }
         ];
     }, [columns, canEdit, canDelete, onEditItem, onDeleteItem, actionColumnHeader, managementButtonsSize]);
@@ -74,7 +84,7 @@ export function CrudTable<T>(props: CrudTableProps<T>) {
                 filtersConfig={filtersConfig}
                 filters={filters}
                 updateFilter={updateFilter}
-                showCreateButton={canEdit && canDelete}
+                showCreateButton={headerConfig?.showCreateButton || false}
                 createButtonText={headerConfig?.createButtonText || 'Create'}
                 onCreateClick={onCreateClick}
             />

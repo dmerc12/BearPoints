@@ -23,12 +23,14 @@ export interface UseTableOptions<T, F extends TableFilters> {
         data: T[];
         loading: boolean;
         error: string | null;
+        pagination: {
+            totalPages: number;
+            totalElements: number;
+        };
     };
     initialFilters: F;
     mode?: 'read-only' | 'crud';
     fetchAction?: (params: { page: number; size: number; force?: boolean }) => unknown;
-    rankingFunction?: (data: T[]) => T[];
-    filterFunction?: (data: T[], filters: F) => T[];
     itemsPerPage?: number;
     columnsBuilder?: (helpers: TableHelpers<T>) => TableColumn<T>[];
     defaultColumns?: TableColumn<T>[];
@@ -36,12 +38,12 @@ export interface UseTableOptions<T, F extends TableFilters> {
 
 export function useTable<T, F extends TableFilters>(props: UseTableOptions<T, F>) {
     const {
-        selector, initialFilters, mode = 'read-only', fetchAction, rankingFunction, filterFunction,
-        itemsPerPage = 1000, columnsBuilder, defaultColumns = []
+        selector, initialFilters, mode = 'read-only', fetchAction,
+        itemsPerPage = 10, columnsBuilder, defaultColumns = []
     } = props;
 
     const dispatch = useAppDispatch();
-    const { data, loading, error } = useAppSelector(selector);
+    const { data, loading, error, pagination } = useAppSelector(selector);
 
     const [filters, setFilters] = useState<F>(initialFilters);
     const [currentPage, setCurrentPage] = useState(1);
@@ -55,9 +57,12 @@ export function useTable<T, F extends TableFilters>(props: UseTableOptions<T, F>
     // Fetch data on mount
     useEffect(() => {
         if (fetchAction) {
-            dispatch(fetchAction({ page: 0, size: itemsPerPage }) as never);
+            dispatch(fetchAction({
+                page: currentPage - 1,
+                size: itemsPerPage
+            }) as never);
         }
-    }, [dispatch, fetchAction, itemsPerPage]);
+    }, [dispatch, fetchAction, currentPage, itemsPerPage]);
 
     const helpers = useMemo(() => ({
         handleEditItem: mode === 'crud' ? (item: T) => setEditingItem(item) : undefined,
@@ -71,38 +76,8 @@ export function useTable<T, F extends TableFilters>(props: UseTableOptions<T, F>
         return defaultColumns;
     }, [columnsBuilder, helpers, defaultColumns]);
 
-    const rankedData = useMemo(() => {
-        if (rankingFunction) {
-            return rankingFunction(data);
-        }
-        return data;
-    }, [data, rankingFunction]);
-
-    const sortedData = useMemo(() => {
-        if (!sortField) return rankedData;
-        return [...rankedData].sort((a, b) => {
-            const aValue = a[sortField as keyof T];
-            const bValue = b[sortField as keyof T];
-            if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
-            if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
-            return 0;
-        });
-    }, [rankedData, sortField, sortDirection]);
-
-    const filteredData = useMemo(() => {
-        if (filterFunction) {
-            return filterFunction(sortedData, filters);
-        }
-        return sortedData;
-    }, [sortedData, filters, filterFunction]);
-
-    const paginatedData = useMemo(() => {
-        const startIndex = (currentPage - 1) * itemsPerPage;
-        const endIndex = startIndex + itemsPerPage;
-        return filteredData.slice(startIndex, endIndex);
-    }, [filteredData, currentPage, itemsPerPage]);
-
-    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+    const totalPages = pagination.totalPages;
+    const totalCount = pagination.totalElements;
 
     const handleSort = useCallback((field: string) => {
         if (sortField === field) {
@@ -111,6 +86,7 @@ export function useTable<T, F extends TableFilters>(props: UseTableOptions<T, F>
             setSortField(field);
             setSortDirection('asc');
         }
+        // TODO: Implement server-side sorting by updating fetchAction to include sort parameters
     }, [sortField, sortDirection]);
 
     const updateFilter = useCallback((filterKey: keyof F, value: string) => {
@@ -119,6 +95,7 @@ export function useTable<T, F extends TableFilters>(props: UseTableOptions<T, F>
             [filterKey]: value,
         }));
         setCurrentPage(1);
+        // TODO: Implement server-side sorting by updating fetchAction to include filter parameters
     }, []);
 
     const updateFilterAny = useCallback((key: string, value: string) => {
@@ -160,9 +137,13 @@ export function useTable<T, F extends TableFilters>(props: UseTableOptions<T, F>
 
     const retryFetch = useCallback(() => {
         if (fetchAction) {
-            dispatch(fetchAction({ page: 0, size: itemsPerPage, force: true }) as never);
+            dispatch(fetchAction({
+                page: currentPage - 1,
+                size: itemsPerPage,
+                force: true
+            }) as never);
         }
-    }, [dispatch, fetchAction, itemsPerPage]);
+    }, [dispatch, fetchAction, currentPage, itemsPerPage]);
 
     const handleSuccess = useCallback(() => {
         if (mode === 'crud') {
@@ -173,7 +154,7 @@ export function useTable<T, F extends TableFilters>(props: UseTableOptions<T, F>
 
     const baseReturn = {
         // Data
-        data: paginatedData, allData: filteredData, sortedData, totalCount: filteredData.length, loading, error,
+        data, totalCount, loading, error,
         // Columns
         columns,
         // Filters
@@ -192,7 +173,8 @@ export function useTable<T, F extends TableFilters>(props: UseTableOptions<T, F>
             // CRUD state
             showCreateModal, editingItem, deletingItem,
             // CRUD actions
-            handleCreateItem, handleEditItem, handleDeleteItem, handleCloseModals, handleSuccess
+            handleCreateItem, handleEditItem, handleDeleteItem,
+            handleCloseModals, handleSuccess
         };
     }
 
