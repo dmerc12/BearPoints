@@ -1,7 +1,7 @@
 import { fetchStudents, RootState, useAppDispatch, useAppSelector } from '../../store';
 import { fullName, formatGrade, formatName, sortGrades } from '../../utils';
+import { useCallback, useEffect, useMemo } from 'react';
 import { Student, Role } from '../../services';
-import { useCallback, useMemo } from 'react';
 import { useTable } from '../index';
 
 export interface UseStudentTableProps {
@@ -109,6 +109,12 @@ export function useStudentTable({ itemsPerPage = 10 }: UseStudentTableProps) {
         itemsPerPage,
         mode: 'crud' as const,
     });
+
+    useEffect(() => {
+        return () => {
+            table.resetFilters();
+        };
+    }, [table]);
 
     const crudTable = table as typeof table & {
         showCreateModal: boolean;

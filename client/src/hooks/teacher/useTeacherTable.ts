@@ -1,7 +1,7 @@
 import { fetchTeachers, RootState, useAppSelector, useAppDispatch } from '../../store';
 import { fullName, formatGrade, sortGrades } from '../../utils';
+import { useCallback, useEffect, useMemo } from 'react';
 import { Teacher, Role } from '../../services';
-import { useCallback, useMemo } from 'react';
 import { useTable } from '../index';
 
 export interface UseTeacherTableProps {
@@ -85,6 +85,12 @@ export function useTeacherTable({ itemsPerPage = 10 }: UseTeacherTableProps) {
         itemsPerPage,
         mode: 'crud' as const,
     });
+
+    useEffect(() => {
+        return () => {
+            table.resetFilters();
+        };
+    }, [table]);
 
     const crudTable = table as typeof table & {
         showCreateModal: boolean;

@@ -50,6 +50,12 @@ export function useAdminTable({ itemsPerPage = 10 }: UseAdminTableProps) {
         mode: 'crud' as const,
     });
 
+    useEffect(() => {
+        return () => {
+            table.resetFilters();
+        };
+    }, [table]);
+
     const crudTable = table as typeof table & {
         showCreateModal: boolean;
         editingItem: UserDTO | null;
@@ -83,12 +89,6 @@ export function useAdminTable({ itemsPerPage = 10 }: UseAdminTableProps) {
         createButtonText: 'Create Administrator',
         additionalElements: null,
     }), [isAdmin]);
-
-    useEffect(() => {
-        return () => {
-            crudTable.resetFilters();
-        };
-    }, [crudTable]);
 
     return { ...crudTable, filtersConfig, headerConfig, isAdmin };
 }

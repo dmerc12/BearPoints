@@ -1,8 +1,8 @@
 import { useAppDispatch, useAppSelector, fetchLeaderboard, setTimeframe } from '../../store';
 import { fullName, formatGrade, formatName } from '../../utils';
 import { LeaderboardEntry, Timeframe } from '../../services';
+import { useMemo, useCallback, useEffect } from 'react';
 import { TableColumn, useTable } from '../../hooks';
-import { useMemo, useCallback } from 'react';
 
 export interface UseLeaderboardTableProps {
     itemsPerPage?: number;
@@ -89,6 +89,12 @@ export function useLeaderboardTable({ itemsPerPage = 10 }: UseLeaderboardTablePr
         ),
         itemsPerPage: itemsPerPage,
     });
+
+    useEffect(() => {
+        return () => {
+            table.resetFilters();
+        };
+    }, [table]);
 
     const teacherOptions = useMemo(() => {
         const teachers = [...new Set(entries.map(e => fullName(e.teacher)))];
