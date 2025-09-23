@@ -1,11 +1,9 @@
+import { CreateBehaviorTypeModal, EditBehaviorTypeModal, DeleteBehaviorTypeModal, CrudTable } from '../index';
 import { formatBehaviorTypeStatus, getBehaviorTypeStatusVariant } from '../../utils';
-import { CreateBehaviorTypeModal, EditBehaviorTypeModal, DeleteBehaviorTypeModal,
-    TableColumn, BaseTable, SelectFilter, TextFilter } from '../index';
-import { Row, Button, Col, ButtonGroup, Badge } from 'react-bootstrap';
-import { BehaviorType, Role } from '../../services';
 import { useBehaviorTypeTable } from '../../hooks';
-import { useAppSelector } from '../../store';
-import { useMemo, useEffect } from 'react';
+import { BehaviorType } from '../../services';
+import { Badge } from 'react-bootstrap';
+import { useMemo } from 'react';
 
 interface BehaviorTypeTableProps {
     itemsPerPage?: number;
@@ -13,170 +11,75 @@ interface BehaviorTypeTableProps {
     size?: 's' | 'm' | 'l';
 }
 
-export default function BehaviorTypeTable({ itemsPerPage = 10, showFilters = true, size = 'm' }: BehaviorTypeTableProps) {
-    const currentUser = useAppSelector(state =>
-        state.user.data);
-
-    const isAdmin = useMemo(() => currentUser?.role === Role.ADMIN, [currentUser]);
+export default function BehaviorTypeTable(props: BehaviorTypeTableProps) {
+    const { itemsPerPage = 10, showFilters = true, size = 'm' } = props;
 
     const {
-        data: behaviorTypes, loading, error, filters, updateFilter, resetFilters,
-        showCreateModal, editingItem: editingBehaviorType, deletingItem: deletingBehaviorType,
-        handleCreateItem: handleCreateBehaviorType, handleEditItem: handleEditBehaviorType,
-        handleDeleteItem: handleDeleteBehaviorType, handleCloseModals, retryFetch, handleSuccess,
-    } = useBehaviorTypeTable();
+        data, loading, error, filters, updateFilter, isAdmin, columns,
+        showCreateModal, editingItem, deletingItem, handleCreateItem, handleEditItem, handleDeleteItem,
+        handleCloseModals, retry, handleSuccess, filtersConfig, headerConfig,
+        currentPage, totalPages, setCurrentPage, totalCount
+    } = useBehaviorTypeTable({ itemsPerPage });
 
-    useEffect(() => {
-        return () => {
-            resetFilters();
-        };
-    }, [resetFilters]);
-
-    const filteredBehaviorTypes = useMemo(() => {
-        if (!behaviorTypes.length) return [];
-        const nameFilter = filters.nameSearch.toLowerCase();
-        const statusFilter = filters.statusFilter;
-        const pointValueFilter = filters.pointValueFilter;
-        return behaviorTypes.filter((behaviorType: BehaviorType) => {
-            const behaviorTypeName = behaviorType.name.toLowerCase();
-            const nameMatches = !nameFilter || behaviorTypeName.includes(nameFilter);
-            const statusMatches = !statusFilter || behaviorType.active.toString() === statusFilter;
-            const pointValueMatches = !pointValueFilter || behaviorType.pointValue.toString() === pointValueFilter;
-            return nameMatches && statusMatches && pointValueMatches;
-        });
-    }, [behaviorTypes, filters]);
-
-    const columns: TableColumn<BehaviorType>[] = useMemo(() => [
-        {
-            key: 'name',
-            header: 'Name',
-            render: (behaviorType: BehaviorType) => behaviorType.name
-        },
-        {
-            key: 'pointValue',
-            header: 'Point Value',
-            render: (behaviorType: BehaviorType) => behaviorType.pointValue
-        },
-        {
+    const enhancedColumns = useMemo(() => {
+        const enhanced = [...columns];
+        enhanced.push({
             key: 'status',
             header: 'Status',
             render: (behaviorType: BehaviorType) => (
                 <Badge bg={getBehaviorTypeStatusVariant(behaviorType.active)}>
                     {formatBehaviorTypeStatus(behaviorType.active)}
                 </Badge>
-            )
-        },
-        ...(isAdmin) ? [{
-            key: 'actions',
-            header: 'Actions',
-            render: (behaviorType: BehaviorType) => (
-                <ButtonGroup size='sm'>
-                    <Button variant='outline-primary'
-                            onClick={() => handleEditBehaviorType(behaviorType)}
-                    >
-                        Edit
-                    </Button>
-                    <Button variant='danger'
-                            onClick={() => handleDeleteBehaviorType(behaviorType)}
-                    >
-                        Delete
-                    </Button>
-                </ButtonGroup>
-            )
-        }] : []
-    ], [isAdmin, handleEditBehaviorType, handleDeleteBehaviorType]);
-
-    const renderFilters = () => {
-        if (!showFilters) return null;
-        return (
-            <Row className='mb-4 g-3'>
-                <Col md={4}>
-                    <TextFilter
-                        value={filters.nameSearch}
-                        onChange={(value) => updateFilter('nameSearch', value)}
-                        label='Search Behavior Types'
-                        placeholder='Search by name...'
-                    />
-                </Col>
-                <Col md={4}>
-                    <SelectFilter
-                        value={filters.statusFilter}
-                        onChange={(value) => updateFilter('statusFilter', value)}
-                        label='Status'
-                        options={[
-                            { value: 'true', label: 'Active' },
-                            { value: 'false', label: 'Inactive' }
-                        ]}
-                    />
-                </Col>
-                <Col md={4}>
-                    <SelectFilter
-                        value={filters.pointValueFilter}
-                        onChange={(value) => updateFilter('pointValueFilter', value)}
-                        label='Point Value'
-                        options={[
-                            { value: '1', label: '1 Point' },
-                            { value: '2', label: '2 Points' },
-                            { value: '3', label: '3 Points' },
-                            { value: '4', label: '4 Points' },
-                            { value: '5', label: '5 Points' },
-                        ]}
-                    />
-                </Col>
-            </Row>
-        );
-    };
-
-    const renderHeader = () => {
-        return (
-            <div className='m-2 d-flex justify-content-between align-items-center'>
-                <span>Showing {filteredBehaviorTypes.length} of {behaviorTypes.length} behavior types</span>
-                {isAdmin && (
-                    <Button variant='primary'
-                            onClick={handleCreateBehaviorType}
-                            className='me-2'
-                            size={size === 's' ? 'sm' : undefined}
-                    >
-                        Create Behavior Type
-                    </Button>
-                )}
-            </div>
-        );
-    };
+            ),
+            sortable: true
+        });
+        return enhanced;
+    }, [columns]);
 
     return (
-        <>
-          <BaseTable<BehaviorType>
-            data={filteredBehaviorTypes}
+          <CrudTable<BehaviorType>
+            data={data}
             loading={loading}
             error={error}
-            columns={columns}
-            itemsPerPage={itemsPerPage}
-            renderFilters={renderFilters}
-            renderHeader={renderHeader}
-            onRetry={retryFetch}
+            columns={enhancedColumns}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalCount={totalCount}
+            onPageChange={setCurrentPage}
+            onRetry={retry}
+            filtersConfig={showFilters ? filtersConfig : undefined}
+            headerConfig={headerConfig}
+            filters={filters}
+            updateFilter={updateFilter}
             size={size}
-            showCreateButton={isAdmin}
-            createButtonText='Create Behavior Type'
-            onCreateClick={handleCreateBehaviorType}
+            canEdit={isAdmin}
+            canDelete={isAdmin}
+            onEditItem={handleEditItem}
+            onDeleteItem={handleDeleteItem}
+            onCreateClick={handleCreateItem}
+            createModal={
+                <CreateBehaviorTypeModal
+                    show={showCreateModal}
+                    onCancel={handleCloseModals}
+                    onSuccess={handleSuccess}
+                />
+            }
+            editModal={
+                <EditBehaviorTypeModal
+                    show={!!editingItem}
+                    behaviorType={editingItem}
+                    onCancel={handleCloseModals}
+                    onSuccess={handleSuccess}
+                />
+            }
+            deleteModal={
+                <DeleteBehaviorTypeModal
+                    show={!!deletingItem}
+                    behaviorType={deletingItem}
+                    onCancel={handleCloseModals}
+                    onSuccess={handleSuccess}
+                />
+            }
           />
-          <CreateBehaviorTypeModal
-              show={showCreateModal}
-              onCancel={handleCloseModals}
-              onSuccess={handleSuccess}
-          />
-          <EditBehaviorTypeModal
-              show={!!editingBehaviorType}
-              behaviorType={editingBehaviorType}
-              onCancel={handleCloseModals}
-              onSuccess={handleSuccess}
-          />
-          <DeleteBehaviorTypeModal
-              show={!!deletingBehaviorType}
-              behaviorType={deletingBehaviorType}
-              onCancel={handleCloseModals}
-              onSuccess={handleSuccess}
-          />
-        </>
     );
 }
