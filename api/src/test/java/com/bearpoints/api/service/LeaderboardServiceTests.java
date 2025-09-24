@@ -10,6 +10,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -36,7 +39,7 @@ import static org.mockito.Mockito.when;
  * @see LeaderboardService
  * @see LeaderboardServiceImpl
  *
- * @version 1.0
+ * @version 2.0
  * @author Dylan Mercer
  */
 @ExtendWith(MockitoExtension.class)
@@ -99,7 +102,9 @@ public class LeaderboardServiceTests {
         bragLog = createValidBragLog(now.minusDays(3));
         LocalDateTime startDate = now.minusWeeks(1);
         when(bragLogRepository.findByTimestampAfter(startDate)).thenReturn(List.of(bragLog));
-        assertThat(leaderboardService.getLeaderboard(Timeframe.WEEK))
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<LeaderboardEntryDTO> result = leaderboardService.getLeaderboard(Timeframe.WEEK, pageable);
+        assertThat(result)
                 .hasSize(1)
                 .first()
                 .extracting(LeaderboardEntryDTO::getPoints)
@@ -114,7 +119,9 @@ public class LeaderboardServiceTests {
         bragLog = createValidBragLog(now.minusWeeks(3));
         LocalDateTime startDate = now.minusMonths(1);
         when(bragLogRepository.findByTimestampAfter(startDate)).thenReturn(List.of(bragLog));
-        assertThat(leaderboardService.getLeaderboard(Timeframe.MONTH))
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<LeaderboardEntryDTO> result = leaderboardService.getLeaderboard(Timeframe.MONTH, pageable);
+        assertThat(result)
                 .hasSize(1)
                 .first()
                 .extracting(LeaderboardEntryDTO::getPoints)
@@ -129,7 +136,9 @@ public class LeaderboardServiceTests {
         bragLog = createValidBragLog(now.minusMonths(4));
         LocalDateTime startDate = now.minusMonths(6);
         when(bragLogRepository.findByTimestampAfter(startDate)).thenReturn(List.of(bragLog));
-        assertThat(leaderboardService.getLeaderboard(Timeframe.SEMESTER))
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<LeaderboardEntryDTO> result = leaderboardService.getLeaderboard(Timeframe.SEMESTER, pageable);
+        assertThat(result)
                 .hasSize(1)
                 .first()
                 .extracting(LeaderboardEntryDTO::getPoints)
@@ -144,10 +153,66 @@ public class LeaderboardServiceTests {
         bragLog = createValidBragLog(now.minusMonths(8));
         LocalDateTime startDate = now.minusYears(1);
         when(bragLogRepository.findByTimestampAfter(startDate)).thenReturn(List.of(bragLog));
-        assertThat(leaderboardService.getLeaderboard(Timeframe.YEAR))
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<LeaderboardEntryDTO> result = leaderboardService.getLeaderboard(Timeframe.YEAR, pageable);
+        assertThat(result)
                 .hasSize(1)
                 .first()
                 .extracting(LeaderboardEntryDTO::getPoints)
                 .isEqualTo(bragLog.getPointsGenerated());
+    }
+
+    /** Test pagination functionality */
+    @Test
+    @DisplayName("Pagination returns correct page")
+    public void paginationReturnsCorrectPage() {
+        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
+        BragLog log1 = createValidBragLog(now.minusDays(1));
+        BragLog log2 = createValidBragLog(now.minusDays(2));
+        BragLog log3 = createValidBragLog(now.minusDays(3));
+        LocalDateTime startDate = now.minusWeeks(1);
+        when(bragLogRepository.findByTimestampAfter(startDate))
+                .thenReturn(List.of(log1, log2, log3));
+        Pageable pageable = PageRequest.of(0, 2);
+        Page<LeaderboardEntryDTO> result = leaderboardService.getLeaderboard(Timeframe.WEEK, pageable);
+        assertThat(result.getContent()).hasSize(2);
+        assertThat(result.getTotalElements()).isEqualTo(3);
+        assertThat(result.getTotalPages()).isEqualTo(2);
+        assertThat(result.getNumber()).isEqualTo(0);
+    }
+
+    /** Test pagination when page offset is beyond total entries */
+    @Test
+    @DisplayName("Pagination returns empty page when offset exceeds total entries")
+    public void paginationReturnsEmptyPageWhenOffsetExceedsTotal() {
+        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
+        BragLog log1 = createValidBragLog(now.minusDays(1));
+        BragLog log2 = createValidBragLog(now.minusDays(2));
+        LocalDateTime startDate = now.minusWeeks(1);
+        when(bragLogRepository.findByTimestampAfter(startDate)).thenReturn(List.of(log1, log2));
+        Pageable pageable = PageRequest.of(1, 2);
+        Page<LeaderboardEntryDTO> result = leaderboardService.getLeaderboard(Timeframe.WEEK, pageable);
+        assertThat(result.getContent()).isEmpty();
+        assertThat(result.getTotalElements()).isEqualTo(2);
+        assertThat(result.getTotalPages()).isEqualTo(1);
+        assertThat(result.getNumber()).isEqualTo(1);
+        assertThat(result.getSize()).isEqualTo(2);
+    }
+
+    /** Test pagination when page offset is far beyond total entries */
+    @Test
+    @DisplayName("Pagination returns empty page when offset far exceeds total entries")
+    public void paginationReturnsEmptyPageWhenOffsetFarExceedsTotal() {
+        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
+        BragLog log1 = createValidBragLog(now.minusDays(1));
+        LocalDateTime startDate = now.minusWeeks(1);
+        when(bragLogRepository.findByTimestampAfter(startDate)).thenReturn(List.of(log1));
+        Pageable pageable = PageRequest.of(10, 1);
+        Page<LeaderboardEntryDTO> result = leaderboardService.getLeaderboard(Timeframe.WEEK, pageable);
+        assertThat(result.getContent()).isEmpty();
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        assertThat(result.getTotalPages()).isEqualTo(1);
+        assertThat(result.getNumber()).isEqualTo(10);
+        assertThat(result.getSize()).isEqualTo(1);
     }
 }

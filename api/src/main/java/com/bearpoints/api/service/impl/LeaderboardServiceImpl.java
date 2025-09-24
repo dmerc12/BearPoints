@@ -7,6 +7,9 @@ import com.bearpoints.api.entity.BragLog;
 import com.bearpoints.api.entity.Student;
 import com.bearpoints.api.entity.Timeframe;
 import com.bearpoints.api.service.LeaderboardService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,7 +31,7 @@ import java.util.stream.Collectors;
  * @see BragLog
  * @see BragLogDAO
  *
- * @version 1.0
+ * @version 2.0
  * @author Dylan Mercer
  */
 @Service
@@ -41,10 +44,21 @@ public class LeaderboardServiceImpl implements LeaderboardService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<LeaderboardEntryDTO> getLeaderboard(Timeframe timeframe) {
+    public Page<LeaderboardEntryDTO> getLeaderboard(Timeframe timeframe, Pageable pageable) {
         LocalDateTime startDate = calculateStartDate(timeframe);
         List<BragLog> logs = bragLogRepository.findByTimestampAfter(startDate);
-        return calculateLeaderboardEntries(logs);
+        List<LeaderboardEntryDTO> allEntries = calculateLeaderboardEntries(logs);
+        return getPaginatedResults(allEntries, pageable);
+    }
+
+    private Page<LeaderboardEntryDTO> getPaginatedResults(List<LeaderboardEntryDTO> allEntries, Pageable pageable) {
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), allEntries.size());
+        if (start > allEntries.size()) {
+            return new PageImpl<>(List.of(), pageable, allEntries.size());
+        }
+        List<LeaderboardEntryDTO> pageContent = allEntries.subList(start, end);
+        return new PageImpl<>(pageContent, pageable, allEntries.size());
     }
 
     private List<LeaderboardEntryDTO> calculateLeaderboardEntries(List<BragLog> logs) {

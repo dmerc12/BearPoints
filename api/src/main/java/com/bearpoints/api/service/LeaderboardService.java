@@ -3,8 +3,8 @@ package com.bearpoints.api.service;
 import com.bearpoints.api.dto.LeaderboardEntryDTO;
 import com.bearpoints.api.entity.Timeframe;
 import com.bearpoints.api.service.impl.LeaderboardServiceImpl;
-
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 /**
  * Represents service responsible for retrieving and calculating brag log leaderboard.
@@ -12,14 +12,15 @@ import java.util.List;
  *
  * @see LeaderboardEntryDTO
  * @see Timeframe
- * @version 1.0
+ * @version 2.0
  * @author Dylan Mercer
  */
 public interface LeaderboardService {
     /**
-     * Retrieves leaderboard data for the specified timeframe
+     * Retrieves paginated leaderboard data for the specified timeframe
      * @param timeframe Filter period for leaderboard data
-     * @return List of leaderboard entries with structured student/teacher details
+     * @param pageable Pagination information
+     * @return Page of leaderboard entries with structured student/teacher details
      */
-    List<LeaderboardEntryDTO> getLeaderboard(Timeframe timeframe);
+    Page<LeaderboardEntryDTO> getLeaderboard(Timeframe timeframe, Pageable pageable);
 }
