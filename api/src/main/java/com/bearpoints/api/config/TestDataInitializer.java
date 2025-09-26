@@ -19,27 +19,46 @@ import java.util.stream.Collectors;
  * <p>Creates a predefined test teacher account during application startup when:
  * <ul>
  *     <li>Not running in production profile</li>
- *     <li>TEST_TEACHER_EMAIL environment variable is set</li>
+ *     <li>TEST_EMAIL environment variable is set</li>
  *     <li>No existing user with the specified email exists</li>
  * </ul>
  *
- * <p>The test user is created with:
+ * <p>The test ecosystem includes:
  * <ul>
- *     <li>Email: Value from TEST_EMAIL environment variable</li>
- *     <li>First name: "Test"</li>
- *     <li>Last name: "User"</li>
- *     <li>Role: ADMIN</li>
+ *     <li>Administrator accounts with varying permissions</li>
+ *     <li>Teacher accounts with random grade level assignments</li>
+ *     <li>Student accounts distributed across teachers</li>
+ *     <li>Behavior types with mixed active/inactive status</li>
+ *     <li>Brag logs with randomized behavior combinations</li>
+ *     <li>Reward items with varying point costs and stock levels</li>
+ *     <li>Student reward assignments</li>
  * </ul>
  *
  * <p>Execution flow:
  * <ol>
  *     <li>Checks if TEST_EMAIL environment variable is set</li>
- *     <li>Verifies no existing user with that email exists</li>
- *     <li>Sets up temporary admin security context for creation</li>
- *     <li>Creates the user and entity</li>
- *     <li>Creates other test data</li>
- *     <li>Clears the temporary security context</li>
+ *     <li>Verifies no existing user with specified email</li>
+ *     <li>Establishes temporary admin security context</li>
+ *     <li>Creates primary test administrator account</li>
+ *     <li>Generates additional test administrators</li>
+ *     <li>Creates teachers with randomized grade levels</li>
+ *     <li>Distributes students across created teachers</li>
+ *     <li>Initializes behavior type catalog</li>
+ *     <li>Generates brag logs with behavior combinations</li>
+ *     <li>Creates reward item inventory</li>
+ *     <li>Assigns rewards to students</li>
+ *     <li>Cleans up security context</li>
  * </ol>
+ *
+ * <p>Configuration constants control data volume:
+ * <ul>
+ *     <li>NUM_TEST_ADMINS_TO_CREATE: Number of additional admin accounts (default: 12)</li>
+ *     <li>NUM_TEST_TEACHERS_TO_CREATE: Number of teacher accounts (default: 25)</li>
+ *     <li>MIN/MAX_NUM_TEST_STUDENTS_PER_TEACHER: Student distribution range (default: 20-30)</li>
+ *     <li>NUM_TEST_BRAG_LOGS_TO_CREATE: Brag log entries (default: 200)</li>
+ *     <li>NUM_TEST_REWARD_ITEMS_TO_CREATE: Reward catalog size (default: 20)</li>
+ *     <li>NUM_TEST_STUDENT_REWARDS_TO_CREATE: Reward assignments (default: 50)</li>
+ * </ul>
  *
  * @see CommandLineRunner
  * @version 2.0
@@ -98,9 +117,10 @@ public class TestDataInitializer implements CommandLineRunner {
                     Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMIN")));
             SecurityContextHolder.getContext().setAuthentication(adminAuth);
             // Create test user
-            String testUserFirstName = testEmail.substring(0, 1);
-            String testUserLastName = testEmail.substring(3, testEmail.length() - 1);
-            createTestAdmin(testEmail, testUserFirstName, testUserLastName);
+            String[] emailParts = testEmail.split("@");
+            String firstInitial = emailParts[0].substring(0, 1);
+            String testUserLastName = emailParts[0].substring(2);
+            createTestAdmin(testEmail, firstInitial, testUserLastName);
             log.info("Created test user");
             // Create test data
             // Create test administrators
