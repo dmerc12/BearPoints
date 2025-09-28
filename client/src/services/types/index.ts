@@ -18,4 +18,5 @@ export { type StudentReward } from './StudentReward';
 export { type PaginatedStudentRewards } from './PaginatedStudentRewards';
 export { type BragLogRequest } from './BragLogRequest';
 export { type LeaderboardEntry } from './LeaderboardEntry';
+export { type PaginatedLeaderboardEntries } from './PaginatedLeaderboardEntries';
 export { type Person } from './Person';

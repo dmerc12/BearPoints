@@ -8,30 +8,12 @@ export interface UseLeaderboardTableProps {
     itemsPerPage?: number;
 }
 
-export function useLeaderboardTable({ itemsPerPage = 10 }: UseLeaderboardTableProps) {
+export function useLeaderboardTable({ itemsPerPage = 20 }: UseLeaderboardTableProps) {
     const dispatch = useAppDispatch();
-    const { entries, currentTimeframe } = useAppSelector(
+    const { data, currentTimeframe } = useAppSelector(
         state => state.leaderboard);
 
     const initialFilters = { teacherFilter: '', gradeFilter: '' }
-
-    const rankingFunction = useCallback((data: LeaderboardEntry[]) => {
-        return data.map((entry, index) => ({
-            ...entry,
-            rank: index + 1,
-        }));
-    }, []);
-
-    const filterFunction = useCallback((data: LeaderboardEntry[],
-                                        filters: { teacherFilter: string; gradeFilter: string }) => {
-        return data.filter(entry => {
-            const teacherMatch = filters.teacherFilter === ''
-                || fullName(entry.teacher).toLowerCase().includes(filters.teacherFilter.toLowerCase());
-            const gradeMatch = filters.gradeFilter === ''
-                || formatGrade(entry.grade) === filters.gradeFilter;
-            return teacherMatch && gradeMatch;
-        });
-    }, []);
 
     const columnsBuilder = useCallback(() => [
         {
@@ -68,26 +50,24 @@ export function useLeaderboardTable({ itemsPerPage = 10 }: UseLeaderboardTablePr
 
     const fetchAction = useCallback(({ page, size, force }
                                      : { page?: number, size?: number, force?: boolean }
-                                     = { page: 0, size: 1000, force: false }) => {
-        console.log(`Page (${page}) and size (${size}) are ignored here`)
-        dispatch(fetchLeaderboard({ timeframe: currentTimeframe, force: force || false }) as never);
-    }, [dispatch, currentTimeframe]);
+                                     = {}) => {
+        const pageToUse = page !== undefined ? page : 0;
+        const sizeToUse = size !== undefined ? size : itemsPerPage
+        dispatch(fetchLeaderboard({
+            timeframe: currentTimeframe,
+            page: pageToUse,
+            size: sizeToUse,
+            force: force || false
+        }));
+    }, [dispatch, currentTimeframe, itemsPerPage]);
 
     const table = useTable({
-        selector: (state) => ({
-            data: state.leaderboard.entries,
-            loading: state.leaderboard.loading,
-            error: state.leaderboard.error
-        }),
-        initialFilters: initialFilters,
-        filterFunction,
-        rankingFunction,
+        selector: (state) => state.leaderboard,
+        initialFilters,
         columnsBuilder,
-        fetchAction: useCallback(() =>
-            { fetchAction({ force: false }) },
-            [fetchAction]
-        ),
-        itemsPerPage: itemsPerPage,
+        fetchAction,
+        itemsPerPage,
+        mode: 'read-only',
     });
 
     useEffect(() => {
@@ -97,14 +77,14 @@ export function useLeaderboardTable({ itemsPerPage = 10 }: UseLeaderboardTablePr
     }, [table]);
 
     const teacherOptions = useMemo(() => {
-        const teachers = [...new Set(entries.map(e => fullName(e.teacher)))];
+        const teachers = [...new Set(data.map(e => fullName(e.teacher)))];
         return teachers.map(teacher => ({ value: teacher, label: teacher }));
-    }, [entries]);
+    }, [data]);
 
     const gradeOptions = useMemo(() => {
-        const grades = [...new Set(entries.map(e => formatGrade(e.grade)))];
+        const grades = [...new Set(data.map(e => formatGrade(e.grade)))];
         return grades.map(grade => ({ value: grade, label: grade }));
-    }, [entries]);
+    }, [data]);
 
     const retry = useCallback(() => {
         fetchAction({ force: true });
@@ -112,8 +92,9 @@ export function useLeaderboardTable({ itemsPerPage = 10 }: UseLeaderboardTablePr
 
     const handleTimeframeChange = useCallback((timeframe: Timeframe) => {
         dispatch(setTimeframe(timeframe));
+        table.setCurrentPage(1);
         retry();
-    }, [dispatch, retry]);
+    }, [dispatch, retry, table]);
 
     const filtersConfig = [
         {
@@ -130,5 +111,11 @@ export function useLeaderboardTable({ itemsPerPage = 10 }: UseLeaderboardTablePr
         },
     ];
 
-    return { ...table, currentTimeframe, filtersConfig, handleTimeframeChange, retry };
+    const headerConfig = {
+        title: 'Leaderboard',
+        itemName: 'entries',
+        showCreateButton: false,
+    };
+
+    return { ...table, currentTimeframe, filtersConfig, headerConfig, handleTimeframeChange, retry };
 }

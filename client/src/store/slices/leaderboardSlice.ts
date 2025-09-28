@@ -1,49 +1,61 @@
+import { getLeaderboard, LeaderboardEntry, PaginatedLeaderboardEntries, Timeframe, CacheResponse } from '../../services';
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { getLeaderboard, LeaderboardEntry, Timeframe } from '../../services';
 import { RootState } from '../index';
 
 interface LeaderboardState {
-    entries: LeaderboardEntry[];
+    data: LeaderboardEntry[];
     loading: boolean;
     error: string | null;
     currentTimeframe: Timeframe;
-    cachedEntries: Record<Timeframe, LeaderboardEntry[]>;
-    lastFetched: Record<Timeframe, number | null>;
+    pagination: {
+        totalPages: number;
+        totalElements: number;
+    }
+    lastFetched: number | null;
+    cachedEntries: Record<Timeframe, {
+        data: LeaderboardEntry[];
+        pagination: { totalPages: number; totalElements: number };
+        lastFetched: number | null;
+    }>;
 }
 
 const initialState: LeaderboardState = {
-    entries: [],
+    data: [],
     loading: false,
     error: null,
     currentTimeframe: Timeframe.WEEK,
-    cachedEntries: {
-        [Timeframe.WEEK]: [],
-        [Timeframe.MONTH]: [],
-        [Timeframe.SEMESTER]: [],
-        [Timeframe.YEAR]: []
+    pagination: {
+        totalPages: 0,
+        totalElements: 0
     },
-    lastFetched: {
-        [Timeframe.WEEK]: null,
-        [Timeframe.MONTH]: null,
-        [Timeframe.SEMESTER]: null,
-        [Timeframe.YEAR]: null
-    }
+    lastFetched: null,
+    cachedEntries: {
+        [Timeframe.WEEK]: { data: [], pagination: { totalPages: 0, totalElements: 0 }, lastFetched: null },
+        [Timeframe.MONTH]: { data: [], pagination: { totalPages: 0, totalElements: 0 }, lastFetched: null },
+        [Timeframe.SEMESTER]: { data: [], pagination: { totalPages: 0, totalElements: 0 }, lastFetched: null },
+        [Timeframe.YEAR]: { data: [], pagination: { totalPages: 0, totalElements: 0 }, lastFetched: null }
+    },
 };
 
 const CACHE_DURATION = 5 * 60 * 1000;
 
 export const fetchLeaderboard = createAsyncThunk(
     'leaderboard/fetchLeaderboard',
-    async (params: { timeframe: Timeframe, force?: boolean}, { getState, signal }) => {
+    async (params: { timeframe: Timeframe, page?: number, size?: number, force?: boolean},
+           { getState, signal }) => {
         const state = getState() as RootState;
-        const { timeframe, force } = params;
-        const lastFetched = state.leaderboard.lastFetched[timeframe];
+        const { timeframe, page = 0, size = 20, force = false } = params;
+        const cachedTimeframe = state.leaderboard.cachedEntries[timeframe];
+        const lastFetched = cachedTimeframe?.lastFetched;
         const isCacheValid = lastFetched && (Date.now() - lastFetched) < CACHE_DURATION;
         if (isCacheValid && !force) {
-            return { data: state.leaderboard.cachedEntries[timeframe], timeframe };
+            return {
+                data: cachedTimeframe.data,
+                totalPages: cachedTimeframe.pagination.totalPages,
+                totalElements: cachedTimeframe.pagination.totalElements
+            } as CacheResponse<LeaderboardEntry>;
         }
-        const data = await getLeaderboard(timeframe, signal);
-        return { data, timeframe }
+        return await getLeaderboard(timeframe, page, size, signal);
     }
 );
 
@@ -57,12 +69,21 @@ const leaderboardSlice = createSlice({
         resetLeaderboard: () => initialState,
         setTimeframe: (state, action: PayloadAction<Timeframe>) => {
             state.currentTimeframe = action.payload;
-            if (state.cachedEntries[action.payload].length > 0) {
-                state.entries = state.cachedEntries[action.payload];
+            const cachedData = state.cachedEntries[action.payload]
+            if (cachedData && cachedData.data.length > 0) {
+                state.data = cachedData.data;
+                state.pagination = cachedData.pagination;
+            } else {
+                state.data = [];
+                state.pagination = { totalPages: 0, totalElements: 0 };
             }
         },
         clearTimeframeCache: (state, action: PayloadAction<Timeframe>) => {
-            state.cachedEntries[action.payload] = [];
+            state.cachedEntries[action.payload] = {
+                data: [],
+                pagination: { totalPages: 0, totalElements: 0 },
+                lastFetched: null
+            };
         }
     },
     extraReducers: (builder) => {
@@ -73,14 +94,27 @@ const leaderboardSlice = createSlice({
             })
             .addCase(fetchLeaderboard.fulfilled, (
                 state,
-                action: PayloadAction<{ data: LeaderboardEntry[], timeframe: Timeframe}>) => {
+                action: PayloadAction<PaginatedLeaderboardEntries | CacheResponse<LeaderboardEntry>>) => {
                     state.loading = false;
-                    const { data, timeframe } = action.payload;
-                    state.cachedEntries[timeframe] = data;
-                    state.lastFetched[timeframe] = Date.now();
-                    if (state.currentTimeframe === timeframe) {
-                        state.entries = data;
+                    if ('leaderboardEntries' in action.payload) {
+                        state.data = action.payload.leaderboardEntries;
+                        state.pagination = {
+                            totalPages: action.payload.totalPages,
+                            totalElements: action.payload.totalLeaderboardEntries
+                        };
+                    } else {
+                        state.data = action.payload.data;
+                        state.pagination = {
+                            totalPages: action.payload.totalPages,
+                            totalElements: action.payload.totalElements
+                        };
                     }
+                    state.cachedEntries[state.currentTimeframe] = {
+                        data: state.data,
+                        pagination: state.pagination,
+                        lastFetched: Date.now()
+                    };
+                    state.lastFetched = Date.now();
             })
             .addCase(fetchLeaderboard.rejected, (state, action) => {
                 state.loading = false;
