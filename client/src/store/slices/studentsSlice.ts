@@ -1,6 +1,6 @@
 import { 
     getStudents, createStudent, updateStudent, deleteStudent,
-    PaginatedStudents, Student, CacheResponse
+    Student, CacheResponse
 } from '../../services';
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import {RootState} from '../index';
@@ -14,6 +14,11 @@ interface StudentsState {
         totalElements: number;
     };
     lastFetched: number | null;
+    currentParams: {
+        page: number;
+        size: number;
+        sort?: string;
+    } | null;
 }
 
 const initialState: StudentsState = {
@@ -24,17 +29,24 @@ const initialState: StudentsState = {
         totalPages: 0,
         totalElements: 0
     },
-    lastFetched: null
+    lastFetched: null,
+    currentParams: null
 };
 
 const CACHE_DURATION = 5 * 60 * 1000;
 
 export const fetchStudents = createAsyncThunk(
     'students/fetchStudents',
-    async (params: { page: number, size: number, force?: boolean }, { getState, signal }) => {
+    async (params: { page: number, size: number, sort?: string, force?: boolean }, { getState, signal }) => {
         const state = getState() as RootState;
-        const lastFetched = state.students.lastFetched;
-        const isCacheValid = lastFetched && (Date.now() - lastFetched) < CACHE_DURATION;
+        const { lastFetched, currentParams } = state.students;
+        const isSameParams = currentParams &&
+            currentParams.page ===  params.page &&
+            currentParams.size === params.size &&
+            currentParams.sort === params.sort;
+        const isCacheValid = lastFetched &&
+            (Date.now() - lastFetched) < CACHE_DURATION &&
+            isSameParams;
         if (isCacheValid && !params.force) {
             return {
                 data: state.students.data,
@@ -42,7 +54,7 @@ export const fetchStudents = createAsyncThunk(
                 totalElements: state.students.pagination.totalElements
             } as CacheResponse<Student>;
         }
-        return await getStudents(params.page, params.size, signal);
+        return await getStudents(params.page, params.size, params.sort, signal);
     }
 );
 
@@ -83,9 +95,7 @@ const studentsSlice = createSlice({
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(fetchStudents.fulfilled, (
-                state,
-                action: PayloadAction<PaginatedStudents | CacheResponse<Student>>) => {
+            .addCase(fetchStudents.fulfilled, (state, action) => {
                     state.loading = false;
                     if ('students' in action.payload) {
                         state.data = action.payload.students;
@@ -100,6 +110,11 @@ const studentsSlice = createSlice({
                             totalElements: action.payload.totalElements
                         };
                     }
+                    state.currentParams = {
+                        page: action.meta.arg.page,
+                        size: action.meta.arg.size,
+                        sort: action.meta.arg.sort
+                    };
                     state.lastFetched = Date.now();
             })
             .addCase(fetchStudents.rejected, (state, action) => {
@@ -114,6 +129,7 @@ const studentsSlice = createSlice({
                 state.loading = false;
                 state.data.push(action.payload);
                 state.lastFetched = null;
+                state.currentParams = null;
             })
             .addCase(addStudent.rejected, (state, action) => {
                 state.loading = false;
@@ -130,6 +146,7 @@ const studentsSlice = createSlice({
                     state.data[index] = action.payload;
                 }
                 state.lastFetched = null;
+                state.currentParams = null;
             })
             .addCase(modifyStudent.rejected, (state, action) => {
                 state.loading = false;
@@ -143,6 +160,7 @@ const studentsSlice = createSlice({
                 state.loading = false;
                 state.data = state.data.filter(student => student.id !== action.payload);
                 state.lastFetched = null;
+                state.currentParams = null;
             })
             .addCase(removeStudent.rejected, (state, action) => {
                 state.loading = false;

@@ -1,6 +1,6 @@
 import {
     getUsersByRole, createUser, updateUser, deleteUser,
-    PaginatedUsers, UserDTO, Role, CacheResponse
+    UserDTO, Role, CacheResponse
 } from '../../services';
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../index';
@@ -14,6 +14,11 @@ interface AdminsState {
         totalElements: number;
     };
     lastFetched: number | null;
+    currentParams: {
+        page: number;
+        size: number;
+        sort?: string;
+    } | null;
 }
 
 const initialState: AdminsState = {
@@ -24,17 +29,24 @@ const initialState: AdminsState = {
         totalPages: 0,
         totalElements: 0
     },
-    lastFetched: null
+    lastFetched: null,
+    currentParams: null
 };
 
 const CACHE_DURATION = 5 * 60 * 1000;
 
 export const fetchAdmins = createAsyncThunk(
     'admins/fetchAdmins',
-    async (params: { page: number, size: number, force?: boolean }, { getState, signal }) => {
+    async (params: { page: number, size: number, sort?: string, force?: boolean }, { getState, signal }) => {
         const state = getState() as RootState;
-        const lastFetched = state.admins.lastFetched;
-        const isCacheValid = lastFetched && (Date.now() - lastFetched) < CACHE_DURATION;
+        const { lastFetched, currentParams } = state.admins;
+        const isSameParams = currentParams &&
+            currentParams.page ===  params.page &&
+            currentParams.size === params.size &&
+            currentParams.sort === params.sort;
+        const isCacheValid = lastFetched &&
+            (Date.now() - lastFetched) < CACHE_DURATION &&
+            isSameParams;
         if (isCacheValid && !params.force) {
             return {
                 data: state.admins.data,
@@ -42,7 +54,7 @@ export const fetchAdmins = createAsyncThunk(
                 totalElements: state.admins.pagination.totalElements
             } as CacheResponse<UserDTO>;
         }
-        return await getUsersByRole(Role.ADMIN, params.page, params.size, signal);
+        return await getUsersByRole(Role.ADMIN, params.page, params.size, params.sort, signal);
     }
 );
 
@@ -91,9 +103,7 @@ const adminsSlice = createSlice({
                state.loading = true;
                state.error = null;
            })
-           .addCase(fetchAdmins.fulfilled, (
-               state,
-               action: PayloadAction<PaginatedUsers | CacheResponse<UserDTO>>) => {
+           .addCase(fetchAdmins.fulfilled, (state, action) => {
                    state.loading = false;
                    if ('users' in action.payload) {
                        state.data = action.payload.users;
@@ -108,6 +118,11 @@ const adminsSlice = createSlice({
                            totalElements: action.payload.totalElements
                        };
                    }
+                   state.currentParams = {
+                       page: action.meta.arg.page,
+                       size: action.meta.arg.size,
+                       sort: action.meta.arg.sort
+                   };
                    state.lastFetched = Date.now();
            })
            .addCase(fetchAdmins.rejected, (state, action) => {
@@ -122,6 +137,7 @@ const adminsSlice = createSlice({
                state.loading = false;
                state.data.push(action.payload);
                state.lastFetched = null;
+               state.currentParams = null;
            })
            .addCase(addAdmin.rejected, (state, action) => {
                state.loading = false;
@@ -138,6 +154,7 @@ const adminsSlice = createSlice({
                    state.data[index] = action.payload;
                }
                state.lastFetched = null;
+               state.currentParams = null;
            })
            .addCase(modifyAdmin.rejected, (state, action) => {
                state.loading = false;
@@ -151,6 +168,7 @@ const adminsSlice = createSlice({
                state.loading = false;
                state.data = state.data.filter(admin => admin.id !== action.payload);
                state.lastFetched = null;
+               state.currentParams = null;
            })
            .addCase(removeAdmin.rejected, (state, action) => {
                state.loading = false;

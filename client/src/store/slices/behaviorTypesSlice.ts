@@ -1,6 +1,6 @@
 import {
     getBehaviorTypes, createBehaviorType, updateBehaviorType, deleteBehaviorType,
-    PaginatedBehaviorTypes, BehaviorType, CacheResponse
+    BehaviorType, CacheResponse
 } from '../../services';
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../index';
@@ -14,6 +14,11 @@ interface BehaviorTypesState {
         totalElements: number;
     };
     lastFetched: number | null;
+    currentParams: {
+        page: number;
+        size: number;
+        sort?: string;
+    } | null;
 }
 
 const initialState: BehaviorTypesState = {
@@ -24,17 +29,24 @@ const initialState: BehaviorTypesState = {
         totalPages: 0,
         totalElements: 0
     },
-    lastFetched: null
+    lastFetched: null,
+    currentParams: null,
 };
 
 const CACHE_DURATION = 5 * 60 * 1000;
 
 export const fetchBehaviorTypes = createAsyncThunk(
     'behaviorTypes/fetchBehaviorTypes',
-    async (params: { page: number, size: number, force?: boolean }, { getState, signal }) => {
+    async (params: { page: number, size: number, sort?: string, force?: boolean }, { getState, signal }) => {
         const state = getState() as RootState;
-        const lastFetched = state.behaviorTypes.lastFetched;
-        const isCacheValid = lastFetched && (Date.now() - lastFetched) < CACHE_DURATION;
+        const { lastFetched, currentParams } = state.behaviorTypes;
+        const isSameParams = currentParams &&
+            currentParams.page ===  params.page &&
+            currentParams.size === params.size &&
+            currentParams.sort === params.sort;
+        const isCacheValid = lastFetched &&
+            (Date.now() - lastFetched) < CACHE_DURATION &&
+            isSameParams;
         if (isCacheValid && !params.force) {
             return {
                 data: state.behaviorTypes.data,
@@ -42,7 +54,7 @@ export const fetchBehaviorTypes = createAsyncThunk(
                 totalElements: state.behaviorTypes.pagination.totalElements
             } as CacheResponse<BehaviorType>;
         }
-        return await getBehaviorTypes(params.page, params.size, signal);
+        return await getBehaviorTypes(params.page, params.size, params.sort, signal);
     }
 );
 
@@ -83,9 +95,7 @@ const behaviorTypesSlice = createSlice({
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(fetchBehaviorTypes.fulfilled, (
-                state,
-                action: PayloadAction<PaginatedBehaviorTypes | CacheResponse<BehaviorType>>) => {
+            .addCase(fetchBehaviorTypes.fulfilled, (state, action) => {
                     state.loading = false;
                     if ('behaviorTypes' in action.payload) {
                         state.data = action.payload.behaviorTypes;
@@ -99,6 +109,11 @@ const behaviorTypesSlice = createSlice({
                             totalPages: action.payload.totalPages,
                             totalElements: action.payload.totalElements
                         };
+                    }
+                    state.currentParams = {
+                        page: action.meta.arg.page,
+                        size: action.meta.arg.size,
+                        sort: action.meta.arg.sort
                     }
                     state.lastFetched = Date.now();
             })
@@ -114,6 +129,7 @@ const behaviorTypesSlice = createSlice({
                 state.loading = false;
                 state.data.push(action.payload);
                 state.lastFetched = null;
+                state.currentParams = null;
             })
             .addCase(addBehaviorType.rejected, (state, action) => {
                 state.loading = false;
@@ -130,6 +146,7 @@ const behaviorTypesSlice = createSlice({
                     state.data[index] = action.payload;
                 }
                 state.lastFetched = null;
+                state.currentParams = null;
             })
             .addCase(modifyBehaviorType.rejected, (state, action) => {
                 state.loading = false;
@@ -143,6 +160,7 @@ const behaviorTypesSlice = createSlice({
                 state.loading = false;
                 state.data = state.data.filter(behaviorType => behaviorType.id !== action.payload);
                 state.lastFetched = null;
+                state.currentParams = null;
             })
             .addCase(removeBehaviorType.rejected, (state, action) => {
                 state.loading = false;

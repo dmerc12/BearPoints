@@ -38,5 +38,5 @@ export {
     fetchBragLogs, addBragLog, addPublicBragLog, modifyBragLog, removeBragLog, resetBragLogs, clearBragLogsError,
     fetchRewardItems, addRewardItem, modifyRewardItem, removeRewardItem, resetRewardItems, clearRewardItemsError,
     fetchStudentRewards, addStudentReward, modifyStudentReward, removeStudentReward, resetStudentRewards, clearStudentRewardsError,
-    fetchLeaderboard, setTimeframe, resetLeaderboard, clearTimeframeCache, clearLeaderboardError
+    fetchLeaderboard, setTimeframe, resetLeaderboard, clearTimeframeCache, clearSortCache, clearLeaderboardError
 } from './slices';

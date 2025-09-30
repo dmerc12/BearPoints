@@ -25,5 +25,5 @@ export {
     clearStudentRewardsError
 } from './studentRewardsSlice';
 export {
-    fetchLeaderboard, setTimeframe, resetLeaderboard, clearLeaderboardError, clearTimeframeCache
+    fetchLeaderboard, setTimeframe, resetLeaderboard, clearLeaderboardError, clearTimeframeCache, clearSortCache
 } from './leaderboardSlice';
