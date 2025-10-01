@@ -1,14 +1,10 @@
 import { PaginatedBehaviorTypes, fetchPaginated } from '../../index';
 
 export const getBehaviorTypes = async (page = 0, size = 100,
-                                       sort?: string, signal?: AbortSignal): Promise<PaginatedBehaviorTypes> => {
+                                       sortQuery?: string, signal?: AbortSignal): Promise<PaginatedBehaviorTypes> => {
     let url = `api/behavior-types?projection=behaviorTypeProjection&page=${page}&size=${size}`;
-    if (sort) {
-        url += `&sort=${sort}`;
+    if (sortQuery) {
+        url += `&${sortQuery}`;
     }
-    return await fetchPaginated<PaginatedBehaviorTypes>(
-        url,
-        'behaviorTypes',
-        signal
-    );
+    return await fetchPaginated<PaginatedBehaviorTypes>(url,'behaviorTypes', signal);
 };
