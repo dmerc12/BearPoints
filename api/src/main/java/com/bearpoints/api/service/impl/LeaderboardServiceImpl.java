@@ -19,6 +19,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -67,28 +68,33 @@ public class LeaderboardServiceImpl implements LeaderboardService {
             Student student = log.getStudent();
             pointsMap.merge(student, log.getPointsGenerated(), Integer::sum);
         }
+        AtomicInteger rank = new AtomicInteger(1);
         return pointsMap.entrySet().stream()
-                .map(entry ->
-                        createEntryDTO(entry.getKey(), entry.getValue()))
+                .map(entry -> createUnrankedEntry(entry.getKey(), entry.getValue()))
                 .sorted(Comparator.comparingInt(LeaderboardEntryDTO::getPoints).reversed())
+                .map(unrankedEntry -> new LeaderboardEntryDTO(
+                        rank.getAndIncrement(),
+                        unrankedEntry.getStudent(),
+                        unrankedEntry.getTeacher(),
+                        unrankedEntry.getGrade(),
+                        unrankedEntry.getPoints()
+                ))
                 .collect(Collectors.toList());
     }
 
-    private LeaderboardEntryDTO createEntryDTO(Student student, int points) {
-        return new LeaderboardEntryDTO(
-                new PersonDTO(
-                        student.getId(),
-                        student.getUser().getFirstName(),
-                        student.getUser().getLastName()
-                ),
-                new PersonDTO(
-                        student.getTeacher().getId(),
-                        student.getTeacher().getUser().getFirstName(),
-                        student.getTeacher().getUser().getLastName()
-                ),
-                student.getTeacher().getGrade().name(),
-                points
+    private LeaderboardEntryDTO createUnrankedEntry(Student student, int points) {
+        PersonDTO studentDTO = new PersonDTO(
+                student.getId(),
+                student.getUser().getFirstName(),
+                student.getUser().getLastName()
         );
+        PersonDTO teacherDTO = new PersonDTO(
+                student.getTeacher().getId(),
+                student.getTeacher().getUser().getFirstName(),
+                student.getTeacher().getUser().getLastName()
+        );
+        String grade = student.getTeacher().getGrade().name();
+        return new LeaderboardEntryDTO(0, studentDTO, teacherDTO, grade, points);
     }
 
     private LocalDateTime calculateStartDate(Timeframe timeframe) {

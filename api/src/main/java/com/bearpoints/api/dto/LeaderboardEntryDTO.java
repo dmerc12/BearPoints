@@ -21,6 +21,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class LeaderboardEntryDTO {
+    private Integer rank;
     private PersonDTO student;
     private PersonDTO teacher;
     private String grade;
