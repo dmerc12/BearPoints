@@ -48,9 +48,9 @@ export function useStudentTable({ itemsPerPage = 10 }: UseStudentTableProps) {
         },
     ], []);
 
-    const fetchAction = useCallback(({ page, size, force }
-                                     : { page: number; size: number; force?: boolean })=> {
-        dispatch(fetchStudents({ page, size, force: force || false }) as never);
+    const fetchAction = useCallback(({ page, size, sort, force }
+                                     : { page: number; size: number; sort?: string; force?: boolean })=> {
+        dispatch(fetchStudents({ page, size, sort, force: force || false }) as never);
     }, [dispatch]);
 
     const teacherNames = useMemo(() => {

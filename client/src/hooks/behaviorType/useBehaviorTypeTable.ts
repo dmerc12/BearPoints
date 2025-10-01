@@ -29,9 +29,9 @@ export function useBehaviorTypeTable({ itemsPerPage }: UseBehaviorTypeTableProps
         },
     ], []);
 
-    const fetchAction = useCallback(({ page, size, force }
-                                     : { page: number, size: number; force?: boolean }) => {
-        dispatch(fetchBehaviorTypes({ page, size, force: force || false }) as never);
+    const fetchAction = useCallback(({ page, size, sort, force }
+                                     : { page: number, size: number; sort?: string; force?: boolean }) => {
+        dispatch(fetchBehaviorTypes({ page, size, sort, force: force || false }) as never);
     }, [dispatch]);
 
     const filtersConfig = [

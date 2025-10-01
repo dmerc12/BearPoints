@@ -42,9 +42,9 @@ export function useTeacherTable({ itemsPerPage = 10 }: UseTeacherTableProps) {
         },
     ], []);
 
-    const fetchAction = useCallback(({ page, size, force }
-                                     : { page: number; size: number; force?: boolean }) => {
-        dispatch(fetchTeachers({ page, size, force: force || false }) as never);
+    const fetchAction = useCallback(({ page, size, sort, force }
+                                     : { page: number; size: number; sort?: string; force?: boolean }) => {
+        dispatch(fetchTeachers({ page, size, sort, force: force || false }) as never);
     }, [dispatch]);
 
     const gradeOptions = useMemo(() => {

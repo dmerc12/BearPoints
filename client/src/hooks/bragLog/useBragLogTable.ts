@@ -43,9 +43,9 @@ export function useBragLogTable({ itemsPerPage = 10 }: UseBragLogTableProps) {
         },
     ], []);
 
-    const fetchAction = useCallback(({ page, size, force }
-                                     : { page: number; size: number; force?: boolean }) => {
-        dispatch(fetchBragLogs({ page, size, force: force || false }) as never);
+    const fetchAction = useCallback(({ page, size, sort, force }
+                                     : { page: number; size: number; sort?: string; force?: boolean }) => {
+        dispatch(fetchBragLogs({ page, size, sort, force: force || false }) as never);
     }, [dispatch]);
 
     const filtersConfig = [

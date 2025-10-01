@@ -15,6 +15,17 @@ export function useLeaderboardTable({ itemsPerPage = 20 }: UseLeaderboardTablePr
 
     const initialFilters = { teacherFilter: '', gradeFilter: '' }
 
+    const getServerSortField = useCallback((clientField: string): string => {
+        const fieldMap: Record<string, string> = {
+            'rank': 'rank',
+            'points': 'points',
+            'studentName': 'student.lastName',
+            'teacherName': 'teacher.lastName',
+            'grade': 'grade'
+        };
+        return fieldMap[clientField] || clientField
+    }, []);
+
     const columnsBuilder = useCallback(() => [
         {
             key: 'rank',
@@ -48,8 +59,8 @@ export function useLeaderboardTable({ itemsPerPage = 20 }: UseLeaderboardTablePr
         },
     ] as TableColumn<LeaderboardEntry>[], []);
 
-    const fetchAction = useCallback(({ page, size, force }
-                                     : { page?: number, size?: number, force?: boolean }
+    const fetchAction = useCallback(({ page, size, sort, force }
+                                     : { page?: number, size?: number, sort?: string, force?: boolean }
                                      = {}) => {
         const pageToUse = page !== undefined ? page : 0;
         const sizeToUse = size !== undefined ? size : itemsPerPage
@@ -57,6 +68,7 @@ export function useLeaderboardTable({ itemsPerPage = 20 }: UseLeaderboardTablePr
             timeframe: currentTimeframe,
             page: pageToUse,
             size: sizeToUse,
+            sort: sort,
             force: force || false
         }));
     }, [dispatch, currentTimeframe, itemsPerPage]);
@@ -68,11 +80,13 @@ export function useLeaderboardTable({ itemsPerPage = 20 }: UseLeaderboardTablePr
         fetchAction,
         itemsPerPage,
         mode: 'read-only',
+        getServerSortField
     });
 
     useEffect(() => {
         return () => {
             table.resetFilters();
+            table.resetSorting();
         };
     }, [table]);
 
@@ -93,8 +107,7 @@ export function useLeaderboardTable({ itemsPerPage = 20 }: UseLeaderboardTablePr
     const handleTimeframeChange = useCallback((timeframe: Timeframe) => {
         dispatch(setTimeframe(timeframe));
         table.setCurrentPage(1);
-        retry();
-    }, [dispatch, retry, table]);
+    }, [dispatch, table]);
 
     const filtersConfig = [
         {

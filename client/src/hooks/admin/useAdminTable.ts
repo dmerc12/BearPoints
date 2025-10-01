@@ -36,9 +36,9 @@ export function useAdminTable({ itemsPerPage = 10 }: UseAdminTableProps) {
         },
     ], []);
 
-    const fetchAction = useCallback(({ page, size, force }
-                                     : { page: number; size: number; force?: boolean }) => {
-        dispatch(fetchAdmins({ page, size, force: force || false }) as never);
+    const fetchAction = useCallback(({ page, size, sort, force }
+                                     : { page: number; size: number; sort?: string; force?: boolean }) => {
+        dispatch(fetchAdmins({ page, size, sort, force: force || false }) as never);
     }, [dispatch]);
 
     const table = useTable<UserDTO, typeof initialFilters>({
