@@ -1,6 +1,11 @@
 import { RootState, useAppDispatch, useAppSelector } from '../store';
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 
+export interface SortingConfig {
+    propertyName: string;
+    sortType: 'asc' | 'desc';
+}
+
 export interface TableFilters {
     [key: string]: string;
 }
@@ -39,12 +44,13 @@ export interface UseTableOptions<T, F extends TableFilters> {
     itemsPerPage?: number;
     columnsBuilder?: (helpers: TableHelpers<T>) => TableColumn<T>[];
     defaultColumns?: TableColumn<T>[];
+    getServerSortField?: (clientField: string) => string;
 }
 
 export function useTable<T, F extends TableFilters>(props: UseTableOptions<T, F>) {
     const {
         selector, initialFilters, mode = 'read-only', fetchAction,
-        itemsPerPage = 10, columnsBuilder, defaultColumns = []
+        itemsPerPage = 10, columnsBuilder, defaultColumns = [], getServerSortField
     } = props;
 
     const dispatch = useAppDispatch();
@@ -52,17 +58,26 @@ export function useTable<T, F extends TableFilters>(props: UseTableOptions<T, F>
 
     const [filters, setFilters] = useState<F>(initialFilters);
     const [currentPage, setCurrentPage] = useState(1);
-    const [sortField, setSortField] = useState<string>('');
-    const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+    const [sortConfig, setSortConfig] = useState<SortingConfig[]>([]);
 
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [editingItem, setEditingItem] = useState<T | null>(null);
     const [deletingItem, setDeletingItem] = useState<T | null>(null);
 
+    const getSortField = useCallback((clientField: string): string => {
+        if (getServerSortField) {
+            return getServerSortField(clientField);
+        }
+        return clientField;
+    }, [getServerSortField]);
+
     const sortParam = useMemo(() => {
-        if (!sortField) return undefined;
-        return `${sortField},${sortDirection}`;
-    }, [sortField, sortDirection]);
+        if (sortConfig.length === 0) return undefined;
+        return sortConfig.map((config) => {
+            const serverField = getSortField(config.propertyName);
+            return `sort=${serverField},${config.sortType}`;
+        }).join('&');
+    }, [sortConfig, getSortField]);
 
     // Fetch data on mount
     useEffect(() => {
@@ -91,14 +106,23 @@ export function useTable<T, F extends TableFilters>(props: UseTableOptions<T, F>
     const totalCount = pagination.totalElements;
 
     const handleSort = useCallback((field: string) => {
-        if (sortField === field) {
-            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-        } else {
-            setSortField(field);
-            setSortDirection('asc');
-        }
+        setSortConfig((currentConfig) => {
+            const pendingChange = [...currentConfig];
+            const existingIndex = pendingChange.findIndex((config) =>
+                config.propertyName === field);
+            if (existingIndex > -1) {
+                const existingConfig = pendingChange[existingIndex];
+                pendingChange.splice(existingIndex, 1);
+                if (existingConfig.sortType === 'asc') {
+                    pendingChange.push({ propertyName: field, sortType: 'desc' });
+                }
+            } else {
+                pendingChange.push({ propertyName: field, sortType: 'asc' });
+            }
+            return pendingChange;
+        });
         setCurrentPage(1);
-    }, [sortField, sortDirection]);
+    }, []);
 
     const updateFilter = useCallback((filterKey: keyof F, value: string) => {
         setFilters(prev => ({
@@ -120,8 +144,7 @@ export function useTable<T, F extends TableFilters>(props: UseTableOptions<T, F>
     }, [initialFilters]);
 
     const resetSorting = useCallback(() => {
-        setSortField('');
-        setSortDirection('asc');
+        setSortConfig([]);
         setCurrentPage(1);
     }, []);
 
@@ -177,7 +200,7 @@ export function useTable<T, F extends TableFilters>(props: UseTableOptions<T, F>
         // Filters
         filters, updateFilter: updateFilterAny, resetFilters,
         // Sorting
-        sortField, sortDirection, handleSort, resetSorting,
+        sortConfig, handleSort, resetSorting,
         // Pagination
         currentPage, setCurrentPage, totalPages, itemsPerPage,
         // Data refresh
