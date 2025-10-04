@@ -22,6 +22,7 @@ public class LeaderboardEntryDTOTests {
     @DisplayName("Constructor initializes all fields correctly")
     void shouldInitializeAllFieldsViaConstructor() {
         LeaderboardEntryDTO dto = new LeaderboardEntryDTO(
+                1,
                 new PersonDTO(
                         101L,
                         "John",
@@ -35,6 +36,7 @@ public class LeaderboardEntryDTOTests {
                 "THIRD",
                 150
         );
+        assertEquals(1, dto.getRank());
         assertEquals(101L, dto.getStudent().getId());
         assertEquals("John", dto.getStudent().getFirstName());
         assertEquals("Smith", dto.getStudent().getLastName());

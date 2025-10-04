@@ -1,7 +1,8 @@
 package com.bearpoints.api.service;
 
-import com.bearpoints.api.dao.BragLogDAO;
+import com.bearpoints.api.dao.LeaderboardDAO;
 import com.bearpoints.api.dto.LeaderboardEntryDTO;
+import com.bearpoints.api.dto.PersonDTO;
 import com.bearpoints.api.entity.*;
 import com.bearpoints.api.service.impl.LeaderboardServiceImpl;
 import org.junit.jupiter.api.DisplayName;
@@ -11,208 +12,253 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Set;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * Unit tests for {@link LeaderboardService} implementation and functionality.
- * <p>Tests include:
+ * Unit tests for {@link LeaderboardService} implementation.
+ *
+ * <p>Validates business logic for leaderboard retrieval, including timeframe calculation
+ * and proper delegation to DAO layer with correct parameters.
+ *
+ * <p>Key test areas:
  * <ul>
- *     <li>Service implementation and functionality</li>
+ *     <li>Service method delegation to DAO with correct parameters</li>
+ *     <li>Timeframe to start date conversion accuracy</li>
+ *     <li>Filter parameter propagation (teacherId, grade)</li>
+ *     <li>Integration point verification between service and DAO layers</li>
  * </ul>
- * <p>Timeframes available and tested:
+ *
+ * <p>Timeframes calculations tested:
  * <ul>
- *     <li>WEEK</li>
- *     <li>MONTH</li>
- *     <li>SEMESTER</li>
- *     <li>YEAR</li>
+ *     <li>WEEK - 7 days prior to current timestamp</li>
+ *     <li>MONTH - 30 days prior to current timestamp</li>
+ *     <li>SEMESTER - 6 months prior to current timestamp</li>
+ *     <li>YEAR - 365 days prior to current timestamp</li>
  * </ul>
  *
  * @see LeaderboardService
  * @see LeaderboardServiceImpl
- *
+ * @since 1.0
  * @version 2.0
  * @author Dylan Mercer
  */
 @ExtendWith(MockitoExtension.class)
 public class LeaderboardServiceTests {
-    /** Mock brag log repository */
+    /** Mock DAO for verifying service-to-DAO interactions */
     @Mock
-    private BragLogDAO bragLogRepository;
+    private LeaderboardDAO leaderboardDAO;
 
-    /** Injects mock repository into service implementation */
+    /** Service implementation with mocked DAO */
     @InjectMocks
     private LeaderboardServiceImpl leaderboardService;
 
-    /** Test data */
-    private BragLog bragLog;
-
-    private BragLog createValidBragLog(LocalDateTime timestamp) {
-        // Create teacher
-        User teacherUser = new User();
-        teacherUser.setId(1L);
-        teacherUser.setEmail("valid.teacher@okcps.org");
-        teacherUser.setFirstName("ValidFirstName");
-        teacherUser.setLastName("ValidLastName");
-        teacherUser.setRole(Role.TEACHER);
-        Teacher  teacher = new Teacher();
-        teacher.setId(2L);
-        teacher.setUser(teacherUser);
-        teacher.setGrade(GradeLevel.PRE_K);
-        // Create student
-        User studentUser = new User();
-        studentUser.setId(2L);
-        studentUser.setEmail("valid.student@okcps.org");
-        studentUser.setFirstName("ValidFirstName");
-        studentUser.setLastName("ValidLastName");
-        studentUser.setRole(Role.STUDENT);
-        Student student = new Student();
-        student.setId(1L);
-        student.setUser(studentUser);
-        student.setTeacher(teacher);
-        student.generateToken();
-        // Create behavior type
-        BehaviorType behaviorType = new BehaviorType();
-        behaviorType.setId(1L);
-        behaviorType.setName("valid behavior type");
-        // Create brag log
-        BragLog bragLog = new BragLog();
-        bragLog.setStudent(student);
-        bragLog.setTeacher(teacher);
-        bragLog.setBehaviors(Set.of(behaviorType));
-        bragLog.setPointsGenerated(behaviorType.getPointValue());
-        bragLog.setTimestamp(timestamp);
-        bragLog.setNotes("test notes");
-        return bragLog;
+    /**
+     * Tests service method delegation with basic parameters.
+     *
+     * <p>Verifies that service:
+     * <ul>
+     *     <li>Calls DAO with correct start date calculated from WEEK timeframe</li>
+     *     <li>Passes through null filter parameters unchanged</li>
+     *     <li>Returns DAO results without modification</li>
+     *     <li>Uses truncated timestamps for consistent time handling</li>
+     * </ul>
+     */
+    @Test
+    @DisplayName("Service delegates to DAO with correct parameters")
+    void getLeaderboard_DelegatesToDAO() {
+        Pageable pageable = PageRequest.of(0, 20);
+        LocalDateTime expectedStartDate = LocalDateTime.now()
+                .truncatedTo(ChronoUnit.SECONDS)
+                .minusWeeks(1);
+        List<LeaderboardEntryDTO> expectedContent = List.of(
+                new LeaderboardEntryDTO(1,
+                        new PersonDTO(1L, "John", "Doe"),
+                        new PersonDTO(1L, "Jane", "Smith"),
+                        "FIRST", 100)
+        );
+        Page<LeaderboardEntryDTO> expectedPage = new PageImpl<>(expectedContent, pageable, expectedContent.size());
+        when(leaderboardDAO.findRankedLeaderboard(any(LocalDateTime.class), eq(null), eq(null), eq(pageable)))
+                .thenReturn(expectedPage);
+        Page<LeaderboardEntryDTO> result = leaderboardService.getLeaderboard(Timeframe.WEEK, null, null, pageable);
+        assertNotNull(result);
+        assertEquals(1, result.getContent().size());
+        verify(leaderboardDAO).findRankedLeaderboard(expectedStartDate, null, null, pageable);
     }
 
-    /** Test get leaderboard with week timeframe */
+    /**
+     * Tests WEEK timeframe start date calculation.
+     *
+     * <p>Ensures start date is exactly 7 days prior to current timestamp,
+     * truncated to seconds for consistent database comparison.
+     */
     @Test
-    @DisplayName("Leaderboard with week timeframe")
-    public void leaderboardWithWeekTimeframe() {
+    @DisplayName("Service calculates correct start date for WEEK timeframe")
+    void getLeaderboard_CalculatesCorrectStartDate_Week() {
+        Pageable pageable = PageRequest.of(0, 20);
         LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
-        bragLog = createValidBragLog(now.minusDays(3));
-        LocalDateTime startDate = now.minusWeeks(1);
-        when(bragLogRepository.findByTimestampAfter(startDate)).thenReturn(List.of(bragLog));
-        Pageable pageable = PageRequest.of(0, 10);
-        Page<LeaderboardEntryDTO> result = leaderboardService.getLeaderboard(Timeframe.WEEK, pageable);
-        assertThat(result)
-                .hasSize(1)
-                .first()
-                .extracting(LeaderboardEntryDTO::getPoints)
-                .isEqualTo(bragLog.getPointsGenerated());
+        LocalDateTime expectedStartDate = now.minusWeeks(1);
+        List<LeaderboardEntryDTO> expectedContent = List.of(
+                new LeaderboardEntryDTO(1,
+                        new PersonDTO(1L, "John", "Doe"),
+                        new PersonDTO(1L, "Jane", "Smith"),
+                        "FIRST", 100)
+        );
+        Page<LeaderboardEntryDTO> expectedPage = new PageImpl<>(expectedContent, pageable, expectedContent.size());
+        when(leaderboardDAO.findRankedLeaderboard(eq(expectedStartDate), eq(null), eq(null), eq(pageable)))
+                .thenReturn(expectedPage);
+        Page<LeaderboardEntryDTO> result = leaderboardService.getLeaderboard(Timeframe.WEEK, null, null, pageable);
+        assertNotNull(result);
+        assertEquals(1, result.getContent().size());
+        verify(leaderboardDAO).findRankedLeaderboard(expectedStartDate, null, null, pageable);
     }
 
-    /** Test get leaderboard with month timeframe */
+    /**
+     * Tests MONTH timeframe start date calculation.
+     *
+     * <p>Ensures start date is exactly 30 days prior to current timestamp,
+     * truncated to seconds for consistent database comparison.
+     */
     @Test
-    @DisplayName("Leaderboard with month timeframe")
-    public void leaderboardWithMonthTimeframe() {
+    @DisplayName("Service calculates correct start date for MONTH timeframe")
+    void getLeaderboard_CalculatesCorrectStartDate_Month() {
+        Pageable pageable = PageRequest.of(0, 20);
         LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
-        bragLog = createValidBragLog(now.minusWeeks(3));
-        LocalDateTime startDate = now.minusMonths(1);
-        when(bragLogRepository.findByTimestampAfter(startDate)).thenReturn(List.of(bragLog));
-        Pageable pageable = PageRequest.of(0, 10);
-        Page<LeaderboardEntryDTO> result = leaderboardService.getLeaderboard(Timeframe.MONTH, pageable);
-        assertThat(result)
-                .hasSize(1)
-                .first()
-                .extracting(LeaderboardEntryDTO::getPoints)
-                .isEqualTo(bragLog.getPointsGenerated());
+        LocalDateTime expectedStartDate = now.minusMonths(1);
+        List<LeaderboardEntryDTO> expectedContent = List.of(
+                new LeaderboardEntryDTO(1,
+                        new PersonDTO(1L, "John", "Doe"),
+                        new PersonDTO(1L, "Jane", "Smith"),
+                        "FIRST", 100)
+        );
+        Page<LeaderboardEntryDTO> expectedPage = new PageImpl<>(expectedContent, pageable, expectedContent.size());
+        when(leaderboardDAO.findRankedLeaderboard(eq(expectedStartDate), eq(null), eq(null), eq(pageable)))
+                .thenReturn(expectedPage);
+        Page<LeaderboardEntryDTO> result = leaderboardService.getLeaderboard(Timeframe.MONTH, null, null, pageable);
+        assertNotNull(result);
+        assertEquals(1, result.getContent().size());
+        verify(leaderboardDAO).findRankedLeaderboard(expectedStartDate, null, null, pageable);
     }
 
-    /** Test get leaderboard with semester timeframe */
+    /**
+     * Tests SEMESTER timeframe start date calculation.
+     *
+     * <p>Ensures start date is exactly 6 months prior to current timestamp,
+     * truncated to seconds for consistent database comparison.
+     */
     @Test
-    @DisplayName("Leaderboard with semester timeframe")
-    public void leaderboardWithSemesterTimeframe() {
+    @DisplayName("Service calculates correct start date for SEMESTER timeframe")
+    void getLeaderboard_CalculatesCorrectStartDate_Semester() {
+        Pageable pageable = PageRequest.of(0, 20);
         LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
-        bragLog = createValidBragLog(now.minusMonths(4));
-        LocalDateTime startDate = now.minusMonths(6);
-        when(bragLogRepository.findByTimestampAfter(startDate)).thenReturn(List.of(bragLog));
-        Pageable pageable = PageRequest.of(0, 10);
-        Page<LeaderboardEntryDTO> result = leaderboardService.getLeaderboard(Timeframe.SEMESTER, pageable);
-        assertThat(result)
-                .hasSize(1)
-                .first()
-                .extracting(LeaderboardEntryDTO::getPoints)
-                .isEqualTo(bragLog.getPointsGenerated());
+        LocalDateTime expectedStartDate = now.minusMonths(6);
+        List<LeaderboardEntryDTO> expectedContent = List.of(
+                new LeaderboardEntryDTO(1,
+                        new PersonDTO(1L, "John", "Doe"),
+                        new PersonDTO(1L, "Jane", "Smith"),
+                        "FIRST", 100)
+        );
+        Page<LeaderboardEntryDTO> expectedPage = new PageImpl<>(expectedContent, pageable, expectedContent.size());
+        when(leaderboardDAO.findRankedLeaderboard(eq(expectedStartDate), eq(null), eq(null), eq(pageable)))
+                .thenReturn(expectedPage);
+        Page<LeaderboardEntryDTO> result = leaderboardService.getLeaderboard(Timeframe.SEMESTER, null, null, pageable);
+        assertNotNull(result);
+        assertEquals(1, result.getContent().size());
+        verify(leaderboardDAO).findRankedLeaderboard(expectedStartDate, null, null, pageable);
     }
 
-    /** Test get leaderboard with year timeframe */
+    /**
+     * Tests YEAR timeframe start date calculation.
+     *
+     * <p>Ensures start date is exactly 1 year prior to current timestamp,
+     * truncated to seconds for consistent database comparison.
+     */
     @Test
-    @DisplayName("Leaderboard with year timeframe")
-    public void leaderboardWithYearTimeframe() {
+    @DisplayName("Service calculates correct start date for YEAR timeframe")
+    void getLeaderboard_CalculatesCorrectStartDate_Year() {
+        Pageable pageable = PageRequest.of(0, 20);
         LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
-        bragLog = createValidBragLog(now.minusMonths(8));
-        LocalDateTime startDate = now.minusYears(1);
-        when(bragLogRepository.findByTimestampAfter(startDate)).thenReturn(List.of(bragLog));
-        Pageable pageable = PageRequest.of(0, 10);
-        Page<LeaderboardEntryDTO> result = leaderboardService.getLeaderboard(Timeframe.YEAR, pageable);
-        assertThat(result)
-                .hasSize(1)
-                .first()
-                .extracting(LeaderboardEntryDTO::getPoints)
-                .isEqualTo(bragLog.getPointsGenerated());
+        LocalDateTime expectedStartDate = now.minusYears(1);
+        List<LeaderboardEntryDTO> expectedContent = List.of(
+                new LeaderboardEntryDTO(1,
+                        new PersonDTO(1L, "John", "Doe"),
+                        new PersonDTO(1L, "Jane", "Smith"),
+                        "FIRST", 100)
+        );
+        Page<LeaderboardEntryDTO> expectedPage = new PageImpl<>(expectedContent, pageable, expectedContent.size());
+        when(leaderboardDAO.findRankedLeaderboard(eq(expectedStartDate), eq(null), eq(null), eq(pageable)))
+                .thenReturn(expectedPage);
+        Page<LeaderboardEntryDTO> result = leaderboardService.getLeaderboard(Timeframe.YEAR, null, null, pageable);
+        assertNotNull(result);
+        assertEquals(1, result.getContent().size());
+        verify(leaderboardDAO).findRankedLeaderboard(expectedStartDate, null, null, pageable);
     }
 
-    /** Test pagination functionality */
+    /**
+     * Tests service delegation with teacher filter.
+     *
+     * <p>Validates that teacherId parameter is properly propagated from service layer
+     * to DAO layer without modification.
+     */
     @Test
-    @DisplayName("Pagination returns correct page")
-    public void paginationReturnsCorrectPage() {
+    @DisplayName("Service delegates to DAO with teacher filter")
+    void getLeaderboard_WithTeacherFilter_DelegatesToDAO() {
+        Pageable pageable = PageRequest.of(0, 20);
         LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
-        BragLog log1 = createValidBragLog(now.minusDays(1));
-        BragLog log2 = createValidBragLog(now.minusDays(2));
-        BragLog log3 = createValidBragLog(now.minusDays(3));
-        LocalDateTime startDate = now.minusWeeks(1);
-        when(bragLogRepository.findByTimestampAfter(startDate))
-                .thenReturn(List.of(log1, log2, log3));
-        Pageable pageable = PageRequest.of(0, 2);
-        Page<LeaderboardEntryDTO> result = leaderboardService.getLeaderboard(Timeframe.WEEK, pageable);
-        assertThat(result.getContent()).hasSize(2);
-        assertThat(result.getTotalElements()).isEqualTo(3);
-        assertThat(result.getTotalPages()).isEqualTo(2);
-        assertThat(result.getNumber()).isEqualTo(0);
+        LocalDateTime expectedStartDate = now.minusWeeks(1);
+        Long teacherId = 1L;
+        List<LeaderboardEntryDTO> expectedContent = List.of(
+                new LeaderboardEntryDTO(1,
+                        new PersonDTO(1L, "John", "Doe"),
+                        new PersonDTO(teacherId, "Jane", "Smith"),
+                        "FIRST", 100)
+        );
+        Page<LeaderboardEntryDTO> expectedPage = new PageImpl<>(expectedContent, pageable, expectedContent.size());
+        when(leaderboardDAO.findRankedLeaderboard(eq(expectedStartDate), eq(teacherId), eq(null), eq(pageable)))
+                .thenReturn(expectedPage);
+        Page<LeaderboardEntryDTO> result = leaderboardService.getLeaderboard(Timeframe.WEEK, teacherId, null, pageable);
+        assertNotNull(result);
+        assertEquals(1, result.getContent().size());
+        verify(leaderboardDAO).findRankedLeaderboard(expectedStartDate, teacherId, null, pageable);
     }
 
-    /** Test pagination when page offset is beyond total entries */
+    /**
+     * Tests service delegation with grade filter.
+     *
+     * <p>Validates that grade parameter is properly propagated from service layer
+     * to DAO layer without modification.
+     */
     @Test
-    @DisplayName("Pagination returns empty page when offset exceeds total entries")
-    public void paginationReturnsEmptyPageWhenOffsetExceedsTotal() {
+    @DisplayName("Service delegates to DAO with grade filter")
+    void getLeaderboard_WithGradeFilter_DelegatesToDAO() {
+        Pageable pageable = PageRequest.of(0, 20);
         LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
-        BragLog log1 = createValidBragLog(now.minusDays(1));
-        BragLog log2 = createValidBragLog(now.minusDays(2));
-        LocalDateTime startDate = now.minusWeeks(1);
-        when(bragLogRepository.findByTimestampAfter(startDate)).thenReturn(List.of(log1, log2));
-        Pageable pageable = PageRequest.of(1, 2);
-        Page<LeaderboardEntryDTO> result = leaderboardService.getLeaderboard(Timeframe.WEEK, pageable);
-        assertThat(result.getContent()).isEmpty();
-        assertThat(result.getTotalElements()).isEqualTo(2);
-        assertThat(result.getTotalPages()).isEqualTo(1);
-        assertThat(result.getNumber()).isEqualTo(1);
-        assertThat(result.getSize()).isEqualTo(2);
-    }
-
-    /** Test pagination when page offset is far beyond total entries */
-    @Test
-    @DisplayName("Pagination returns empty page when offset far exceeds total entries")
-    public void paginationReturnsEmptyPageWhenOffsetFarExceedsTotal() {
-        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
-        BragLog log1 = createValidBragLog(now.minusDays(1));
-        LocalDateTime startDate = now.minusWeeks(1);
-        when(bragLogRepository.findByTimestampAfter(startDate)).thenReturn(List.of(log1));
-        Pageable pageable = PageRequest.of(10, 1);
-        Page<LeaderboardEntryDTO> result = leaderboardService.getLeaderboard(Timeframe.WEEK, pageable);
-        assertThat(result.getContent()).isEmpty();
-        assertThat(result.getTotalElements()).isEqualTo(1);
-        assertThat(result.getTotalPages()).isEqualTo(1);
-        assertThat(result.getNumber()).isEqualTo(10);
-        assertThat(result.getSize()).isEqualTo(1);
+        LocalDateTime expectedStartDate = now.minusWeeks(1);
+        String grade = "FIRST";
+        List<LeaderboardEntryDTO> expectedContent = List.of(
+                new LeaderboardEntryDTO(1,
+                        new PersonDTO(1L, "John", "Doe"),
+                        new PersonDTO(1L, "Jane", "Smith"),
+                        grade, 100)
+        );
+        Page<LeaderboardEntryDTO> expectedPage = new PageImpl<>(expectedContent, pageable, expectedContent.size());
+        when(leaderboardDAO.findRankedLeaderboard(eq(expectedStartDate), eq(null), eq(grade), eq(pageable)))
+                .thenReturn(expectedPage);
+        Page<LeaderboardEntryDTO> result = leaderboardService.getLeaderboard(Timeframe.WEEK, null, grade, pageable);
+        assertNotNull(result);
+        assertEquals(1, result.getContent().size());
+        verify(leaderboardDAO).findRankedLeaderboard(expectedStartDate, null, grade, pageable);
     }
 }

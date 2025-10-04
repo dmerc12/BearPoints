@@ -11,26 +11,26 @@ import org.springframework.web.bind.annotation.*;
 
 /**
  * REST controller for leaderboard data retrieval.
- * <p>Provides secure access to student point leaderboards filtered by timeframe.
+ * <p>Provides secure access to student point leaderboards filtered by timeframe, teacher, and grade.
  *
  * <p>Endpoint:
  * <ul>
- *     <li>{@code GET /api/leaderboard} - Retrieves current leaderboard with pagination</li>
+ *     <li>{@code GET /api/leaderboard} - Retrieves current leaderboard with pagination and filtering</li>
  * </ul>
  *
  * <p>Features:
  * <ul>
  *     <li>Requires STUDENT, TEACHER, or ADMIN role</li>
  *     <li>Supports timeframe filtering (WEEK, MONTH, SEMESTER, YEAR)</li>
+ *     <li>Supports teacher and grade filtering</li>
  *     <li>Default timeframe is WEEK</li>
- *     <li>Returns paginated results sorted by points (highest first)</li>
+ *     <li>Returns paginated results with dynamic contextual ranking (global/class/grade ranks)</li>
  *     <li>Supports page, size, and sort parameters</li>
  * </ul>
  *
  * @see LeaderboardService
- * @see LeaderboardEntryDTO
  * @see Timeframe
- * @version 2.0
+ * @version 3.0
  * @author Dylan Mercer
  */
 @CrossOrigin
@@ -45,21 +45,27 @@ public class LeaderboardController {
     }
 
     /**
-     * Retrieves current leaderboard data with pagination.
-     * <p>Returns list of students sorted by points in descending order.
+     * Retrieves current leaderboard data with pagination and filtering.
+     * <p>Returns list of students with dynamic ranking based on filters.
      *
      * @param timeframe Filter period (optional, defaults to WEEK)
+     * @param teacherId Filter by specific teacher (optional)
+     * @param grade Filter by grade level (optional)
      * @param pageable  Pagination and sorting parameters (page, size, sort)
      * @return List of leaderboard entries with structured student/teacher details
      *
      * @example
      * GET /api/leaderboard?timeframe=MONTH&page=0&size=20&sort=points,desc
      * GET /api/leaderboard?page=1&size=10
+     * GET /api/leaderboard?teacherId=123&grade=FIRST&page=1&size=10
+     * GET /api/leaderboard?timeframe=WEEK&grade=SECOND&page=0&size-15
      */
     @GetMapping
     public Page<LeaderboardEntryDTO> getLeaderboard(
             @RequestParam(defaultValue = "WEEK") Timeframe timeframe,
-            @PageableDefault(size = 20, sort = "points") Pageable pageable) {
-        return leaderboardService.getLeaderboard(timeframe, pageable);
+            @RequestParam(required = false) Long teacherId,
+            @RequestParam(required = false) String grade,
+            @PageableDefault(size = 20) Pageable pageable) {
+        return leaderboardService.getLeaderboard(timeframe, teacherId, grade, pageable);
     }
 }

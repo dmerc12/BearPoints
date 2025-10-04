@@ -12,15 +12,20 @@ import org.springframework.data.domain.Pageable;
  *
  * @see LeaderboardEntryDTO
  * @see Timeframe
- * @version 2.0
+ * @version 3.0
  * @author Dylan Mercer
  */
 public interface LeaderboardService {
     /**
-     * Retrieves paginated leaderboard data for the specified timeframe
+     * Retrieves paginated data with dynamic server-side ranking.
+     * <p>Enhanced in Version 3.0 with database-level ranking and filtering support.
+     *
      * @param timeframe Filter period for leaderboard data
+     * @param teacherId Filter by specific teacher (optional)
+     * @param grade Filter by grade level (optional)
      * @param pageable Pagination information
-     * @return Page of leaderboard entries with structured student/teacher details
+     * @return Page of leaderboard entries with contextual ranking
+     * @since 3.0 Added teacherId and grade filtering parameters
      */
-    Page<LeaderboardEntryDTO> getLeaderboard(Timeframe timeframe, Pageable pageable);
+    Page<LeaderboardEntryDTO> getLeaderboard(Timeframe timeframe, Long teacherId, String grade, Pageable pageable);
 }
