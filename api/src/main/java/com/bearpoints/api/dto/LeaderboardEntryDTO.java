@@ -1,5 +1,6 @@
 package com.bearpoints.api.dto;
 
+import com.bearpoints.api.entity.GradeLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -9,6 +10,7 @@ import lombok.Getter;
  *
  * <p>Fields:
  * <ul>
+ *     <li>{@code rank} - Student's position in the leaderboard (1-based)</li>
  *     <li>{@code student} - Student information (id, first name, last name)</li>
  *     <li>{@code teacher} - Teacher's information (id, first name, last name)</li>
  *     <li>{@code grade} - Student's grade level</li>
@@ -24,6 +26,6 @@ public class LeaderboardEntryDTO {
     private Integer rank;
     private PersonDTO student;
     private PersonDTO teacher;
-    private String grade;
+    private GradeLevel grade;
     private Integer points;
 }

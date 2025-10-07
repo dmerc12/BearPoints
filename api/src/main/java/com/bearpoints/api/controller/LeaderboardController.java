@@ -1,6 +1,7 @@
 package com.bearpoints.api.controller;
 
 import com.bearpoints.api.dto.LeaderboardEntryDTO;
+import com.bearpoints.api.entity.GradeLevel;
 import com.bearpoints.api.entity.Timeframe;
 import com.bearpoints.api.service.LeaderboardService;
 import org.springframework.data.domain.Page;
@@ -30,7 +31,7 @@ import org.springframework.web.bind.annotation.*;
  *
  * @see LeaderboardService
  * @see Timeframe
- * @version 3.0
+ * @version 3.1
  * @author Dylan Mercer
  */
 @CrossOrigin
@@ -64,7 +65,7 @@ public class LeaderboardController {
     public Page<LeaderboardEntryDTO> getLeaderboard(
             @RequestParam(defaultValue = "WEEK") Timeframe timeframe,
             @RequestParam(required = false) Long teacherId,
-            @RequestParam(required = false) String grade,
+            @RequestParam(required = false) GradeLevel grade,
             @PageableDefault(size = 20) Pageable pageable) {
         return leaderboardService.getLeaderboard(timeframe, teacherId, grade, pageable);
     }

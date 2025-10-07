@@ -2,6 +2,7 @@ package com.bearpoints.api.service.impl;
 
 import com.bearpoints.api.dao.LeaderboardDAO;
 import com.bearpoints.api.dto.LeaderboardEntryDTO;
+import com.bearpoints.api.entity.GradeLevel;
 import com.bearpoints.api.entity.Timeframe;
 import com.bearpoints.api.service.LeaderboardService;
 import org.springframework.data.domain.Page;
@@ -20,7 +21,7 @@ import java.time.temporal.ChronoUnit;
  * @see Timeframe
  * @see LeaderboardDAO
  *
- * @version 3.0
+ * @version 3.1
  * @author Dylan Mercer
  */
 @Service
@@ -34,7 +35,7 @@ public class LeaderboardServiceImpl implements LeaderboardService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<LeaderboardEntryDTO> getLeaderboard(Timeframe timeframe, Long teacherId, String grade, Pageable pageable) {
+    public Page<LeaderboardEntryDTO> getLeaderboard(Timeframe timeframe, Long teacherId, GradeLevel grade, Pageable pageable) {
         LocalDateTime startDate = calculateStartDate(timeframe);
         return leaderboardDAO.findRankedLeaderboard(startDate, teacherId, grade, pageable);
     }

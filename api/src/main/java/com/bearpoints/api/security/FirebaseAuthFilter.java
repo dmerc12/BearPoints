@@ -30,7 +30,7 @@ import java.io.IOException;
  *
  * @see OncePerRequestFilter
  * @see FirebaseUserDetails
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @Component
@@ -75,7 +75,7 @@ public class FirebaseAuthFilter extends OncePerRequestFilter {
      * @throws IOException      If I/O operations fail
      */
     @Override
-    protected void doFilterInternal(
+    public void doFilterInternal(
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain) throws ServletException, IOException {

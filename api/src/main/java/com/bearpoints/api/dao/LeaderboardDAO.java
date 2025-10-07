@@ -2,6 +2,7 @@ package com.bearpoints.api.dao;
 
 import com.bearpoints.api.dao.impl.LeaderboardDAOImpl;
 import com.bearpoints.api.dto.LeaderboardEntryDTO;
+import com.bearpoints.api.entity.GradeLevel;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -22,7 +23,7 @@ import java.time.LocalDateTime;
  *
  * @see LeaderboardEntryDTO
  * @see LeaderboardDAOImpl
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 public interface LeaderboardDAO {
@@ -49,7 +50,7 @@ public interface LeaderboardDAO {
     Page<LeaderboardEntryDTO> findRankedLeaderboard(
             LocalDateTime startDate,
             Long teacherId,
-            String grade,
+            GradeLevel grade,
             Pageable pageable
     );
 }

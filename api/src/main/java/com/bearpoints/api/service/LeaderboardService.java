@@ -1,6 +1,7 @@
 package com.bearpoints.api.service;
 
 import com.bearpoints.api.dto.LeaderboardEntryDTO;
+import com.bearpoints.api.entity.GradeLevel;
 import com.bearpoints.api.entity.Timeframe;
 import com.bearpoints.api.service.impl.LeaderboardServiceImpl;
 import org.springframework.data.domain.Page;
@@ -12,7 +13,7 @@ import org.springframework.data.domain.Pageable;
  *
  * @see LeaderboardEntryDTO
  * @see Timeframe
- * @version 3.0
+ * @version 3.1
  * @author Dylan Mercer
  */
 public interface LeaderboardService {
@@ -27,5 +28,5 @@ public interface LeaderboardService {
      * @return Page of leaderboard entries with contextual ranking
      * @since 3.0 Added teacherId and grade filtering parameters
      */
-    Page<LeaderboardEntryDTO> getLeaderboard(Timeframe timeframe, Long teacherId, String grade, Pageable pageable);
+    Page<LeaderboardEntryDTO> getLeaderboard(Timeframe timeframe, Long teacherId, GradeLevel grade, Pageable pageable);
 }
