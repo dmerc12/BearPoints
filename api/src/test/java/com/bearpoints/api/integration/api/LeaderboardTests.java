@@ -227,14 +227,13 @@ public class LeaderboardTests {
     @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
     @DisplayName("GET /leaderboard with combined filters returns precise results")
     void getLeaderboard_WithCombinedFilters_ReturnsPreciseResults() throws Exception {
-        Long teacherId = 1L;
         String grade = "FIRST";
         mockMvc.perform(MockMvcRequestBuilders.get(baseUrl)
                     .param("timeframe", "WEEK")
-                    .param("teacherId", teacherId.toString())
+                    .param("teacherId", "1")
                     .param("grade", grade))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[*].teacher.id").value(everyItem(is(teacherId))))
+                .andExpect(jsonPath("$.content[*].teacher.id").value(everyItem(is(1))))
                 .andExpect(jsonPath("$.content[*].grade").value(everyItem(is(grade))));
     }
 
