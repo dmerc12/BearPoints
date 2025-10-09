@@ -90,6 +90,36 @@ public class TeacherTests {
                 .containsExactly("User reference is required");
     }
 
+    /** Version field tests */
+    @Nested
+    @DisplayName("Version field tests")
+    class VersionTests {
+        /** Tests that version field is properly initialized */
+        @Test
+        @DisplayName("Version field initializes to zero")
+        public void versionFieldInitializesToZero() {
+            Teacher teacher = new Teacher();
+            assertThat(teacher.getVersion()).isEqualTo(0L);
+        }
+
+        /** Tests version field setter functionality */
+        @Test
+        @DisplayName("Version field can be set and retrieved")
+        public void versionFieldCanBeSetAndRetrieved() {
+            validTeacher.setVersion(5L);
+            assertThat(validTeacher.getVersion()).isEqualTo(5L);
+        }
+
+        /** Tests that version field doesn't affect validation */
+        @Test
+        @DisplayName("Version field changes don't affect validation")
+        public void versionChangesDontAffectValidation() {
+            validTeacher.setVersion(10L);
+            Set<ConstraintViolation<Teacher>> violations = validator.validate(validTeacher);
+            assertThat(violations).isEmpty();
+        }
+    }
+
     /** Tests for {@link Syncable} interface methods implemented in {@link User}. */
     @Nested
     @DisplayName("Syncable interface implementation tests")
