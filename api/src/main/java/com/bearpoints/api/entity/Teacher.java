@@ -71,7 +71,7 @@ public class Teacher implements Syncable {
 
     /**
      * Version field for JPA optimistic locking.
-     * <p>Automatically managed by JPA to prevent concurrent modifications</p>
+     * <p>Automatically managed by JPA to prevent concurrent modifications
      */
     @Version
     @Column(nullable = false)
