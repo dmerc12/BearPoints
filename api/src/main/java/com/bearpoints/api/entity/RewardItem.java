@@ -79,6 +79,14 @@ public class RewardItem implements Syncable {
     private Set<StudentReward> studentRewards;
 
     /**
+     * Version field for JPA optimistic locking.
+     * <p>Automatically managed by JPA to prevent concurrent modifications
+     */
+    @Version
+    @Column(nullable = false)
+    private Long version = 0L;
+
+    /**
      * Timestamp of last successful sync with Google Sheets.
      * <p>Null indicates the entity has never been synced.
      */

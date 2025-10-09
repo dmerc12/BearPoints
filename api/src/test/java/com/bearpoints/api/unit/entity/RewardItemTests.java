@@ -196,6 +196,36 @@ public class RewardItemTests {
         }
     }
 
+    /** Version field tests */
+    @Nested
+    @DisplayName("Version field tests")
+    class VersionTests {
+        /** Tests that version field is properly initialized */
+        @Test
+        @DisplayName("Version field initializes to zero")
+        public void versionFieldInitializesToZero() {
+            RewardItem rewardItem = new RewardItem();
+            assertThat(rewardItem.getVersion()).isEqualTo(0L);
+        }
+
+        /** Tests version field setter functionality */
+        @Test
+        @DisplayName("Version field can be set and retrieved")
+        public void versionFieldCanBeSetAndRetrieved() {
+            validRewardItem.setVersion(5L);
+            assertThat(validRewardItem.getVersion()).isEqualTo(5L);
+        }
+
+        /** Tests that version field doesn't affect validation */
+        @Test
+        @DisplayName("Version field changes don't affect validation")
+        public void versionChangesDontAffectValidation() {
+            validRewardItem.setVersion(10L);
+            Set<ConstraintViolation<RewardItem>> violations = validator.validate(validRewardItem);
+            assertThat(violations).isEmpty();
+        }
+    }
+
     /** Tests for {@link Syncable} interface methods implemented in {@link User}. */
     @Nested
     @DisplayName("Syncable interface implementation tests")
