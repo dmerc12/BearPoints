@@ -102,6 +102,14 @@ public class BragLog implements Syncable {
     private String notes;
 
     /**
+     * Version field for JPA optimistic locking.
+     * <p>Automatically managed by JPA to prevent concurrent modifications
+     */
+    @Version
+    @Column(nullable = false)
+    private Long version = 0L;
+
+    /**
      * Timestamp (auto-generated).
      * <p>Constraints:
      * <ul>
