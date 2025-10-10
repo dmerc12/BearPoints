@@ -110,4 +110,17 @@ public class BehaviorTypeDAOTests {
             entityManager.flush();
         });
     }
+
+    @Test
+    @DisplayName("Version is automatically set after persistence")
+    void versionIsSetAfterPersistence() {
+        BehaviorType newBehavior = new BehaviorType();
+        newBehavior.setName("Version Test");
+        newBehavior.setPointValue(5);
+        newBehavior.setActive(true);
+        assertNull(newBehavior.getVersion());
+        BehaviorType saved = behaviorTypeDAO.save(newBehavior);
+        assertNotNull(saved.getVersion());
+        assertEquals(0L, saved.getVersion());
+    }
 }

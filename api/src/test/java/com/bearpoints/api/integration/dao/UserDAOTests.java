@@ -105,4 +105,18 @@ public class UserDAOTests {
             entityManager.flush();
         });
     }
+
+    @Test
+    @DisplayName("Version is automatically set after persistence")
+    void versionIsSetAfterPersistence() {
+        User newUser = new User();
+        newUser.setFirstName("John");
+        newUser.setLastName("Doe");
+        newUser.setEmail("jodoe@okcps.org");
+        newUser.setRole(Role.ADMIN);
+        assertNull(newUser.getVersion());
+        User saved = userDAO.save(newUser);
+        assertNotNull(saved.getVersion());
+        assertEquals(0L, saved.getVersion());
+    }
 }

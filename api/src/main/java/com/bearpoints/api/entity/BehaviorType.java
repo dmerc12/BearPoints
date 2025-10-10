@@ -72,7 +72,7 @@ public class BehaviorType implements Syncable {
      */
     @Version
     @Column(nullable = false)
-    private Long version = 0L;
+    private Long version;
 
     /**
      * Creation timestamp (auto-generated).

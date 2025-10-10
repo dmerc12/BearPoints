@@ -172,4 +172,24 @@ public class StudentDAOTests {
             entityManager.flush();
         });
     }
+
+    @Test
+    @DisplayName("Version is automatically set after persistence")
+    void versionIsSetAfterPersistence() {
+        User newUser = new User();
+        newUser.setFirstName("Student");
+        newUser.setLastName("User");
+        newUser.setEmail("new.user@okcps.org");
+        newUser.setRole(Role.STUDENT);
+        entityManager.persist(newUser);
+        entityManager.flush();
+        Student newStudent = new Student();
+        newStudent.setUser(newUser);
+        newStudent.setTeacher(testTeacher);
+        newStudent.generateToken();
+        assertNull(newStudent.getVersion());
+        Student saved = studentDAO.save(newStudent);
+        assertNotNull(saved.getVersion());
+        assertEquals(0L, saved.getVersion());
+    }
 }

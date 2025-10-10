@@ -102,4 +102,17 @@ public class RewardItemDAOTests {
             entityManager.flush();
         });
     }
+
+    @Test
+    @DisplayName("Version is automatically set after persistence")
+    void versionIsSetAfterPersistence() {
+        RewardItem newItem = new RewardItem();
+        newItem.setName("Version Test");
+        newItem.setPointCost(25);
+        newItem.setStock(100);
+        assertNull(newItem.getVersion());
+        RewardItem saved = rewardItemDAO.save(newItem);
+        assertNotNull(saved.getVersion());
+        assertEquals(0L, saved.getVersion());
+    }
 }

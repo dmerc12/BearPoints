@@ -141,4 +141,18 @@ public class BragLogDAOTests {
         assertNotNull(saved.getId());
         assertEquals(3, saved.getPointsGenerated());
     }
+
+    @Test
+    @DisplayName("Version is automatically set after persistence")
+    void versionIsSetAfterPersistence() {
+        BragLog newLog = new BragLog();
+        newLog.setStudent(testStudent);
+        newLog.setTeacher(testTeacher);
+        newLog.setPointsGenerated(3);
+        newLog.setBehaviors(Set.of(testBehaviorType));
+        assertNull(newLog.getVersion());
+        BragLog saved = bragLogDAO.save(newLog);
+        assertNotNull(saved.getVersion());
+        assertEquals(0L, saved.getVersion());
+    }
 }

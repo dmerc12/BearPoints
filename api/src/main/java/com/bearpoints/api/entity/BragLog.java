@@ -107,7 +107,7 @@ public class BragLog implements Syncable {
      */
     @Version
     @Column(nullable = false)
-    private Long version = 0L;
+    private Long version;
 
     /**
      * Timestamp (auto-generated).

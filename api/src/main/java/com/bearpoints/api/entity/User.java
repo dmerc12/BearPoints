@@ -122,7 +122,7 @@ public class User implements Syncable {
      */
     @Version
     @Column(nullable = false)
-    private Long version  = 0L;
+    private Long version;
 
     /**
      * Timestamp of last successful sync with Google Sheets.

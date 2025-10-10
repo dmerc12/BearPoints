@@ -17,6 +17,8 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.test.context.support.WithMockUser;
 
@@ -133,7 +135,8 @@ public class TeacherDAOSecurityTests {
     @DisplayName("STUDENT can find teacher by grade")
     void studentCanFindByGrade() {
         assertDoesNotThrow(() -> {
-            List<Teacher> result = teacherDAO.findByGrade(testTeacher.getGrade());
+            Page<Teacher> resultPage = teacherDAO.findByGrade(testTeacher.getGrade(), PageRequest.of(0, 10));
+            List<Teacher> result = resultPage.getContent();
             assertFalse(result.isEmpty());
         });
     }

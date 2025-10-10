@@ -248,14 +248,6 @@ public class UserTests {
     @Nested
     @DisplayName("Version field tests")
     class VersionTests {
-        /** Tests that version field is properly initialized */
-        @Test
-        @DisplayName("Version field initializes to zero")
-        public void versionFieldInitializesToZero() {
-            User user = new User();
-            assertThat(user.getVersion()).isEqualTo(0L);
-        }
-
         /** Tests version field setter functionality */
         @Test
         @DisplayName("Version field can be set and retrieved")

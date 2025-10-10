@@ -169,16 +169,7 @@ public class StudentTests {
     /** Version field tests */
     @Nested
     @DisplayName("Version field tests")
-    class VersionTests {
-        /** Tests that version field is properly initialized */
-        @Test
-        @DisplayName("Version field initializes to zero")
-        public void versionFieldInitializesToZero() {
-            Student student = new Student();
-            assertThat(student.getVersion()).isEqualTo(0L);
-        }
-
-        /** Tests version field setter functionality */
+    class VersionTests {/** Tests version field setter functionality */
         @Test
         @DisplayName("Version field can be set and retrieved")
         public void versionFieldCanBeSetAndRetrieved() {

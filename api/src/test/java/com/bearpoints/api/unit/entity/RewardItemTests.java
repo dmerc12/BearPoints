@@ -200,14 +200,6 @@ public class RewardItemTests {
     @Nested
     @DisplayName("Version field tests")
     class VersionTests {
-        /** Tests that version field is properly initialized */
-        @Test
-        @DisplayName("Version field initializes to zero")
-        public void versionFieldInitializesToZero() {
-            RewardItem rewardItem = new RewardItem();
-            assertThat(rewardItem.getVersion()).isEqualTo(0L);
-        }
-
         /** Tests version field setter functionality */
         @Test
         @DisplayName("Version field can be set and retrieved")

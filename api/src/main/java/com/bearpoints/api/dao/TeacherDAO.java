@@ -6,6 +6,8 @@ import com.bearpoints.api.entity.Teacher;
 import io.micrometer.common.lang.NonNull;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.data.rest.core.annotation.RestResource;
@@ -69,7 +71,7 @@ public interface TeacherDAO extends JpaRepository<Teacher, Long> {
      * @return List of matching teachers
      */
     @PreAuthorize("isAuthenticated()")
-    List<Teacher> findByGrade(@NotNull(message = "Grade is required") GradeLevel grade);
+    Page<Teacher> findByGrade(@NotNull(message = "Grade is required") GradeLevel grade, Pageable pageable);
 
     /**
      * Retrieves all teachers

@@ -1,10 +1,7 @@
 package com.bearpoints.api.integration.dao;
 
 import com.bearpoints.api.dao.TeacherDAO;
-import com.bearpoints.api.entity.GradeLevel;
-import com.bearpoints.api.entity.Role;
-import com.bearpoints.api.entity.Teacher;
-import com.bearpoints.api.entity.User;
+import com.bearpoints.api.entity.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 
 import java.util.List;
 import java.util.Optional;
@@ -80,7 +79,8 @@ public class TeacherDAOTests {
     @Test
     @DisplayName("findByGrade returns correct teachers")
     void shouldFindTeacherByGrade() {
-        List<Teacher> result = teacherDAO.findByGrade(GradeLevel.THIRD);
+        Page<Teacher> resultPage = teacherDAO.findByGrade(GradeLevel.THIRD, PageRequest.of(0, 10));
+        List<Teacher> result = resultPage.getContent();
         assertEquals(1, result.size());
         assertEquals(testTeacher.getUser().getEmail(), result.getFirst().getUser().getEmail());
     }
@@ -111,5 +111,24 @@ public class TeacherDAOTests {
             teacherDAO.save(duplicate);
             entityManager.flush();
         });
+    }
+
+    @Test
+    @DisplayName("Version is automatically set after persistence")
+    void versionIsSetAfterPersistence() {
+        User newUser = new User();
+        newUser.setFirstName("John");
+        newUser.setLastName("Doe");
+        newUser.setEmail("jodoe@okcps.org");
+        newUser.setRole(Role.TEACHER);
+        entityManager.persist(newUser);
+        entityManager.flush();
+        Teacher newTeacher = new Teacher();
+        newTeacher.setUser(newUser);
+        newTeacher.setGrade(GradeLevel.FIRST);
+        assertNull(newTeacher.getVersion());
+        Teacher saved = teacherDAO.save(newTeacher);
+        assertNotNull(saved.getVersion());
+        assertEquals(0L, saved.getVersion());
     }
 }

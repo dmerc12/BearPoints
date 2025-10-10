@@ -112,4 +112,16 @@ public class StudentRewardDAOTests {
         assertNotNull(saved.getRedeemedAt());
         assertTrue(saved.getRedeemedAt().isBefore(LocalDateTime.now().plusSeconds(1)));
     }
+
+    @Test
+    @DisplayName("Version is automatically set after persistence")
+    void versionIsSetAfterPersistence() {
+        StudentReward newRedemption = new StudentReward();
+        newRedemption.setStudent(testStudent);
+        newRedemption.setRewardItem(testReward);
+        assertNull(newRedemption.getVersion());
+        StudentReward saved = studentRewardDAO.save(newRedemption);
+        assertNotNull(saved.getVersion());
+        assertEquals(0L, saved.getVersion());
+    }
 }
