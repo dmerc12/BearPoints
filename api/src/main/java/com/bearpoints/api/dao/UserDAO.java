@@ -1,6 +1,5 @@
 package com.bearpoints.api.dao;
 
-import com.bearpoints.api.dto.UserProjection;
 import com.bearpoints.api.entity.Role;
 import com.bearpoints.api.entity.User;
 import io.micrometer.common.lang.NonNull;
@@ -9,9 +8,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.repository.query.Param;
-import org.springframework.data.rest.core.annotation.RepositoryRestResource;
-import org.springframework.data.rest.core.annotation.RestResource;
-import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 import java.util.Optional;
@@ -19,91 +15,87 @@ import java.util.Optional;
 /**
  * JPA repository for {@link User} entities.
  * <p>Provides CRUD operations and custom queries for user management.
- * Exposes REST endpoints under '/users' with security constraints.
  *
  * <p>Key features:
  * <ul>
- *     <li>Standard CRUD operations with ADMIN-only write access</li>
- *     <li>Public access to email-based user lookup</li>
- *     <li>Internal synchronization methods</li>
- *     <li>Role-based access control</li>
- *     <li>Uses {@link UserProjection} for condensed REST representations</li>
+ *     <li>Standard CRUD operations</li>
+ *     <li>Custom queries for user retrieval</li>
+ *     <li>Pagination and sorting support</li>
+ *     <li>Advanced filtering via specifications</li>
  * </ul>
- *
- * <p>Security constraints:
- * <ul>
- *     <li>ADMIN role required for all operations except email lookup</li>
- *     <li>TEACHER role can create STUDENT users</li>
- *     <li>Email lookup is publicly accessible</li>
- *     <li>All authenticated users can access user lists</li>
- * </ul>
- *
- * <p>Projection Usage:
- * REST representations use {@link UserProjection} by default for condensed views.
- *
+
  * @see User
- * @see UserProjection
- * @version 1.2
+ * @version 2.0
  * @author Dylan Mercer
  */
-@RepositoryRestResource(
-        path = "users",
-        excerptProjection = UserProjection.class
-)
-@PreAuthorize("isAuthenticated()")
 public interface UserDAO extends JpaRepository<User, Long> {
     /**
      * Finds a user by email address.
-     * <p>Publicly accessible without authentication. Used during authentication flows.
      *
      * @param email User's email address
      * @return Optional containing the user if found
      */
-    @PreAuthorize("permitAll()")
     Optional<User> findByEmail(String email);
 
     /**
      * Finds users by role with pagination support.
-     * <p>Exposed as REST endpoint at /users/search/byRole?role={role}&page={page}&size={size}
-     * <p>Accessible to any authenticated users.
      *
      * @param role User role to filter by
      * @param pageable Pagination information
      * @return Paginated list of users with the specified role
      */
-    @PreAuthorize("isAuthenticated()")
-    @RestResource(path = "byRole", rel = "byRole")
     Page<User> findByRole(@Param("role") Role role, Pageable pageable);
 
+    /**
+     * Finds users by role and first name containing string with pagination support.
+     *
+     * <p>Case-insensitive search for user management.
+     *
+     * @param role User role to filter by
+     * @param firstName First name fragment to search for
+     * @param pageable Pagination information
+     * @return Paginated list of matching users
+     */
+    Page<User> findByRoleAndFirstNameContainingIgnoreCase(Role role, String firstName, Pageable pageable);
+
+    /**
+     * Finds users by role and last name containing string with pagination support.
+     *
+     * <p>Case-insensitive search for user management.
+     *
+     * @param role User role to filter by
+     * @param lastName Last name fragment to search for
+     * @param pageable Pagination information
+     * @return Paginated list of matching users
+     */
+    Page<User> findByRoleAndLastNameContainingIgnoreCase(Role role, String lastName, Pageable pageable);
+
+    /**
+     * Finds users by role and email containing string with pagination support.
+     * <p>Combined filter for role and email search.
+     *
+     * @param role User role to filter by
+     * @param email Email fragment to search for
+     * @param pageable Pagination information
+     * @return Paginated list of matching users
+     */
+    Page<User> findByRoleAndEmailContainingIgnoreCase(Role role, String email, Pageable pageable);
+
+    /**
+     * Retrieves all users with caching support.
+     *
+     * @return List of all users
+     */
     @NonNull
     @Override
     @Cacheable("users")
-    @PreAuthorize("isAuthenticated()")
     List<User> findAll();
-
-    @NonNull
-    @Override
-    @PreAuthorize("hasRole('ADMIN') or " + "(hasRole('TEACHER') and #entity.role.name() == 'STUDENT')")
-    <S extends User> S save(@NonNull S entity);
-
-    @Override
-    @PreAuthorize("hasRole('ADMIN')")
-    void delete(@NonNull User entity);
-
-    @Override
-    @PreAuthorize("hasRole('ADMIN')")
-    void deleteAll();
-
-    @Override
-    @PreAuthorize("hasRole('ADMIN')")
-    void deleteAll(@NonNull Iterable<? extends User> entities);
 
     /**
      * Finds un-synchronized users (internal use only).
-     * <p>Not exposed via REST API. Used for Google Sheets synchronization.
+     * <p>Used for Google Sheets synchronization.
      *
      * @return List of unsynced users
      */
-    @RestResource(exported = false)
     List<User> findBySyncedToSheetsFalse();
 }
