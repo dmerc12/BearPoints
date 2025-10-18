@@ -1,6 +1,8 @@
 package com.bearpoints.api.dto;
 
 import com.bearpoints.api.entity.User;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -41,6 +43,22 @@ public class UserDTO {
     private final String lastName;
 
     private final String role;
+
+    /**
+     * Constructor for Jackson deserialization
+     */
+    @JsonCreator
+    public UserDTO(@JsonProperty("id") Long id,
+                   @JsonProperty("email") String email,
+                   @JsonProperty("firstName") String firstName,
+                   @JsonProperty("lastName") String lastName,
+                   @JsonProperty("role") String role) {
+        this.id = id;
+        this.email = email;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.role = role;
+    }
 
     /**
      * Constructs a UserDTO from a User entity.
