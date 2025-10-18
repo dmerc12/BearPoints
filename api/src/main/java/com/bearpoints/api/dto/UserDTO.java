@@ -1,6 +1,10 @@
 package com.bearpoints.api.dto;
 
 import com.bearpoints.api.entity.User;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 
 /**
@@ -22,9 +26,20 @@ import lombok.Getter;
 @Getter
 public class UserDTO {
     private final Long id;
+
+    @NotBlank(message = "Email is required")
+    @Email(message = "Invalid email format")
+    @Pattern(regexp = ".+@okcps\\.org$", message = "Email must be @okcps.org domain")
     private final String email;
+
+    @NotBlank(message = "First name is required")
+    @Size(min = 1, max = 100, message = "First name must be between 1 and 100 characters")
     private final String firstName;
+
+    @NotBlank(message = "Last name is required")
+    @Size(min = 1, max = 100, message = "Last name must be between 1 and 100 characters")
     private final String lastName;
+
     private final String role;
 
     /**
