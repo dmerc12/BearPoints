@@ -1,4 +1,4 @@
-package com.bearpoints.api.integration.api;
+package com.bearpoints.api.integration;
 
 import com.bearpoints.api.config.TestDataInitializer;
 import com.bearpoints.api.controller.LeaderboardController;
