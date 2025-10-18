@@ -1,5 +1,6 @@
 package com.bearpoints.api.exception;
 
+import com.bearpoints.api.dto.ErrorResponseDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -18,17 +19,33 @@ import java.io.IOException;
  *
  * <p>Current exception handlers:
  * <ul>
+ *     <li>{@link UserNotFoundException} - Returns HTTP 404 Not Found</li>
  *     <li>{@link IllegalArgumentException} - Returns HTTP 400 Bad Request</li>
  *     <li>{@link IOException} - Returns HTTP 500 Internal Server Error</li>
  * </ul>
  *
  * @see RestControllerAdvice
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @RestControllerAdvice
 public class GlobalHandlers {
     private static final Logger logger = LoggerFactory.getLogger(GlobalHandlers.class);
+
+    /**
+     * Handles User not found exceptions.
+     * <p>Returns a 404 Not Found status with the exception message in the response body.
+     *
+     * @param ex The caught UserNotFoundException
+     * @return Response entity with error message and status code
+     */
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ErrorResponseDTO> handleUserNotFoundException(UserNotFoundException ex) {
+        logger.warn("User not found", ex);
+        ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponseDTO);
+    }
 
     /**
      * Handles illegal argument exceptions.
@@ -39,9 +56,10 @@ public class GlobalHandlers {
      */
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<String> handleIllegalArgumentException(IllegalArgumentException ex) {
+    public ResponseEntity<ErrorResponseDTO> handleIllegalArgumentException(IllegalArgumentException ex) {
         logger.warn("Client sent invalid request: {}", ex.getMessage());
-        return ResponseEntity.badRequest().body(ex.getMessage());
+        ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO(ex.getMessage());
+        return ResponseEntity.badRequest().body(errorResponseDTO);
     }
 
     /**
@@ -54,8 +72,9 @@ public class GlobalHandlers {
      */
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(IOException.class)
-    public ResponseEntity<String> handleIOException(IOException ex) {
+    public ResponseEntity<ErrorResponseDTO> handleIOException(IOException ex) {
         logger.error("IO Exception occurred", ex);
-        return ResponseEntity.internalServerError().body("Internal server error");
+        ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO("Internal server error");
+        return ResponseEntity.internalServerError().body(errorResponseDTO);
     }
 }
