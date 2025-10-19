@@ -8,10 +8,12 @@ import org.junit.jupiter.api.Test;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit tests for {@link ErrorResponseDTO}.
@@ -32,6 +34,7 @@ public class ErrorResponseDTOTests {
             assertThat(errorResponse.getMessage()).isEqualTo(errorMessage);
             assertThat(errorResponse.getTimestamp()).isNotNull();
             assertThat(errorResponse.getTimestamp()).isBeforeOrEqualTo(LocalDateTime.now());
+            assertThat(errorResponse.getFieldErrors()).isNull();
         }
 
         @Test
@@ -40,6 +43,7 @@ public class ErrorResponseDTOTests {
             ErrorResponseDTO errorResponse = new ErrorResponseDTO(null);
             assertThat(errorResponse.getMessage()).isNull();
             assertThat(errorResponse.getTimestamp()).isNotNull();
+            assertThat(errorResponse.getFieldErrors()).isNull();
         }
 
         @Test
@@ -48,6 +52,68 @@ public class ErrorResponseDTOTests {
             ErrorResponseDTO errorResponse = new ErrorResponseDTO("");
             assertThat(errorResponse.getMessage()).isEmpty();
             assertThat(errorResponse.getTimestamp()).isNotNull();
+            assertThat(errorResponse.getFieldErrors()).isNull();
+        }
+
+        @Test
+        @DisplayName("should create ErrorResponseDTO with message and field errors")
+        void shouldCreateErrorResponseWithMessageAndFieldErrors() {
+            String errorMessage = "Validation failed";
+            Map<String, String> fieldErrors = Map.of(
+                    "email", "Email must be valid",
+                    "firstName", "First name must be between 1 and 100 characters"
+            );
+            ErrorResponseDTO errorResponse = new ErrorResponseDTO(errorMessage, fieldErrors);
+            assertThat(errorResponse.getMessage()).isEqualTo(errorMessage);
+            assertThat(errorResponse.getTimestamp()).isNotNull();
+            assertNotNull(errorResponse.getFieldErrors());
+            assertThat(errorResponse.getFieldErrors()).isEqualTo(fieldErrors);
+            assertThat(errorResponse.getFieldErrors().size()).isEqualTo(2);
+            assertThat(errorResponse.getFieldErrors().containsKey("email"));
+            assertThat(errorResponse.getFieldErrors().containsKey("firstName"));
+        }
+
+        @Test
+        @DisplayName("should create ErrorResponseDTO with null message and field errors")
+        void shouldCreateErrorResponseWithNullMessageAndFieldErrors() {
+            Map<String, String> fieldErrors = Map.of("field", "error");
+            ErrorResponseDTO errorResponse = new ErrorResponseDTO(null, fieldErrors);
+            assertThat(errorResponse.getMessage()).isNull();
+            assertThat(errorResponse.getTimestamp()).isNotNull();
+            assertThat(errorResponse.getFieldErrors()).isEqualTo(fieldErrors);
+        }
+
+        @Test
+        @DisplayName("should create ErrorResponseDTO with empty message and field errors")
+        void shouldCreateErrorResponseWithEmptyMessageAndFieldErrors() {
+            Map<String, String> fieldErrors = Map.of("field", "error");
+            ErrorResponseDTO errorResponse = new ErrorResponseDTO("", fieldErrors);
+            assertThat(errorResponse.getMessage()).isEmpty();
+            assertThat(errorResponse.getTimestamp()).isNotNull();
+            assertThat(errorResponse.getFieldErrors()).isEqualTo(fieldErrors);
+        }
+
+        @Test
+        @DisplayName("should create ErrorResponseDTO with message and null field errors")
+        void shouldCreateErrorResponseWithMessageAndNullFieldErrors() {
+            String errorMessage = "Validation failed";
+            ErrorResponseDTO errorResponse = new ErrorResponseDTO(errorMessage, null);
+            assertThat(errorResponse.getMessage()).isEqualTo(errorMessage);
+            assertThat(errorResponse.getTimestamp()).isNotNull();
+            assertThat(errorResponse.getFieldErrors()).isNull();
+        }
+
+        @Test
+        @DisplayName("should create ErrorResponseDTO with message and empty field errors")
+        void shouldCreateErrorResponseWithMessageAndEmptyFieldErrors() {
+            String errorMessage = "Validation failed";
+            Map<String, String> fieldErrors = Collections.emptyMap();
+            ErrorResponseDTO errorResponse = new ErrorResponseDTO(errorMessage, fieldErrors);
+            assertThat(errorResponse.getMessage()).isEqualTo(errorMessage);
+            assertThat(errorResponse.getTimestamp()).isNotNull();
+            assertNotNull(errorResponse.getFieldErrors());
+            assertThat(errorResponse.getFieldErrors()).isEqualTo(fieldErrors);
+            assertThat(errorResponse.getFieldErrors().isEmpty());
         }
     }
 
@@ -81,6 +147,26 @@ public class ErrorResponseDTOTests {
             LocalDateTime timestamp = errorResponse.getTimestamp();
             assertThat(timestamp).isAfterOrEqualTo(beforeCreation);
             assertThat(timestamp).isBeforeOrEqualTo(afterCreation);
+        }
+
+        @Test
+        @DisplayName("getFieldErrors should return correct field errors")
+        void getFieldErrors_shouldReturnCorrectFieldErrors() {
+            Map<String, String> expectedFieldErrors = Map.of(
+                    "email", "Email is required",
+                    "firstName", "First Name is required"
+            );
+            ErrorResponseDTO errorResponse = new ErrorResponseDTO("Validation error", expectedFieldErrors);
+            Map<String, String> actualFieldErrors = errorResponse.getFieldErrors();
+            assertThat(actualFieldErrors).isEqualTo(expectedFieldErrors);
+        }
+
+        @Test
+        @DisplayName("getFieldErrors should return null when no field errors provided")
+        void getFieldErrors_shouldReturnNullWhenNoFieldErrorsProvided() {
+            ErrorResponseDTO errorResponse = new ErrorResponseDTO("Error");
+            Map<String, String> fieldErrors = errorResponse.getFieldErrors();
+            assertThat(fieldErrors).isNull();
         }
     }
 
@@ -120,6 +206,18 @@ public class ErrorResponseDTOTests {
             assertThat(toStringResult).contains(message);
             assertThat(toStringResult).contains("timestamp");
         }
+
+        @Test
+        @DisplayName("toString should include field errors when present")
+        void toString_shouldIncludeFieldErrorsWhenPresent() {
+            String message = "Validation error";
+            Map<String, String> fieldErrors = Map.of("field", "error message");
+            ErrorResponseDTO errorResponse = new ErrorResponseDTO(message, fieldErrors);
+            String toStringResult = errorResponse.toString();
+            assertThat(toStringResult).contains(message);
+            assertThat(toStringResult).contains("timestamp");
+            assertThat(toStringResult).contains("fieldErrors");
+        }
     }
 
     @Nested
@@ -141,6 +239,33 @@ public class ErrorResponseDTOTests {
             ErrorResponseDTO errorResponse = new ErrorResponseDTO(messageWithSpecialChars);
             assertThat(errorResponse.getMessage()).isEqualTo(messageWithSpecialChars);
         }
+
+        @Test
+        @DisplayName("should handle large field errors map")
+        void shouldHandleLargeFieldErrorsMap() {
+            Map<String, String> largeFieldErrors = new HashMap<>();
+            for (int i = 0; i < 100; i++) {
+                largeFieldErrors.put("key" + i, "value" + i);
+            }
+            ErrorResponseDTO errorResponse = new ErrorResponseDTO("Large validation errors", largeFieldErrors);
+            assertNotNull(errorResponse.getFieldErrors());
+            assertThat(errorResponse.getFieldErrors().size()).isEqualTo(100);
+            assertThat(errorResponse.getFieldErrors().containsKey("field0"));
+            assertThat(errorResponse.getFieldErrors().containsKey("field99"));
+        }
+
+        @Test
+        @DisplayName("should handle nested field names in field errors")
+        void shouldHandleNestedFieldNamesInFieldErrors() {
+            Map<String, String> nestedFieldErrors = Map.of(
+                    "user.address.street", "Street is required",
+                    "user.email", "Email is invalid"
+            );
+            ErrorResponseDTO errorResponse = new ErrorResponseDTO("Nested validation errors", nestedFieldErrors);
+            assertNotNull(errorResponse.getFieldErrors());
+            assertThat(errorResponse.getFieldErrors()).isEqualTo(nestedFieldErrors);
+            assertThat(errorResponse.getFieldErrors().containsKey("user.address.street"));
+        }
     }
 
     @Nested
@@ -152,14 +277,18 @@ public class ErrorResponseDTOTests {
             ErrorResponseDTO errorResponse = new ErrorResponseDTO("Test");
             assertDoesNotThrow(errorResponse::getMessage);
             assertDoesNotThrow(errorResponse::getTimestamp);
+            assertDoesNotThrow(errorResponse::getFieldErrors);
         }
 
         @Test
         @DisplayName("should follow JavaBean naming conventions")
         void shouldFollowJavaBeanNamingConventions() {
-            ErrorResponseDTO errorResponse = new ErrorResponseDTO("Test");
+            Map<String, String> fieldErrors = Map.of("field", "error message");
+            ErrorResponseDTO errorResponse = new ErrorResponseDTO("Test", fieldErrors);
             assertThat(errorResponse.getMessage()).isInstanceOf(String.class);
             assertThat(errorResponse.getTimestamp()).isInstanceOf(LocalDateTime.class);
+            assertThat(errorResponse.getFieldErrors()).isInstanceOf(Map.class);
+
         }
     }
 }
