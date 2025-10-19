@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -84,18 +83,10 @@ public class GlobalHandlers {
      * @return Response entity with error message and status code
      */
     @ResponseStatus(HttpStatus.CONFLICT)
-    @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<ErrorResponseDTO> handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
+    @ExceptionHandler(DuplicateResourceException.class)
+    public ResponseEntity<ErrorResponseDTO> handleDuplicateResourceException(DuplicateResourceException ex) {
         logger.warn("Data integrity violation: {}", ex.getMessage());
-        String errorMessage = "Database constraint violation";
-        Throwable rootCause = ex.getRootCause();
-        if (rootCause instanceof SQLException sqlException) {
-            String sqlMessage = sqlException.getMessage();
-            if (sqlMessage != null && sqlMessage.contains("uk_user_email")) {
-                errorMessage = "A user with this email already exists";
-            }
-        }
-        ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO(errorMessage);
+        ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO(ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponseDTO);
     }
 
