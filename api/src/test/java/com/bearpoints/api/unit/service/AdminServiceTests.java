@@ -5,6 +5,7 @@ import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.dto.UserDTO;
 import com.bearpoints.api.entity.Role;
 import com.bearpoints.api.entity.User;
+import com.bearpoints.api.exception.DuplicateResourceException;
 import com.bearpoints.api.exception.UserNotFoundException;
 import com.bearpoints.api.service.impl.AdminServiceImpl;
 import org.junit.jupiter.api.DisplayName;
@@ -184,7 +185,35 @@ public class AdminServiceTests {
             assertEquals(1L, result.getId());
             assertEquals("new.admin@okcps.org", result.getEmail());
             assertEquals("ADMIN", result.getRole());
+            verify(userDAO).findByEmail(anyString());
             verify(userDAO).save(any(User.class));
+        }
+
+        @Test
+        @DisplayName("Should throw DuplicateResourceException when email already exists")
+        void shouldThrowDuplicateResourceExceptionWhenEmailAlreadyExists() {
+            UserDTO userDTO = new UserDTO(null, "existing@okcps.org", "New", "Admin", "ADMIN");
+            User existingUser = createUser(1L, "existing@okcps.org", "Existing", "User", Role.TEACHER);
+            when(userDAO.findByEmail("existing@okcps.org")).thenReturn(Optional.of(existingUser));
+            DuplicateResourceException exception = assertThrows(
+                    DuplicateResourceException.class,
+                    () -> adminService.createAdmin(userDTO)
+            );
+            assertEquals("A user with this email already exists", exception.getMessage());
+            verify(userDAO).findByEmail("existing@okcps.org");
+            verify(userDAO, never()).save(any(User.class));
+        }
+
+        @Test
+        @DisplayName("Should create admin with same role regardless of input role")
+        void shouldCreateAdminWithAdminRoleRegardlessOfInputRole() {
+            UserDTO userDTO = new UserDTO(null, "new@okcps.org", "New", "Admin", "STUDENT");
+            User savedUser = createUser(1L, "new@okcps.org", "New", "Admin", Role.ADMIN);
+            when(userDAO.findByEmail("new@okcps.org")).thenReturn(Optional.empty());
+            when(userDAO.save(any(User.class))).thenReturn(savedUser);
+            UserDTO result = adminService.createAdmin(userDTO);
+            assertEquals("ADMIN", result.getRole());
+            verify(userDAO).save(argThat(user -> user.getRole() == Role.ADMIN));
         }
     }
 
@@ -199,6 +228,7 @@ public class AdminServiceTests {
             UserDTO updateDTO = new UserDTO(createUser(adminId, "new@okcps.org", "New", "Last-Name", Role.ADMIN));
             User updatedAdmin = createUser(adminId, "new@okcps.org", "New", "Last-Name", Role.ADMIN);
             when(userDAO.findById(adminId)).thenReturn(Optional.of(existingAdmin));
+            when(userDAO.findByEmail("new@okcps.org")).thenReturn(Optional.empty());
             when(userDAO.save(any(User.class))).thenReturn(updatedAdmin);
             UserDTO result = adminService.updateAdmin(adminId, updateDTO);
             assertNotNull(result);
@@ -206,6 +236,69 @@ public class AdminServiceTests {
             assertEquals("New", result.getFirstName());
             assertEquals("Last-Name",  result.getLastName());
             verify(userDAO).findById(adminId);
+            verify(userDAO).findByEmail("new@okcps.org");
+            verify(userDAO).save(existingAdmin);
+            assertEquals("new@okcps.org", existingAdmin.getEmail());
+            assertEquals("New", existingAdmin.getFirstName());
+            assertEquals("Last-Name", existingAdmin.getLastName());
+        }
+
+        @Test
+        @DisplayName("Should update admin user without checking email when email unchanged")
+        void shouldUpdateAdminUserWithoutCheckingEmailWhenEmailUnchanged() {
+            Long adminId = 1L;
+            User existingAdmin = createUser(adminId, "same@okcps.org", "Old", "Name", Role.ADMIN);
+            UserDTO updateDTO = new UserDTO(adminId, "same@okcps.org", "New", "Last-Name", "ADMIN");
+            User updatedAdmin = createUser(adminId, "same@okcps.org", "New", "Last-Name", Role.ADMIN);
+            when(userDAO.findById(adminId)).thenReturn(Optional.of(existingAdmin));
+            when(userDAO.save(any(User.class))).thenReturn(updatedAdmin);
+            UserDTO result = adminService.updateAdmin(adminId, updateDTO);
+            assertNotNull(result);
+            assertEquals("same@okcps.org", result.getEmail());
+            assertEquals("New", result.getFirstName());
+            assertEquals("Last-Name", result.getLastName());
+            verify(userDAO, never()).findByEmail(anyString());
+            verify(userDAO).findById(adminId);
+            verify(userDAO).save(existingAdmin);
+        }
+
+        @Test
+        @DisplayName("Should throw DuplicateResourceException when updating to existing email")
+        void shouldThrowDuplicateResourceExceptionWhenUpdatingToExistingEmail() {
+            Long adminId = 1L;
+            String existingEmail = "existing@okcps.org";
+            User existingAdmin = createUser(adminId, "old@okcps.org", "Old", "Name", Role.ADMIN);
+            UserDTO updateDTO = new UserDTO(adminId, existingEmail, "New", "Last-Name", "ADMIN");
+            User otherUser = createUser(2L, existingEmail, "Other", "User", Role.TEACHER);
+            when(userDAO.findById(adminId)).thenReturn(Optional.of(existingAdmin));
+            when(userDAO.findByEmail(existingEmail)).thenReturn(Optional.of(otherUser));
+            DuplicateResourceException exception = assertThrows(
+                    DuplicateResourceException.class,
+                    () -> adminService.updateAdmin(adminId, updateDTO)
+            );
+            assertEquals("A user with this email already exists", exception.getMessage());
+            verify(userDAO).findById(adminId);
+            verify(userDAO).findByEmail(existingEmail);
+            verify(userDAO, never()).save(any(User.class));
+        }
+
+        @Test
+        @DisplayName("Should allow update when email exists but is the same user")
+        void shouldAllowUpdateWhenEmailExistsButIsSameUser() {
+            Long adminId = 1L;
+            String adminEmail = "admin@okcps.org";
+            User existingAdmin = createUser(adminId, adminEmail, "Old", "Name", Role.ADMIN);
+            UserDTO updateDTO = new UserDTO(adminId, adminEmail, "New", "Last-Name", "ADMIN");
+            User updatedAdmin = createUser(adminId, adminEmail, "New", "Last-Name", Role.ADMIN);
+            when(userDAO.findById(adminId)).thenReturn(Optional.of(existingAdmin));
+            when(userDAO.save(any(User.class))).thenReturn(updatedAdmin);
+            UserDTO result = adminService.updateAdmin(adminId, updateDTO);
+            assertNotNull(result);
+            assertEquals(adminEmail, result.getEmail());
+            assertEquals("New", result.getFirstName());
+            assertEquals("Last-Name", result.getLastName());
+            verify(userDAO).findById(adminId);
+            verify(userDAO, never()).findByEmail(adminEmail);
             verify(userDAO).save(existingAdmin);
         }
 
@@ -215,18 +308,41 @@ public class AdminServiceTests {
             Long adminId = 999L;
             UserDTO updateDTO = new UserDTO(createUser(adminId, "new@okcps.org", "New", "Last-Name", Role.ADMIN));
             when(userDAO.findById(adminId)).thenReturn(Optional.empty());
-            assertThrows(UserNotFoundException.class, () -> adminService.updateAdmin(adminId, updateDTO));
+            assertThrows(
+                    UserNotFoundException.class,
+                    () -> adminService.updateAdmin(adminId, updateDTO)
+            );
         }
 
         @Test
-        @DisplayName("Should throw UserNotFoundException when user exists but is not admin")
-        void shouldThrowUserNotFoundExceptionWhenUserExistsButIsNotAdmin() {
+        @DisplayName("Should throw UserNotFoundException when user exists but is student")
+        void shouldThrowUserNotFoundExceptionWhenUserExistsButIsStudent() {
             Long userId = 1L;
             User studentUser = createUser(userId, "student@okcps.org", "Student", "User", Role.STUDENT);
             UserDTO updateDTO = new UserDTO(createUser(userId, "new@okcps.org", "New", "Name", Role.ADMIN));
             when(userDAO.findById(userId)).thenReturn(Optional.of(studentUser));
-            assertThrows(UserNotFoundException.class, () -> adminService.updateAdmin(userId, updateDTO));
+            assertThrows(
+                    UserNotFoundException.class,
+                    () -> adminService.updateAdmin(userId, updateDTO)
+            );
             verify(userDAO).findById(userId);
+            verify(userDAO, never()).findByEmail(anyString());
+            verify(userDAO, never()).save(any(User.class));
+        }
+
+        @Test
+        @DisplayName("Should throw UserNotFoundException when user exists but is teacher")
+        void shouldThrowUserNotFoundExceptionWhenUserExistsButIsTeacher() {
+            Long userId = 1L;
+            User teacherUser = createUser(userId, "teacher@okcps.org", "Teacher", "User", Role.TEACHER);
+            UserDTO updateDTO = new UserDTO(createUser(userId, "new@okcps.org", "New", "Name", Role.ADMIN));
+            when(userDAO.findById(userId)).thenReturn(Optional.of(teacherUser));
+            assertThrows(
+                    UserNotFoundException.class,
+                    () -> adminService.updateAdmin(userId, updateDTO)
+            );
+            verify(userDAO).findById(userId);
+            verify(userDAO, never()).findByEmail(anyString());
             verify(userDAO, never()).save(any(User.class));
         }
     }

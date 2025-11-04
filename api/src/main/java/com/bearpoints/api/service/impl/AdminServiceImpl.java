@@ -5,6 +5,7 @@ import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.dto.UserDTO;
 import com.bearpoints.api.entity.Role;
 import com.bearpoints.api.entity.User;
+import com.bearpoints.api.exception.DuplicateResourceException;
 import com.bearpoints.api.exception.UserNotFoundException;
 import com.bearpoints.api.service.AdminService;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +14,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 /**
  * Implementation of {@link AdminService} for administrative user management.
@@ -109,6 +112,10 @@ public class AdminServiceImpl implements AdminService {
     @Transactional
     public UserDTO createAdmin(UserDTO userDTO) {
         log.debug("Creating new admin user with email: {}", userDTO.getEmail());
+        Optional<User> existingEmail = userDAO.findByEmail(userDTO.getEmail());
+        if (existingEmail.isPresent()) {
+            throw new DuplicateResourceException("A user with this email already exists");
+        }
         User admin = new User();
         admin.setEmail(userDTO.getEmail());
         admin.setFirstName(userDTO.getFirstName());
@@ -130,6 +137,12 @@ public class AdminServiceImpl implements AdminService {
         User admin = userDAO.findById(id)
                 .filter(user -> user.getRole() == Role.ADMIN)
                 .orElseThrow(() -> new UserNotFoundException("Administrator not found with ID: " + id));
+        if (!admin.getEmail().equals(userDTO.getEmail())) {
+            Optional<User> existingEmail = userDAO.findByEmail(userDTO.getEmail());
+            if (existingEmail.isPresent()) {
+                throw new DuplicateResourceException("A user with this email already exists");
+            }
+        }
         admin.setEmail(userDTO.getEmail());
         admin.setFirstName(userDTO.getFirstName());
         admin.setLastName(userDTO.getLastName());
