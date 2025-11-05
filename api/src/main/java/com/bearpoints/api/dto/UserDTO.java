@@ -1,5 +1,6 @@
 package com.bearpoints.api.dto;
 
+import com.bearpoints.api.entity.Role;
 import com.bearpoints.api.entity.User;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -36,7 +37,7 @@ public class UserDTO {
     @Size(min = 1, max = 100, message = "Last name must be between 1 and 100 characters")
     private final String lastName;
 
-    private final String role;
+    private final Role role;
 
     /**
      * Constructor for Jackson deserialization
@@ -51,7 +52,7 @@ public class UserDTO {
         this.email = email;
         this.firstName = firstName;
         this.lastName = lastName;
-        this.role = role;
+        this.role = validateAndConvertRole(role);
     }
 
     /**
@@ -64,6 +65,23 @@ public class UserDTO {
         this.email = user.getEmail();
         this.firstName = user.getFirstName();
         this.lastName = user.getLastName();
-        this.role = user.getRole().name();
+        this.role = user.getRole();
+    }
+
+    private Role validateAndConvertRole(String roleString) {
+        if (roleString == null) {
+            return null;
+        }
+        String trimmed = roleString.trim();
+        if (trimmed.isEmpty()) {
+            return null;
+        }
+        String normalized = trimmed.toUpperCase();
+        try {
+            return Role.valueOf(normalized);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid role: " + roleString + ". Valid values are: " +
+                    java.util.Arrays.toString(Role.values()));
+        }
     }
 }

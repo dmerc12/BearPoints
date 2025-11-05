@@ -15,8 +15,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Set;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit tests for {@link UserDTO} functionality.
@@ -27,10 +26,11 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  *     <li>Edge cases and different role mapping</li>
  *     <li>JSON deserialization constructor</li>
  *     <li>Validation constraints</li>
+ *     <li>Role validation and conversion logic</li>
  * </ul>
  *
  * @see UserDTO
- * @version 1.1
+ * @version 1.2
  * @author Dylan Mercer
  */
 @DisplayName("UserDTO Tests")
@@ -55,7 +55,7 @@ public class UserDTOTests {
             assertEquals(user.getEmail(), dto.getEmail());
             assertEquals(user.getFirstName(), dto.getFirstName());
             assertEquals(user.getLastName(), dto.getLastName());
-            assertEquals(user.getRole().name(), dto.getRole());
+            assertEquals(user.getRole(), dto.getRole());
         }
 
         @Test
@@ -67,7 +67,7 @@ public class UserDTOTests {
             assertEquals(user.getFirstName(), dto.getFirstName());
             assertEquals(user.getLastName(), dto.getLastName());
             assertEquals(user.getEmail(),  dto.getEmail());
-            assertEquals(user.getRole().name(), dto.getRole());
+            assertEquals(user.getRole(), dto.getRole());
         }
 
         @Test
@@ -79,7 +79,7 @@ public class UserDTOTests {
             assertEquals(user.getFirstName(), dto.getFirstName());
             assertEquals(user.getLastName(), dto.getLastName());
             assertEquals(user.getEmail(),  dto.getEmail());
-            assertEquals(user.getRole().name(), dto.getRole());
+            assertEquals(user.getRole(), dto.getRole());
         }
 
         @Test
@@ -91,7 +91,7 @@ public class UserDTOTests {
             assertEquals(user.getFirstName(), dto.getFirstName());
             assertEquals(user.getLastName(), dto.getLastName());
             assertEquals(user.getEmail(),  dto.getEmail());
-            assertEquals(user.getRole().name(), dto.getRole());
+            assertEquals(user.getRole(), dto.getRole());
         }
 
         @Test
@@ -103,7 +103,7 @@ public class UserDTOTests {
             assertEquals(user.getEmail(), dto.getEmail());
             assertEquals(user.getFirstName(), dto.getFirstName());
             assertEquals(user.getLastName(), dto.getLastName());
-            assertEquals(user.getRole().name(), dto.getRole());
+            assertEquals(user.getRole(), dto.getRole());
         }
     }
 
@@ -123,7 +123,7 @@ public class UserDTOTests {
             assertThat(dto.getEmail()).isEqualTo(email);
             assertThat(dto.getFirstName()).isEqualTo(firstName);
             assertThat(dto.getLastName()).isEqualTo(lastName);
-            assertThat(dto.getRole()).isEqualTo(role);
+            assertThat(dto.getRole()).isEqualTo(Role.TEACHER);
         }
 
         @Test
@@ -138,7 +138,7 @@ public class UserDTOTests {
             assertThat(dto.getEmail()).isEqualTo(email);
             assertThat(dto.getFirstName()).isEqualTo(firstName);
             assertThat(dto.getLastName()).isEqualTo(lastName);
-            assertThat(dto.getRole()).isEqualTo(role);
+            assertThat(dto.getRole()).isEqualTo(Role.TEACHER);
         }
 
         @Test
@@ -180,7 +180,7 @@ public class UserDTOTests {
             assertThat(dto.getEmail()).isEmpty();
             assertThat(dto.getFirstName()).isEmpty();
             assertThat(dto.getLastName()).isEmpty();
-            assertThat(dto.getRole()).isEmpty();
+            assertThat(dto.getRole()).isNull();
         }
 
         @Test
@@ -189,9 +189,66 @@ public class UserDTOTests {
             UserDTO dto1 = new UserDTO(1L, "test@okcps.org", "John", "Doe", "student");
             UserDTO dto2 = new UserDTO(2L, "test2@okcps.org", "Jane", "Smith", "teacher");
             UserDTO dto3 = new UserDTO(3L, "test3@okcps.org", "Bob", "Johnson", "admin");
-            assertThat(dto1.getRole()).isEqualTo("student");
-            assertThat(dto2.getRole()).isEqualTo("teacher");
-            assertThat(dto3.getRole()).isEqualTo("admin");
+            assertThat(dto1.getRole()).isEqualTo(Role.STUDENT);
+            assertThat(dto2.getRole()).isEqualTo(Role.TEACHER);
+            assertThat(dto3.getRole()).isEqualTo(Role.ADMIN);
+        }
+
+        @Test
+        @DisplayName("Should handle whitespace role string as null")
+        void shouldHandleWhitespaceRoleStringAsNull() {
+            UserDTO dto = new UserDTO(1L, "test@okcps.org", "John", "Doe", "  ");
+            assertThat(dto.getRole()).isNull();
+        }
+
+        @Test
+        @DisplayName("Should handle different role string caps cases")
+        void shouldHandleDifferentRoleStringCapsCases() {
+            UserDTO dto1 = new UserDTO(1L, "test1@okcps.org", "John", "Doe", "student");
+            UserDTO dto2 = new UserDTO(2L, "test2@okcps.org", "John", "Doe", "Teacher");
+            UserDTO dto3 = new UserDTO(3L, "test3@okcps.org", "John", "Doe", "ADMIN");
+            UserDTO dto4 = new UserDTO(4L, "test4@okcps.org", "John", "Doe", "sTudeNt");
+            assertThat(dto1.getRole()).isEqualTo(Role.STUDENT);
+            assertThat(dto2.getRole()).isEqualTo(Role.TEACHER);
+            assertThat(dto3.getRole()).isEqualTo(Role.ADMIN);
+            assertThat(dto4.getRole()).isEqualTo(Role.STUDENT);
+        }
+
+        @Test
+        @DisplayName("Should throw exception for invalid role string")
+        void shouldThrowExceptionForInvalidRoleString() {
+            String invalidRole = "INVALID ROLE";
+            IllegalArgumentException exception = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> new UserDTO(1L, "test@okcps.org", "John", "Doe", invalidRole)
+            );
+            assertThat(exception.getMessage()).contains("Invalid role: " + invalidRole);
+            assertThat(exception.getMessage()).contains("Valid values are: ");
+            for (Role role : Role.values()) {
+                assertThat(exception.getMessage()).contains(role.name());
+            }
+        }
+
+        @Test
+        @DisplayName("Should throw exception for malformed role string")
+        void shouldThrowExceptionForMalformedRoleString() {
+            String malformedRole = "STUDENT_TEACHER";
+            IllegalArgumentException exception = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> new UserDTO(1L, "test@okcps.org", "John", "Doe", malformedRole)
+            );
+            assertThat(exception.getMessage()).contains("Invalid role: " + malformedRole);
+        }
+
+        @Test
+        @DisplayName("Should trim whitespace from role string before validation")
+        void shouldTrimWhitespaceFromRoleStringBeforeValidation() {
+            UserDTO dto1 = new UserDTO(1L, "test@okcps.org", "John", "Doe", "   student   ");
+            UserDTO dto2 = new UserDTO(2L, "test2@okcps.org", "John", "Doe", "\tteacher\t");
+            UserDTO dto3 = new UserDTO(3L, "test3@okcps.org", "John", "Doe", "\nadmin\n");
+            assertThat(dto1.getRole()).isEqualTo(Role.STUDENT);
+            assertThat(dto2.getRole()).isEqualTo(Role.TEACHER);
+            assertThat(dto3.getRole()).isEqualTo(Role.ADMIN);
         }
     }
 
@@ -231,11 +288,11 @@ public class UserDTOTests {
             assertEquals(updatedName, updatedDTO.getFirstName());
             assertEquals(updatedName, updatedDTO.getLastName());
             assertEquals(updatedEmail, updatedDTO.getEmail());
-            assertEquals(updatedRole.name(), updatedDTO.getRole());
+            assertEquals(updatedRole, updatedDTO.getRole());
             assertEquals(originalName, originalDTO.getFirstName());
             assertEquals(originalName, originalDTO.getLastName());
             assertEquals(originalEmail, originalDTO.getEmail());
-            assertEquals(originalRole.name(), originalDTO.getRole());
+            assertEquals(originalRole, originalDTO.getRole());
         }
     }
 
@@ -339,6 +396,20 @@ public class UserDTOTests {
             assertThat(fromEntity.getLastName()).isEqualTo(fromJson.getLastName());
             assertThat(fromEntity.getEmail()).isEqualTo(fromJson.getEmail());
             assertThat(fromEntity.getRole()).isEqualTo(fromJson.getRole());
+        }
+
+        @Test
+        @DisplayName("UserDTOs with different roles should have different role values")
+        void userDTOsWithDifferentRolesShouldHaveDifferentRoleValues() {
+            UserDTO studentDTO = new UserDTO(1L, "test@okcps.org", "John", "Doe", "STUDENT");
+            UserDTO teacherDTO = new UserDTO(1L, "test@okcps.org", "John", "Doe", "TEACHER");
+            UserDTO adminDTO = new UserDTO(1L, "test@okcps.org", "John", "Doe", "ADMIN");
+            assertThat(studentDTO.getRole()).isEqualTo(Role.STUDENT);
+            assertThat(teacherDTO.getRole()).isEqualTo(Role.TEACHER);
+            assertThat(adminDTO.getRole()).isEqualTo(Role.ADMIN);
+            assertThat(studentDTO.getRole()).isNotEqualTo(teacherDTO.getRole());
+            assertThat(teacherDTO.getRole()).isNotEqualTo(adminDTO.getRole());
+            assertThat(adminDTO.getRole()).isNotEqualTo(studentDTO.getRole());
         }
     }
 

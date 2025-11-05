@@ -80,7 +80,7 @@ public class UserControllerTests {
         assertEquals(user.getFirstName(), userDTO.getFirstName());
         assertEquals(user.getLastName(), userDTO.getLastName());
         assertEquals(user.getEmail(), userDTO.getEmail());
-        assertEquals(user.getRole().name(), userDTO.getRole());
+        assertEquals(user.getRole(), userDTO.getRole());
     }
 
     /**

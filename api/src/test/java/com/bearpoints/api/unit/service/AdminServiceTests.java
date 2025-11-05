@@ -149,7 +149,7 @@ public class AdminServiceTests {
             assertEquals("admin@okcps.org", result.getEmail());
             assertEquals("Admin", result.getFirstName());
             assertEquals("User", result.getLastName());
-            assertEquals(Role.ADMIN.name(), result.getRole());
+            assertEquals(Role.ADMIN, result.getRole());
             verify(userDAO).findById(adminId);
         }
 
@@ -184,7 +184,7 @@ public class AdminServiceTests {
             assertNotNull(result);
             assertEquals(1L, result.getId());
             assertEquals("new.admin@okcps.org", result.getEmail());
-            assertEquals("ADMIN", result.getRole());
+            assertEquals(Role.ADMIN, result.getRole());
             verify(userDAO).findByEmail(anyString());
             verify(userDAO).save(any(User.class));
         }
@@ -212,7 +212,7 @@ public class AdminServiceTests {
             when(userDAO.findByEmail("new@okcps.org")).thenReturn(Optional.empty());
             when(userDAO.save(any(User.class))).thenReturn(savedUser);
             UserDTO result = adminService.createAdmin(userDTO);
-            assertEquals("ADMIN", result.getRole());
+            assertEquals(Role.ADMIN, result.getRole());
             verify(userDAO).save(argThat(user -> user.getRole() == Role.ADMIN));
         }
     }
