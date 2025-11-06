@@ -1,18 +1,13 @@
 package com.bearpoints.api.dao;
 
-import com.bearpoints.api.dto.TeacherProjection;
 import com.bearpoints.api.entity.GradeLevel;
 import com.bearpoints.api.entity.Teacher;
 import io.micrometer.common.lang.NonNull;
-import jakarta.validation.constraints.NotNull;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.rest.core.annotation.RepositoryRestResource;
-import org.springframework.data.rest.core.annotation.RestResource;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.parameters.P;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -20,93 +15,85 @@ import java.util.Optional;
 /**
  * JPA repository for {@link Teacher} entities.
  * <p>Provides CRUD operations and custom queries for teacher management.
- * Exposes REST endpoints under '/teachers' with security constraints.
  *
  * <p>Key features:
  * <ul>
- *     <li>Standard CRUD operations with ADMIN-only delete access</li>
- *     <li>Any authenticated user can access read operations</li>
+ *     <li>Standard CRUD operations</li>
+ *     <li>Custom queries for teacher retrieval</li>
+ *     <li>Pagination and sorting support</li>
+ *     <li>Advanced filtering via specifications</li>
  *     <li>Internal synchronization methods</li>
- *     <li>Role-based access control for write operations</li>
- *     <li>Uses {@link TeacherProjection} for condensed REST representations</li>
  * </ul>
- *
- * <p>Security constraints:
- * <ul>
- *     <li>ADMIN role required for delete operations</li>
- *     <li>ADMIN can create / update any teacher</li>
- *     <li>TEACHER can only update their own profile</li>
- *     <li>All authenticated users can access read operations</li>
- *     <li>Internal sync method not exposed via REST</li>
- * </ul>
- *
- * <p>Projection Usage:
- * REST representations use {@link TeacherProjection} by default for condensed views.
  *
  * @see Teacher
- * @see TeacherProjection
- * @version 1.2
+ * @version 2.0
  * @author Dylan Mercer
  */
-@RepositoryRestResource(
-        path = "teachers",
-        excerptProjection = TeacherProjection.class
-)
 public interface TeacherDAO extends JpaRepository<Teacher, Long> {
     /**
      * Finds a teacher by their associated user email.
-     * <p>Requires any authenticated role.
      *
      * @param email User's email address
      * @return Optional containing the teacher if found
      */
-    @PreAuthorize("isAuthenticated()")
     Optional<Teacher> findByUserEmail(String email);
 
     /**
-     * Finds teachers by grade level.
-     * <p>Requires any authenticated role.
+     * Finds a teacher by user email containing string with pagination support.
+     * <p>Case-insensitive search for teacher management.
      *
-     * @param grade Grade level to search for
-     * @return List of matching teachers
+     * @param email Email fragment to search for
+     * @param pageable Pagination information
+     * @return Paginated list of matching teachers
      */
-    @PreAuthorize("isAuthenticated()")
-    Page<Teacher> findByGrade(@NotNull(message = "Grade is required") GradeLevel grade, Pageable pageable);
+    Page<Teacher> findByUserEmailContainingIgnoreCase(@Param("email") String email, Pageable pageable);
 
     /**
-     * Retrieves all teachers
-     * <p>Requires any authenticated role</p>
-     * @return List of all teachers
+     * Finds a teacher by user first name containing string with pagination support.
+     * <p>Case-insensitive search for teacher management.
+     *
+     * @param firstName First name fragment to search for
+     * @param pageable Pagination information
+     * @return Paginated list of matching teachers
+     */
+    Page<Teacher> findByUserFirstNameContainingIgnoreCase(@Param("firstName") String firstName, Pageable pageable);
+
+    /**
+     * Finds a teacher by user last name containing string with pagination.
+     * <p>Case-insensitive search for teacher management.
+     *
+     * @param lastName Last name fragment to search for
+     * @param pageable Pagination information
+     * @return Paginated list of matching teachers
+     */
+    Page<Teacher> findByUserLastNameContainingIgnoreCase(@Param("lastName") String lastName, Pageable pageable);
+
+    /**
+     * Finds teachers by grade level with pagination support.
+     *
+     * @param grade Grade level to search for
+     * @param pageable Pagination information
+     * @return Paginated list of matching teachers
+     */
+    Page<Teacher> findByGrade(@Param("grade") GradeLevel grade, Pageable pageable);
+
+    /**
+     * Retrieves all teachers with pagination and caching support.
+     *
+     * @param pageable Pagination information
+     * @return Paginated list of all teachers
      */
     @NonNull
     @Override
     @Cacheable("teachers")
-    @PreAuthorize("isAuthenticated()")
-    List<Teacher> findAll();
+    Page<Teacher> findAll(@NonNull Pageable pageable);
 
-    @NonNull
-    @Override
-    @PreAuthorize("hasRole('ADMIN') or " + "(hasRole('TEACHER') and @securityUtils.isOwnTeacher(#entity, authentication))")
-    <S extends Teacher> S save(@NonNull @P("entity") S entity);
-
-    @Override
-    @PreAuthorize("hasRole('ADMIN')")
-    void delete(@NonNull Teacher entity);
-
-    @Override
-    @PreAuthorize("hasRole('ADMIN')")
-    void deleteAll();
-
-    @Override
-    @PreAuthorize("hasRole('ADMIN')")
-    void deleteAll(@NonNull Iterable<? extends Teacher> entities);
 
     /**
      * Finds un-synced teachers (internal use only).
-     * <p>Not exposed via REST API. Used for Google Sheets synchronization.
+     * <p>Used for Google Sheets synchronization.
      *
      * @return List of unsynced teachers
      */
-    @RestResource(exported = false)
     List<Teacher> findBySyncedToSheetsFalse();
 }
