@@ -6,6 +6,7 @@ import com.bearpoints.api.entity.GradeLevel;
 import com.bearpoints.api.entity.Role;
 import com.bearpoints.api.entity.Teacher;
 import com.bearpoints.api.entity.User;
+import com.bearpoints.api.unit.utility.GradeLevelUtilsTests;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -15,17 +16,17 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit tests for {@link TeacherDTO} functionality.
- * <p>Verifies:
+ * <p>Verifies DTO-specific behavior including:
  * <ul>
  *     <li>Correct mapping from Teacher entity to DTO</li>
- *     <li>All fields are properly populated</li>
- *     <li>Edge cases and different grade level mapping</li>
+ *     <li>Proper field population and null handling</li>
  *     <li>JSON deserialization constructor</li>
- *     <li>GradeLevel validation and conversion logic</li>
+ *     <li>Edge cases and boundary conditions</li>
  * </ul>
+ * <p>Note: Detailed grade level validation logic is tested in {@link GradeLevelUtilsTests}
  *
  * @see TeacherDTO
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @DisplayName("TeacherDTO Tests")
@@ -49,54 +50,6 @@ public class TeacherDTOTests {
         }
 
         @Test
-        @DisplayName("Should correctly map PRE_K grade level")
-        void shouldCorrectlyMapPRE_KGradeLevel() {
-            Teacher teacher = createTeacher(1L, GradeLevel.PRE_K);
-            TeacherDTO dto = new TeacherDTO(teacher);
-            assertEquals(teacher.getGrade(), dto.getGrade());
-        }
-
-        @Test
-        @DisplayName("Should correctly map K grade level")
-        void shouldCorrectlyMapKGradeLevel() {
-            Teacher teacher = createTeacher(1L, GradeLevel.K);
-            TeacherDTO dto = new TeacherDTO(teacher);
-            assertEquals(teacher.getGrade(), dto.getGrade());
-        }
-
-        @Test
-        @DisplayName("Should correctly map FIRST grade level")
-        void shouldCorrectlyMapFIRSTGradeLevel() {
-            Teacher teacher = createTeacher(1L, GradeLevel.FIRST);
-            TeacherDTO dto = new TeacherDTO(teacher);
-            assertEquals(teacher.getGrade(), dto.getGrade());
-        }
-
-        @Test
-        @DisplayName("Should correctly map SECOND grade level")
-        void shouldCorrectlyMapSECONDGradeLevel() {
-            Teacher teacher = createTeacher(1L, GradeLevel.SECOND);
-            TeacherDTO dto = new TeacherDTO(teacher);
-            assertEquals(teacher.getGrade(), dto.getGrade());
-        }
-
-        @Test
-        @DisplayName("Should correctly map THIRD grade level")
-        void shouldCorrectlyMapTHIRDGradeLevel() {
-            Teacher teacher = createTeacher(1L, GradeLevel.THIRD);
-            TeacherDTO dto = new TeacherDTO(teacher);
-            assertEquals(teacher.getGrade(), dto.getGrade());
-        }
-
-        @Test
-        @DisplayName("Should correctly map FOURTH grade level")
-        void shouldCorrectlyMapFOURTHGradeLevel() {
-            Teacher teacher = createTeacher(1L, GradeLevel.FOURTH);
-            TeacherDTO dto = new TeacherDTO(teacher);
-            assertEquals(teacher.getGrade(), dto.getGrade());
-        }
-
-        @Test
         @DisplayName("Should handle teacher with null ID")
         void shouldHandleTeacherWithNullId() {
             Teacher teacher = createTeacher(null, GradeLevel.FIRST);
@@ -114,6 +67,18 @@ public class TeacherDTOTests {
             assertNotNull(dto.getId());
             assertNotNull(dto.getUser());
             assertNull(dto.getGrade());
+        }
+
+        @Test
+        @DisplayName("Should handle teacher with null user")
+        void shouldHandleTeacherWithNullUser() {
+            Teacher teacher = new Teacher();
+            teacher.setId(1L);
+            teacher.setGrade(GradeLevel.FIRST);
+            TeacherDTO dto = new TeacherDTO(teacher);
+            assertThat(dto.getId()).isEqualTo(teacher.getId());
+            assertThat(dto.getGrade()).isEqualTo(teacher.getGrade());
+            assertThat(dto.getUser()).isNull();
         }
     }
 
@@ -164,50 +129,20 @@ public class TeacherDTOTests {
         }
 
         @Test
-        @DisplayName("Should handle empty string for grade level field")
-        void shouldHandleEmptyStringForGradeLevelField() {
+        @DisplayName("Should delegate grade level validation to GradeLevelUtils")
+        void shouldDelegateGradeLevelValidationToGradeLevelUtils() {
             UserDTO user = new UserDTO(1L, "test@okcps.org", "John", "Doe", "TEACHER");
-            TeacherDTO dto = new TeacherDTO(1L, user, "");
-            assertThat(dto.getGrade()).isNull();
-        }
-
-        @Test
-        @DisplayName("Should handle different grade level string cases")
-        void shouldHandleDifferentGradeLevelStringCases() {
-            UserDTO user = new UserDTO(1L, "test@okcps.org", "John", "Doe", "TEACHER");
-            TeacherDTO dto1 = new TeacherDTO(1L, user, "pre_k");
-            TeacherDTO dto2 = new TeacherDTO(2L, user, "first");
-            TeacherDTO dto3 = new TeacherDTO(3L, user, "FOURTH");
+            TeacherDTO dto1 = new TeacherDTO(1L, user, "pre-k");
             assertThat(dto1.getGrade()).isEqualTo(GradeLevel.PRE_K);
+            TeacherDTO dto2 = new TeacherDTO(2L, user, "  first ");
             assertThat(dto2.getGrade()).isEqualTo(GradeLevel.FIRST);
-            assertThat(dto3.getGrade()).isEqualTo(GradeLevel.FOURTH);
-        }
-
-        @Test
-        @DisplayName("Should handle whitespace grade level string as null")
-        void shouldHandleWhitespaceGradLevelStringAsNull() {
-            UserDTO user = new UserDTO(1L, "test@okcps.org", "John", "Doe", "TEACHER");
-            TeacherDTO dto1 = new TeacherDTO(1L, user, "    ");
-            TeacherDTO dto2 = new TeacherDTO(2L, user, "\t");
-            TeacherDTO dto3 = new TeacherDTO(3L, user, "\n");
-            assertThat(dto1.getGrade()).isNull();
-            assertThat(dto2.getGrade()).isNull();
+            TeacherDTO dto3 = new TeacherDTO(3L, user, "");
             assertThat(dto3.getGrade()).isNull();
         }
 
         @Test
-        @DisplayName("Should handle hyphen to underscore conversion in grade levels")
-        void shouldHandleHyphenToUnderscoreConversionInGradeLevels() {
-            UserDTO user = new UserDTO(1L, "test@okcps.org", "John", "Doe", "TEACHER");
-            TeacherDTO dto1 = new TeacherDTO(1L, user, "pre-k");
-            TeacherDTO dto2 = new TeacherDTO(2L, user, "PRE-K");
-            assertThat(dto1.getGrade()).isEqualTo(GradeLevel.PRE_K);
-            assertThat(dto2.getGrade()).isEqualTo(GradeLevel.PRE_K);
-        }
-
-        @Test
-        @DisplayName("Should throw exception for invalid grade level string")
-        void shouldThrowExceptionForInvalidGradeLevelString() {
+        @DisplayName("Should propagate grade level validation exceptions from GradeLevelUtils")
+        void shouldPropagateGradeLevelValidationExceptions() {
             UserDTO user = new UserDTO(1L, "test@okcps.org", "John", "Doe", "TEACHER");
             String invalidGrade = "INVALID_GRADE";
             IllegalArgumentException exception = assertThrows(
@@ -215,34 +150,6 @@ public class TeacherDTOTests {
                     () -> new TeacherDTO(1L, user, invalidGrade)
             );
             assertThat(exception.getMessage()).contains("Invalid grade level: " + invalidGrade);
-            assertThat(exception.getMessage()).contains("Valid values are: ");
-            for (GradeLevel grade : GradeLevel.values()) {
-                assertThat(exception.getMessage()).contains(grade.name());
-            }
-        }
-
-        @Test
-        @DisplayName("Should throw exception for malformed grade level string")
-        void shouldThrowExceptionForMalformedGradeLevelString() {
-            UserDTO user = new UserDTO(1L, "test@okcps.org", "John", "Doe", "TEACHER");
-            String malformedGrade = "FIRST_SECOND";
-            IllegalArgumentException exception = assertThrows(
-                    IllegalArgumentException.class,
-                    () -> new TeacherDTO(1L, user, malformedGrade)
-            );
-            assertThat(exception.getMessage()).contains("Invalid grade level: " + malformedGrade);
-        }
-
-        @Test
-        @DisplayName("Should trim whitespace from role string before validation")
-        void shouldTrimWhitespaceFromRoleStringBeforeValidation() {
-            UserDTO user = new UserDTO(1L, "test@okcps.org", "John", "Doe", "TEACHER");
-            TeacherDTO dto1 = new TeacherDTO(1L, user, "   first  ");
-            TeacherDTO dto2 = new TeacherDTO(2L, user, "\tsecond\t");
-            TeacherDTO dto3 = new TeacherDTO(3L, user, "\nthird\n");
-            assertThat(dto1.getGrade()).isEqualTo(GradeLevel.FIRST);
-            assertThat(dto2.getGrade()).isEqualTo(GradeLevel.SECOND);
-            assertThat(dto3.getGrade()).isEqualTo(GradeLevel.THIRD);
         }
     }
 
@@ -281,21 +188,6 @@ public class TeacherDTOTests {
             assertThat(fromEntity.getUser().getLastName()).isEqualTo(fromJSON.getUser().getLastName());
             assertThat(fromEntity.getUser().getRole()).isEqualTo(fromJSON.getUser().getRole());
             assertThat(fromEntity.getGrade()).isEqualTo(fromJSON.getGrade());
-        }
-
-        @Test
-        @DisplayName("TeacherDTOs with different grade levels should have different grade level values")
-        void teacherDTOsWithDifferentGradLevelsShouldHaveDifferentGradLevelValues() {
-            UserDTO user = new UserDTO(1L, "test@okcps.org", "John", "Doe", "TEACHER");
-            TeacherDTO preKDTO = new TeacherDTO(1L, user, "PRE_K");
-            TeacherDTO firstDTO = new TeacherDTO(2L, user, "FIRST");
-            TeacherDTO fourthDTO = new TeacherDTO(3L, user, "FOURTH");
-            assertThat(preKDTO.getGrade()).isEqualTo(GradeLevel.PRE_K);
-            assertThat(firstDTO.getGrade()).isEqualTo(GradeLevel.FIRST);
-            assertThat(fourthDTO.getGrade()).isEqualTo(GradeLevel.FOURTH);
-            assertThat(preKDTO.getGrade()).isNotEqualTo(firstDTO.getGrade());
-            assertThat(firstDTO.getGrade()).isNotEqualTo(fourthDTO.getGrade());
-            assertThat(fourthDTO.getGrade()).isNotEqualTo(preKDTO.getGrade());
         }
     }
 

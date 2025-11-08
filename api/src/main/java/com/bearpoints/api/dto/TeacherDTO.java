@@ -2,6 +2,7 @@ package com.bearpoints.api.dto;
 
 import com.bearpoints.api.entity.GradeLevel;
 import com.bearpoints.api.entity.Teacher;
+import com.bearpoints.api.utility.GradeLevelUtils;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -24,7 +25,7 @@ public class TeacherDTO {
                       @JsonProperty("grade") String grade) {
         this.id = id;
         this.user = user;
-        this.grade = validateAndConvertGrade(grade);
+        this.grade = GradeLevelUtils.validateAndConvertGrade(grade);
     }
 
     /**
@@ -36,22 +37,5 @@ public class TeacherDTO {
         this.id = teacher.getId();
         this.user = teacher.getUser() != null ? new UserDTO(teacher.getUser()) : null;
         this.grade = teacher.getGrade();
-    }
-
-    private GradeLevel validateAndConvertGrade(String gradeString) {
-        if (gradeString == null) {
-            return null;
-        }
-        String trimmed = gradeString.trim();
-        if (trimmed.isEmpty()) {
-            return null;
-        }
-        String normalized = trimmed.toUpperCase().replace("-", "_");
-        try {
-            return GradeLevel.valueOf(normalized);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Invalid grade level: " + gradeString + ". Valid values are: " +
-                    java.util.Arrays.toString(GradeLevel.values()));
-        }
     }
 }
