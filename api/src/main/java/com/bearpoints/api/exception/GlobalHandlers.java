@@ -1,11 +1,14 @@
 package com.bearpoints.api.exception;
 
 import com.bearpoints.api.dto.ErrorResponseDTO;
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import com.fasterxml.jackson.databind.exc.ValueInstantiationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -102,6 +105,30 @@ public class GlobalHandlers {
     public ResponseEntity<ErrorResponseDTO> handleIllegalArgumentException(IllegalArgumentException ex) {
         logger.warn("Client sent invalid request: {}", ex.getMessage());
         ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO(ex.getMessage());
+        return ResponseEntity.badRequest().body(errorResponseDTO);
+    }
+
+    /**
+     * Handles JSON parsing and deserialization exceptions.
+     * <p>Returns a 400 Bad Request status when JSON is malformed or contains invalid values.
+     *
+     * @param ex The caught HttpMessageNotReadableException
+     * @return ResponseEntity with error message and status code
+     */
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponseDTO> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
+        logger.warn("JSON parsing error: {}", ex.getMessage());
+        Throwable rootCause = ex.getRootCause();
+        String errorMessage = "Invalid request body";
+        if (rootCause instanceof ValueInstantiationException) {
+            errorMessage = rootCause.getMessage();
+        } else if (rootCause instanceof InvalidFormatException ife) {
+            errorMessage = "Invalid value for field '" + ife.getPath().getFirst().getFieldName() + "': " + ife.getValue();
+        } else if (rootCause instanceof IllegalArgumentException) {
+            errorMessage = rootCause.getMessage();
+        }
+        ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO(errorMessage);
         return ResponseEntity.badRequest().body(errorResponseDTO);
     }
 

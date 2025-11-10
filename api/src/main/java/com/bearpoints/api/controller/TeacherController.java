@@ -64,7 +64,7 @@ public class TeacherController {
     public ResponseEntity<PagedResponseDTO<TeacherDTO>> getAllTeachers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "lastName,asc") String sort
+            @RequestParam(defaultValue = "user.lastName,asc") String sort
     ) {
         log.debug("Retrieving all teachers - page: {}, size: {}, sort: {}", page, size, sort);
         String[] sortParams = splitSortParams(sort);
@@ -92,7 +92,7 @@ public class TeacherController {
             @RequestParam String email,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "lastName,asc") String sort
+            @RequestParam(defaultValue = "user.lastName,asc") String sort
     ) {
         log.debug("Searching teachers by email: {} - page: {}, size: {}, sort: {}", email, page, size, sort);
         String[] sortParams = splitSortParams(sort);
@@ -120,7 +120,7 @@ public class TeacherController {
             @RequestParam String firstName,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "lastName,asc") String sort
+            @RequestParam(defaultValue = "user.lastName,asc") String sort
     ) {
         log.debug("Searching teachers by first name: {} - page: {}, size: {}, sort: {}", firstName, page, size, sort);
         String[] sortParams = splitSortParams(sort);
@@ -148,7 +148,7 @@ public class TeacherController {
             @RequestParam String lastName,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "lastName,asc") String sort
+            @RequestParam(defaultValue = "user.lastName,asc") String sort
     ) {
         log.debug("Searching teachers by last name: {} - page: {}, size: {}, sort: {}", lastName, page, size, sort);
         String[] sortParams = splitSortParams(sort);
@@ -176,7 +176,7 @@ public class TeacherController {
             @RequestParam GradeLevel grade,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "lastName,asc") String sort
+            @RequestParam(defaultValue = "user.lastName,asc") String sort
     ) {
         log.debug("Searching teachers by grade: {} - page: {}, size: {}, sort: {}", grade.name(), page, size, sort);
         String[] sortParams = splitSortParams(sort);

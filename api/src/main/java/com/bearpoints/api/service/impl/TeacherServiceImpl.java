@@ -1,6 +1,7 @@
 package com.bearpoints.api.service.impl;
 
 import com.bearpoints.api.dao.TeacherDAO;
+import com.bearpoints.api.dao.UserDAO;
 import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.dto.TeacherDTO;
 import com.bearpoints.api.entity.GradeLevel;
@@ -24,6 +25,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class TeacherServiceImpl implements TeacherService {
+    private final UserDAO userDAO;
     private final TeacherDAO teacherDAO;
 
     @Override
@@ -104,8 +106,9 @@ public class TeacherServiceImpl implements TeacherService {
         user.setFirstName(teacherDTO.getUser().getFirstName());
         user.setLastName(teacherDTO.getUser().getLastName());
         user.setRole(Role.TEACHER);
+        User savedUser = userDAO.save(user);
         Teacher teacher = new Teacher();
-        teacher.setUser(user);
+        teacher.setUser(savedUser);
         teacher.setGrade(teacherDTO.getGrade());
         Teacher savedTeacher = teacherDAO.save(teacher);
         log.info("Successfully created teacher with ID: {}", savedTeacher.getId());

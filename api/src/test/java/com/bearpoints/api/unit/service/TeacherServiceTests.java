@@ -1,6 +1,7 @@
 package com.bearpoints.api.unit.service;
 
 import com.bearpoints.api.dao.TeacherDAO;
+import com.bearpoints.api.dao.UserDAO;
 import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.dto.TeacherDTO;
 import com.bearpoints.api.dto.UserDTO;
@@ -43,6 +44,9 @@ import static org.mockito.Mockito.*;
 @DisplayName("TeacherService Tests")
 @ExtendWith(MockitoExtension.class)
 public class TeacherServiceTests {
+    @Mock
+    private UserDAO userDAO;
+
     @Mock
     private TeacherDAO teacherDAO;
 
@@ -204,7 +208,14 @@ public class TeacherServiceTests {
                     "FIRST"
             );
             when(teacherDAO.findByUserEmail(email)).thenReturn(Optional.empty());
+            User savedUser = new User();
+            savedUser.setId(1L);
+            savedUser.setEmail(email);
+            savedUser.setFirstName("New");
+            savedUser.setLastName("Teacher");
+            savedUser.setRole(role);
             Teacher savedTeacher = createTeacher(1L, 1L, email, "New", "Teacher", role, gradeLevel);
+            when(userDAO.save(any(User.class))).thenReturn(savedUser);
             when(teacherDAO.save(any(Teacher.class))).thenReturn(savedTeacher);
             TeacherDTO result = teacherService.createTeacher(teacherDTO);
             assertNotNull(result);
@@ -213,6 +224,7 @@ public class TeacherServiceTests {
             assertEquals(gradeLevel, result.getGrade());
             assertEquals(role, result.getUser().getRole());
             verify(teacherDAO).findByUserEmail(email);
+            verify(userDAO).save(any(User.class));
             verify(teacherDAO).save(any(Teacher.class));
         }
 
@@ -251,9 +263,17 @@ public class TeacherServiceTests {
             );
             when(teacherDAO.findByUserEmail(newEmail)).thenReturn(Optional.empty());
             Teacher savedTeacher = createTeacher(1L, 1L, newEmail, firstName, lastName, role, gradeLevel);
+            User savedUser = new User();
+            savedUser.setId(1L);
+            savedUser.setEmail(newEmail);
+            savedUser.setFirstName("New");
+            savedUser.setLastName("Teacher");
+            savedUser.setRole(role);
+            when(userDAO.save(any(User.class))).thenReturn(savedUser);
             when(teacherDAO.save(any(Teacher.class))).thenReturn(savedTeacher);
             TeacherDTO result = teacherService.createTeacher(teacherDTO);
             assertEquals(Role.TEACHER, result.getUser().getRole());
+            verify(userDAO).save(any(User.class));
             verify(teacherDAO).save(argThat(teacher -> teacher.getUser().getRole() == Role.TEACHER));
         }
     }

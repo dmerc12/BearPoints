@@ -5,14 +5,18 @@ import com.bearpoints.api.entity.Teacher;
 import com.bearpoints.api.utility.GradeLevelUtils;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 
 @Getter
 public class TeacherDTO {
     private final Long id;
 
+    @Valid
     private final UserDTO user;
 
+    @NotNull(message = "Grade is required")
     private final GradeLevel grade;
 
 
