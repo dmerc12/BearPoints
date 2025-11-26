@@ -53,9 +53,9 @@ public class StudentSpecificationTests {
         teacher.setUser(teacherUser);
         teacher.setGrade(GradeLevel.FOURTH);
         teacherDAO.save(teacher);
-        Student student1 = createStudent("john.doe@okcps.org", "John", "Doe", 100);
-        Student student2 = createStudent("jane.smith@okcps.org", "Jane", "Smith", 150);
-        Student student3 = createStudent("bob.johnson@okcps.org", "Bob", "Johnson", 75);
+        createStudent("john.doe@okcps.org", "John", "Doe", 100);
+        createStudent("jane.smith@okcps.org", "Jane", "Smith", 150);
+        createStudent("bob.johnson@okcps.org", "Bob", "Johnson", 75);
     }
 
     @Test
@@ -182,7 +182,7 @@ public class StudentSpecificationTests {
         assertEquals("john.doe@okcps.org", results.getContent().getFirst().getUser().getEmail());
     }
 
-    private Student createStudent(String email, String firstName, String lastName, Integer points) {
+    private void createStudent(String email, String firstName, String lastName, Integer points) {
         User user = new User();
         user.setEmail(email);
         user.setFirstName(firstName);
@@ -194,6 +194,6 @@ public class StudentSpecificationTests {
         student.setTeacher(teacher);
         student.setPoints(points);
         student.generateToken();
-        return studentDAO.save(student);
+        studentDAO.save(student);
     }
 }
