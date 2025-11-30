@@ -88,14 +88,6 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
-    public StudentDTO getStudentByEmail(String email) {
-        log.debug("Retrieving student by email: {}", email);
-        Student student = studentDAO.findByUserEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("Student not found with email: " + email));
-        return new StudentDTO(student);
-    }
-
-    @Override
     @Transactional
     public StudentDTO createStudent(StudentDTO studentDTO) {
         log.debug("Creating student with email: {}", studentDTO.getUser().getEmail());
@@ -143,7 +135,7 @@ public class StudentServiceImpl implements StudentService {
         if (!existingStudent.getTeacher().getId().equals(studentDTO.getTeacher().getId())) {
             Teacher newTeacher = teacherDAO.findById(studentDTO.getTeacher().getId())
                     .orElseThrow(() -> new UserNotFoundException("Teacher not found with ID: " + studentDTO.getTeacher().getId()));
-            existingUser.setTeacher(newTeacher);
+            existingStudent.setTeacher(newTeacher);
         }
         Student updatedStudent = studentDAO.save(existingStudent);
         log.info("Successfully updated student with ID: {}", updatedStudent.getId());

@@ -69,15 +69,6 @@ public interface StudentService {
     StudentDTO getStudentByToken(String token);
 
     /**
-     * Retrieves a student by user email.
-     *
-     * @param email Student's email address
-     * @return Student DTO
-     * @throws UserNotFoundException if student not found
-     */
-    StudentDTO getStudentByEmail(String email);
-
-    /**
      * Creates a new student.
      *
      * @param studentDTO Student data to create

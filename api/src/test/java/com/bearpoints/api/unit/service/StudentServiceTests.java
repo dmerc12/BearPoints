@@ -261,28 +261,6 @@ public class StudentServiceTests {
                     () ->  studentService.getStudentByToken(token));
             verify(studentDAO).findByToken(token);
         }
-
-        @Test
-        @DisplayName("Should return student by email when found")
-        void shouldReturnStudentByEmailWhenFound() {
-            Student student = createStudent(1L, 100);
-            String email = student.getUser().getEmail();
-            when(studentDAO.findByUserEmail(email)).thenReturn(Optional.of(student));
-            StudentDTO result = studentService.getStudentByEmail(email);
-            assertNotNull(result);
-            assertEquals(email, result.getUser().getEmail());
-            verify(studentDAO).findByUserEmail(email);
-        }
-
-        @Test
-        @DisplayName("Should throw UserNotFoundException when student not found by email")
-        void shouldThrowUserNotFoundExceptionWhenStudentNotFoundByEmail() {
-            String email = "nonexistent@okcps.org";
-            when(studentDAO.findByUserEmail(email)).thenReturn(Optional.empty());
-            assertThrows(UserNotFoundException.class,
-                    () ->  studentService.getStudentByEmail(email));
-            verify(studentDAO).findByUserEmail(email);
-        }
     }
 
     @Nested

@@ -319,19 +319,6 @@ public class StudentDTOTests {
         }
 
         @Test
-        @DisplayName("Should cascade validation to teacher field")
-        void shouldCascadeValidationToTeacherField() {
-            UserDTO user = new UserDTO(1L, "student@okcps.org", "John", "Doe", "STUDENT");
-            TeacherDTO invalidTeacher = new TeacherDTO(1L,
-                    new UserDTO(2L, "teacher@okcps.org", "Jane", "Smith", "TEACHER"),
-                    null);
-            StudentDTO dto = new StudentDTO(1L, user, 100, "token-cascade", invalidTeacher);
-            Set<ConstraintViolation<StudentDTO>> violations = validator.validate(dto);
-            assertThat(violations).isNotNull();
-            assertThat(violations.size()).isGreaterThan(0);
-        }
-
-        @Test
         @DisplayName("Should handle null points in validation")
         void shouldHandleNullPointsInValidation() {
             UserDTO user = new UserDTO(1L, "student@okcps.org", "John", "Doe", "STUDENT");

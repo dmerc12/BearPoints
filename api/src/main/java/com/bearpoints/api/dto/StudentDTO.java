@@ -20,7 +20,6 @@ public class StudentDTO {
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private final String token;
 
-    @Valid
     private final TeacherDTO teacher;
 
     /**
