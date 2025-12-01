@@ -6,8 +6,11 @@ import io.micrometer.common.lang.NonNull;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.query.Param;
+import org.springframework.lang.Nullable;
 
 import java.util.List;
 import java.util.Optional;
@@ -29,7 +32,7 @@ import java.util.Optional;
  * @version 2.0
  * @author Dylan Mercer
  */
-public interface TeacherDAO extends JpaRepository<Teacher, Long> {
+public interface TeacherDAO extends JpaRepository<Teacher, Long>, JpaSpecificationExecutor<Teacher> {
     /**
      * Finds a teacher by their associated user email.
      *
@@ -88,6 +91,16 @@ public interface TeacherDAO extends JpaRepository<Teacher, Long> {
     @Cacheable("teachers")
     Page<Teacher> findAll(@NonNull Pageable pageable);
 
+    /**
+     * Finds teachers using specification with pagination.
+     *
+     * @param spec Specifications to search / filter for
+     * @param pageable Pagination information
+     * @return Paginated list of teachers matching specifications
+     */
+    @NonNull
+    @Override
+    Page<Teacher> findAll(@Nullable Specification<Teacher> spec, @NonNull Pageable pageable);
 
     /**
      * Finds un-synced teachers (internal use only).
