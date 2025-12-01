@@ -4,6 +4,7 @@ import com.bearpoints.api.dao.TeacherDAO;
 import com.bearpoints.api.dao.UserDAO;
 import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.dto.TeacherDTO;
+import com.bearpoints.api.dto.TeacherSearchCriteria;
 import com.bearpoints.api.entity.GradeLevel;
 import com.bearpoints.api.entity.Role;
 import com.bearpoints.api.entity.Teacher;
@@ -11,10 +12,12 @@ import com.bearpoints.api.entity.User;
 import com.bearpoints.api.exception.DuplicateResourceException;
 import com.bearpoints.api.exception.UserNotFoundException;
 import com.bearpoints.api.service.TeacherService;
+import com.bearpoints.api.specification.TeacherSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,6 +40,19 @@ public class TeacherServiceImpl implements TeacherService {
                 teacherPage.getNumberOfElements(),
                 teacherPage.getTotalElements());
         return new PagedResponseDTO<>(teacherPage);
+    }
+
+    @Override
+    public PagedResponseDTO<TeacherDTO> searchTeachers(TeacherSearchCriteria criteria, Pageable pageable) {
+        log.debug("Searching teachers with criteria: {} and pagination: {}", criteria, pageable);
+        if (!criteria.hasFilters()) {
+            // If no filters provided return all teachers
+            return getAllTeachers(pageable);
+        }
+        Specification<Teacher> spec = TeacherSpecification.withCriteria(criteria);
+        Page<TeacherDTO> teacherPage = teacherDAO.findAll(spec, pageable).map(TeacherDTO::new);
+        log.info("Found {} teachers matching search criteria", teacherPage.getNumberOfElements());
+        return PagedResponseDTO.of(teacherPage);
     }
 
     @Override

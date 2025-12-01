@@ -4,6 +4,7 @@ import com.bearpoints.api.dao.TeacherDAO;
 import com.bearpoints.api.dao.UserDAO;
 import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.dto.TeacherDTO;
+import com.bearpoints.api.dto.TeacherSearchCriteria;
 import com.bearpoints.api.dto.UserDTO;
 import com.bearpoints.api.entity.GradeLevel;
 import com.bearpoints.api.entity.Role;
@@ -23,6 +24,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.util.Collections;
 import java.util.List;
@@ -87,75 +89,97 @@ public class TeacherServiceTests {
     }
 
     @Nested
-    @DisplayName("When searching teachers")
-    class WhenSearchingTeachersTests {
+    @SuppressWarnings("unchecked")
+    @DisplayName("When searching teachers with criteria")
+    class WhenSearchingTeachersWithCriteria {
         @Test
-        @DisplayName("Should search teachers by email")
-        void shouldSearchTeachersByEmail() {
-            String searchTerm = "teacher";
-            String email = searchTerm + "1@okcps.org";
+        @DisplayName("Should search teachers with email criteria")
+        void shouldSearchTeachersWithEmailCriteria() {
+            TeacherSearchCriteria criteria = new TeacherSearchCriteria();
+            criteria.setEmail("j.doe@okcps.org");
             List<Teacher> teachers = List.of(
-                    createTeacher(1L, 1L, email, "Teacher1", "User1", Role.TEACHER, GradeLevel.FIRST)
+                    createTeacher(1L, 1L, "j.doe@okcps.org", "John",
+                            "Doe", Role.TEACHER, GradeLevel.FIRST)
             );
             Page<Teacher> teacherPage = new PageImpl<>(teachers, pageable, 1L);
-            when(teacherDAO.findByUserEmailContainingIgnoreCase(eq(searchTerm), any(Pageable.class)))
+            when(teacherDAO.findAll(any(Specification.class), any(Pageable.class)))
                     .thenReturn(teacherPage);
-            PagedResponseDTO<TeacherDTO> result = teacherService.searchTeachersByEmail(searchTerm, pageable);
+            PagedResponseDTO<TeacherDTO> result = teacherService.searchTeachers(criteria, pageable);
             assertNotNull(result);
             assertEquals(1, result.getContent().size());
-            assertEquals(email, result.getContent().getFirst().getUser().getEmail());
-            verify(teacherDAO).findByUserEmailContainingIgnoreCase(searchTerm, pageable);
+            verify(teacherDAO).findAll(any(Specification.class), eq(pageable));
         }
 
         @Test
         @DisplayName("Should search teachers by first name")
         void shouldSearchTeachersByFirstName() {
-            String firstName = "John";
+            TeacherSearchCriteria criteria = new TeacherSearchCriteria();
+            criteria.setFirstName("John");
             List<Teacher> teachers = List.of(
-                    createTeacher(1L, 1L, "john@okcps.org", firstName, "Doe", Role.TEACHER, GradeLevel.FIRST)
+                    createTeacher(1L, 1L, "j.doe@okcps.org", "John",
+                            "Doe", Role.TEACHER, GradeLevel.FIRST)
             );
             Page<Teacher> teacherPage = new PageImpl<>(teachers, pageable, 1L);
-            when(teacherDAO.findByUserFirstNameContainingIgnoreCase(eq(firstName), any(Pageable.class)))
+            when(teacherDAO.findAll(any(Specification.class), any(Pageable.class)))
                     .thenReturn(teacherPage);
-            PagedResponseDTO<TeacherDTO> result = teacherService.searchTeachersByFirstName(firstName, pageable);
+            PagedResponseDTO<TeacherDTO> result = teacherService.searchTeachers(criteria, pageable);
             assertNotNull(result);
             assertEquals(1, result.getContent().size());
-            assertEquals(firstName, result.getContent().getFirst().getUser().getFirstName());
-            verify(teacherDAO).findByUserFirstNameContainingIgnoreCase(firstName, pageable);
+            verify(teacherDAO).findAll(any(Specification.class), eq(pageable));
         }
 
         @Test
         @DisplayName("Should search teachers by last name")
         void shouldSearchTeachersByLastName() {
-            String lastName = "Doe";
+            TeacherSearchCriteria criteria = new TeacherSearchCriteria();
+            criteria.setLastName("Doe");
             List<Teacher> teachers = List.of(
-                    createTeacher(1L, 1L, "john@okcps.org", "John", lastName, Role.TEACHER, GradeLevel.FIRST)
+                    createTeacher(1L, 1L, "j.doe@okcps.org", "John",
+                            "Doe", Role.TEACHER, GradeLevel.FIRST)
             );
             Page<Teacher> teacherPage = new PageImpl<>(teachers, pageable, 1L);
-            when(teacherDAO.findByUserLastNameContainingIgnoreCase(eq(lastName), any(Pageable.class)))
+            when(teacherDAO.findAll(any(Specification.class), any(Pageable.class)))
                     .thenReturn(teacherPage);
-            PagedResponseDTO<TeacherDTO> result = teacherService.searchTeachersByLastName(lastName, pageable);
+            PagedResponseDTO<TeacherDTO> result = teacherService.searchTeachers(criteria, pageable);
             assertNotNull(result);
             assertEquals(1, result.getContent().size());
-            assertEquals(lastName, result.getContent().getFirst().getUser().getLastName());
-            verify(teacherDAO).findByUserLastNameContainingIgnoreCase(lastName, pageable);
+            verify(teacherDAO).findAll(any(Specification.class), eq(pageable));
         }
 
         @Test
         @DisplayName("Should search teachers by grade level")
         void shouldSearchTeachersByGradesLevel() {
-            GradeLevel gradeLevel = GradeLevel.FIRST;
+            TeacherSearchCriteria criteria = new TeacherSearchCriteria();
+            criteria.setGrade(GradeLevel.FIRST);
             List<Teacher> teachers = List.of(
-                    createTeacher(1L, 1L, "john@okcps.org", "John", "Doe", Role.TEACHER, gradeLevel)
+                    createTeacher(1L, 1L, "j.doe@okcps.org", "John",
+                            "Doe", Role.TEACHER, GradeLevel.FIRST)
             );
             Page<Teacher> teacherPage = new PageImpl<>(teachers, pageable, 1L);
-            when(teacherDAO.findByGrade(eq(gradeLevel), any(Pageable.class)))
+            when(teacherDAO.findAll(any(Specification.class), any(Pageable.class)))
                     .thenReturn(teacherPage);
-            PagedResponseDTO<TeacherDTO> result = teacherService.searchTeachersByGrade(gradeLevel, pageable);
+            PagedResponseDTO<TeacherDTO> result = teacherService.searchTeachers(criteria, pageable);
             assertNotNull(result);
             assertEquals(1, result.getContent().size());
-            assertEquals(gradeLevel, result.getContent().getFirst().getGrade());
-            verify(teacherDAO).findByGrade(gradeLevel, pageable);
+            verify(teacherDAO).findAll(any(Specification.class), eq(pageable));
+        }
+
+        @Test
+        @DisplayName("Should return all teachers with no criteria specified")
+        void shouldReturnAllTeachersWhenNoCriteriaSpecified() {
+            TeacherSearchCriteria criteria = new TeacherSearchCriteria();
+            List<Teacher> teachers = List.of(
+                    createTeacher(1L, 1L, "j.doe@okcps.org", "John",
+                            "Doe", Role.TEACHER, GradeLevel.FIRST)
+            );
+            Page<Teacher> teacherPage = new PageImpl<>(teachers, pageable, 1L);
+            when(teacherDAO.findAll(any(Pageable.class)))
+                    .thenReturn(teacherPage);
+            PagedResponseDTO<TeacherDTO> result = teacherService.searchTeachers(criteria, pageable);
+            assertNotNull(result);
+            assertEquals(1, result.getContent().size());
+            verify(teacherDAO).findAll(pageable);
+            verify(teacherDAO, never()).findAll(any(Specification.class), any(Pageable.class));
         }
     }
 

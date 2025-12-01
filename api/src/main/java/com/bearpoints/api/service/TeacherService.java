@@ -2,6 +2,7 @@ package com.bearpoints.api.service;
 
 import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.dto.TeacherDTO;
+import com.bearpoints.api.dto.TeacherSearchCriteria;
 import com.bearpoints.api.entity.GradeLevel;
 import com.bearpoints.api.exception.UserNotFoundException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -29,6 +30,15 @@ public interface TeacherService {
      * @return Paginated response of teacher user DTOs
      */
     PagedResponseDTO<TeacherDTO> getAllTeachers(Pageable pageable);
+
+    /**
+     * Searches teachers by any field (email, first name, last name, grade level) with pagination and sorting.
+     *
+     * @param criteria Search criteria containing filters
+     * @param pageable Pagination and sorting parameters
+     * @return Paginated response of matching student DTOs
+     */
+    PagedResponseDTO<TeacherDTO> searchTeachers(TeacherSearchCriteria criteria, Pageable pageable);
 
     /**
      * Searches teacher users by email with pagination and sorting.
