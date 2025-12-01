@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.*;
  *     <li>GET /api/students/search - Search students with flexible criteria (any authenticated user)</li>
  *     <li>GET /api/students/leaderboard - Retrieve classroom leaderboard (any authenticated user)</li>
  *     <li>GET /api/students/{id} - Retrieve student by ID (any authenticated user)</li>
- *     <li>GET /api/students/email/{email} - Retrieve student by email (any authenticated user)</li>
+ *     <li>GET /api/students/token/{token} - Retrieve student by token (any authenticated user)</li>
  *     <li>POST /api/students - Create new student (ADMIN only)</li>
  *     <li>PUT /api/students - Update existing student (Admin only)</li>
  *     <li>DELETE /api/students/{id} - Delete student (Admin only)</li>
