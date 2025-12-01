@@ -6,8 +6,11 @@ import io.micrometer.common.lang.NonNull;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.query.Param;
+import org.springframework.lang.Nullable;
 
 import java.util.List;
 import java.util.Optional;
@@ -28,7 +31,7 @@ import java.util.Optional;
  * @version 2.0
  * @author Dylan Mercer
  */
-public interface UserDAO extends JpaRepository<User, Long> {
+public interface UserDAO extends JpaRepository<User, Long>, JpaSpecificationExecutor<User> {
     /**
      * Finds a user by email address.
      *
@@ -45,6 +48,16 @@ public interface UserDAO extends JpaRepository<User, Long> {
      * @return Paginated list of users with the specified role
      */
     Page<User> findByRole(@Param("role") Role role, Pageable pageable);
+
+    /**
+     * Finds users using role and specification with pagination.
+     *
+     * @param spec Specifications to search / filter for
+     * @param pageable Pagination information
+     * @return Paginated list of users matching role and specification
+     */
+    @NonNull
+    Page<User> findAll(@Nullable Specification<User> spec, @NonNull Pageable pageable);
 
     /**
      * Finds users by role and first name containing string with pagination support.
