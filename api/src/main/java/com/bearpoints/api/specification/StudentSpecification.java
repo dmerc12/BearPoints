@@ -1,6 +1,7 @@
 package com.bearpoints.api.specification;
 
 import com.bearpoints.api.dto.StudentSearchCriteria;
+import com.bearpoints.api.entity.Role;
 import com.bearpoints.api.entity.Student;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
@@ -36,6 +37,7 @@ public class StudentSpecification {
     public static Specification<Student> withCriteria(StudentSearchCriteria criteria) {
         return (root, _, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
+            predicates.add(criteriaBuilder.equal(root.get("user").get("role"), Role.STUDENT));
             // Email filter
             if (isValidSearchString(criteria.getEmail())) {
                 predicates.add(criteriaBuilder.like(
