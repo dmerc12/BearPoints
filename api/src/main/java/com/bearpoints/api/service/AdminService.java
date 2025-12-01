@@ -1,7 +1,6 @@
 package com.bearpoints.api.service;
 
-import com.bearpoints.api.dto.PagedResponseDTO;
-import com.bearpoints.api.dto.UserDTO;
+import com.bearpoints.api.dto.*;
 import com.bearpoints.api.exception.UserNotFoundException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Pageable;
@@ -28,6 +27,15 @@ public interface AdminService {
      * @return Paginated response of admin user DTOs
      */
     PagedResponseDTO<UserDTO> getAllAdmins(Pageable pageable);
+
+    /**
+     * Searches admins by any field (email, first name, last name) with pagination and sorting.
+     *
+     * @param criteria Search criteria containing filters
+     * @param pageable Pagination and sorting parameters
+     * @return Paginated response of matching admin DTOs
+     */
+    PagedResponseDTO<UserDTO> searchAdmins(AdminSearchCriteria criteria, Pageable pageable);
 
     /**
      * Searches admin users by email with pagination and sorting.

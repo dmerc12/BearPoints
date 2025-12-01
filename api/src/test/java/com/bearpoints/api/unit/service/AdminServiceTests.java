@@ -1,6 +1,7 @@
 package com.bearpoints.api.unit.service;
 
 import com.bearpoints.api.dao.UserDAO;
+import com.bearpoints.api.dto.AdminSearchCriteria;
 import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.dto.UserDTO;
 import com.bearpoints.api.entity.Role;
@@ -19,6 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.util.Collections;
 import java.util.List;
@@ -80,57 +82,75 @@ public class AdminServiceTests {
     }
 
     @Nested
-    @DisplayName("When searching admin users")
+    @SuppressWarnings("unchecked")
+    @DisplayName("When searching admin users with criteria")
     class WhenSearchingAdminUsers {
         @Test
-        @DisplayName("Should search admin users by email")
-        void shouldSearchAdminUsersByEmail() {
-            String email = "admin";
+        @DisplayName("Should search admin users with email criteria")
+        void shouldSearchAdminUsersWithEmailCriteria() {
+            AdminSearchCriteria criteria = new AdminSearchCriteria();
+            criteria.setEmail("admin1@okcps.org");
             List<User> adminUsers = List.of(
                     createUser(1L, "admin1@okcps.org", "Admin1", "User1", Role.ADMIN)
             );
             Page<User> adminPage = new PageImpl<>(adminUsers, pageable, 1L);
-            when(userDAO.findByRoleAndEmailContainingIgnoreCase(eq(Role.ADMIN), eq(email), any(Pageable.class)))
+            when(userDAO.findAll(any(Specification.class), any(Pageable.class)))
                     .thenReturn(adminPage);
-            PagedResponseDTO<UserDTO> result = adminService.searchAdminsByEmail(email, pageable);
+            PagedResponseDTO<UserDTO> result = adminService.searchAdmins(criteria, pageable);
             assertNotNull(result);
             assertEquals(1, result.getContent().size());
-            assertEquals("admin1@okcps.org", result.getContent().getFirst().getEmail());
-            verify(userDAO).findByRoleAndEmailContainingIgnoreCase(Role.ADMIN, email, pageable);
+            verify(userDAO).findAll(any(Specification.class), eq(pageable));
         }
 
         @Test
-        @DisplayName("Should search admin users by first name")
-        void shouldSearchAdminUsersByFirstName() {
-            String firstName = "John";
+        @DisplayName("Should search admin users with first name criteria")
+        void shouldSearchAdminUsersWithFirstNameCriteria() {
+            AdminSearchCriteria criteria = new AdminSearchCriteria();
+            criteria.setFirstName("John");
             List<User> adminUsers = List.of(
                     createUser(1L, "john@okcps.org", "John", "Doe", Role.ADMIN)
             );
             Page<User> adminPage = new PageImpl<>(adminUsers, pageable, 1L);
-            when(userDAO.findByRoleAndFirstNameContainingIgnoreCase(eq(Role.ADMIN), eq(firstName), any(Pageable.class)))
+            when(userDAO.findAll(any(Specification.class), any(Pageable.class)))
                     .thenReturn(adminPage);
-            PagedResponseDTO<UserDTO> result = adminService.searchAdminsByFirstName(firstName, pageable);
+            PagedResponseDTO<UserDTO> result = adminService.searchAdmins(criteria, pageable);
             assertNotNull(result);
             assertEquals(1, result.getContent().size());
-            assertEquals("John", result.getContent().getFirst().getFirstName());
-            verify(userDAO).findByRoleAndFirstNameContainingIgnoreCase(Role.ADMIN, firstName, pageable);
+            verify(userDAO).findAll(any(Specification.class), eq(pageable));
         }
 
         @Test
-        @DisplayName("Should search admin users by last name")
-        void shouldSearchAdminUsersByLastName() {
-            String lastName = "Doe";
+        @DisplayName("Should search admin users with last name criteria")
+        void shouldSearchAdminUsersWithLastNameCriteria() {
+            AdminSearchCriteria criteria = new AdminSearchCriteria();
+            criteria.setLastName("Doe");
             List<User> adminUsers = List.of(
                     createUser(1L, "john@okcps.org", "John", "Doe", Role.ADMIN)
             );
             Page<User> adminPage = new PageImpl<>(adminUsers, pageable, 1L);
-            when(userDAO.findByRoleAndLastNameContainingIgnoreCase(eq(Role.ADMIN), eq(lastName), any(Pageable.class)))
+            when(userDAO.findAll(any(Specification.class), any(Pageable.class)))
                     .thenReturn(adminPage);
-            PagedResponseDTO<UserDTO> result = adminService.searchAdminsByLastName(lastName, pageable);
+            PagedResponseDTO<UserDTO> result = adminService.searchAdmins(criteria, pageable);
             assertNotNull(result);
             assertEquals(1, result.getContent().size());
-            assertEquals("Doe", result.getContent().getFirst().getLastName());
-            verify(userDAO).findByRoleAndLastNameContainingIgnoreCase(Role.ADMIN, lastName, pageable);
+            verify(userDAO).findAll(any(Specification.class), eq(pageable));
+        }
+
+        @Test
+        @DisplayName("Should return all admins with no criteria specified")
+        void shouldReturnAllAdminsWithNoCriteriaSpecified() {
+            AdminSearchCriteria criteria = new AdminSearchCriteria();
+            List<User> adminUsers = List.of(
+                    createUser(1L, "john@okcps.org", "John", "Doe", Role.ADMIN)
+            );
+            Page<User> adminPage = new PageImpl<>(adminUsers, pageable, 1L);
+            when(userDAO.findByRole(eq(Role.ADMIN), any(Pageable.class)))
+                    .thenReturn(adminPage);
+            PagedResponseDTO<UserDTO> result = adminService.searchAdmins(criteria, pageable);
+            assertNotNull(result);
+            assertEquals(1, result.getContent().size());
+            verify(userDAO).findByRole(eq(Role.ADMIN), eq(pageable));
+            verify(userDAO, never()).findAll(any(Specification.class), any(Pageable.class));
         }
     }
 

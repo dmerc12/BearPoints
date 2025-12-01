@@ -1,17 +1,18 @@
 package com.bearpoints.api.service.impl;
 
 import com.bearpoints.api.dao.UserDAO;
-import com.bearpoints.api.dto.PagedResponseDTO;
-import com.bearpoints.api.dto.UserDTO;
+import com.bearpoints.api.dto.*;
 import com.bearpoints.api.entity.Role;
 import com.bearpoints.api.entity.User;
 import com.bearpoints.api.exception.DuplicateResourceException;
 import com.bearpoints.api.exception.UserNotFoundException;
 import com.bearpoints.api.service.AdminService;
+import com.bearpoints.api.specification.AdminSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,6 +45,22 @@ public class AdminServiceImpl implements AdminService {
         log.info("Retrieved {} admin users out of {} total",
                 adminPage.getNumberOfElements(),
                 adminPage.getTotalElements());
+        return PagedResponseDTO.of(adminPage);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public PagedResponseDTO<UserDTO> searchAdmins(AdminSearchCriteria criteria, Pageable pageable) {
+        log.debug("Searching admins with criteria: {} and pagination: {}", criteria, pageable);
+        if (!criteria.hasFilters()) {
+            // If no filters provided, return all admins
+            return getAllAdmins(pageable);
+        }
+        Specification<User> spec = AdminSpecification.withCriteria(criteria);
+        Page<UserDTO> adminPage = userDAO.findAll(spec, pageable).map(UserDTO::new);
+        log.info("Found {} admins matching search criteria", adminPage.getNumberOfElements());
         return PagedResponseDTO.of(adminPage);
     }
 
