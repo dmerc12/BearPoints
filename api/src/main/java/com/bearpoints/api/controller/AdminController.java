@@ -1,5 +1,6 @@
 package com.bearpoints.api.controller;
 
+import com.bearpoints.api.dto.AdminSearchCriteria;
 import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.dto.UserDTO;
 import com.bearpoints.api.service.AdminService;
@@ -22,9 +23,7 @@ import org.springframework.web.bind.annotation.*;
  * <p>Endpoints:
  * <ul>
  *     <li>GET /api/admins - Retrieve all admin users (any authenticated user)</li>
- *     <li>GET /api/admins/search/email - Search admin users by email (any authenticated user)</li>
- *     <li>GET /api/admins/search/first-name - Search admin users by first name (any authenticated user)</li>
- *     <li>GET /api/admins/search/last-name - Search admin users by last name (any authenticated user)</li>
+ *     <li>GET /api/admins/search - Search admin users with flexible criteria (any authenticated user)</li>
  *     <li>GET /api/admins/{id} - Retrieve admin user by ID (any authenticated user)</li>
  *     <li>POST /api/admins - Create new admin user (ADMIN only)</li>
  *     <li>PUT /api/admins/{id} - Update existing admin user (ADMIN only)</li>
@@ -71,6 +70,43 @@ public class AdminController {
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortParams[0]));
         PagedResponseDTO<UserDTO> response = adminService.getAllAdmins(pageable);
         log.info("Retrieved {} admin users", response.getNumberOfElements());
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Searches admins with flexible criteria including email and name.
+     * <p>Accessible to any authenticated user.
+     *
+     * @param email Email search term (optional)
+     * @param firstName First name search term (optional)
+     * @param lastName Last name search term (optional)
+     * @param page Page number (default: 0)
+     * @param size Page size (default: 20)
+     * @param sort Sort criteria (default: lastName,asc)
+     * @return Paginated response of matching admins
+     */
+    @GetMapping("/search")
+    public ResponseEntity<PagedResponseDTO<UserDTO>> searchAdmins(
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String firstName,
+            @RequestParam(required = false) String lastName,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "lastName,asc") String sort
+    ) {
+        log.debug("Searching admins - email: {}, firstName: {}, lastName: {} - page: {}, size: {}, sort: {}",
+                email, firstName, lastName, page, size, sort);
+        AdminSearchCriteria criteria = new AdminSearchCriteria();
+        criteria.setEmail(email);
+        criteria.setFirstName(firstName);
+        criteria.setLastName(lastName);
+        String[] sortParams = splitSortParams(sort);
+        Sort.Direction direction = sortParams.length > 1 && "desc".equalsIgnoreCase(sortParams[1])
+                ? Sort.Direction.DESC
+                : Sort.Direction.ASC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortParams[0]));
+        PagedResponseDTO<UserDTO> response = adminService.searchAdmins(criteria, pageable);
+        log.info("Retrieved {} admins matching search criteria", response.getNumberOfElements());
         return ResponseEntity.ok(response);
     }
 

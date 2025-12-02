@@ -1,6 +1,7 @@
 package com.bearpoints.api.unit.controller;
 
 import com.bearpoints.api.controller.AdminController;
+import com.bearpoints.api.dto.AdminSearchCriteria;
 import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.dto.UserDTO;
 import com.bearpoints.api.entity.Role;
@@ -24,7 +25,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -170,46 +170,13 @@ public class AdminControllerTests {
             );
             Page<UserDTO> adminPage = new PageImpl<>(adminUsers, PageRequest.of(0, 20), 1L);
             PagedResponseDTO<UserDTO> expectedResponse = PagedResponseDTO.of(adminPage);
-            when(adminService.searchAdminsByEmail(eq(email), any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<UserDTO>> response = adminController.searchAdminsByEmail(email, 0, 20, "email");
+            when(adminService.searchAdmins(any(AdminSearchCriteria.class), any(Pageable.class))).thenReturn(expectedResponse);
+            ResponseEntity<PagedResponseDTO<UserDTO>> response = adminController.searchAdmins(email,
+                    null, null, 0, 20, "email");
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
             assertEquals(1, response.getBody().getContent().size());
-            verify(adminService).searchAdminsByEmail(eq(email), any(Pageable.class));
-        }
-
-        @Test
-        @DisplayName("Should search admin users by email with ASC sort")
-        void shouldSearchAdminUsersByEmailWithAscSort() {
-            String email = "admin";
-            List<UserDTO> adminUsers = List.of(
-                    new UserDTO(createUser(1L, email + "1@okcps.org", "Admin1", "User1"))
-            );
-            Page<UserDTO> adminPage = new PageImpl<>(adminUsers, PageRequest.of(0, 20), 1L);
-            PagedResponseDTO<UserDTO> expectedResponse = PagedResponseDTO.of(adminPage);
-            when(adminService.searchAdminsByEmail(eq(email), any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<UserDTO>> response = adminController.searchAdminsByEmail(email, 0, 20, "email,asc");
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            assertEquals(1, response.getBody().getContent().size());
-            verify(adminService).searchAdminsByEmail(eq(email), any(Pageable.class));
-        }
-
-        @Test
-        @DisplayName("Should search admin users by email with DESC sort")
-        void shouldSearchAdminUsersByEmailWithDescSort() {
-            String email = "admin";
-            List<UserDTO> adminUsers = List.of(
-                    new UserDTO(createUser(1L, email + "1@okcps.org", "Admin1", "User1"))
-            );
-            Page<UserDTO> adminPage = new PageImpl<>(adminUsers, PageRequest.of(0, 20), 1L);
-            PagedResponseDTO<UserDTO> expectedResponse = PagedResponseDTO.of(adminPage);
-            when(adminService.searchAdminsByEmail(eq(email), any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<UserDTO>> response = adminController.searchAdminsByEmail(email, 0, 20, "email,desc");
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            assertEquals(1, response.getBody().getContent().size());
-            verify(adminService).searchAdminsByEmail(eq(email), any(Pageable.class));
+            verify(adminService).searchAdmins(any(AdminSearchCriteria.class), any(Pageable.class));
         }
 
         @Test
@@ -221,46 +188,13 @@ public class AdminControllerTests {
             );
             Page<UserDTO> adminPage = new PageImpl<>(adminUsers, PageRequest.of(0, 20), 1L);
             PagedResponseDTO<UserDTO> expectedResponse = PagedResponseDTO.of(adminPage);
-            when(adminService.searchAdminsByFirstName(eq(firstName), any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<UserDTO>> response = adminController.searchAdminsByFirstName(firstName, 0, 20, "firstName");
+            when(adminService.searchAdmins(any(AdminSearchCriteria.class), any(Pageable.class))).thenReturn(expectedResponse);
+            ResponseEntity<PagedResponseDTO<UserDTO>> response = adminController.searchAdmins(null,
+                    firstName, null, 0, 20, "firstName,asc");
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
             assertEquals(1, response.getBody().getContent().size());
-            verify(adminService).searchAdminsByFirstName(eq(firstName), any(Pageable.class));
-        }
-
-        @Test
-        @DisplayName("Should search admin users by first name with ASC sort")
-        void shouldSearchAdminUsersByFirstNameWithAscSort() {
-            String firstName = "John";
-            List<UserDTO> adminUsers = List.of(
-                    new UserDTO(createUser(1L, "john@okcps.org", firstName, "Doe"))
-            );
-            Page<UserDTO> adminPage = new PageImpl<>(adminUsers, PageRequest.of(0, 20), 1L);
-            PagedResponseDTO<UserDTO> expectedResponse = PagedResponseDTO.of(adminPage);
-            when(adminService.searchAdminsByFirstName(eq(firstName), any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<UserDTO>> response = adminController.searchAdminsByFirstName(firstName, 0, 20, "firstName,asc");
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            assertEquals(1, response.getBody().getContent().size());
-            verify(adminService).searchAdminsByFirstName(eq(firstName), any(Pageable.class));
-        }
-
-        @Test
-        @DisplayName("Should search admin users by first name with DESC sort")
-        void shouldSearchAdminUsersByFirstNameWithDescSort() {
-            String firstName = "John";
-            List<UserDTO> adminUsers = List.of(
-                    new UserDTO(createUser(1L, "john@okcps.org", firstName, "Doe"))
-            );
-            Page<UserDTO> adminPage = new PageImpl<>(adminUsers, PageRequest.of(0, 20), 1L);
-            PagedResponseDTO<UserDTO> expectedResponse = PagedResponseDTO.of(adminPage);
-            when(adminService.searchAdminsByFirstName(eq(firstName), any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<UserDTO>> response = adminController.searchAdminsByFirstName(firstName, 0, 20, "firstName,desc");
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            assertEquals(1, response.getBody().getContent().size());
-            verify(adminService).searchAdminsByFirstName(eq(firstName), any(Pageable.class));
+            verify(adminService).searchAdmins(any(AdminSearchCriteria.class), any(Pageable.class));
         }
 
         @Test
@@ -272,46 +206,33 @@ public class AdminControllerTests {
             );
             Page<UserDTO> adminPage = new PageImpl<>(adminUsers, PageRequest.of(0, 20), 1L);
             PagedResponseDTO<UserDTO> expectedResponse = PagedResponseDTO.of(adminPage);
-            when(adminService.searchAdminsByLastName(eq(lastName), any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<UserDTO>> response = adminController.searchAdminsByLastName(lastName, 0, 20, "lastName");
+            when(adminService.searchAdmins(any(AdminSearchCriteria.class), any(Pageable.class))).thenReturn(expectedResponse);
+            ResponseEntity<PagedResponseDTO<UserDTO>> response = adminController.searchAdmins(null,
+                    null, lastName, 0, 20, "lastName,desc");
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
             assertEquals(1, response.getBody().getContent().size());
-            verify(adminService).searchAdminsByLastName(eq(lastName), any(Pageable.class));
+            verify(adminService).searchAdmins(any(AdminSearchCriteria.class), any(Pageable.class));
         }
 
         @Test
-        @DisplayName("Should search admin users by last name with ASC sort")
-        void shouldSearchAdminUsersByLastNameWithAscSort() {
+        @DisplayName("Should search admin users with combined criteria")
+        void shouldSearchAdminUsersWithCombinedCriteria() {
+            String email = "j";
+            String firstName = "John";
             String lastName = "Doe";
             List<UserDTO> adminUsers = List.of(
-                    new UserDTO(createUser(1L, "john@okcps.org", "John", lastName))
+                    new UserDTO(createUser(1L, email + "ohn@okcps.org", firstName, lastName))
             );
             Page<UserDTO> adminPage = new PageImpl<>(adminUsers, PageRequest.of(0, 20), 1L);
             PagedResponseDTO<UserDTO> expectedResponse = PagedResponseDTO.of(adminPage);
-            when(adminService.searchAdminsByLastName(eq(lastName), any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<UserDTO>> response = adminController.searchAdminsByLastName(lastName, 0, 20, "lastName,asc");
+            when(adminService.searchAdmins(any(AdminSearchCriteria.class), any(Pageable.class))).thenReturn(expectedResponse);
+            ResponseEntity<PagedResponseDTO<UserDTO>> response = adminController.searchAdmins(email,
+                    firstName, lastName, 0, 20, "lastName,desc,firstName,desc,email,desc");
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
             assertEquals(1, response.getBody().getContent().size());
-            verify(adminService).searchAdminsByLastName(eq(lastName), any(Pageable.class));
-        }
-
-        @Test
-        @DisplayName("Should search admin users by last name with DESC sort")
-        void shouldSearchAdminUsersByLastNameWithDescSort() {
-            String lastName = "Doe";
-            List<UserDTO> adminUsers = List.of(
-                    new UserDTO(createUser(1L, "john@okcps.org", "John", lastName))
-            );
-            Page<UserDTO> adminPage = new PageImpl<>(adminUsers, PageRequest.of(0, 20), 1L);
-            PagedResponseDTO<UserDTO> expectedResponse = PagedResponseDTO.of(adminPage);
-            when(adminService.searchAdminsByLastName(eq(lastName), any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<UserDTO>> response = adminController.searchAdminsByLastName(lastName, 0, 20, "lastName,desc");
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            assertEquals(1, response.getBody().getContent().size());
-            verify(adminService).searchAdminsByLastName(eq(lastName), any(Pageable.class));
+            verify(adminService).searchAdmins(any(AdminSearchCriteria.class), any(Pageable.class));
         }
     }
 

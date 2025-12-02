@@ -142,7 +142,7 @@ public class AdminTests {
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
         @DisplayName("by email returns matching admins")
         void searchByEmail_returnsMatchingAdmins() throws Exception {
-            mockMvc.perform(get(baseUrl + "/search/email")
+            mockMvc.perform(get(baseUrl + "/search")
                             .param("email", "admin"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[*].email",
@@ -153,7 +153,7 @@ public class AdminTests {
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
         @DisplayName("by email returns matching admins with sort asc")
         void searchByEmail_returnsMatchingAdminsSortAsc() throws Exception {
-            mockMvc.perform(get(baseUrl + "/search/email")
+            mockMvc.perform(get(baseUrl + "/search")
                             .param("email", "admin")
                             .param("sort", "email,asc"))
                     .andExpect(status().isOk())
@@ -165,7 +165,7 @@ public class AdminTests {
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
         @DisplayName("by email returns matching admins with sort desc")
         void searchByEmail_returnsMatchingAdminsSortDesc() throws Exception {
-            mockMvc.perform(get(baseUrl + "/search/email")
+            mockMvc.perform(get(baseUrl + "/search")
                             .param("email", "admin")
                             .param("sort", "email,desc"))
                     .andExpect(status().isOk())
@@ -177,7 +177,7 @@ public class AdminTests {
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
         @DisplayName("by email returns matching admins with sort no direction")
         void searchByEmail_returnsMatchingAdminsSortNoDirection() throws Exception {
-            mockMvc.perform(get(baseUrl + "/search/email")
+            mockMvc.perform(get(baseUrl + "/search")
                             .param("email", "admin")
                             .param("sort", "email"))
                     .andExpect(status().isOk())
@@ -189,7 +189,7 @@ public class AdminTests {
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
         @DisplayName("by first name returns matching admins")
         void searchByFirstName_returnsMatchingAdmins() throws Exception {
-            mockMvc.perform(get(baseUrl + "/search/first-name")
+            mockMvc.perform(get(baseUrl + "/search")
                             .param("firstName", "admin"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[*].firstName",
@@ -200,7 +200,7 @@ public class AdminTests {
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
         @DisplayName("by first name returns matching admins with sort asc")
         void searchByFirstName_returnsMatchingAdminsSortAsc() throws Exception {
-            mockMvc.perform(get(baseUrl + "/search/first-name")
+            mockMvc.perform(get(baseUrl + "/search")
                             .param("firstName", "admin")
                             .param("sort", "firstName,asc"))
                     .andExpect(status().isOk())
@@ -212,7 +212,7 @@ public class AdminTests {
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
         @DisplayName("by first name returns matching admins with sort desc")
         void searchByFirstName_returnsMatchingAdminsSortDesc() throws Exception {
-            mockMvc.perform(get(baseUrl + "/search/first-name")
+            mockMvc.perform(get(baseUrl + "/search")
                             .param("firstName", "admin")
                             .param("sort", "firstName,desc"))
                     .andExpect(status().isOk())
@@ -224,7 +224,7 @@ public class AdminTests {
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
         @DisplayName("by first name returns matching admins with sort no direction")
         void searchByFirstName_returnsMatchingAdminsSortNoDirection() throws Exception {
-            mockMvc.perform(get(baseUrl + "/search/first-name")
+            mockMvc.perform(get(baseUrl + "/search")
                             .param("firstName", "admin")
                             .param("sort", "firstName"))
                     .andExpect(status().isOk())
@@ -236,7 +236,7 @@ public class AdminTests {
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
         @DisplayName("by last name returns matching admins")
         void searchByLastName_returnsMatchingAdmins() throws Exception {
-            mockMvc.perform(get(baseUrl + "/search/last-name")
+            mockMvc.perform(get(baseUrl + "/search")
                             .param("lastName", "admin"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[*].lastName",
@@ -247,7 +247,7 @@ public class AdminTests {
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
         @DisplayName("by last name returns matching admins with sort asc")
         void searchByLastName_returnsMatchingAdminsSortAsc() throws Exception {
-            mockMvc.perform(get(baseUrl + "/search/last-name")
+            mockMvc.perform(get(baseUrl + "/search")
                             .param("lastName", "admin")
                             .param("sort", "lastName,asc"))
                     .andExpect(status().isOk())
@@ -259,7 +259,7 @@ public class AdminTests {
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
         @DisplayName("by last name returns matching admins with sort desc")
         void searchByLastName_returnsMatchingAdminsSortDesc() throws Exception {
-            mockMvc.perform(get(baseUrl + "/search/last-name")
+            mockMvc.perform(get(baseUrl + "/search")
                             .param("lastName", "admin")
                             .param("sort", "lastName,desc"))
                     .andExpect(status().isOk())
@@ -271,7 +271,7 @@ public class AdminTests {
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
         @DisplayName("by last name returns matching admins with sort no direction")
         void searchByLastName_returnsMatchingAdminsSortNoDirection() throws Exception {
-            mockMvc.perform(get(baseUrl + "/search/last-name")
+            mockMvc.perform(get(baseUrl + "/search")
                             .param("lastName", "admin")
                             .param("sort", "lastName"))
                     .andExpect(status().isOk())
@@ -283,10 +283,19 @@ public class AdminTests {
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
         @DisplayName("with non-matching criteria returns empty results")
         void searchWithNonMatchingCriteria_returnsEmptyResults() throws Exception {
-            mockMvc.perform(get(baseUrl + "/search/email")
+            mockMvc.perform(get(baseUrl + "/search")
                             .param("email", "nonexistentemail@okcps.org"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isEmpty());
+        }
+
+        @Test
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @DisplayName("with empty criteria returns all admins")
+        void searchWithEmptyCriteria_returnsAllAdmins() throws Exception {
+            mockMvc.perform(get(baseUrl + "/search"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").isArray());
         }
     }
 
