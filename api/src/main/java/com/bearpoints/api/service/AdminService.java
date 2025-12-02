@@ -38,33 +38,6 @@ public interface AdminService {
     PagedResponseDTO<UserDTO> searchAdmins(AdminSearchCriteria criteria, Pageable pageable);
 
     /**
-     * Searches admin users by email with pagination and sorting.
-     *
-     * @param email Email search term (case-insensitive, partial match)
-     * @param pageable Pagination and sorting parameters
-     * @return Paginated response of matching admin user DTOs
-     */
-    PagedResponseDTO<UserDTO> searchAdminsByEmail(String email, Pageable pageable);
-
-    /**
-     * Searches admin users by first name with pagination and sorting.
-     *
-     * @param firstName First name search term (case-insensitive, partial match)
-     * @param pageable Pagination and sorting parameters
-     * @return Paginated response of matching admin user DTOs
-     */
-    PagedResponseDTO<UserDTO> searchAdminsByFirstName(String firstName, Pageable pageable);
-
-    /**
-     * Searches admin users by last name with pagination and sorting.
-     *
-     * @param lastName Last name search term (case-insensitive, partial match)
-     * @param pageable Pagination and sorting parameters
-     * @return Paginated response of matching admin user DTOs
-     */
-    PagedResponseDTO<UserDTO> searchAdminsByLastName(String lastName, Pageable pageable);
-
-    /**
      * Retrieves an admin user by ID.
      *
      * @param id ID of the admin user to retrieve

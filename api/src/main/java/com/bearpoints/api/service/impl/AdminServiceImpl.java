@@ -68,51 +68,6 @@ public class AdminServiceImpl implements AdminService {
      * {@inheritDoc}
      */
     @Override
-    public PagedResponseDTO<UserDTO> searchAdminsByEmail(String email, Pageable pageable) {
-        log.debug("Searching admin users by email: {} with pagination: {}", email, pageable);
-        Page<UserDTO> adminPage = userDAO.findByRoleAndEmailContainingIgnoreCase(Role.ADMIN, email, pageable)
-                .map(UserDTO::new);
-        log.info("Found {} admin users matching email '{}' out of {} total",
-                adminPage.getNumberOfElements(),
-                email,
-                adminPage.getTotalElements());
-        return PagedResponseDTO.of(adminPage);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public PagedResponseDTO<UserDTO> searchAdminsByFirstName(String firstName, Pageable pageable) {
-        log.debug("Searching admin users by first name: {} with pagination {}", firstName, pageable);
-        Page<UserDTO> adminPage = userDAO.findByRoleAndFirstNameContainingIgnoreCase(Role.ADMIN, firstName, pageable)
-                .map(UserDTO::new);
-        log.info("Found {} admin users matching first name '{}' out of {} total",
-                adminPage.getNumberOfElements(),
-                firstName,
-                adminPage.getTotalElements());
-        return PagedResponseDTO.of(adminPage);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public PagedResponseDTO<UserDTO> searchAdminsByLastName(String lastName, Pageable pageable) {
-        log.debug("Searching admin users by last name: {} with pagination: {}", lastName, pageable);
-        Page<UserDTO> adminPage = userDAO.findByRoleAndLastNameContainingIgnoreCase(Role.ADMIN, lastName, pageable)
-                .map(UserDTO::new);
-        log.info("Found {} admin users matching last name '{}' out of {} total",
-                adminPage.getNumberOfElements(),
-                lastName,
-                adminPage.getTotalElements());
-        return PagedResponseDTO.of(adminPage);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public UserDTO getAdminById(Long id) {
         log.debug("Retrieving admin user by ID: {}", id);
         User admin = userDAO.findById(id)

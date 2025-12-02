@@ -60,41 +60,6 @@ public interface UserDAO extends JpaRepository<User, Long>, JpaSpecificationExec
     Page<User> findAll(@Nullable Specification<User> spec, @NonNull Pageable pageable);
 
     /**
-     * Finds users by role and first name containing string with pagination support.
-     *
-     * <p>Case-insensitive search for user management.
-     *
-     * @param role User role to filter by
-     * @param firstName First name fragment to search for
-     * @param pageable Pagination information
-     * @return Paginated list of matching users
-     */
-    Page<User> findByRoleAndFirstNameContainingIgnoreCase(Role role, String firstName, Pageable pageable);
-
-    /**
-     * Finds users by role and last name containing string with pagination support.
-     *
-     * <p>Case-insensitive search for user management.
-     *
-     * @param role User role to filter by
-     * @param lastName Last name fragment to search for
-     * @param pageable Pagination information
-     * @return Paginated list of matching users
-     */
-    Page<User> findByRoleAndLastNameContainingIgnoreCase(Role role, String lastName, Pageable pageable);
-
-    /**
-     * Finds users by role and email containing string with pagination support.
-     * <p>Combined filter for role and email search.
-     *
-     * @param role User role to filter by
-     * @param email Email fragment to search for
-     * @param pageable Pagination information
-     * @return Paginated list of matching users
-     */
-    Page<User> findByRoleAndEmailContainingIgnoreCase(Role role, String email, Pageable pageable);
-
-    /**
      * Retrieves all users with caching support.
      *
      * @return List of all users
