@@ -1,6 +1,5 @@
 package com.bearpoints.api.dao;
 
-import com.bearpoints.api.entity.GradeLevel;
 import com.bearpoints.api.entity.Teacher;
 import io.micrometer.common.lang.NonNull;
 import org.springframework.cache.annotation.Cacheable;
@@ -9,7 +8,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.repository.query.Param;
 import org.springframework.lang.Nullable;
 
 import java.util.List;
@@ -40,45 +38,6 @@ public interface TeacherDAO extends JpaRepository<Teacher, Long>, JpaSpecificati
      * @return Optional containing the teacher if found
      */
     Optional<Teacher> findByUserEmail(String email);
-
-    /**
-     * Finds a teacher by user email containing string with pagination support.
-     * <p>Case-insensitive search for teacher management.
-     *
-     * @param email Email fragment to search for
-     * @param pageable Pagination information
-     * @return Paginated list of matching teachers
-     */
-    Page<Teacher> findByUserEmailContainingIgnoreCase(@Param("email") String email, Pageable pageable);
-
-    /**
-     * Finds a teacher by user first name containing string with pagination support.
-     * <p>Case-insensitive search for teacher management.
-     *
-     * @param firstName First name fragment to search for
-     * @param pageable Pagination information
-     * @return Paginated list of matching teachers
-     */
-    Page<Teacher> findByUserFirstNameContainingIgnoreCase(@Param("firstName") String firstName, Pageable pageable);
-
-    /**
-     * Finds a teacher by user last name containing string with pagination.
-     * <p>Case-insensitive search for teacher management.
-     *
-     * @param lastName Last name fragment to search for
-     * @param pageable Pagination information
-     * @return Paginated list of matching teachers
-     */
-    Page<Teacher> findByUserLastNameContainingIgnoreCase(@Param("lastName") String lastName, Pageable pageable);
-
-    /**
-     * Finds teachers by grade level with pagination support.
-     *
-     * @param grade Grade level to search for
-     * @param pageable Pagination information
-     * @return Paginated list of matching teachers
-     */
-    Page<Teacher> findByGrade(@Param("grade") GradeLevel grade, Pageable pageable);
 
     /**
      * Retrieves all teachers with pagination and caching support.

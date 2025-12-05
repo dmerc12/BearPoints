@@ -5,7 +5,6 @@ import com.bearpoints.api.dao.UserDAO;
 import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.dto.TeacherDTO;
 import com.bearpoints.api.dto.TeacherSearchCriteria;
-import com.bearpoints.api.entity.GradeLevel;
 import com.bearpoints.api.entity.Role;
 import com.bearpoints.api.entity.Teacher;
 import com.bearpoints.api.entity.User;
@@ -53,50 +52,6 @@ public class TeacherServiceImpl implements TeacherService {
         Page<TeacherDTO> teacherPage = teacherDAO.findAll(spec, pageable).map(TeacherDTO::new);
         log.info("Found {} teachers matching search criteria", teacherPage.getNumberOfElements());
         return PagedResponseDTO.of(teacherPage);
-    }
-
-    @Override
-    public PagedResponseDTO<TeacherDTO> searchTeachersByEmail(String email, Pageable pageable) {
-        log.debug("Searching teachers by email: {} with pagination: {}", email, pageable);
-        Page<TeacherDTO> teacherPage = teacherDAO.findByUserEmailContainingIgnoreCase(email, pageable)
-                .map(TeacherDTO::new);
-        log.info("Found {} teachers matching email '{}' out of {} total",
-                teacherPage.getNumberOfElements(), email,
-                teacherPage.getTotalElements());
-        return new PagedResponseDTO<>(teacherPage);
-    }
-
-    @Override
-    public PagedResponseDTO<TeacherDTO> searchTeachersByFirstName(String firstName, Pageable pageable) {
-        log.debug("Searching teachers by first name: {} with pagination: {}", firstName, pageable);
-        Page<TeacherDTO> teacherPage = teacherDAO.findByUserFirstNameContainingIgnoreCase(firstName, pageable)
-                .map(TeacherDTO::new);
-        log.info("Found {} teachers matching first name '{}' out of {} total",
-                teacherPage.getNumberOfElements(), firstName,
-                teacherPage.getTotalElements());
-        return new PagedResponseDTO<>(teacherPage);
-    }
-
-    @Override
-    public PagedResponseDTO<TeacherDTO> searchTeachersByLastName(String lastName, Pageable pageable) {
-        log.debug("Searching teachers by last name: {} with pagination: {}", lastName, pageable);
-        Page<TeacherDTO> teacherPage = teacherDAO.findByUserLastNameContainingIgnoreCase(lastName, pageable)
-                .map(TeacherDTO::new);
-        log.info("Found {} teachers matching last name '{}' out of {} total",
-                teacherPage.getNumberOfElements(), lastName,
-                teacherPage.getTotalElements());
-        return new PagedResponseDTO<>(teacherPage);
-    }
-
-    @Override
-    public PagedResponseDTO<TeacherDTO> searchTeachersByGrade(GradeLevel grade, Pageable pageable) {
-        log.debug("Searching teachers by grade: {} with pagination: {}", grade, pageable);
-        Page<TeacherDTO> teacherPage = teacherDAO.findByGrade(grade, pageable)
-                .map(TeacherDTO::new);
-        log.info("Found {} teachers matching grade '{}' out of {} total",
-                teacherPage.getNumberOfElements(), grade,
-                teacherPage.getTotalElements());
-        return new PagedResponseDTO<>(teacherPage);
     }
 
     @Override

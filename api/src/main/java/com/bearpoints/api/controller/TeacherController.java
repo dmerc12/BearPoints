@@ -1,6 +1,5 @@
 package com.bearpoints.api.controller;
 
-import com.bearpoints.api.converter.StringToGradeLevelConverter;
 import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.dto.TeacherDTO;
 import com.bearpoints.api.dto.TeacherSearchCriteria;
@@ -25,10 +24,7 @@ import org.springframework.web.bind.annotation.*;
  * <p>Endpoints:
  * <ul>
  *     <li>GET /api/teachers - Retrieve all teachers (any authenticated user)</li>
- *     <li>GET /api/teachers/search/email - Search teachers by email (any authenticated user)</li>
- *     <li>GET /api/teachers/search/first-name - Search teachers by first name (any authenticated user)</li>
- *     <li>GET /api/teachers/search/last-name - Search teachers by last name (any authenticated user)</li>
- *     <li>GET /api/teachers/search/grade - Search teachers by grade level (any authenticated user)</li>
+ *     <li>GET /api/teachers/search - Search teachers by with flexible criteria (any authenticated user)</li>
  *     <li>GET /api/teachers/{id} - Retrieve teacher by ID (any authenticated user)</li>
  *     <li>POST /api/teachers - Create new teacher (ADMIN only)</li>
  *     <li>PUT /api/teachers/{id} - Update existing teacher (ADMIN only)</li>
@@ -115,118 +111,6 @@ public class TeacherController {
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortParams[0]));
         PagedResponseDTO<TeacherDTO> response = teacherService.searchTeachers(criteria, pageable);
         log.info("Retrieved {} teachers matching search criteria", response.getNumberOfElements());
-        return ResponseEntity.ok(response);
-    }
-
-    /**
-     * Searches teachers by email with pagination and sorting.
-     * <p>Accessible to any authenticated user.
-     *
-     * @param email Email search term
-     * @param page Page number (default: 0)
-     * @param size Page size (default: 20)
-     * @param sort Sort criteria (default: lastName,asc)
-     * @return Paginated response of matching teachers
-     */
-    @GetMapping("/search/email")
-    public ResponseEntity<PagedResponseDTO<TeacherDTO>> searchTeachersByEmail(
-            @RequestParam String email,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "user.lastName,asc") String sort
-    ) {
-        log.debug("Searching teachers by email: {} - page: {}, size: {}, sort: {}", email, page, size, sort);
-        String[] sortParams = splitSortParams(sort);
-        Sort.Direction direction = sortParams.length > 1 && "desc".equalsIgnoreCase(sortParams[1])
-                ? Sort.Direction.DESC
-                : Sort.Direction.ASC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortParams[0]));
-        PagedResponseDTO<TeacherDTO> response = teacherService.searchTeachersByEmail(email, pageable);
-        log.info("Found {} teachers matching email: {}", response.getNumberOfElements(), email);
-        return ResponseEntity.ok(response);
-    }
-
-    /**
-     * Searches teachers by first name with pagination and sorting.
-     * <p>Accessible to any authenticated user.
-     *
-     * @param firstName First name search term
-     * @param page Page number (default: 0)
-     * @param size Page size (default: 20)
-     * @param sort Sort criteria (default: lastName,asc)
-     * @return Paginated response of matching teachers
-     */
-    @GetMapping("/search/first-name")
-    public ResponseEntity<PagedResponseDTO<TeacherDTO>> searchTeachersByFirstName(
-            @RequestParam String firstName,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "user.lastName,asc") String sort
-    ) {
-        log.debug("Searching teachers by first name: {} - page: {}, size: {}, sort: {}", firstName, page, size, sort);
-        String[] sortParams = splitSortParams(sort);
-        Sort.Direction direction = sortParams.length > 1 && "desc".equalsIgnoreCase(sortParams[1])
-                ? Sort.Direction.DESC
-                : Sort.Direction.ASC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortParams[0]));
-        PagedResponseDTO<TeacherDTO> response = teacherService.searchTeachersByFirstName(firstName, pageable);
-        log.info("Found {} teachers matching first name: {}", response.getNumberOfElements(), firstName);
-        return ResponseEntity.ok(response);
-    }
-
-    /**
-     * Searches teachers by last name with pagination and sorting.
-     * <p>Accessible to any authenticated user.
-     *
-     * @param lastName Last name search term
-     * @param page Page number (default: 0)
-     * @param size Page size (default: 20)
-     * @param sort Sort criteria (default: lastName,asc)
-     * @return Paginated response of matching teachers
-     */
-    @GetMapping("/search/last-name")
-    public ResponseEntity<PagedResponseDTO<TeacherDTO>> searchTeachersByLastName(
-            @RequestParam String lastName,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "user.lastName,asc") String sort
-    ) {
-        log.debug("Searching teachers by last name: {} - page: {}, size: {}, sort: {}", lastName, page, size, sort);
-        String[] sortParams = splitSortParams(sort);
-        Sort.Direction direction = sortParams.length > 1 && "desc".equalsIgnoreCase(sortParams[1])
-                ? Sort.Direction.DESC
-                : Sort.Direction.ASC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortParams[0]));
-        PagedResponseDTO<TeacherDTO> response = teacherService.searchTeachersByLastName(lastName, pageable);
-        log.info("Found {} teachers matching last name: {}", response.getNumberOfElements(), lastName);
-        return ResponseEntity.ok(response);
-    }
-
-    /**
-     * Searches teachers by grade level with pagination and sorting.
-     * <p>Accessible to any authenticated user.
-     *
-     * @param grade GradeLevel search term converted by {@link StringToGradeLevelConverter}
-     * @param page Page number (default: 0)
-     * @param size Page size (default: 20)
-     * @param sort Sort criteria (default: lastName,asc)
-     * @return Paginated response of matching teachers
-     */
-    @GetMapping("/search/grade")
-    public ResponseEntity<PagedResponseDTO<TeacherDTO>> searchTeachersByGrade(
-            @RequestParam GradeLevel grade,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "user.lastName,asc") String sort
-    ) {
-        log.debug("Searching teachers by grade: {} - page: {}, size: {}, sort: {}", grade.name(), page, size, sort);
-        String[] sortParams = splitSortParams(sort);
-        Sort.Direction direction = sortParams.length > 1 && "desc".equalsIgnoreCase(sortParams[1])
-                ? Sort.Direction.DESC
-                : Sort.Direction.ASC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortParams[0]));
-        PagedResponseDTO<TeacherDTO> response = teacherService.searchTeachersByGrade(grade, pageable);
-        log.info("Found {} teachers matching grade: {}", response.getNumberOfElements(), grade);
         return ResponseEntity.ok(response);
     }
 

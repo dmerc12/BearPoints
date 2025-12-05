@@ -3,7 +3,6 @@ package com.bearpoints.api.service;
 import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.dto.TeacherDTO;
 import com.bearpoints.api.dto.TeacherSearchCriteria;
-import com.bearpoints.api.entity.GradeLevel;
 import com.bearpoints.api.exception.UserNotFoundException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Pageable;
@@ -39,42 +38,6 @@ public interface TeacherService {
      * @return Paginated response of matching student DTOs
      */
     PagedResponseDTO<TeacherDTO> searchTeachers(TeacherSearchCriteria criteria, Pageable pageable);
-
-    /**
-     * Searches teacher users by email with pagination and sorting.
-     *
-     * @param email Email search term (case-insensitive, partial match)
-     * @param pageable Pagination and sorting parameters
-     * @return Paginated response of matching teacher DTOs
-     */
-    PagedResponseDTO<TeacherDTO> searchTeachersByEmail(String email, Pageable pageable);
-
-    /**
-     * Searches teacher users by first name with pagination and sorting.
-     *
-     * @param firstName First name search term (case-insensitive, partial match)
-     * @param pageable Pagination and sorting parameters
-     * @return Paginated response of matching teacher DTOs
-     */
-    PagedResponseDTO<TeacherDTO> searchTeachersByFirstName(String firstName, Pageable pageable);
-
-    /**
-     * Searches teacher users by last name with pagination and sorting.
-     *
-     * @param lastName Last name search term (case-insensitive, partial match)
-     * @param pageable Pagination and sorting parameters
-     * @return Paginated response of matching teacher DTOs
-     */
-    PagedResponseDTO<TeacherDTO> searchTeachersByLastName(String lastName, Pageable pageable);
-
-    /**
-     * Searches teacher users by grade level with pagination and sorting.
-     *
-     * @param grade Grade level search term
-     * @param pageable Pagination and sorting parameters
-     * @return Paginated response of matching teacher DTOs
-     */
-    PagedResponseDTO<TeacherDTO> searchTeachersByGrade(GradeLevel grade, Pageable pageable);
 
     /**
      * Retrieves a teacher by ID.
