@@ -180,357 +180,56 @@ public class TeacherTests {
     class SearchTeachers {
         @Test
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-        @DisplayName("by email returns matching teachers")
-        void searchByEmail_ReturnsMatchingTeachers() throws Exception {
-            mockMvc.perform(get(baseUrl + "/search/email")
+        @DisplayName("with email criteria returns matching teachers")
+        void searchWithEmailCriteria_ReturnsMatchingTeachers() throws Exception {
+            mockMvc.perform(get(baseUrl + "/search")
                             .param("email", "teacher"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[*].user.email",
                             everyItem(containsStringIgnoringCase("teacher"))));
         }
 
-        @Nested
-        @DisplayName("GET /teachers/search - Email sort direction edge cases")
-        class EmailSortDirectionTests {
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns matching teachers with sort asc")
-            void returnsMatchingTeachersSortAsc() throws Exception {
-                mockMvc.perform(get(baseUrl + "/search/email")
-                                .param("email", "teacher")
-                                .param("sort", "user.email,asc"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content[*].user.email",
-                                everyItem(containsStringIgnoringCase("teacher"))));
-            }
-
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns matching teachers with sort desc")
-            void returnsMatchingTeachersSortDesc() throws Exception {
-                mockMvc.perform(get(baseUrl + "/search/email")
-                                .param("email", "teacher")
-                                .param("sort", "user.email,desc"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content[*].user.email",
-                                everyItem(containsStringIgnoringCase("teacher"))));
-            }
-
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns sorted results when sort no direction parameter is provided")
-            void returnsSortedTeachersNoDirection() throws Exception {
-                mockMvc.perform(get(baseUrl + "/search/email")
-                                .param("email", "teacher")
-                                .param("sort", "user.email"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content[*].user.email",
-                                everyItem(containsStringIgnoringCase("teacher"))));
-            }
-
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns ASC direction when sort has only one parameter")
-            void returnsAscDirection_whenSortHasOneParameter() throws Exception {
-                mockMvc.perform(get(baseUrl + "/search/email")
-                                .param("email", "teacher")
-                                .param("sort", "user.email"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content[*].user.email",
-                                everyItem(containsStringIgnoringCase("teacher"))));
-            }
-
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns DESC direction when sort parameter ends with desc")
-            void returnsAscDirection_whenSorEndsWithDesc() throws Exception {
-                mockMvc.perform(get(baseUrl + "/search/email")
-                                .param("email", "teacher")
-                                .param("sort", "user.email,desc"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content[*].user.email",
-                                everyItem(containsStringIgnoringCase("teacher"))));
-            }
-
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns ASC direction when sort parameter ends with anything other than desc")
-            void returnsAscDirection_whenSortEndsWithNonDesc() throws Exception {
-                mockMvc.perform(get(baseUrl + "/search/email")
-                                .param("email", "teacher")
-                                .param("sort", "user.email,invalid"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content[*].user.email",
-                                everyItem(containsStringIgnoringCase("teacher"))));
-            }
-        }
-
         @Test
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-        @DisplayName("by first name returns matching teachers")
-        void searchByFirstName_ReturnsMatchingTeachers() throws Exception {
-            mockMvc.perform(get(baseUrl + "/search/first-name")
-                            .param("firstName", "teacher"))
+        @DisplayName("with first name criteria returns matching teachers")
+        void searchWithFirstNameCriteria_ReturnsMatchingTeachers() throws Exception {
+            mockMvc.perform(get(baseUrl + "/search")
+                            .param("firstName", "teacher")
+                            .param("sort", "user.firstName"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[*].user.firstName",
                             everyItem(containsStringIgnoringCase("teacher"))));
         }
 
-        @Nested
-        @DisplayName("GET /teachers/search - First name sort direction edge cases")
-        class FirstNameSortDirectionTests {
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns matching teachers with sort asc")
-            void returnsMatchingTeachersSortAsc() throws Exception {
-                mockMvc.perform(get(baseUrl + "/search/first-name")
-                                .param("firstName", "teacher")
-                                .param("sort", "user.firstName,asc"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content[*].user.firstName",
-                                everyItem(containsStringIgnoringCase("teacher"))));
-            }
-
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns matching teachers with sort desc")
-            void returnsMatchingTeachersSortDesc() throws Exception {
-                mockMvc.perform(get(baseUrl + "/search/first-name")
-                                .param("firstName", "teacher")
-                                .param("sort", "user.firstName,desc"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content[*].user.firstName",
-                                everyItem(containsStringIgnoringCase("teacher"))));
-            }
-
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns sorted results when sort no direction parameter is provided")
-            void returnsSortedTeachersNoDirection() throws Exception {
-                mockMvc.perform(get(baseUrl + "/search/first-name")
-                                .param("firstName", "teacher")
-                                .param("sort", "user.email"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content[*].user.firstName",
-                                everyItem(containsStringIgnoringCase("teacher"))));
-            }
-
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns ASC direction when sort has only one parameter")
-            void returnsAscDirection_whenSortHasOneParameter() throws Exception {
-                mockMvc.perform(get(baseUrl + "/search/first-name")
-                                .param("firstName", "teacher")
-                                .param("sort", "user.firstName"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content[*].user.firstName",
-                                everyItem(containsStringIgnoringCase("teacher"))));
-            }
-
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns DESC direction when sort parameter ends with desc")
-            void returnsAscDirection_whenSorEndsWithDesc() throws Exception {
-                mockMvc.perform(get(baseUrl + "/search/first-name")
-                                .param("firstName", "teacher")
-                                .param("sort", "user.firstName,desc"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content[*].user.firstName",
-                                everyItem(containsStringIgnoringCase("teacher"))));
-            }
-
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns ASC direction when sort parameter ends with anything other than desc")
-            void returnsAscDirection_whenSortEndsWithNonDesc() throws Exception {
-                mockMvc.perform(get(baseUrl + "/search/first-name")
-                                .param("firstName", "teacher")
-                                .param("sort", "user.firstName,invalid"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content[*].user.firstName",
-                                everyItem(containsStringIgnoringCase("teacher"))));
-            }
-        }
-
         @Test
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-        @DisplayName("by last name returns matching teachers")
-        void searchByLastName_ReturnsMatchingTeachers() throws Exception {
-            mockMvc.perform(get(baseUrl + "/search/last-name")
-                            .param("lastName", "teacher"))
+        @DisplayName("with last name criteria returns matching teachers")
+        void searchWithLastNameCriteria_ReturnsMatchingTeachers() throws Exception {
+            mockMvc.perform(get(baseUrl + "/search")
+                            .param("lastName", "teacher")
+                            .param("sort", "user.lastName,asc"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[*].user.lastName",
                             everyItem(containsStringIgnoringCase("teacher"))));
-        }
-
-        @Nested
-        @DisplayName("GET /teachers/search - Last name sort direction edge cases")
-        class LastNameSortDirectionTests {
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns matching teachers with sort asc")
-            void returnsMatchingTeachersSortAsc() throws Exception {
-                mockMvc.perform(get(baseUrl + "/search/last-name")
-                                .param("lastName", "teacher")
-                                .param("sort", "user.lastName,asc"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content[*].user.lastName",
-                                everyItem(containsStringIgnoringCase("teacher"))));
-            }
-
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns matching teachers with sort desc")
-            void returnsMatchingTeachersSortDesc() throws Exception {
-                mockMvc.perform(get(baseUrl + "/search/last-name")
-                                .param("lastName", "teacher")
-                                .param("sort", "user.lastName,desc"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content[*].user.lastName",
-                                everyItem(containsStringIgnoringCase("teacher"))));
-            }
-
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns sorted results when sort no direction parameter is provided")
-            void returnsSortedTeachersNoDirection() throws Exception {
-                mockMvc.perform(get(baseUrl + "/search/last-name")
-                                .param("lastName", "teacher")
-                                .param("sort", "user.lastName"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content[*].user.lastName",
-                                everyItem(containsStringIgnoringCase("teacher"))));
-            }
-
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns ASC direction when sort has only one parameter")
-            void returnsAscDirection_whenSortHasOneParameter() throws Exception {
-                mockMvc.perform(get(baseUrl + "/search/last-name")
-                                .param("lastName", "teacher")
-                                .param("sort", "user.firstName"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content[*].user.lastName",
-                                everyItem(containsStringIgnoringCase("teacher"))));
-            }
-
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns DESC direction when sort parameter ends with desc")
-            void returnsAscDirection_whenSorEndsWithDesc() throws Exception {
-                mockMvc.perform(get(baseUrl + "/search/last-name")
-                                .param("lastName", "teacher")
-                                .param("sort", "user.firstName,desc"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content[*].user.lastName",
-                                everyItem(containsStringIgnoringCase("teacher"))));
-            }
-
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns ASC direction when sort parameter ends with anything other than desc")
-            void returnsAscDirection_whenSortEndsWithNonDesc() throws Exception {
-                mockMvc.perform(get(baseUrl + "/search/last-name")
-                                .param("lastName", "teacher")
-                                .param("sort", "user.lastName,invalid"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content[*].user.lastName",
-                                everyItem(containsStringIgnoringCase("teacher"))));
-            }
         }
 
         @Test
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
         @DisplayName("by grade level returns matching teachers")
         void searchByGrade_ReturnsMatchingTeachers() throws Exception {
-            mockMvc.perform(get(baseUrl + "/search/grade")
-                            .param("grade", "FIRST"))
+            mockMvc.perform(get(baseUrl + "/search")
+                            .param("grade", "FIRST")
+                            .param("sort", "user.firstName,desc"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[*].grade",
                             everyItem(is("FIRST"))));
-        }
-
-        @Nested
-        @DisplayName("GET /teachers/search - Grade sort direction edge cases")
-        class GradeSortDirectionTests {
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns matching teachers with sort asc")
-            void returnsMatchingTeachersSortAsc() throws Exception {
-                mockMvc.perform(get(baseUrl + "/search/grade")
-                                .param("grade", "FIRST")
-                                .param("sort", "grade,asc"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content[*].grade",
-                                everyItem(containsStringIgnoringCase("FIRST"))));
-            }
-
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns matching teachers with sort desc")
-            void returnsMatchingTeachersSortDesc() throws Exception {
-                mockMvc.perform(get(baseUrl + "/search/grade")
-                                .param("grade", "FIRST")
-                                .param("sort", "grade,desc"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content[*].grade",
-                                everyItem(containsStringIgnoringCase("FIRST"))));
-            }
-
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns sorted results when sort no direction parameter is provided")
-            void returnsSortedTeachersNoDirection() throws Exception {
-                mockMvc.perform(get(baseUrl + "/search/grade")
-                                .param("grade", "FIRST")
-                                .param("sort", "grade"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content[*].grade",
-                                everyItem(containsStringIgnoringCase("FIRST"))));
-            }
-
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns ASC direction when sort has only one parameter")
-            void returnsAscDirection_whenSortHasOneParameter() throws Exception {
-                mockMvc.perform(get(baseUrl + "/search/grade")
-                                .param("grade", "FIRST")
-                                .param("sort", "grade"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content[*].grade",
-                                everyItem(containsStringIgnoringCase("FIRST"))));
-            }
-
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns DESC direction when sort parameter ends with desc")
-            void returnsAscDirection_whenSorEndsWithDesc() throws Exception {
-                mockMvc.perform(get(baseUrl + "/search/grade")
-                                .param("grade", "FIRST")
-                                .param("sort", "grade,desc"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content[*].grade",
-                                everyItem(containsStringIgnoringCase("FIRST"))));
-            }
-
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns ASC direction when sort parameter ends with anything other than desc")
-            void returnsAscDirection_whenSortEndsWithNonDesc() throws Exception {
-                mockMvc.perform(get(baseUrl + "/search/grade")
-                                .param("grade", "FIRST")
-                                .param("sort", "grade,invalid"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content[*].grade",
-                                everyItem(containsStringIgnoringCase("FIRST"))));
-            }
         }
 
         @Test
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
         @DisplayName("by grade level handles case-insensitive grade strings")
         void searchByGrade_HandlesCaseInsensitiveGrade() throws Exception {
-            mockMvc.perform(get(baseUrl + "/search/grade")
+            mockMvc.perform(get(baseUrl + "/search")
                             .param("grade", "first"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[*].grade",
@@ -541,7 +240,7 @@ public class TeacherTests {
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
         @DisplayName("by grade level handles hyphenated grade strings")
         void searchByGrade_HandlesHyphenatedGrade() throws Exception {
-            mockMvc.perform(get(baseUrl + "/search/grade")
+            mockMvc.perform(get(baseUrl + "/search")
                             .param("grade", "pre-k"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[*].grade",
@@ -552,7 +251,7 @@ public class TeacherTests {
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
         @DisplayName("with non-matching criteria returns empty results")
         void searchWithNonMatchingCriteria_returnsEmptyResults() throws Exception {
-            mockMvc.perform(get(baseUrl + "/search/email")
+            mockMvc.perform(get(baseUrl + "/search")
                             .param("email", "nonexistentemail@okcps.org"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isEmpty());
@@ -562,10 +261,19 @@ public class TeacherTests {
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
         @DisplayName("with non-matching grade returns empty results")
         void searchWithNonMatchingGrade_returnsEmptyResults() throws Exception {
-            mockMvc.perform(get(baseUrl + "/search/grade")
+            mockMvc.perform(get(baseUrl + "/search")
                             .param("grade", "NONEXISTENT_GRADE"))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.message").value(containsString("Invalid grade level")));
+        }
+
+        @Test
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @DisplayName("with no criteria returns all teachers")
+        void searchWithNoCriteria_ReturnsAllTeachers() throws Exception {
+            mockMvc.perform(get(baseUrl + "/search"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").isArray());
         }
     }
 

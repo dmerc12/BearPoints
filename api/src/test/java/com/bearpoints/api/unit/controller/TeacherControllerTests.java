@@ -3,6 +3,7 @@ package com.bearpoints.api.unit.controller;
 import com.bearpoints.api.controller.TeacherController;
 import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.dto.TeacherDTO;
+import com.bearpoints.api.dto.TeacherSearchCriteria;
 import com.bearpoints.api.dto.UserDTO;
 import com.bearpoints.api.entity.GradeLevel;
 import com.bearpoints.api.entity.Role;
@@ -26,7 +27,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
@@ -156,8 +156,8 @@ public class TeacherControllerTests {
     }
 
     @Nested
-    @DisplayName("When searching teachers by email")
-    class WhenSearchingTeachersByEmail {
+    @DisplayName("When searching teachers")
+    class WhenSearchingTeachers {
         @Test
         @DisplayName("Should search teachers by email")
         void shouldSearchTeachersByEmail() {
@@ -167,52 +167,15 @@ public class TeacherControllerTests {
             );
             Page<TeacherDTO> teacherPage = new PageImpl<>(teachers, PageRequest.of(0, 20), 1L);
             PagedResponseDTO<TeacherDTO> expectedResponse = PagedResponseDTO.of(teacherPage);
-            when(teacherService.searchTeachersByEmail(eq(email), any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<TeacherDTO>> response = teacherController.searchTeachersByEmail(email, 0, 20, "email");
+            when(teacherService.searchTeachers(any(TeacherSearchCriteria.class), any(Pageable.class))).thenReturn(expectedResponse);
+            ResponseEntity<PagedResponseDTO<TeacherDTO>> response = teacherController.searchTeachers(email,
+                    null, null, null, 0, 20, "email");
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
             assertEquals(1, response.getBody().getContent().size());
-            verify(teacherService).searchTeachersByEmail(eq(email), any(Pageable.class));
+            verify(teacherService).searchTeachers(any(TeacherSearchCriteria.class), any(Pageable.class));
         }
 
-        @Test
-        @DisplayName("Should search teachers by email with ASC sort")
-        void shouldSearchTeachersByEmailWithAscSort() {
-            String email = "teacher";
-            List<TeacherDTO> teachers = List.of(
-                    createTeacherDTO(1L, email + "1@okcps.org", "John", "Doe", GradeLevel.FIRST)
-            );
-            Page<TeacherDTO> teacherPage = new PageImpl<>(teachers, PageRequest.of(0, 20), 1L);
-            PagedResponseDTO<TeacherDTO> expectedResponse = PagedResponseDTO.of(teacherPage);
-            when(teacherService.searchTeachersByEmail(eq(email), any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<TeacherDTO>> response = teacherController.searchTeachersByEmail(email, 0, 20, "email,asc");
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            assertEquals(1, response.getBody().getContent().size());
-            verify(teacherService).searchTeachersByEmail(eq(email), any(Pageable.class));
-        }
-
-        @Test
-        @DisplayName("Should search teachers by email with DESC sort")
-        void shouldSearchTeachersByEmailWithDescSort() {
-            String email = "teacher";
-            List<TeacherDTO> teachers = List.of(
-                    createTeacherDTO(1L, email + "1@okcps.org", "John", "Doe", GradeLevel.FIRST)
-            );
-            Page<TeacherDTO> teacherPage = new PageImpl<>(teachers, PageRequest.of(0, 20), 1L);
-            PagedResponseDTO<TeacherDTO> expectedResponse = PagedResponseDTO.of(teacherPage);
-            when(teacherService.searchTeachersByEmail(eq(email), any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<TeacherDTO>> response = teacherController.searchTeachersByEmail(email, 0, 20, "email,desc");
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            assertEquals(1, response.getBody().getContent().size());
-            verify(teacherService).searchTeachersByEmail(eq(email), any(Pageable.class));
-        }
-    }
-
-    @Nested
-    @DisplayName("When searching teachers by first name")
-    class WhenSearchingTeachersByFirstName {
         @Test
         @DisplayName("Should search teachers by first name")
         void shouldSearchTeachersByFirstName() {
@@ -222,52 +185,15 @@ public class TeacherControllerTests {
             );
             Page<TeacherDTO> teacherPage = new PageImpl<>(teachers, PageRequest.of(0, 20), 1L);
             PagedResponseDTO<TeacherDTO> expectedResponse = PagedResponseDTO.of(teacherPage);
-            when(teacherService.searchTeachersByFirstName(eq(firstName), any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<TeacherDTO>> response = teacherController.searchTeachersByFirstName(firstName, 0, 20, "firstName");
+            when(teacherService.searchTeachers(any(TeacherSearchCriteria.class), any(Pageable.class))).thenReturn(expectedResponse);
+            ResponseEntity<PagedResponseDTO<TeacherDTO>> response = teacherController.searchTeachers(null,
+                    firstName, null, null, 0, 20, "firstName,asc");
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
             assertEquals(1, response.getBody().getContent().size());
-            verify(teacherService).searchTeachersByFirstName(eq(firstName), any(Pageable.class));
+            verify(teacherService).searchTeachers(any(TeacherSearchCriteria.class), any(Pageable.class));
         }
 
-        @Test
-        @DisplayName("Should search teachers by first name with ASC sort")
-        void shouldSearchTeachersByFirstNameWithAscSort() {
-            String firstName = "John";
-            List<TeacherDTO> teachers = List.of(
-                    createTeacherDTO(1L, "teacher1@okcps.org", firstName, "Doe", GradeLevel.FIRST)
-            );
-            Page<TeacherDTO> teacherPage = new PageImpl<>(teachers, PageRequest.of(0, 20), 1L);
-            PagedResponseDTO<TeacherDTO> expectedResponse = PagedResponseDTO.of(teacherPage);
-            when(teacherService.searchTeachersByFirstName(eq(firstName), any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<TeacherDTO>> response = teacherController.searchTeachersByFirstName(firstName, 0, 20, "firstName,asc");
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            assertEquals(1, response.getBody().getContent().size());
-            verify(teacherService).searchTeachersByFirstName(eq(firstName), any(Pageable.class));
-        }
-
-        @Test
-        @DisplayName("Should search teachers by first name with DESC sort")
-        void shouldSearchTeachersByFirstNameWithDescSort() {
-            String firstName = "John";
-            List<TeacherDTO> teachers = List.of(
-                    createTeacherDTO(1L, "teacher1@okcps.org", firstName, "Doe", GradeLevel.FIRST)
-            );
-            Page<TeacherDTO> teacherPage = new PageImpl<>(teachers, PageRequest.of(0, 20), 1L);
-            PagedResponseDTO<TeacherDTO> expectedResponse = PagedResponseDTO.of(teacherPage);
-            when(teacherService.searchTeachersByFirstName(eq(firstName), any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<TeacherDTO>> response = teacherController.searchTeachersByFirstName(firstName, 0, 20, "firstName,desc");
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            assertEquals(1, response.getBody().getContent().size());
-            verify(teacherService).searchTeachersByFirstName(eq(firstName), any(Pageable.class));
-        }
-    }
-
-    @Nested
-    @DisplayName("When searching teachers by last name")
-    class WhenSearchingTeachersByLastName {
         @Test
         @DisplayName("Should search teachers by last name")
         void shouldSearchTeachersByLastName() {
@@ -277,52 +203,15 @@ public class TeacherControllerTests {
             );
             Page<TeacherDTO> teacherPage = new PageImpl<>(teachers, PageRequest.of(0, 20), 1L);
             PagedResponseDTO<TeacherDTO> expectedResponse = PagedResponseDTO.of(teacherPage);
-            when(teacherService.searchTeachersByLastName(eq(lastName), any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<TeacherDTO>> response = teacherController.searchTeachersByLastName(lastName, 0, 20, "lastName");
+            when(teacherService.searchTeachers(any(TeacherSearchCriteria.class), any(Pageable.class))).thenReturn(expectedResponse);
+            ResponseEntity<PagedResponseDTO<TeacherDTO>> response = teacherController.searchTeachers(null,
+                    null, lastName, null, 0, 20, "lastName,desc");
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
             assertEquals(1, response.getBody().getContent().size());
-            verify(teacherService).searchTeachersByLastName(eq(lastName), any(Pageable.class));
+            verify(teacherService).searchTeachers(any(TeacherSearchCriteria.class), any(Pageable.class));
         }
 
-        @Test
-        @DisplayName("Should search teachers by last name with ASC sort")
-        void shouldSearchTeachersByLastNameWithAscSort() {
-            String lastName = "Doe";
-            List<TeacherDTO> teachers = List.of(
-                    createTeacherDTO(1L, "teacher1@okcps.org", "John", lastName, GradeLevel.FIRST)
-            );
-            Page<TeacherDTO> teacherPage = new PageImpl<>(teachers, PageRequest.of(0, 20), 1L);
-            PagedResponseDTO<TeacherDTO> expectedResponse = PagedResponseDTO.of(teacherPage);
-            when(teacherService.searchTeachersByLastName(eq(lastName), any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<TeacherDTO>> response = teacherController.searchTeachersByLastName(lastName, 0, 20, "lastName,asc");
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            assertEquals(1, response.getBody().getContent().size());
-            verify(teacherService).searchTeachersByLastName(eq(lastName), any(Pageable.class));
-        }
-
-        @Test
-        @DisplayName("Should search teachers by last name with DESC sort")
-        void shouldSearchTeachersByLastNameWithDescSort() {
-            String lastName = "Doe";
-            List<TeacherDTO> teachers = List.of(
-                    createTeacherDTO(1L, "teacher1@okcps.org", "John", lastName, GradeLevel.FIRST)
-            );
-            Page<TeacherDTO> teacherPage = new PageImpl<>(teachers, PageRequest.of(0, 20), 1L);
-            PagedResponseDTO<TeacherDTO> expectedResponse = PagedResponseDTO.of(teacherPage);
-            when(teacherService.searchTeachersByLastName(eq(lastName), any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<TeacherDTO>> response = teacherController.searchTeachersByLastName(lastName, 0, 20, "lastName,desc");
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            assertEquals(1, response.getBody().getContent().size());
-            verify(teacherService).searchTeachersByLastName(eq(lastName), any(Pageable.class));
-        }
-    }
-
-    @Nested
-    @DisplayName("When searching teachers by grade level")
-    class WhenSearchingTeachersByGrade {
         @Test
         @DisplayName("Should search teachers by grade level")
         void shouldSearchTeachersByGradeLevel() {
@@ -332,49 +221,36 @@ public class TeacherControllerTests {
             );
             Page<TeacherDTO> teacherPage = new PageImpl<>(teachers, PageRequest.of(0, 20), 1L);
             PagedResponseDTO<TeacherDTO> expectedResponse = PagedResponseDTO.of(teacherPage);
-            when(teacherService.searchTeachersByGrade(eq(grade), any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<TeacherDTO>> response = teacherController.searchTeachersByGrade(grade, 0, 20, "lastName");
+            when(teacherService.searchTeachers(any(TeacherSearchCriteria.class), any(Pageable.class))).thenReturn(expectedResponse);
+            ResponseEntity<PagedResponseDTO<TeacherDTO>> response = teacherController.searchTeachers(null,
+                    null, null, grade, 0, 20, "lastName,asc");
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
             assertEquals(1, response.getBody().getContent().size());
             assertEquals(grade, response.getBody().getContent().getFirst().getGrade());
-            verify(teacherService).searchTeachersByGrade(eq(grade), any(Pageable.class));
+            verify(teacherService).searchTeachers(any(TeacherSearchCriteria.class), any(Pageable.class));
         }
 
         @Test
-        @DisplayName("Should search teachers by grade level with ASC sort")
-        void shouldSearchTeachersByGradeLevelWithAscSort() {
-            GradeLevel grade = GradeLevel.SECOND;
+        @DisplayName("Should search teachers with combined criteria")
+        void shouldSearchTeachersWithCombinedCriteria() {
+            String email = "teacher";
+            String firstName = "John";
+            String lastName = "Doe";
+            GradeLevel grade = GradeLevel.FIRST;
             List<TeacherDTO> teachers = List.of(
-                    createTeacherDTO(1L, "teacher1@okcps.org", "John", "Doe", grade)
+                    createTeacherDTO(1L, email + "1@okcps.org", firstName, lastName, grade)
             );
             Page<TeacherDTO> teacherPage = new PageImpl<>(teachers, PageRequest.of(0, 20), 1L);
             PagedResponseDTO<TeacherDTO> expectedResponse = PagedResponseDTO.of(teacherPage);
-            when(teacherService.searchTeachersByGrade(eq(grade), any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<TeacherDTO>> response = teacherController.searchTeachersByGrade(grade, 0, 20, "firstName,asc");
+            when(teacherService.searchTeachers(any(TeacherSearchCriteria.class), any(Pageable.class))).thenReturn(expectedResponse);
+            ResponseEntity<PagedResponseDTO<TeacherDTO>> response = teacherController.searchTeachers(email,
+                    firstName, lastName, grade, 0, 20, "lastName,asc,firstName,desc,email");
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
             assertEquals(1, response.getBody().getContent().size());
             assertEquals(grade, response.getBody().getContent().getFirst().getGrade());
-            verify(teacherService).searchTeachersByGrade(eq(grade), any(Pageable.class));
-        }
-
-        @Test
-        @DisplayName("Should search teachers by grade level with DESC sort")
-        void shouldSearchTeachersByGradeLevelWithDescSort() {
-            GradeLevel grade = GradeLevel.THIRD;
-            List<TeacherDTO> teachers = List.of(
-                    createTeacherDTO(1L, "teacher1@okcps.org", "John", "Doe", grade)
-            );
-            Page<TeacherDTO> teacherPage = new PageImpl<>(teachers, PageRequest.of(0, 20), 1L);
-            PagedResponseDTO<TeacherDTO> expectedResponse = PagedResponseDTO.of(teacherPage);
-            when(teacherService.searchTeachersByGrade(eq(grade), any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<TeacherDTO>> response = teacherController.searchTeachersByGrade(grade, 0, 20, "lastName,desc");
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            assertEquals(1, response.getBody().getContent().size());
-            assertEquals(grade, response.getBody().getContent().getFirst().getGrade());
-            verify(teacherService).searchTeachersByGrade(eq(grade), any(Pageable.class));
+            verify(teacherService).searchTeachers(any(TeacherSearchCriteria.class), any(Pageable.class));
         }
     }
 
