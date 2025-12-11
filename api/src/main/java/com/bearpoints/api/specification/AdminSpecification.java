@@ -1,6 +1,6 @@
 package com.bearpoints.api.specification;
 
-import com.bearpoints.api.dto.AdminSearchCriteria;
+import com.bearpoints.api.criteria.AdminSearchCriteria;
 import com.bearpoints.api.entity.Role;
 import com.bearpoints.api.entity.User;
 import jakarta.persistence.criteria.Predicate;

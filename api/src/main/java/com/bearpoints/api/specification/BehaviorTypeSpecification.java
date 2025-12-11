@@ -1,6 +1,6 @@
 package com.bearpoints.api.specification;
 
-import com.bearpoints.api.dto.BehaviorTypeSearchCriteria;
+import com.bearpoints.api.criteria.BehaviorTypeSearchCriteria;
 import com.bearpoints.api.entity.BehaviorType;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;

@@ -1,6 +1,6 @@
 package com.bearpoints.api.specification;
 
-import com.bearpoints.api.dto.StudentSearchCriteria;
+import com.bearpoints.api.criteria.StudentSearchCriteria;
 import com.bearpoints.api.entity.Role;
 import com.bearpoints.api.entity.Student;
 import jakarta.persistence.criteria.Predicate;

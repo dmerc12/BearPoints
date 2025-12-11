@@ -1,4 +1,4 @@
-package com.bearpoints.api.dto;
+package com.bearpoints.api.projection;
 
 import com.bearpoints.api.entity.User;
 import org.springframework.beans.factory.annotation.Value;

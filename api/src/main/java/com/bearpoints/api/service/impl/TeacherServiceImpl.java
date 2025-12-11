@@ -4,7 +4,7 @@ import com.bearpoints.api.dao.TeacherDAO;
 import com.bearpoints.api.dao.UserDAO;
 import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.dto.TeacherDTO;
-import com.bearpoints.api.dto.TeacherSearchCriteria;
+import com.bearpoints.api.criteria.TeacherSearchCriteria;
 import com.bearpoints.api.entity.Role;
 import com.bearpoints.api.entity.Teacher;
 import com.bearpoints.api.entity.User;

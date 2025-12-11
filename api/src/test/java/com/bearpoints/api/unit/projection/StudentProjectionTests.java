@@ -1,8 +1,8 @@
-package com.bearpoints.api.unit.dto;
+package com.bearpoints.api.unit.projection;
 
-import com.bearpoints.api.dto.StudentProjection;
-import com.bearpoints.api.dto.TeacherProjection;
-import com.bearpoints.api.dto.UserProjection;
+import com.bearpoints.api.projection.StudentProjection;
+import com.bearpoints.api.projection.TeacherProjection;
+import com.bearpoints.api.projection.UserProjection;
 import com.bearpoints.api.entity.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

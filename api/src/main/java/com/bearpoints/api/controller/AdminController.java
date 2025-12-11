@@ -1,6 +1,6 @@
 package com.bearpoints.api.controller;
 
-import com.bearpoints.api.dto.AdminSearchCriteria;
+import com.bearpoints.api.criteria.AdminSearchCriteria;
 import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.dto.UserDTO;
 import com.bearpoints.api.service.AdminService;

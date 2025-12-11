@@ -1,7 +1,7 @@
 package com.bearpoints.api.unit.specification;
 
 import com.bearpoints.api.dao.BehaviorTypeDAO;
-import com.bearpoints.api.dto.BehaviorTypeSearchCriteria;
+import com.bearpoints.api.criteria.BehaviorTypeSearchCriteria;
 import com.bearpoints.api.entity.BehaviorType;
 import com.bearpoints.api.specification.BehaviorTypeSpecification;
 import org.junit.jupiter.api.BeforeEach;

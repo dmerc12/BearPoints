@@ -1,6 +1,6 @@
-package com.bearpoints.api.unit.dto;
+package com.bearpoints.api.unit.criteria;
 
-import com.bearpoints.api.dto.BehaviorTypeSearchCriteria;
+import com.bearpoints.api.criteria.BehaviorTypeSearchCriteria;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

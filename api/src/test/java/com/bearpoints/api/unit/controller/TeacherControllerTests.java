@@ -3,7 +3,7 @@ package com.bearpoints.api.unit.controller;
 import com.bearpoints.api.controller.TeacherController;
 import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.dto.TeacherDTO;
-import com.bearpoints.api.dto.TeacherSearchCriteria;
+import com.bearpoints.api.criteria.TeacherSearchCriteria;
 import com.bearpoints.api.dto.UserDTO;
 import com.bearpoints.api.entity.GradeLevel;
 import com.bearpoints.api.entity.Role;

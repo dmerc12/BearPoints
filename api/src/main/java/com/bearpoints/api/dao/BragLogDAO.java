@@ -1,6 +1,6 @@
 package com.bearpoints.api.dao;
 
-import com.bearpoints.api.dto.BragLogProjection;
+import com.bearpoints.api.projection.BragLogProjection;
 import com.bearpoints.api.entity.BragLog;
 import com.bearpoints.api.entity.Student;
 import io.micrometer.common.lang.NonNull;

@@ -1,5 +1,6 @@
 package com.bearpoints.api.unit.service;
 
+import com.bearpoints.api.criteria.StudentSearchCriteria;
 import com.bearpoints.api.dao.StudentDAO;
 import com.bearpoints.api.dao.TeacherDAO;
 import com.bearpoints.api.dao.UserDAO;

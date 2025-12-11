@@ -1,6 +1,7 @@
 package com.bearpoints.api.unit.controller;
 
 import com.bearpoints.api.controller.StudentController;
+import com.bearpoints.api.criteria.StudentSearchCriteria;
 import com.bearpoints.api.dto.*;
 import com.bearpoints.api.entity.Role;
 import com.bearpoints.api.exception.ResourceNotFoundException;

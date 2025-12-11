@@ -1,8 +1,8 @@
-package com.bearpoints.api.unit.dto;
+package com.bearpoints.api.unit.projection;
 
-import com.bearpoints.api.dto.RewardItemProjection;
-import com.bearpoints.api.dto.StudentProjection;
-import com.bearpoints.api.dto.StudentRewardProjection;
+import com.bearpoints.api.projection.RewardItemProjection;
+import com.bearpoints.api.projection.StudentProjection;
+import com.bearpoints.api.projection.StudentRewardProjection;
 import com.bearpoints.api.entity.RewardItem;
 import com.bearpoints.api.entity.Student;
 import com.bearpoints.api.entity.StudentReward;

@@ -1,5 +1,6 @@
 package com.bearpoints.api.service;
 
+import com.bearpoints.api.criteria.AdminSearchCriteria;
 import com.bearpoints.api.dto.*;
 import com.bearpoints.api.exception.ResourceNotFoundException;
 import org.springframework.dao.DataIntegrityViolationException;

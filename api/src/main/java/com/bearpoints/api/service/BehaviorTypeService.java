@@ -1,7 +1,7 @@
 package com.bearpoints.api.service;
 
 import com.bearpoints.api.dto.BehaviorTypeDTO;
-import com.bearpoints.api.dto.BehaviorTypeSearchCriteria;
+import com.bearpoints.api.criteria.BehaviorTypeSearchCriteria;
 import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.exception.DuplicateResourceException;
 import com.bearpoints.api.exception.ResourceNotFoundException;

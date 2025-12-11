@@ -1,4 +1,4 @@
-package com.bearpoints.api.dto;
+package com.bearpoints.api.criteria;
 
 import lombok.Getter;
 import lombok.Setter;

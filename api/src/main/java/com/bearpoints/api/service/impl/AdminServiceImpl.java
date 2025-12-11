@@ -1,5 +1,6 @@
 package com.bearpoints.api.service.impl;
 
+import com.bearpoints.api.criteria.AdminSearchCriteria;
 import com.bearpoints.api.dao.UserDAO;
 import com.bearpoints.api.dto.*;
 import com.bearpoints.api.entity.Role;

@@ -1,6 +1,6 @@
-package com.bearpoints.api.unit.dto;
+package com.bearpoints.api.unit.criteria;
 
-import com.bearpoints.api.dto.TeacherSearchCriteria;
+import com.bearpoints.api.criteria.TeacherSearchCriteria;
 import com.bearpoints.api.entity.GradeLevel;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

@@ -1,4 +1,4 @@
-package com.bearpoints.api.dto;
+package com.bearpoints.api.projection;
 
 import com.bearpoints.api.entity.Student;
 import org.springframework.data.rest.core.config.Projection;

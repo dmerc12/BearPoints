@@ -1,6 +1,6 @@
-package com.bearpoints.api.unit.dto;
+package com.bearpoints.api.unit.projection;
 
-import com.bearpoints.api.dto.BehaviorTypeProjection;
+import com.bearpoints.api.projection.BehaviorTypeProjection;
 import com.bearpoints.api.entity.BehaviorType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

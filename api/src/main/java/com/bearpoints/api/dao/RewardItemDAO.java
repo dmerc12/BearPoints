@@ -1,6 +1,6 @@
 package com.bearpoints.api.dao;
 
-import com.bearpoints.api.dto.RewardItemProjection;
+import com.bearpoints.api.projection.RewardItemProjection;
 import com.bearpoints.api.entity.RewardItem;
 import io.micrometer.common.lang.NonNull;
 import org.springframework.data.jpa.repository.JpaRepository;

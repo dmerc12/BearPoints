@@ -1,6 +1,6 @@
-package com.bearpoints.api.unit.dto;
+package com.bearpoints.api.unit.projection;
 
-import com.bearpoints.api.dto.RewardItemProjection;
+import com.bearpoints.api.projection.RewardItemProjection;
 import com.bearpoints.api.entity.RewardItem;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

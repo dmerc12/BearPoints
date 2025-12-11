@@ -2,7 +2,7 @@ package com.bearpoints.api.service;
 
 import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.dto.StudentDTO;
-import com.bearpoints.api.dto.StudentSearchCriteria;
+import com.bearpoints.api.criteria.StudentSearchCriteria;
 import com.bearpoints.api.exception.DuplicateResourceException;
 import com.bearpoints.api.exception.ResourceNotFoundException;
 import org.springframework.data.domain.Pageable;

@@ -1,7 +1,7 @@
-package com.bearpoints.api.unit.dto;
+package com.bearpoints.api.unit.projection;
 
-import com.bearpoints.api.dto.TeacherProjection;
-import com.bearpoints.api.dto.UserProjection;
+import com.bearpoints.api.projection.TeacherProjection;
+import com.bearpoints.api.projection.UserProjection;
 import com.bearpoints.api.entity.GradeLevel;
 import com.bearpoints.api.entity.Role;
 import com.bearpoints.api.entity.Teacher;

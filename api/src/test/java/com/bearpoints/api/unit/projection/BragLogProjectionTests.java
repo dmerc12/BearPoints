@@ -1,7 +1,7 @@
-package com.bearpoints.api.unit.dto;
+package com.bearpoints.api.unit.projection;
 
-import com.bearpoints.api.dto.*;
 import com.bearpoints.api.entity.*;
+import com.bearpoints.api.projection.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.projection.ProjectionFactory;

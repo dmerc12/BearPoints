@@ -2,7 +2,7 @@ package com.bearpoints.api.unit.service;
 
 import com.bearpoints.api.dao.BehaviorTypeDAO;
 import com.bearpoints.api.dto.BehaviorTypeDTO;
-import com.bearpoints.api.dto.BehaviorTypeSearchCriteria;
+import com.bearpoints.api.criteria.BehaviorTypeSearchCriteria;
 import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.entity.BehaviorType;
 import com.bearpoints.api.exception.DuplicateResourceException;

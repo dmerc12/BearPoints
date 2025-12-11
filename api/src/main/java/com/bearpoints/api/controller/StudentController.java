@@ -2,7 +2,7 @@ package com.bearpoints.api.controller;
 
 import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.dto.StudentDTO;
-import com.bearpoints.api.dto.StudentSearchCriteria;
+import com.bearpoints.api.criteria.StudentSearchCriteria;
 import com.bearpoints.api.service.StudentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

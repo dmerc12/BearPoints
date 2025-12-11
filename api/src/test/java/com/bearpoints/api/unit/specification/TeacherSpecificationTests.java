@@ -2,7 +2,7 @@ package com.bearpoints.api.unit.specification;
 
 import com.bearpoints.api.dao.TeacherDAO;
 import com.bearpoints.api.dao.UserDAO;
-import com.bearpoints.api.dto.TeacherSearchCriteria;
+import com.bearpoints.api.criteria.TeacherSearchCriteria;
 import com.bearpoints.api.entity.*;
 import com.bearpoints.api.specification.TeacherSpecification;
 import org.junit.jupiter.api.BeforeEach;
