@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.lang.Nullable;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * JPA repository for {@link BehaviorType} entities.
@@ -59,10 +60,10 @@ public interface BehaviorTypeDAO extends JpaRepository<BehaviorType, Long>, JpaS
     List<BehaviorType> findBySyncedToSheetsFalse();
 
     /**
-     * Finds behavior type by name (internal use only).
+     * Finds behavior type by name.
      *
      * @param name Behavior type name
-     * @return Matching behavior type or null
+     * @return Optional containing behavior type if found
      */
-    BehaviorType findByName(String name);
+    Optional<BehaviorType> findByName(String name);
 }

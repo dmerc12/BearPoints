@@ -417,7 +417,8 @@ public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
             String[] behaviorNames = row.get(3).toString().split(", ");
             Set<BehaviorType> behaviors = Arrays.stream(behaviorNames)
                     .map(behaviorTypeRepository::findByName)
-                    .filter(Objects::nonNull)
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
                     .collect(Collectors.toSet());
             bragLog.setBehaviors(behaviors);
             bragLog.setPointsGenerated(Integer.parseInt(row.get(4).toString()));

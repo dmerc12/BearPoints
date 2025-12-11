@@ -367,7 +367,7 @@ public class GoogleSheetsSyncServiceTests {
             BehaviorType behavior = createTestBehaviorType("Helping", 5);
             when(studentDAO.findById(1L)).thenReturn(Optional.of(student));
             when(teacherDAO.findById(1L)).thenReturn(Optional.of(teacher));
-            when(behaviorTypeDAO.findByName("Helping")).thenReturn(behavior);
+            when(behaviorTypeDAO.findByName("Helping")).thenReturn(Optional.of(behavior));
             String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
             List<Object> row = Arrays.asList("1", "1", "1", "Helping", "5", "Helped a classmate", timestamp);
             Optional<BragLog> bragLog = ReflectionTestUtils.invokeMethod(syncService, "parseBragLogFromRow", row);
