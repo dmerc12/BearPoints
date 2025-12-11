@@ -7,7 +7,7 @@ import com.bearpoints.api.dto.TeacherSearchCriteria;
 import com.bearpoints.api.dto.UserDTO;
 import com.bearpoints.api.entity.GradeLevel;
 import com.bearpoints.api.entity.Role;
-import com.bearpoints.api.exception.UserNotFoundException;
+import com.bearpoints.api.exception.ResourceNotFoundException;
 import com.bearpoints.api.service.TeacherService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -276,8 +276,8 @@ public class TeacherControllerTests {
         void shouldReturn404WhenTeacherNotFound() {
             Long teacherId = 999L;
             when(teacherService.getTeacherById(teacherId))
-                    .thenThrow(new UserNotFoundException("Teacher not found with id: " + teacherId));
-            assertThrows(UserNotFoundException.class, () -> teacherController.getTeacherById(teacherId));
+                    .thenThrow(new ResourceNotFoundException("Teacher not found with id: " + teacherId));
+            assertThrows(ResourceNotFoundException.class, () -> teacherController.getTeacherById(teacherId));
             verify(teacherService).getTeacherById(teacherId);
         }
     }
@@ -341,9 +341,9 @@ public class TeacherControllerTests {
             Long teacherId = 999L;
             TeacherDTO teacherDTO = createTeacherDTO(teacherId, "nonexistent@okcps.org", "Nonexistent", "Teacher", GradeLevel.FIRST);
             when(teacherService.updateTeacher(teacherId, teacherDTO))
-                    .thenThrow(new UserNotFoundException("Teacher not found with id: " + teacherId));
+                    .thenThrow(new ResourceNotFoundException("Teacher not found with id: " + teacherId));
             assertThrows(
-                    UserNotFoundException.class,
+                    ResourceNotFoundException.class,
                     () -> teacherController.updateTeacher(teacherId, teacherDTO)
             );
             verify(teacherService).updateTeacher(teacherId, teacherDTO);
@@ -367,10 +367,10 @@ public class TeacherControllerTests {
         @DisplayName("Should return 404 when deleting non-existent teacher")
         void shouldReturn404WhenDeletingNonExistentTeacher() {
             Long teacherId = 999L;
-            doThrow(new UserNotFoundException("Teacher not found with id: " + teacherId))
+            doThrow(new ResourceNotFoundException("Teacher not found with id: " + teacherId))
                     .when(teacherService).deleteTeacher(teacherId);
             assertThrows(
-                    UserNotFoundException.class,
+                    ResourceNotFoundException.class,
                     () -> teacherController.deleteTeacher(teacherId)
             );
             verify(teacherService).deleteTeacher(teacherId);

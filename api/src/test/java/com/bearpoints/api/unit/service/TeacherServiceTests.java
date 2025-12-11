@@ -11,7 +11,7 @@ import com.bearpoints.api.entity.Role;
 import com.bearpoints.api.entity.Teacher;
 import com.bearpoints.api.entity.User;
 import com.bearpoints.api.exception.DuplicateResourceException;
-import com.bearpoints.api.exception.UserNotFoundException;
+import com.bearpoints.api.exception.ResourceNotFoundException;
 import com.bearpoints.api.service.impl.TeacherServiceImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -209,11 +209,11 @@ public class TeacherServiceTests {
         }
 
         @Test
-        @DisplayName("Should throw UserNotFoundException when teacher not found")
-        void shouldThrowUserNotFoundExceptionWhenNotFound() {
+        @DisplayName("Should throw ResourceNotFoundException when teacher not found")
+        void shouldThrowResourceNotFoundExceptionWhenNotFound() {
             Long teacherId = 999L;
             when(teacherDAO.findById(teacherId)).thenReturn(Optional.empty());
-            assertThrows(UserNotFoundException.class, () -> teacherService.getTeacherById(teacherId));
+            assertThrows(ResourceNotFoundException.class, () -> teacherService.getTeacherById(teacherId));
         }
     }
 
@@ -461,8 +461,8 @@ public class TeacherServiceTests {
         }
 
         @Test
-        @DisplayName("Should throw UserNotFoundException when teacher not found")
-        void shouldThrowUserNotFoundExceptionWhenTeacherNotFound() {
+        @DisplayName("Should throw ResourceNotFoundException when teacher not found")
+        void shouldThrowResourceNotFoundExceptionWhenTeacherNotFound() {
             Long teacherId = 999L;
             TeacherDTO updateDTO = new TeacherDTO(
                     teacherId,
@@ -471,7 +471,7 @@ public class TeacherServiceTests {
             );
             when(teacherDAO.findById(teacherId)).thenReturn(Optional.empty());
             assertThrows(
-                    UserNotFoundException.class,
+                    ResourceNotFoundException.class,
                     () -> teacherService.updateTeacher(teacherId, updateDTO)
             );
         }
@@ -492,11 +492,11 @@ public class TeacherServiceTests {
         }
 
         @Test
-        @DisplayName("Should throw UserNotFoundException when teacher not found")
-        void shouldThrowUserNotFoundExceptionWhenTeacherNotFound() {
+        @DisplayName("Should throw ResourceNotFoundException when teacher not found")
+        void shouldThrowResourceNotFoundExceptionWhenTeacherNotFound() {
             Long teacherId = 999L;
             when(teacherDAO.findById(teacherId)).thenReturn(Optional.empty());
-            assertThrows(UserNotFoundException.class, () -> teacherService.deleteTeacher(teacherId));
+            assertThrows(ResourceNotFoundException.class, () -> teacherService.deleteTeacher(teacherId));
         }
     }
 

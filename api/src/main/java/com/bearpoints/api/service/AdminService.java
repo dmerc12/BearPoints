@@ -1,7 +1,7 @@
 package com.bearpoints.api.service;
 
 import com.bearpoints.api.dto.*;
-import com.bearpoints.api.exception.UserNotFoundException;
+import com.bearpoints.api.exception.ResourceNotFoundException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Pageable;
 
@@ -42,7 +42,7 @@ public interface AdminService {
      *
      * @param id ID of the admin user to retrieve
      * @return Admin user DTO
-     * @throws UserNotFoundException if admin user not found
+     * @throws ResourceNotFoundException if admin user not found
      */
     UserDTO getAdminById(Long id);
 
@@ -61,7 +61,7 @@ public interface AdminService {
      * @param id ID of the admin user to update
      * @param userDTO Updated user data (email, first name, last name)
      * @return Updated admin user DTO
-     * @throws UserNotFoundException if admin user not found
+     * @throws ResourceNotFoundException if admin user not found
      * @throws DataIntegrityViolationException if email already exists
      */
     UserDTO updateAdmin(Long id, UserDTO userDTO);
@@ -70,7 +70,7 @@ public interface AdminService {
      * Deletes an admin by ID.
      *
      * @param id Admin user ID to delete
-     * @throws UserNotFoundException if admin user not found
+     * @throws ResourceNotFoundException if admin user not found
      */
     void deleteAdmin(Long id);
 }

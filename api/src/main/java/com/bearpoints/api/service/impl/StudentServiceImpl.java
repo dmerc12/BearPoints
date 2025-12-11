@@ -11,7 +11,7 @@ import com.bearpoints.api.entity.Student;
 import com.bearpoints.api.entity.Teacher;
 import com.bearpoints.api.entity.User;
 import com.bearpoints.api.exception.DuplicateResourceException;
-import com.bearpoints.api.exception.UserNotFoundException;
+import com.bearpoints.api.exception.ResourceNotFoundException;
 import com.bearpoints.api.service.StudentService;
 import com.bearpoints.api.specification.StudentSpecification;
 import lombok.RequiredArgsConstructor;
@@ -65,7 +65,7 @@ public class StudentServiceImpl implements StudentService {
     public PagedResponseDTO<StudentDTO> getClassRoomLeaderboard(Long teacherId, Pageable pageable) {
         log.debug("Retrieving classroom leaderboard for teacher ID: {}", teacherId);
         Teacher teacher = teacherDAO.findById(teacherId)
-                .orElseThrow(() -> new UserNotFoundException("Teacher not found with ID: " + teacherId));
+                .orElseThrow(() -> new ResourceNotFoundException("Teacher not found with ID: " + teacherId));
         Page<StudentDTO> leaderboardPage = studentDAO.findByTeacherOrderByPointsDesc(teacher, pageable).map(StudentDTO::new);
         log.info("Retrieved {} students for classroom leaderboard", leaderboardPage.getNumberOfElements());
         return PagedResponseDTO.of(leaderboardPage);
@@ -75,7 +75,7 @@ public class StudentServiceImpl implements StudentService {
     public StudentDTO getStudentById(Long id) {
         log.debug("Retrieving student by ID: {}", id);
         Student student = studentDAO.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("Student not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found with ID: " + id));
         return new StudentDTO(student);
     }
 
@@ -83,7 +83,7 @@ public class StudentServiceImpl implements StudentService {
     public StudentDTO getStudentByToken(String token) {
         log.debug("Retrieving student by token: {}", token);
         Student student = studentDAO.findByToken(token)
-                .orElseThrow(() -> new UserNotFoundException("Student not found with token: " + token));
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found with token: " + token));
         return new StudentDTO(student);
     }
 
@@ -102,7 +102,7 @@ public class StudentServiceImpl implements StudentService {
         user.setRole(Role.STUDENT);
         User savedUser = userDAO.save(user);
         Teacher teacher = teacherDAO.findById(studentDTO.getTeacher().getId())
-                .orElseThrow(() -> new UserNotFoundException("Teacher not found with ID: " + studentDTO.getTeacher().getId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Teacher not found with ID: " + studentDTO.getTeacher().getId()));
         Student student = new Student();
         student.setUser(savedUser);
         student.setTeacher(teacher);
@@ -117,7 +117,7 @@ public class StudentServiceImpl implements StudentService {
     public StudentDTO updateStudent(Long id, StudentDTO studentDTO) {
         log.debug("Updating student with ID: {}", id);
         Student existingStudent = studentDAO.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("Student not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found with ID: " + id));
         User existingUser = existingStudent.getUser();
         String newEmail = studentDTO.getUser().getEmail();
         // Check for duplicate email if changed
@@ -134,7 +134,7 @@ public class StudentServiceImpl implements StudentService {
         // Update teacher if changed
         if (!existingStudent.getTeacher().getId().equals(studentDTO.getTeacher().getId())) {
             Teacher newTeacher = teacherDAO.findById(studentDTO.getTeacher().getId())
-                    .orElseThrow(() -> new UserNotFoundException("Teacher not found with ID: " + studentDTO.getTeacher().getId()));
+                    .orElseThrow(() -> new ResourceNotFoundException("Teacher not found with ID: " + studentDTO.getTeacher().getId()));
             existingStudent.setTeacher(newTeacher);
         }
         Student updatedStudent = studentDAO.save(existingStudent);
@@ -147,7 +147,7 @@ public class StudentServiceImpl implements StudentService {
     public void deleteStudent(Long id) {
         log.debug("Deleting student with ID: {}", id);
         Student student = studentDAO.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("Student not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found with ID: " + id));
         studentDAO.delete(student);
         log.info("Successfully deleted student with ID: {}", id);
     }

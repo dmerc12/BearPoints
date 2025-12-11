@@ -4,7 +4,7 @@ import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.dto.StudentDTO;
 import com.bearpoints.api.dto.StudentSearchCriteria;
 import com.bearpoints.api.exception.DuplicateResourceException;
-import com.bearpoints.api.exception.UserNotFoundException;
+import com.bearpoints.api.exception.ResourceNotFoundException;
 import org.springframework.data.domain.Pageable;
 
 /**
@@ -55,7 +55,7 @@ public interface StudentService {
      *
      * @param id ID of the student to retrieve
      * @return Student DTO
-     * @throws UserNotFoundException if student not found
+     * @throws ResourceNotFoundException if student not found
      */
     StudentDTO getStudentById(Long id);
 
@@ -64,7 +64,7 @@ public interface StudentService {
      *
      * @param token Student's unique access token
      * @return Student DTO
-     * @throws UserNotFoundException if student not found
+     * @throws ResourceNotFoundException if student not found
      */
     StudentDTO getStudentByToken(String token);
 
@@ -83,7 +83,7 @@ public interface StudentService {
      * @param id ID of the student to update
      * @param studentDTO Updated student data
      * @return Updated student DTO
-     * @throws UserNotFoundException if student not found
+     * @throws ResourceNotFoundException if student not found
      * @throws DuplicateResourceException if email already exists
      */
     StudentDTO updateStudent(Long id, StudentDTO studentDTO);
@@ -92,7 +92,7 @@ public interface StudentService {
      * Deletes a student by ID.
      *
      * @param id Student ID to delete
-     * @throws UserNotFoundException if student not found
+     * @throws ResourceNotFoundException if student not found
      */
     void deleteStudent(Long id);
 }

@@ -6,7 +6,7 @@ import com.bearpoints.api.dao.UserDAO;
 import com.bearpoints.api.dto.*;
 import com.bearpoints.api.entity.*;
 import com.bearpoints.api.exception.DuplicateResourceException;
-import com.bearpoints.api.exception.UserNotFoundException;
+import com.bearpoints.api.exception.ResourceNotFoundException;
 import com.bearpoints.api.service.impl.StudentServiceImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -203,11 +203,11 @@ public class StudentServiceTests {
         }
 
         @Test
-        @DisplayName("Should throw UserNotFoundException when teacher not found for leaderboard")
-        void shouldThrowUserNotFoundExceptionWhenTeacherNotFoundForLeaderboard() {
+        @DisplayName("Should throw ResourceNotFoundException when teacher not found for leaderboard")
+        void shouldThrowResourceNotFoundExceptionWhenTeacherNotFoundForLeaderboard() {
             Long teacherId = 999L;
             when(teacherDAO.findById(teacherId)).thenReturn(Optional.empty());
-            assertThrows(UserNotFoundException.class,
+            assertThrows(ResourceNotFoundException.class,
                     () ->  studentService.getClassRoomLeaderboard(teacherId, pageable));
             verify(teacherDAO).findById(teacherId);
             verify(studentDAO, never()).findByTeacherOrderByPointsDesc(any(Teacher.class), any(Pageable.class));
@@ -231,11 +231,11 @@ public class StudentServiceTests {
         }
 
         @Test
-        @DisplayName("Should throw UserNotFoundException when student not found by ID")
-        void shouldThrowUserNotFoundExceptionWhenStudentNotFoundById() {
+        @DisplayName("Should throw ResourceNotFoundException when student not found by ID")
+        void shouldThrowResourceNotFoundExceptionWhenStudentNotFoundById() {
             Long studentId = 999L;
             when(studentDAO.findById(studentId)).thenReturn(Optional.empty());
-            assertThrows(UserNotFoundException.class,
+            assertThrows(ResourceNotFoundException.class,
                     () ->  studentService.getStudentById(studentId));
             verify(studentDAO).findById(studentId);
         }
@@ -253,11 +253,11 @@ public class StudentServiceTests {
         }
 
         @Test
-        @DisplayName("Should throw UserNotFoundException when student not found by token")
-        void shouldThrowUserNotFoundExceptionWhenStudentNotFoundByToken() {
+        @DisplayName("Should throw ResourceNotFoundException when student not found by token")
+        void shouldThrowResourceNotFoundExceptionWhenStudentNotFoundByToken() {
             String token = "invalid-token";
             when(studentDAO.findByToken(token)).thenReturn(Optional.empty());
-            assertThrows(UserNotFoundException.class,
+            assertThrows(ResourceNotFoundException.class,
                     () ->  studentService.getStudentByToken(token));
             verify(studentDAO).findByToken(token);
         }
@@ -319,8 +319,8 @@ public class StudentServiceTests {
         }
 
         @Test
-        @DisplayName("Should throw UserNotFoundException when teacher not found")
-        void shouldThrowUserNotFoundExceptionWhenTeacherNotFound() {
+        @DisplayName("Should throw ResourceNotFoundException when teacher not found")
+        void shouldThrowResourceNotFoundExceptionWhenTeacherNotFound() {
             StudentDTO studentDTO = new StudentDTO(
                     null,
                     new UserDTO(null, "new@okcps.org", "New", "Student", "STUDENT"),
@@ -330,7 +330,7 @@ public class StudentServiceTests {
             );
             when(studentDAO.findByUserEmail(studentDTO.getUser().getEmail())).thenReturn(Optional.empty());
             when(teacherDAO.findById(studentDTO.getTeacher().getId())).thenReturn(Optional.empty());
-            assertThrows(UserNotFoundException.class, () -> studentService.createStudent(studentDTO));
+            assertThrows(ResourceNotFoundException.class, () -> studentService.createStudent(studentDTO));
             verify(studentDAO).findByUserEmail(studentDTO.getUser().getEmail());
             verify(teacherDAO).findById(studentDTO.getTeacher().getId());
             verify(studentDAO, never()).save(any(Student.class));
@@ -436,8 +436,8 @@ public class StudentServiceTests {
         }
 
         @Test
-        @DisplayName("Should throw UserNotFoundException when student not found")
-        void shouldThrowUserNotFoundExceptionWhenStudentNotFound() {
+        @DisplayName("Should throw ResourceNotFoundException when student not found")
+        void shouldThrowResourceNotFoundExceptionWhenStudentNotFound() {
             Long studentId = 999L;
             StudentDTO updateDTO = new StudentDTO(
                     studentId,
@@ -448,14 +448,14 @@ public class StudentServiceTests {
             );
             when(studentDAO.findById(studentId)).thenReturn(Optional.empty());
             assertThrows(
-                    UserNotFoundException.class,
+                    ResourceNotFoundException.class,
                     () -> studentService.updateStudent(studentId, updateDTO)
             );
         }
 
         @Test
-        @DisplayName("Should throw UserNotFoundException when new teacher not found")
-        void shouldThrowUserNotFoundExceptionWhenNewTeacherNotFound() {
+        @DisplayName("Should throw ResourceNotFoundException when new teacher not found")
+        void shouldThrowResourceNotFoundExceptionWhenNewTeacherNotFound() {
             Long studentId = 1L;
             Student existingStudent = createStudent(studentId, 100);
             StudentDTO updateDTO = new StudentDTO(
@@ -468,7 +468,7 @@ public class StudentServiceTests {
             when(studentDAO.findById(studentId)).thenReturn(Optional.of(existingStudent));
             when(teacherDAO.findById(999L)).thenReturn(Optional.empty());
             assertThrows(
-                    UserNotFoundException.class,
+                    ResourceNotFoundException.class,
                     () -> studentService.updateStudent(studentId, updateDTO)
             );
         }
@@ -513,12 +513,12 @@ public class StudentServiceTests {
         }
 
         @Test
-        @DisplayName("Should throw UserNotFoundException when student not found")
-        void shouldThrowUserNotFoundExceptionWhenStudentNotFound() {
+        @DisplayName("Should throw ResourceNotFoundException when student not found")
+        void shouldThrowResourceNotFoundExceptionWhenStudentNotFound() {
             Long studentId = 999L;
             when(studentDAO.findById(studentId)).thenReturn(Optional.empty());
             assertThrows(
-                    UserNotFoundException.class,
+                    ResourceNotFoundException.class,
                     () -> studentService.deleteStudent(studentId)
             );
         }

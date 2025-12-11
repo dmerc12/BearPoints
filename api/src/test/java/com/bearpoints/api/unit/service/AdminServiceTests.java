@@ -7,7 +7,7 @@ import com.bearpoints.api.dto.UserDTO;
 import com.bearpoints.api.entity.Role;
 import com.bearpoints.api.entity.User;
 import com.bearpoints.api.exception.DuplicateResourceException;
-import com.bearpoints.api.exception.UserNotFoundException;
+import com.bearpoints.api.exception.ResourceNotFoundException;
 import com.bearpoints.api.service.impl.AdminServiceImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -174,20 +174,20 @@ public class AdminServiceTests {
         }
 
         @Test
-        @DisplayName("Should throw UserNotFoundException when admin user not found")
-        void shouldThrowUserNotFoundExceptionWhenAdminUserNotFound() {
+        @DisplayName("Should throw ResourceNotFoundException when admin user not found")
+        void shouldThrowResourceNotFoundExceptionWhenAdminUserNotFound() {
             Long adminId = 999L;
             when(userDAO.findById(adminId)).thenReturn(Optional.empty());
-            assertThrows(UserNotFoundException.class, () -> adminService.getAdminById(adminId));
+            assertThrows(ResourceNotFoundException.class, () -> adminService.getAdminById(adminId));
         }
 
         @Test
-        @DisplayName("Should throw UserNotFoundException when user exists but is not admin")
-        void shouldThrowUserNotFoundExceptionWhenUserExistsButIsNotAdmin() {
+        @DisplayName("Should throw ResourceNotFoundException when user exists but is not admin")
+        void shouldThrowResourceNotFoundExceptionWhenUserExistsButIsNotAdmin() {
             Long userId = 1L;
             User studentUser = createUser(userId, "student@okcps.org", "Student", "User", Role.STUDENT);
             when(userDAO.findById(userId)).thenReturn(Optional.of(studentUser));
-            assertThrows(UserNotFoundException.class, () -> adminService.getAdminById(userId));
+            assertThrows(ResourceNotFoundException.class, () -> adminService.getAdminById(userId));
         }
     }
 
@@ -323,26 +323,26 @@ public class AdminServiceTests {
         }
 
         @Test
-        @DisplayName("Should throw UserNotFoundException when admin user not found")
-        void shouldThrowUserNotFoundExceptionWhenAdminUserNotFound() {
+        @DisplayName("Should throw ResourceNotFoundException when admin user not found")
+        void shouldThrowResourceNotFoundExceptionWhenAdminUserNotFound() {
             Long adminId = 999L;
             UserDTO updateDTO = new UserDTO(createUser(adminId, "new@okcps.org", "New", "Last-Name", Role.ADMIN));
             when(userDAO.findById(adminId)).thenReturn(Optional.empty());
             assertThrows(
-                    UserNotFoundException.class,
+                    ResourceNotFoundException.class,
                     () -> adminService.updateAdmin(adminId, updateDTO)
             );
         }
 
         @Test
-        @DisplayName("Should throw UserNotFoundException when user exists but is student")
-        void shouldThrowUserNotFoundExceptionWhenUserExistsButIsStudent() {
+        @DisplayName("Should throw ResourceNotFoundException when user exists but is student")
+        void shouldThrowResourceNotFoundExceptionWhenUserExistsButIsStudent() {
             Long userId = 1L;
             User studentUser = createUser(userId, "student@okcps.org", "Student", "User", Role.STUDENT);
             UserDTO updateDTO = new UserDTO(createUser(userId, "new@okcps.org", "New", "Name", Role.ADMIN));
             when(userDAO.findById(userId)).thenReturn(Optional.of(studentUser));
             assertThrows(
-                    UserNotFoundException.class,
+                    ResourceNotFoundException.class,
                     () -> adminService.updateAdmin(userId, updateDTO)
             );
             verify(userDAO).findById(userId);
@@ -351,14 +351,14 @@ public class AdminServiceTests {
         }
 
         @Test
-        @DisplayName("Should throw UserNotFoundException when user exists but is teacher")
-        void shouldThrowUserNotFoundExceptionWhenUserExistsButIsTeacher() {
+        @DisplayName("Should throw ResourceNotFoundException when user exists but is teacher")
+        void shouldThrowResourceNotFoundExceptionWhenUserExistsButIsTeacher() {
             Long userId = 1L;
             User teacherUser = createUser(userId, "teacher@okcps.org", "Teacher", "User", Role.TEACHER);
             UserDTO updateDTO = new UserDTO(createUser(userId, "new@okcps.org", "New", "Name", Role.ADMIN));
             when(userDAO.findById(userId)).thenReturn(Optional.of(teacherUser));
             assertThrows(
-                    UserNotFoundException.class,
+                    ResourceNotFoundException.class,
                     () -> adminService.updateAdmin(userId, updateDTO)
             );
             verify(userDAO).findById(userId);
@@ -382,20 +382,20 @@ public class AdminServiceTests {
         }
 
         @Test
-        @DisplayName("Should throw UserNotFoundException when admin user not found")
-        void shouldThrowUserNotFoundExceptionWhenAdminUserNotFound() {
+        @DisplayName("Should throw ResourceNotFoundException when admin user not found")
+        void shouldThrowResourceNotFoundExceptionWhenAdminUserNotFound() {
             Long adminId = 999L;
             when(userDAO.findById(adminId)).thenReturn(Optional.empty());
-            assertThrows(UserNotFoundException.class, () -> adminService.deleteAdmin(adminId));
+            assertThrows(ResourceNotFoundException.class, () -> adminService.deleteAdmin(adminId));
         }
 
         @Test
-        @DisplayName("Should throw UserNotFoundException when user exists but is not admin")
-        void shouldThrowUserNotFoundExceptionWhenUserExistsButIsNotAdmin() {
+        @DisplayName("Should throw ResourceNotFoundException when user exists but is not admin")
+        void shouldThrowResourceNotFoundExceptionWhenUserExistsButIsNotAdmin() {
             Long userId = 1L;
             User teacherUser = createUser(userId, "teacher@okcps.org", "Teacher", "User", Role.TEACHER);
             when(userDAO.findById(userId)).thenReturn(Optional.of(teacherUser));
-            assertThrows(UserNotFoundException.class, () -> adminService.deleteAdmin(userId));
+            assertThrows(ResourceNotFoundException.class, () -> adminService.deleteAdmin(userId));
             verify(userDAO).findById(userId);
             verify(userDAO, never()).delete(any(User.class));
         }

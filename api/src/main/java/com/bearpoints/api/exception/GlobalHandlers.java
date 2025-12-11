@@ -27,7 +27,7 @@ import java.util.Map;
  *
  * <p>Current exception handlers:
  * <ul>
- *     <li>{@link UserNotFoundException} - Returns HTTP 404 Not Found</li>
+ *     <li>{@link ResourceNotFoundException} - Returns HTTP 404 Not Found</li>
  *     <li>{@link MethodArgumentNotValidException} - Returns HTTP 400 Bad Request with validation errors</li>
  *     <li>{@link DataIntegrityViolationException} - Returns HTTP 409 Conflict for duplicate resources</li>
  *     <li>{@link IllegalArgumentException} - Returns HTTP 400 Bad Request</li>
@@ -46,12 +46,12 @@ public class GlobalHandlers {
      * Handles User not found exceptions.
      * <p>Returns a 404 Not Found status with the exception message in the response body.
      *
-     * @param ex The caught UserNotFoundException
+     * @param ex The caught ResourceNotFoundException
      * @return Response entity with error message and status code
      */
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<ErrorResponseDTO> handleUserNotFoundException(UserNotFoundException ex) {
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponseDTO> handleUserNotFoundException(ResourceNotFoundException ex) {
         logger.warn("User not found", ex);
         ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO(ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponseDTO);

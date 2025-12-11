@@ -5,7 +5,7 @@ import com.bearpoints.api.dto.*;
 import com.bearpoints.api.entity.Role;
 import com.bearpoints.api.entity.User;
 import com.bearpoints.api.exception.DuplicateResourceException;
-import com.bearpoints.api.exception.UserNotFoundException;
+import com.bearpoints.api.exception.ResourceNotFoundException;
 import com.bearpoints.api.service.AdminService;
 import com.bearpoints.api.specification.AdminSpecification;
 import lombok.RequiredArgsConstructor;
@@ -72,7 +72,7 @@ public class AdminServiceImpl implements AdminService {
         log.debug("Retrieving admin user by ID: {}", id);
         User admin = userDAO.findById(id)
                 .filter(user -> user.getRole() == Role.ADMIN)
-                .orElseThrow(() -> new UserNotFoundException("Administrator not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Administrator not found with ID: " + id));
         log.debug("Successfully retrieved admin user ID: {}", id);
         return new UserDTO(admin);
     }
@@ -108,7 +108,7 @@ public class AdminServiceImpl implements AdminService {
         log.debug("Updating admin user ID: {}", id);
         User admin = userDAO.findById(id)
                 .filter(user -> user.getRole() == Role.ADMIN)
-                .orElseThrow(() -> new UserNotFoundException("Administrator not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Administrator not found with ID: " + id));
         if (!admin.getEmail().equals(userDTO.getEmail())) {
             Optional<User> existingEmail = userDAO.findByEmail(userDTO.getEmail());
             if (existingEmail.isPresent()) {
@@ -132,7 +132,7 @@ public class AdminServiceImpl implements AdminService {
         log.debug("Deleting admin user with ID: {}", id);
         User admin = userDAO.findById(id)
                 .filter(user -> user.getRole() == Role.ADMIN)
-                .orElseThrow(() -> new UserNotFoundException("Administrator not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Administrator not found with ID: " + id));
         userDAO.delete(admin);
         log.info("Successfully deleted admin user with ID: {}", id);
     }

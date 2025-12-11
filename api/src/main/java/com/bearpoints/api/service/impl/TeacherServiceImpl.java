@@ -9,7 +9,7 @@ import com.bearpoints.api.entity.Role;
 import com.bearpoints.api.entity.Teacher;
 import com.bearpoints.api.entity.User;
 import com.bearpoints.api.exception.DuplicateResourceException;
-import com.bearpoints.api.exception.UserNotFoundException;
+import com.bearpoints.api.exception.ResourceNotFoundException;
 import com.bearpoints.api.service.TeacherService;
 import com.bearpoints.api.specification.TeacherSpecification;
 import lombok.RequiredArgsConstructor;
@@ -58,7 +58,7 @@ public class TeacherServiceImpl implements TeacherService {
     public TeacherDTO getTeacherById(Long id) {
         log.debug("Retrieving teacher by ID: {}", id);
         Teacher teacher = teacherDAO.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("Teacher not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Teacher not found with ID: " + id));
         log.debug("Successfully retrieved teacher ID: {}", id);
         return new TeacherDTO(teacher);
     }
@@ -91,7 +91,7 @@ public class TeacherServiceImpl implements TeacherService {
     public TeacherDTO updateTeacher(Long id, TeacherDTO teacherDTO) {
         log.debug("Updating teacher with ID: {}", id);
         Teacher existingTeacher = teacherDAO.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("Teacher not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Teacher not found with ID: " + id));
         User existingUser = existingTeacher.getUser();
         String newEmail = teacherDTO.getUser().getEmail();
         if (!existingUser.getEmail().equals(newEmail)) {
@@ -114,7 +114,7 @@ public class TeacherServiceImpl implements TeacherService {
     public void deleteTeacher(Long id) {
         log.debug("Deleting teacher with ID: {}", id);
         Teacher teacher = teacherDAO.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("Teacher not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Teacher not found with ID: " + id));
         teacherDAO.delete(teacher);
         log.info("Successfully deleted teacher with ID: {}", id);
     }

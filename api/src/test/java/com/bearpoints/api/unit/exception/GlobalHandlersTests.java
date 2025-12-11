@@ -3,7 +3,7 @@ package com.bearpoints.api.unit.exception;
 import com.bearpoints.api.dto.ErrorResponseDTO;
 import com.bearpoints.api.exception.DuplicateResourceException;
 import com.bearpoints.api.exception.GlobalHandlers;
-import com.bearpoints.api.exception.UserNotFoundException;
+import com.bearpoints.api.exception.ResourceNotFoundException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.fasterxml.jackson.databind.exc.ValueInstantiationException;
@@ -52,10 +52,10 @@ public class GlobalHandlersTests {
     private GlobalHandlers globalHandlers;
 
     @Test
-    @DisplayName("Handle UserNotFoundException - returns 404 with message")
-    void handleUserNotFoundException() {
+    @DisplayName("Handle ResourceNotFoundException - returns 404 with message")
+    void handleResourceNotFoundException() {
         String errorMessage = "User not found with ID: 123";
-        UserNotFoundException ex = new UserNotFoundException(errorMessage);
+        ResourceNotFoundException ex = new ResourceNotFoundException(errorMessage);
         ResponseEntity<ErrorResponseDTO> response = globalHandlers.handleUserNotFoundException(ex);
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertNotNull(response.getBody());

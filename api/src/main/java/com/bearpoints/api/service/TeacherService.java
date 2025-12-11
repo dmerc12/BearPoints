@@ -3,7 +3,7 @@ package com.bearpoints.api.service;
 import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.dto.TeacherDTO;
 import com.bearpoints.api.dto.TeacherSearchCriteria;
-import com.bearpoints.api.exception.UserNotFoundException;
+import com.bearpoints.api.exception.ResourceNotFoundException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Pageable;
 
@@ -44,7 +44,7 @@ public interface TeacherService {
      *
      * @param id ID of the teacher to retrieve
      * @return Teacher user DTO
-     * @throws UserNotFoundException if teacher not found
+     * @throws ResourceNotFoundException if teacher not found
      */
     TeacherDTO getTeacherById(Long id);
 
@@ -71,7 +71,7 @@ public interface TeacherService {
      * Deletes a teacher by ID.
      *
      * @param id Teacher ID to delete
-     * @throws UserNotFoundException if teacher not found
+     * @throws ResourceNotFoundException if teacher not found
      */
     void deleteTeacher(Long id);
 }

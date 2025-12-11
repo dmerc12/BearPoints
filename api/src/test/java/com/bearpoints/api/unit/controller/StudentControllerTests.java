@@ -3,7 +3,7 @@ package com.bearpoints.api.unit.controller;
 import com.bearpoints.api.controller.StudentController;
 import com.bearpoints.api.dto.*;
 import com.bearpoints.api.entity.Role;
-import com.bearpoints.api.exception.UserNotFoundException;
+import com.bearpoints.api.exception.ResourceNotFoundException;
 import com.bearpoints.api.service.StudentService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -376,8 +376,8 @@ public class StudentControllerTests {
         void shouldReturn404WhenStudentNotFound() {
             Long studentId = 999L;
             when(studentService.getStudentById(studentId))
-                    .thenThrow(new UserNotFoundException("Student not found with ID: " + studentId));
-            assertThrows(UserNotFoundException.class, () -> studentController.getStudentById(studentId));
+                    .thenThrow(new ResourceNotFoundException("Student not found with ID: " + studentId));
+            assertThrows(ResourceNotFoundException.class, () -> studentController.getStudentById(studentId));
             verify(studentService).getStudentById(studentId);
         }
     }
@@ -404,8 +404,8 @@ public class StudentControllerTests {
         void shouldReturn404WhenStudentNotFoundByToken() {
             String token = "invalid-token";
             when(studentService.getStudentByToken(token))
-                    .thenThrow(new UserNotFoundException("Student not found with token: " + token));
-            assertThrows(UserNotFoundException.class, () -> studentController.getStudentByToken(token));
+                    .thenThrow(new ResourceNotFoundException("Student not found with token: " + token));
+            assertThrows(ResourceNotFoundException.class, () -> studentController.getStudentByToken(token));
             verify(studentService).getStudentByToken(token);
         }
     }
@@ -473,8 +473,8 @@ public class StudentControllerTests {
             StudentDTO studentDTO = createStudentDTO(studentId, "nonexistent@okcps.org",
                     "Nonexistent", "Student", 0, "token", 1L);
             when(studentService.updateStudent(studentId, studentDTO))
-                    .thenThrow(new UserNotFoundException("Student not found with ID: " + studentId));
-            assertThrows(UserNotFoundException.class, () -> studentController.updateStudent(studentId, studentDTO));
+                    .thenThrow(new ResourceNotFoundException("Student not found with ID: " + studentId));
+            assertThrows(ResourceNotFoundException.class, () -> studentController.updateStudent(studentId, studentDTO));
             verify(studentService).updateStudent(studentId, studentDTO);
         }
     }
@@ -496,9 +496,9 @@ public class StudentControllerTests {
         @DisplayName("Should return 404 when deleting non-existent student")
         void shouldReturn404WhenDeletingNonExistentStudent() {
             Long studentId = 999L;
-            doThrow(new UserNotFoundException("Student not found with ID: " + studentId))
+            doThrow(new ResourceNotFoundException("Student not found with ID: " + studentId))
                     .when(studentService).deleteStudent(studentId);
-            assertThrows(UserNotFoundException.class, () -> studentController.deleteStudent(studentId));
+            assertThrows(ResourceNotFoundException.class, () -> studentController.deleteStudent(studentId));
             verify(studentService).deleteStudent(studentId);
         }
     }
