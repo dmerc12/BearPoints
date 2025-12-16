@@ -126,7 +126,18 @@ public class BehaviorTypeServiceImpl implements BehaviorTypeService {
         log.debug("Deleting behavior type with ID: {}", id);
         BehaviorType behaviorType = behaviorTypeDAO.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Behavior type not found with ID: " + id));
-        behaviorTypeDAO.delete(behaviorType);
-        log.info("Successfully deleted behavior type with ID: {}", id);
+        // Check if behavior type is used in any brag logs
+        boolean isUsed = behaviorTypeDAO.isBehaviorTypeUsed(id);
+        if (isUsed) {
+            // Behavior type is used - soft delete (deactivate)
+            behaviorType.setActive(false);
+            behaviorTypeDAO.save(behaviorType);
+            log.warn("Behavior type '{}' (ID: {}) is used in brag logs and has been deactivated",
+                    behaviorType.getName(), id);
+        } else {
+            // Behavior type is not used - hard delete
+            behaviorTypeDAO.delete(behaviorType);
+            log.info("Behavior type'{}' (ID: {}) has been permanently deleted", behaviorType.getName(), id);
+        }
     }
 }

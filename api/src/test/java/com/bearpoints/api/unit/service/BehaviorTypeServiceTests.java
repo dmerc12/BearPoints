@@ -330,14 +330,34 @@ public class BehaviorTypeServiceTests {
     @DisplayName("When deleting behavior type")
     class WhenDeletingBehaviorType {
         @Test
-        @DisplayName("Should delete behavior type successfully")
-        void shouldDeleteBeBehaviorTypeSuccessfully() {
+        @DisplayName("Should hard delete behavior type when not used")
+        void shouldHardDeleteBeBehaviorTypeWhenNotUsed() {
             Long behaviorTypeId = 1L;
             BehaviorType behaviorType = createBehaviorType(behaviorTypeId, "Test", 1, true);
             when(behaviorTypeDAO.findById(behaviorTypeId)).thenReturn(Optional.of(behaviorType));
+            when(behaviorTypeDAO.isBehaviorTypeUsed(behaviorTypeId)).thenReturn(false);
             behaviorTypeService.deleteBehaviorType(behaviorTypeId);
             verify(behaviorTypeDAO).findById(behaviorTypeId);
+            verify(behaviorTypeDAO).isBehaviorTypeUsed(behaviorTypeId);
             verify(behaviorTypeDAO).delete(behaviorType);
+            verify(behaviorTypeDAO, never()).save(any(BehaviorType.class));
+        }
+
+        @Test
+        @DisplayName("Should soft delete behavior type when used in brag logs")
+        void shouldSoftDeleteBeBehaviorTypeWhenUsedInBragLogs() {
+            Long behaviorTypeId = 1L;
+            BehaviorType behaviorType = createBehaviorType(behaviorTypeId, "Test", 1, true);
+            when(behaviorTypeDAO.findById(behaviorTypeId)).thenReturn(Optional.of(behaviorType));
+            when(behaviorTypeDAO.isBehaviorTypeUsed(behaviorTypeId)).thenReturn(true);
+            when(behaviorTypeDAO.save(any(BehaviorType.class))).thenAnswer(
+                    invocation -> invocation.getArgument(0));
+            behaviorTypeService.deleteBehaviorType(behaviorTypeId);
+            assertFalse(behaviorType.getActive());
+            verify(behaviorTypeDAO).findById(behaviorTypeId);
+            verify(behaviorTypeDAO).isBehaviorTypeUsed(behaviorTypeId);
+            verify(behaviorTypeDAO).save(behaviorType);
+            verify(behaviorTypeDAO, never()).delete(any(BehaviorType.class));
         }
 
         @Test
