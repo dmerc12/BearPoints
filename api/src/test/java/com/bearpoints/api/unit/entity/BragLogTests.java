@@ -26,13 +26,13 @@ import static org.assertj.core.api.Assertions.assertThat;
  *     <li>Student (null)</li>
  *     <li>Teacher (null)</li>
  *     <li>Behaviors (empty)</li>
- *     <li>Points generated (null, min)</li>
+ *     <li>Points generated (min when set)</li>
  *     <li>Notes (max)</li>
  *  </ul>
  *
  * @see BragLog*
  *
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 public class BragLogTests {
@@ -52,6 +52,7 @@ public class BragLogTests {
         BragLog bragLog = new BragLog();
         bragLog.setStudent(student);
         bragLog.setTeacher(teacher);
+        bragLog.setGrade(teacher.getGrade());
         bragLog.setBehaviors(Set.of(behaviorType));
         bragLog.setPointsGenerated(behaviorType.getPointValue());
         bragLog.setNotes("test notes");
@@ -60,7 +61,9 @@ public class BragLogTests {
 
     private BehaviorType createValidBehaviorType() {
         BehaviorType behaviorType = new BehaviorType();
-        behaviorType.setName("valid behavior type");
+        behaviorType.setName("valid behavior type" + System.currentTimeMillis());
+        behaviorType.setPointValue(3);
+        behaviorType.setActive(true);
         return behaviorType;
     }
 
@@ -126,40 +129,154 @@ public class BragLogTests {
                 .containsExactly("At least one behavior is required");
     }
 
-    /** Tests valid behavior type creation */
+    /** Tests valid brag log passes all constraints */
     @Test
-    @DisplayName("Valid behavior type passes all constraints")
+    @DisplayName("Valid brag log passes all constraints")
     public void testBragLogValid() {
         Set<ConstraintViolation<BragLog>> violations = validator.validate(validBragLog);
         assertThat(violations).isEmpty();
     }
 
-    /** Tests points generated validation */
+    /** Tests @PrePersist */
     @Nested
-    @DisplayName("Points generated validation")
-    class PointsGeneratedValidation {
-        /** Tests null points generated validation */
+    @DisplayName("Tests @PrePersist")
+    class PrePersistTests {
+        /** Tests @PrePersist calculates points generated from behaviors */
         @Test
-        @DisplayName("Null points generated fails validation")
-        public void behaviorTypePointValueNull() {
-            validBragLog.setPointsGenerated(null);
-            Set<ConstraintViolation<BragLog>> violations = validator.validate(validBragLog);
-            assertThat(violations)
-                    .filteredOn(v -> v.getPropertyPath().toString().equals("pointsGenerated"))
-                    .extracting(ConstraintViolation::getMessage)
-                    .containsExactly("Points generated is required");
+        @DisplayName("@PrePersist calculates points generated from behaviors when null")
+        public void testPrePersistCalculatesPointsGenerated() {
+            Teacher teacher = createValidTeacher();
+            Student student = createValidStudent(teacher);
+            BehaviorType behaviorTyp = createValidBehaviorType();
+            BragLog bragLog = new BragLog();
+            bragLog.setStudent(student);
+            bragLog.setTeacher(teacher);
+            bragLog.setBehaviors(Set.of(behaviorTyp));
+            bragLog.setDefaultsBeforePersist();
+            assertThat(bragLog.getPointsGenerated())
+                    .isEqualTo(behaviorTyp.getPointValue());
         }
 
-        /** Tests minimum points generated validation */
+        /** Tests @PrePersist sets grade level from teacher when null */
         @Test
-        @DisplayName("Minimum points generated fails validation")
-        public void bragLogPointsGeneratedMin() {
+        @DisplayName("@PrePersist sets grade level from teacher when null")
+        public void testPrePersistSetsGradeLevelFromTeacher() {
+            Teacher teacher = createValidTeacher();
+            Student student = createValidStudent(teacher);
+            BehaviorType behaviorType = createValidBehaviorType();
+            BragLog bragLog = new BragLog();
+            bragLog.setStudent(student);
+            bragLog.setTeacher(teacher);
+            bragLog.setBehaviors(Set.of(behaviorType));
+            bragLog.setNotes("test notes");
+            bragLog.setDefaultsBeforePersist();
+            assertThat(bragLog.getGrade()).isEqualTo(teacher.getGrade());
+        }
+
+        /** Tests @PrePersist doesn't override existing grade level */
+        @Test
+        @DisplayName("@PrePersist doesn't override existing grade level")
+        public void testPrePersistDoesNotOverrideExistingGradeLevel() {
+            Teacher teacher = createValidTeacher();
+            teacher.setGrade(GradeLevel.PRE_K);
+            Student student = createValidStudent(teacher);
+            BehaviorType behaviorType = createValidBehaviorType();
+            BragLog bragLog = new BragLog();
+            bragLog.setStudent(student);
+            bragLog.setTeacher(teacher);
+            bragLog.setGrade(GradeLevel.FIRST);
+            bragLog.setBehaviors(Set.of(behaviorType));
+            bragLog.setNotes("test notes");
+            bragLog.setDefaultsBeforePersist();
+            assertThat(bragLog.getGrade()).isEqualTo(GradeLevel.FIRST);
+        }
+
+        /** Tests @PrePersist doesn't override existing points generated */
+        @Test
+        @DisplayName("@PrePersist doesn't override existing points generated")
+        public void testPrePersistDoesNotOverrideExistingPointsGenerated() {
+            Teacher teacher = createValidTeacher();
+            Student student = createValidStudent(teacher);
+            BehaviorType behaviorType = createValidBehaviorType();
+            behaviorType.setPointValue(1);
+            BragLog bragLog = new BragLog();
+            bragLog.setStudent(student);
+            bragLog.setTeacher(teacher);
+            bragLog.setBehaviors(Set.of(behaviorType));
+            bragLog.setPointsGenerated(10);
+            bragLog.setNotes("test notes");
+            bragLog.setDefaultsBeforePersist();
+            assertThat(bragLog.getPointsGenerated()).isEqualTo(10);
+        }
+
+        /** Tests @PrePersist when teacher is null */
+        @Test
+        @DisplayName("@PrePersist doesn't set grade level when teacher is null")
+        public void testPrePersistDoesNotSetGradeLevelWhenTeacherIsNull() {
+            BehaviorType behaviorType = createValidBehaviorType();
+            BragLog bragLog = new BragLog();
+            bragLog.setBehaviors(Set.of(behaviorType));
+            bragLog.setNotes("test notes");
+            bragLog.setDefaultsBeforePersist();
+            assertThat(bragLog.getGrade()).isNull();
+        }
+
+        /** Tests @PrePersist when behaviors are null */
+        @Test
+        @DisplayName("@PrePersist doesn't set points generated when behaviors are null")
+        public void testPrePersistDoesNotSetPointsGeneratedWhenBehaviorsAreNull() {
+            Teacher teacher = createValidTeacher();
+            Student student = createValidStudent(teacher);
+            BragLog bragLog = new BragLog();
+            bragLog.setStudent(student);
+            bragLog.setTeacher(teacher);
+            bragLog.setNotes("test notes");
+            bragLog.setDefaultsBeforePersist();
+            assertThat(bragLog.getPointsGenerated()).isNull();
+        }
+
+        /** Tests @PrePersist doesn't set points generated when behaviors are empty (not null) */
+        @Test
+        @DisplayName("@PrePersist doesn't set points generated when behaviors are empty (not null)")
+        public void testPrePersistDoesNotSetPointsGeneratedWhenBehaviorsAreEmpty() {
+            Teacher teacher = createValidTeacher();
+            Student student = createValidStudent(teacher);
+            BragLog bragLog = new BragLog();
+            bragLog.setStudent(student);
+            bragLog.setTeacher(teacher);
+            bragLog.setBehaviors(Set.of());
+            bragLog.setNotes("test notes");
+            bragLog.setDefaultsBeforePersist();
+            assertThat(bragLog.getPointsGenerated()).isNull();
+        }
+
+    }
+
+    /** Tests points generated validation */
+    @Nested
+    @DisplayName("Points Generated validation")
+    class PointsGeneratedValidation {
+        /** Tests points generated validation when below minimum fails validation */
+        @Test
+        @DisplayName("Points generated below minimum fails validation")
+        public void testBragLogPointsGeneratedBelowMin() {
             validBragLog.setPointsGenerated(0);
             Set<ConstraintViolation<BragLog>> violations = validator.validate(validBragLog);
             assertThat(violations)
                     .filteredOn(v -> v.getPropertyPath().toString().equals("pointsGenerated"))
                     .extracting(ConstraintViolation::getMessage)
                     .containsExactly("Minimum points is 1");
+        }
+
+        /** Tests points generated passes when null (server will calculate) */
+        @Test
+        @DisplayName("Points generated null passes validation (server will calculate)")
+        public void testBragLogPointsGeneratedNull() {
+            validBragLog.setPointsGenerated(null);
+            Set<ConstraintViolation<BragLog>> violations = validator.validate(validBragLog);
+            assertThat(violations)
+                    .filteredOn(v -> v.getPropertyPath().toString().equals("pointsGenerated"))
+                    .isEmpty();
         }
     }
 

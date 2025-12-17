@@ -19,7 +19,7 @@ import java.util.Set;
  * @see Teacher
  * @see Syncable
  * @see BehaviorType
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @Data
@@ -57,6 +57,15 @@ public class BragLog implements Syncable {
     private Teacher teacher;
 
     /**
+     * Grade level at the time of the brag log creation.
+     * <p>Preserves historical accuracy when teachers/students change grades.
+     * <p>Server will set this automatically from the teacher's current grade.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "grade", nullable = false)
+    private GradeLevel grade;
+
+    /**
      * BearBrag's associated behaviors
      * <p>Table associating behaviors with brag logs:
      * <ul>
@@ -79,13 +88,14 @@ public class BragLog implements Syncable {
 
     /**
      * BearBrag's points generated
+     * <p>Server will calculate this automatically from the sum of selected behaviors' point values.
+     *
      * <p>Constraints:
      * <ul>
-     *     <li>Non-null</li>
-     *     <li>Minimum value</li>
+     *     <li>Non-null (after server calculation)</li>
+     *     <li>Minimum value of 1</li>
      * </ul>
      */
-    @NotNull(message = "Points generated is required")
     @Min(value = 1, message = "Minimum points is 1")
     @Column(name = "points_generated", nullable = false)
     private Integer pointsGenerated;
@@ -183,5 +193,24 @@ public class BragLog implements Syncable {
     @Override
     public void setSheetRowId(Integer rowId) {
         this.sheetRowId = rowId;
+    }
+
+    /**
+     * Sets default values before persisting the brag log.
+     * <p>Calculates points generated from behaviors if not set.
+     * <p>Sets grade level from teacher's current grade if not set.
+     */
+    @PrePersist
+    public void setDefaultsBeforePersist() {
+        // Set grade level from teacher if not set
+        if (this.grade == null && this.teacher != null) {
+            this.grade = this.teacher.getGrade();
+        }
+        // Calculate points generated from behaviors if not set
+        if (this.pointsGenerated == null && this.behaviors != null && !this.behaviors.isEmpty()) {
+            this.pointsGenerated = this.behaviors.stream()
+                    .mapToInt(BehaviorType::getPointValue)
+                    .sum();
+        }
     }
 }
