@@ -249,7 +249,34 @@ public class BragLogTests {
             bragLog.setDefaultsBeforePersist();
             assertThat(bragLog.getPointsGenerated()).isNull();
         }
+    }
 
+    /** Tests grade validation */
+    @Nested
+    @DisplayName("Grade validation")
+    class GradeValidation {
+        /** Tests grade validation for all valid grade levels */
+        @Test
+        @DisplayName("All valid grade levels pass grade validation")
+        void allValidGradeLevelsPassGradeValidation() {
+            for (GradeLevel grade : GradeLevel.values()) {
+                validBragLog.setGrade(grade);
+                Set<ConstraintViolation<BragLog>> violations = validator.validate(validBragLog);
+                assertThat(violations).isEmpty();
+            }
+        }
+
+        /** Tests null grade validation */
+        @Test
+        @DisplayName("Null grade level fails validation")
+        void nullGradeLevelFailsValidation() {
+            validBragLog.setGrade(null);
+            Set<ConstraintViolation<BragLog>> violations = validator.validate(validBragLog);
+            assertThat(violations)
+                    .filteredOn(v -> v.getPropertyPath().toString().equals("grade"))
+                    .extracting(ConstraintViolation::getMessage)
+                    .containsExactly("Grade is required");
+        }
     }
 
     /** Tests points generated validation */

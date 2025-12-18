@@ -63,6 +63,7 @@ public class BragLog implements Syncable {
      */
     @Enumerated(EnumType.STRING)
     @Column(name = "grade", nullable = false)
+    @NotNull(message = "Grade is required")
     private GradeLevel grade;
 
     /**
