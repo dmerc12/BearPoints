@@ -203,6 +203,10 @@ public class BragLog implements Syncable {
      */
     @PrePersist
     public void setDefaultsBeforePersist() {
+        // Set teacher from student if not set
+        if (this.teacher == null && this.student != null) {
+            this.teacher = this.student.getTeacher();
+        }
         // Set grade level from teacher if not set
         if (this.grade == null && this.teacher != null) {
             this.grade = this.teacher.getGrade();
