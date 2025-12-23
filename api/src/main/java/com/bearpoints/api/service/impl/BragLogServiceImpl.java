@@ -7,7 +7,6 @@ import com.bearpoints.api.dao.BragLogDAO;
 import com.bearpoints.api.dao.StudentDAO;
 import com.bearpoints.api.dao.TeacherDAO;
 import com.bearpoints.api.dto.BragLogDTO;
-import com.bearpoints.api.dto.BragLogRequest;
 import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.entity.*;
 import com.bearpoints.api.service.BragLogService;
@@ -21,13 +20,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Represents service responsible for public brag log submissions.
  * <p>Implements with {@link BragLogService}
  *
- * @see BragLogRequest
  * @see Student
  * @see StudentDAO
  * @see Teacher
@@ -45,13 +42,11 @@ import java.util.stream.Collectors;
 public class BragLogServiceImpl implements BragLogService {
     private final BragLogDAO bragLogDAO;
     private final StudentDAO studentDAO;
-    private final TeacherDAO teacherDAO;
     private final BehaviorTypeDAO behaviorTypeDAO;
 
-    public BragLogServiceImpl(BragLogDAO bragLogDAO, StudentDAO studentDAO, TeacherDAO teacherDAO, BehaviorTypeDAO behaviorTypeDAO) {
+    public BragLogServiceImpl(BragLogDAO bragLogDAO, StudentDAO studentDAO, BehaviorTypeDAO behaviorTypeDAO) {
         this.bragLogDAO = bragLogDAO;
         this.studentDAO = studentDAO;
-        this.teacherDAO = teacherDAO;
         this.behaviorTypeDAO = behaviorTypeDAO;
     }
 
@@ -171,44 +166,5 @@ public class BragLogServiceImpl implements BragLogService {
                 .orElseThrow(() -> new ResourceNotFoundException("Brag log not found with ID: " + id));
         bragLogDAO.delete(bragLog);
         log.info("Successfully deleted brag log with ID: {}", id);
-    }
-
-    /**
-     * DEPRECATED
-     * Service to assist in submitting brag logs
-     */
-    @Override
-    @Transactional
-    public BragLog submitBragLog(BragLogRequest request) {
-        log.info("Submitting brag log for student {}", request.getStudentId());
-        // Validate behaviors are not empty
-        if (request.getBehaviorIds().isEmpty()) {
-            throw new IllegalArgumentException("At least one behavior must be selected");
-        }
-        // Validate student exists
-        Student student = studentDAO.findById(request.getStudentId())
-                .orElseThrow(() -> new IllegalArgumentException("Invalid student ID"));
-        // Validate teacher exists
-        Teacher teacher = teacherDAO.findById(request.getTeacherId())
-                .orElseThrow(() -> new IllegalArgumentException("Invalid teacher ID"));
-        // Validate student is in teachers class
-        if (!student.getTeacher().getId().equals(teacher.getId())) {
-            throw new IllegalArgumentException("Teacher does not teach this student");
-        }
-        // Get behaviors
-        Set<BehaviorType> behaviors = request.getBehaviorIds().stream()
-                .map(id -> behaviorTypeDAO.findById(id)
-                        .orElseThrow(() -> new IllegalArgumentException("Invalid behavior ID: " + id)))
-                        .collect(Collectors.toSet());
-        // Create brag log
-        BragLog bragLog = new BragLog();
-        bragLog.setStudent(student);
-        bragLog.setTeacher(teacher);
-        bragLog.setBehaviors(behaviors);
-        bragLog.setPointsGenerated(
-                behaviors.stream().mapToInt(BehaviorType::getPointValue).sum()
-        );
-        bragLog.setNotes(request.getNotes());
-        return bragLogDAO.save(bragLog);
     }
 }

@@ -2,9 +2,7 @@ package com.bearpoints.api.controller;
 
 import com.bearpoints.api.criteria.BragLogSearchCriteria;
 import com.bearpoints.api.dto.BragLogDTO;
-import com.bearpoints.api.dto.BragLogRequest;
 import com.bearpoints.api.dto.PagedResponseDTO;
-import com.bearpoints.api.entity.BragLog;
 import com.bearpoints.api.entity.GradeLevel;
 import com.bearpoints.api.service.BragLogService;
 import jakarta.validation.Valid;
@@ -19,7 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.net.URI;
 import java.time.LocalDateTime;
 
 /**
@@ -215,23 +212,5 @@ public class BragLogController {
 
     private String[] splitSortParams(String sort) {
         return sort.split(",");
-    }
-
-    /**
-     * DEPRECATED
-     * Submits a new brag log entry.
-     * <p>Processes valid brag log submissions and returns the resource location.
-     *
-     * @param request Brag log submission data (required)
-     * @return HTTP 201 Created with location header pointing to the new resource
-     * @throws IllegalArgumentException for invalid request data (HTTP 400)
-     */
-    @PostMapping("/submit")
-    public ResponseEntity<Void> submitBragLog(
-            @Valid @RequestBody BragLogRequest request) {
-        BragLog log = bragLogService.submitBragLog(request);
-        return ResponseEntity
-                .created(URI.create("api/brag-logs/" + log.getId()))
-                .build();
     }
 }

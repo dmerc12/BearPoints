@@ -2,9 +2,7 @@ package com.bearpoints.api.service;
 
 import com.bearpoints.api.criteria.BragLogSearchCriteria;
 import com.bearpoints.api.dto.BragLogDTO;
-import com.bearpoints.api.dto.BragLogRequest;
 import com.bearpoints.api.dto.PagedResponseDTO;
-import com.bearpoints.api.entity.BragLog;
 import com.bearpoints.api.exception.ResourceNotFoundException;
 import org.springframework.data.domain.Pageable;
 
@@ -76,10 +74,4 @@ public interface BragLogService {
      * @throws ResourceNotFoundException if brag log not found
      */
     void deleteBragLog(Long id);
-
-    /**
-     * DEPRECATED
-     * Service to assist in submitting brag logs
-     * */
-    BragLog submitBragLog(BragLogRequest request);
 }

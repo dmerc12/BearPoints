@@ -4,13 +4,10 @@ import com.bearpoints.api.controller.BragLogController;
 import com.bearpoints.api.criteria.BragLogSearchCriteria;
 import com.bearpoints.api.dto.BehaviorTypeDTO;
 import com.bearpoints.api.dto.BragLogDTO;
-import com.bearpoints.api.dto.BragLogRequest;
 import com.bearpoints.api.dto.PagedResponseDTO;
-import com.bearpoints.api.entity.BragLog;
 import com.bearpoints.api.entity.GradeLevel;
 import com.bearpoints.api.exception.ResourceNotFoundException;
 import com.bearpoints.api.service.BragLogService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -24,11 +21,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
-import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
@@ -59,20 +52,6 @@ public class BragLogControllerTests {
 
     @InjectMocks
     private BragLogController bragLogController;
-
-    // DEPRECATED
-    private BragLogRequest bragLogRequest;
-    private BragLog createdBragLog;
-
-    // DEPRECATED
-    @BeforeEach
-    public void setup() {
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
-        bragLogRequest = new BragLogRequest(1L, 1L, Set.of(1L, 2L), "Test notes");
-        createdBragLog = new BragLog();
-        createdBragLog.setId(100L);
-    }
 
     private BragLogDTO createBragLogDTO(Long id, Long teacherId, Long studentId, String studentName, String teacherName) {
         BehaviorTypeDTO behavior1 = new BehaviorTypeDTO(1L, "Participated", 2, true);
@@ -401,135 +380,6 @@ public class BragLogControllerTests {
             assertThrows(ResourceNotFoundException.class,
                     () -> bragLogController.deleteBragLog(bragLogId));
             verify(bragLogService).deleteBragLog(bragLogId);
-        }
-    }
-
-    @Nested
-    @DisplayName("DEPRECATED tests")
-    class DeprecatedTests {
-        /**
-         * Tests successful brag log submission scenarios.
-         */
-        @Nested
-        @DisplayName("Successful submission scenarios")
-        class SuccessfulScenarios {
-            /**
-             * Tests that valid requests are properly processed.
-             * <p>Verifies:
-             * <ul>
-             *     <li>HTTP 201 Created status</li>
-             *     <li>Location header contains correct resource path</li>
-             *     <li>Response body is empty</li>
-             * </ul>
-             */
-            @Test
-            @DisplayName("POST /brag-logs returns 201 with location header")
-            void submitBragLog_ValidRequest_ReturnsCreated() {
-                when(bragLogService.submitBragLog(any(BragLogRequest.class))).thenReturn(createdBragLog);
-                ResponseEntity<Void> response = bragLogController.submitBragLog(bragLogRequest);
-                assertEquals(HttpStatus.CREATED, response.getStatusCode());
-                URI location = response.getHeaders().getLocation();
-                assertNotNull(location);
-                assertTrue(location.toString().endsWith("api/brag-logs/100"));
-                assertNull(response.getBody());
-            }
-        }
-
-        /**
-         * Tests error scenarios and exception handling.
-         */
-        @Nested
-        @DisplayName("Error scenarios")
-        class ErrorScenarios {
-            /**
-             * Tests handling of invalid student ID.
-             * <p>Verifies:
-             * <ul>
-             *     <li>Service exception is propagated</li>
-             *     <li>HTTP 400 Bad Request status</li>
-             * </ul>
-             */
-            @Test
-            @DisplayName("Invalid student ID returns 400")
-            void submitBragLog_InvalidStudent_ReturnsBadRequest() {
-                when(bragLogService.submitBragLog(bragLogRequest))
-                        .thenThrow(new IllegalArgumentException("Invalid student ID"));
-                IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                        () -> bragLogController.submitBragLog(bragLogRequest));
-                assertEquals("Invalid student ID", exception.getMessage());
-            }
-
-            /**
-             * Tests handling of invalid teacher ID.
-             * <p>Verifies:
-             * <ul>
-             *     <li>Service exception is propagated</li>
-             *     <li>HTTP 400 Bad Request status</li>
-             * </ul>
-             */
-            @Test
-            @DisplayName("Invalid teacher ID returns 400")
-            void submitBragLog_InvalidTeacher_ReturnsBadRequest() {
-                when(bragLogService.submitBragLog(bragLogRequest))
-                        .thenThrow(new IllegalArgumentException("Invalid teacher ID"));
-                IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                        () -> bragLogController.submitBragLog(bragLogRequest));
-                assertEquals("Invalid teacher ID", exception.getMessage());
-            }
-
-            /**
-             * Tests handling of mismatched student-teacher relationship.
-             * <p>Verifies:
-             * <ul>
-             *     <li>Service exception is propagated</li>
-             *     <li>HTTP 400 Bad Request status</li>
-             * </ul>
-             */
-            @Test
-            @DisplayName("Mismatched student-teacher returns 400")
-            void submitBragLog_MismatchedRelationship_ReturnsBadRequest() {
-                when(bragLogService.submitBragLog(bragLogRequest))
-                        .thenThrow(new IllegalArgumentException("Teacher does not teach this student"));
-                IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                        () -> bragLogController.submitBragLog(bragLogRequest));
-                assertEquals("Teacher does not teach this student", exception.getMessage());
-            }
-
-            /**
-             * Tests handling of empty behaviors.
-             * <p>Verifies:
-             * <ul>
-             *     <li>Service exception is propagated</li>
-             *     <li>HTTP 400 Bad Request status</li>
-             * </ul>
-             */
-            @Test
-            @DisplayName("Empty behaviors returns 400")
-            void submitBragLog_EmptyBehaviors_ReturnsBadRequest() {
-                when(bragLogService.submitBragLog(bragLogRequest))
-                        .thenThrow(new IllegalArgumentException("At least one behavior must be selected"));
-                IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                        () -> bragLogController.submitBragLog(bragLogRequest));
-                assertEquals("At least one behavior must be selected", exception.getMessage());
-            }
-
-            /**
-             * Tests handling of invalid behavior IDs.
-             * <p>Verifies:
-             * <ul>
-             *     <li>Service exception is propagated</li>
-             *     <li>HTTP 400 Bad Request status</li>
-             * </ul>
-             */
-            @Test
-            @DisplayName("Invalid behavior ID returns 400")
-            void submitBragLog_InvalidBehavior_ReturnsBadRequest() {
-                when(bragLogService.submitBragLog(bragLogRequest))
-                        .thenThrow(new IllegalArgumentException("Invalid behavior ID: 999"));
-                IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                        () -> bragLogController.submitBragLog(bragLogRequest));
-                assertEquals("Invalid behavior ID: 999", exception.getMessage());
-            }
         }
     }
 }

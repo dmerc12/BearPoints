@@ -4,9 +4,7 @@ import com.bearpoints.api.criteria.BragLogSearchCriteria;
 import com.bearpoints.api.dao.BehaviorTypeDAO;
 import com.bearpoints.api.dao.BragLogDAO;
 import com.bearpoints.api.dao.StudentDAO;
-import com.bearpoints.api.dao.TeacherDAO;
 import com.bearpoints.api.dto.BragLogDTO;
-import com.bearpoints.api.dto.BragLogRequest;
 import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.entity.*;
 import com.bearpoints.api.exception.ResourceNotFoundException;
@@ -30,7 +28,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -54,16 +51,10 @@ public class BragLogServiceTests {
     private StudentDAO studentDAO;
 
     @Mock
-    private TeacherDAO teacherDAO;
-
-    @Mock
     private BehaviorTypeDAO behaviorTypeDAO;
 
     @InjectMocks
     private BragLogServiceImpl bragLogService;
-
-    // Deprecated
-    private BragLogRequest bragLogRequest;
 
     private final Pageable pageable = PageRequest.of(0, 10);
 
@@ -84,9 +75,6 @@ public class BragLogServiceTests {
         bragLogDTO = new BragLogDTO(1L, student.getId(), null,
                 Set.of(behaviorType1.getId(), behaviorType2.getId()), "test notes 1",
                 null, null, null, null, null, null);
-
-        // DEPRECATED
-        bragLogRequest = createBragLogRequest(student, teacher, Set.of(behaviorType1.getId(), behaviorType2.getId()));
     }
 
     @Nested
@@ -387,106 +375,5 @@ public class BragLogServiceTests {
         bragLog.setNotes("test notes " + (Long) 1L);
         bragLog.setDefaultsBeforePersist();
         return bragLog;
-    }
-
-
-
-    // DEPRECATED
-    private BragLogRequest createBragLogRequest(Student student, Teacher teacher, Set<Long> behaviorTypes) {
-        return new BragLogRequest(
-                student.getId(),
-                teacher.getId(),
-                behaviorTypes,
-                "test notes"
-        );
-    }
-
-    @Nested
-    @DisplayName("DEPRECATED method tests")
-    class DeprecatedMethodTests {
-        /** Test valid student */
-        @Test
-        @DisplayName("Valid student passes validation")
-        public void validStudentPassesValidation() {
-            when(studentDAO.findById(student.getId())).thenReturn(Optional.of(student));
-            when(teacherDAO.findById(teacher.getId())).thenReturn(Optional.of(teacher));
-            when(behaviorTypeDAO.findById(behaviorType1.getId())).thenReturn(Optional.of(behaviorType1));
-            when(behaviorTypeDAO.findById(behaviorType2.getId())).thenReturn(Optional.of(behaviorType2));
-            when(bragLogDAO.save(any(BragLog.class))).thenReturn(bragLog);
-            BragLog result = bragLogService.submitBragLog(bragLogRequest);
-            assertThat(result).isNotNull();
-        }
-
-        /** Test invalid student */
-        @Test
-        @DisplayName("Invalid student fails validation")
-        public void invalidStudentFailsValidation() {
-            when(studentDAO.findById(student.getId())).thenReturn(Optional.empty());
-            IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                    bragLogService.submitBragLog(bragLogRequest)
-            );
-            assertEquals("Invalid student ID", exception.getMessage());
-        }
-
-        @Nested
-        @DisplayName("Tests teacher validation")
-        class teacherValidation {
-            /** Test invalid teacher */
-            @Test
-            @DisplayName("Invalid teacher fails validation")
-            public void invalidTeacherFailsValidation() {
-                when(studentDAO.findById(student.getId())).thenReturn(Optional.of(student));
-                when(teacherDAO.findById(teacher.getId())).thenReturn(Optional.empty());
-                IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                        bragLogService.submitBragLog(bragLogRequest)
-                );
-                assertEquals("Invalid teacher ID", exception.getMessage());
-            }
-
-            /** Test invalid student - teacher relationship */
-            @Test
-            @DisplayName("Invalid student - teacher relationship fails validation")
-            public void invalidTeacherRelationshipFailsValidation() {
-                Teacher otherTeacher = createValidTeacher(2L, GradeLevel.SECOND);
-                when(studentDAO.findById(student.getId())).thenReturn(Optional.of(student));
-                when(teacherDAO.findById(teacher.getId())).thenReturn(Optional.of(otherTeacher));
-                IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                        bragLogService.submitBragLog(bragLogRequest)
-                );
-                assertEquals("Teacher does not teach this student", exception.getMessage());
-            }
-        }
-
-        /** Test behaviors validation */
-        @Nested
-        @DisplayName("Tests behaviors validation")
-        class behaviorsValidation {
-            /** Test empty behaviors */
-            @Test
-            @DisplayName("Empty behaviors fail validation")
-            public void emptyBehaviorsFailValidation() {
-                bragLogRequest = createBragLogRequest(student, teacher, Set.of());
-                IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                        bragLogService.submitBragLog(bragLogRequest)
-                );
-                assertEquals("At least one behavior must be selected", exception.getMessage());
-            }
-
-            /** Test invalid behaviors */
-            @Test
-            @DisplayName("Invalid behaviors fail validation")
-            public void invalidBehaviorsFailValidation() {
-                when(studentDAO.findById(student.getId())).thenReturn(Optional.of(student));
-                when(teacherDAO.findById(teacher.getId())).thenReturn(Optional.of(teacher));
-                lenient().when(behaviorTypeDAO.findById(behaviorType1.getId())).thenReturn(Optional.of(behaviorType1));
-                lenient().when(behaviorTypeDAO.findById(behaviorType2.getId())).thenReturn(Optional.empty());
-                IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                        bragLogService.submitBragLog(bragLogRequest)
-                );
-                String message = exception.getMessage();
-                assertTrue(message.equals("Invalid behavior ID: " + behaviorType1.getId())
-                        || message.equals("Invalid behavior ID: " + behaviorType2.getId()));
-            }
-        }
     }
 }
