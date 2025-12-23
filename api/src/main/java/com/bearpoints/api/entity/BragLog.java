@@ -201,18 +201,19 @@ public class BragLog implements Syncable {
      * <p>Calculates points generated from behaviors if not set.
      * <p>Sets grade level from teacher's current grade if not set.
      */
+    @PreUpdate
     @PrePersist
     public void setDefaultsBeforePersist() {
         // Set teacher from student if not set
-        if (this.teacher == null && this.student != null) {
+        if (this.student != null) {
             this.teacher = this.student.getTeacher();
         }
         // Set grade level from teacher if not set
-        if (this.grade == null && this.teacher != null) {
+        if (this.teacher != null) {
             this.grade = this.teacher.getGrade();
         }
         // Calculate points generated from behaviors if not set
-        if (this.pointsGenerated == null && this.behaviors != null && !this.behaviors.isEmpty()) {
+        if (this.behaviors != null && !this.behaviors.isEmpty()) {
             this.pointsGenerated = this.behaviors.stream()
                     .mapToInt(BehaviorType::getPointValue)
                     .sum();

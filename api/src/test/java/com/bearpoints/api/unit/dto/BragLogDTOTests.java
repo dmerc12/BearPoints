@@ -263,16 +263,6 @@ public class BragLogDTOTests {
         }
 
         @Test
-        @DisplayName("Null teacherId violates @NotNull constraint")
-        void nullTeacherIdViolatesNotNullConstraint() {
-            BragLogDTO dto = new BragLogDTO(null, 1L, null, Set.of(101L), "Notes",
-                    null, null, null, null, null, null);
-            Set<ConstraintViolation<BragLogDTO>> violations = validator.validate(dto);
-            assertThat(violations).hasSize(1);
-            assertThat(violations.iterator().next().getMessage()).isEqualTo("Teacher ID is required");
-        }
-
-        @Test
         @DisplayName("Empty behaviorIds violates @NotEmpty constraint")
         void emptyBehaviorIdsViolatesNotEmptyConstraint() {
             BragLogDTO dto = new BragLogDTO(null, 1L, 2L, Set.of(), "Notes",

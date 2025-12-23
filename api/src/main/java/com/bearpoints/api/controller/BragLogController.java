@@ -51,7 +51,7 @@ import java.time.LocalDateTime;
 @CrossOrigin
 @RestController
 @RequiredArgsConstructor
-@PreAuthorize("isAuthenticated()")
+@PreAuthorize("permitAll()")
 @RequestMapping("/api/brag-logs")
 public class BragLogController {
     private final BragLogService bragLogService;
@@ -169,6 +169,7 @@ public class BragLogController {
      * @return Created brag log details
      */
     @PostMapping
+    @PreAuthorize("permitAll()")
     public ResponseEntity<BragLogDTO> createBragLog(@Valid @RequestBody BragLogDTO bragLogDTO) {
         log.debug("Creating new brag log for student with ID: {}", bragLogDTO.getStudentId());
         BragLogDTO createdBragLog = bragLogService.createBragLog(bragLogDTO);
@@ -185,7 +186,7 @@ public class BragLogController {
      * @return Updated brag log details
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     public ResponseEntity<BragLogDTO> updateBragLog(
             @PathVariable Long id,
             @Valid @RequestBody BragLogDTO bragLogDTO
@@ -204,7 +205,7 @@ public class BragLogController {
      * @return No content response
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     public ResponseEntity<Void> deleteBragLog(@PathVariable Long id) {
         log.debug("Deleting brag log with ID: {}", id);
         bragLogService.deleteBragLog(id);

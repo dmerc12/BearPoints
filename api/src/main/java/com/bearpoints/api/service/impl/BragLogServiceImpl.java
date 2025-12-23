@@ -59,6 +59,7 @@ public class BragLogServiceImpl implements BragLogService {
      *{@inheritDoc}
      */
     @Override
+    @Transactional(readOnly = true)
     public PagedResponseDTO<BragLogDTO> getAllBragLogs(Pageable pageable) {
         log.debug("Retrieving all brag logs with pagination {}", pageable);
         Page<BragLogDTO> bragLogPage = bragLogDAO.findAll(pageable).map(BragLogDTO::new);
@@ -70,6 +71,7 @@ public class BragLogServiceImpl implements BragLogService {
      * {@inheritDoc}
      */
     @Override
+    @Transactional(readOnly = true)
     public PagedResponseDTO<BragLogDTO> searchBragLogs(BragLogSearchCriteria criteria, Pageable pageable) {
         log.debug("Searching brag logs with criteria: {} and pagination: {}", criteria, pageable);
         if (!criteria.hasFilters()) {
@@ -86,6 +88,7 @@ public class BragLogServiceImpl implements BragLogService {
      * {@inheritDoc}
      */
     @Override
+    @Transactional(readOnly = true)
     public BragLogDTO getBragLogById(Long id) {
         log.debug("Retrieving brag log by ID: {}", id);
         BragLog bragLog = bragLogDAO.findById(id)
@@ -97,6 +100,7 @@ public class BragLogServiceImpl implements BragLogService {
      * {@inheritDoc}
      */
     @Override
+    @Transactional
     public BragLogDTO createBragLog(BragLogDTO bragLogDTO) {
         log.debug("Creating brag log with student ID: {}", bragLogDTO.getStudentId());
         Student student = studentDAO.findById(bragLogDTO.getStudentId())
@@ -121,6 +125,7 @@ public class BragLogServiceImpl implements BragLogService {
      * {@inheritDoc}
      */
     @Override
+    @Transactional
     public BragLogDTO updateBragLog(Long id, BragLogDTO bragLogDTO) {
         log.debug("Updating brag log with ID: {}", id);
         BragLog existingBragLog = bragLogDAO.findById(id)
@@ -159,6 +164,7 @@ public class BragLogServiceImpl implements BragLogService {
      * {@inheritDoc}
      */
     @Override
+    @Transactional
     public void deleteBragLog(Long id) {
         log.debug("Deleting brag log with ID: {}", id);
         BragLog bragLog = bragLogDAO.findById(id)

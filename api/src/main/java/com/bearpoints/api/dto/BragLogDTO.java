@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 @Getter
 public class BragLogDTO {
     // Response fields (never sent by client)
+    private final Long teacherId;
     private final String studentName;
     private final String teacherName;
     private final GradeLevel grade;
@@ -38,8 +39,6 @@ public class BragLogDTO {
     @NotNull(message = "Student ID is required")
     private final Long studentId;
 
-    @NotNull(message = "Teacher ID is required")
-    private final Long teacherId;
 
     @NotEmpty(message = "At least one behavior is required")
     private final Set<Long> behaviorIds;

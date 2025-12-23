@@ -46,7 +46,7 @@ public class BragLogTests {
     }
 
     private BragLog createValidBragLog() {
-        Teacher teacher = createValidTeacher(1L);
+        Teacher teacher = createValidTeacher();
         Student student = createValidStudent(teacher);
         BehaviorType behaviorType = createValidBehaviorType();
         BragLog bragLog = new BragLog();
@@ -76,10 +76,10 @@ public class BragLogTests {
         return student;
     }
 
-    private Teacher createValidTeacher(Long id) {
-        User teacherUser = createValidUser("valid.teacher" + id + "@okcps.org", Role.TEACHER);
+    private Teacher createValidTeacher() {
+        User teacherUser = createValidUser("valid.teacher" + 1L + "@okcps.org", Role.TEACHER);
         Teacher  teacher = new Teacher();
-        teacher.setId(id);
+        teacher.setId(1L);
         teacher.setUser(teacherUser);
         teacher.setGrade(GradeLevel.PRE_K);
         return teacher;
@@ -146,7 +146,7 @@ public class BragLogTests {
         @Test
         @DisplayName("@PrePersist calculates points generated from behaviors when null")
         public void testPrePersistCalculatesPointsGenerated() {
-            Teacher teacher = createValidTeacher(1L);
+            Teacher teacher = createValidTeacher();
             Student student = createValidStudent(teacher);
             BehaviorType behaviorTyp = createValidBehaviorType();
             BragLog bragLog = new BragLog();
@@ -162,7 +162,7 @@ public class BragLogTests {
         @Test
         @DisplayName("@PrePersist sets teacher from student when null")
         public void testPrePersistSetsTeacherFromStudent() {
-            Teacher teacher = createValidTeacher(1L);
+            Teacher teacher = createValidTeacher();
             Student student = createValidStudent(teacher);
             BehaviorType behaviorType = createValidBehaviorType();
             BragLog bragLog = new BragLog();
@@ -174,30 +174,11 @@ public class BragLogTests {
             assertThat(bragLog.getTeacher().getId()).isEqualTo(teacher.getId());
         }
 
-        /** Tests @PrePersist doesn't override existing teacher */
-        @Test
-        @DisplayName("@PrePersist doesn't override existing teacher")
-        public void testPrePersistDoesNotOverrideExistingTeacher() {
-            Teacher teacher1 = createValidTeacher(1L);
-            Teacher teacher2 = createValidTeacher(2L);
-            teacher1.setGrade(GradeLevel.PRE_K);
-            Student student = createValidStudent(teacher1);
-            BehaviorType behaviorType = createValidBehaviorType();
-            BragLog bragLog = new BragLog();
-            bragLog.setStudent(student);
-            bragLog.setTeacher(teacher2);
-            bragLog.setGrade(GradeLevel.PRE_K);
-            bragLog.setBehaviors(Set.of(behaviorType));
-            bragLog.setNotes("test notes");
-            bragLog.setDefaultsBeforePersist();
-            assertThat(bragLog.getTeacher().getId()).isEqualTo(teacher2.getId());
-        }
-
         /** Tests @PrePersist sets grade level from teacher when null */
         @Test
         @DisplayName("@PrePersist sets grade level from teacher when null")
         public void testPrePersistSetsGradeLevelFromTeacher() {
-            Teacher teacher = createValidTeacher(1L);
+            Teacher teacher = createValidTeacher();
             Student student = createValidStudent(teacher);
             BehaviorType behaviorType = createValidBehaviorType();
             BragLog bragLog = new BragLog();
@@ -207,42 +188,6 @@ public class BragLogTests {
             bragLog.setNotes("test notes");
             bragLog.setDefaultsBeforePersist();
             assertThat(bragLog.getGrade()).isEqualTo(teacher.getGrade());
-        }
-
-        /** Tests @PrePersist doesn't override existing grade level */
-        @Test
-        @DisplayName("@PrePersist doesn't override existing grade level")
-        public void testPrePersistDoesNotOverrideExistingGradeLevel() {
-            Teacher teacher = createValidTeacher(1L);
-            teacher.setGrade(GradeLevel.PRE_K);
-            Student student = createValidStudent(teacher);
-            BehaviorType behaviorType = createValidBehaviorType();
-            BragLog bragLog = new BragLog();
-            bragLog.setStudent(student);
-            bragLog.setTeacher(teacher);
-            bragLog.setGrade(GradeLevel.FIRST);
-            bragLog.setBehaviors(Set.of(behaviorType));
-            bragLog.setNotes("test notes");
-            bragLog.setDefaultsBeforePersist();
-            assertThat(bragLog.getGrade()).isEqualTo(GradeLevel.FIRST);
-        }
-
-        /** Tests @PrePersist doesn't override existing points generated */
-        @Test
-        @DisplayName("@PrePersist doesn't override existing points generated")
-        public void testPrePersistDoesNotOverrideExistingPointsGenerated() {
-            Teacher teacher = createValidTeacher(1L);
-            Student student = createValidStudent(teacher);
-            BehaviorType behaviorType = createValidBehaviorType();
-            behaviorType.setPointValue(1);
-            BragLog bragLog = new BragLog();
-            bragLog.setStudent(student);
-            bragLog.setTeacher(teacher);
-            bragLog.setBehaviors(Set.of(behaviorType));
-            bragLog.setPointsGenerated(10);
-            bragLog.setNotes("test notes");
-            bragLog.setDefaultsBeforePersist();
-            assertThat(bragLog.getPointsGenerated()).isEqualTo(10);
         }
 
         /** Tests @PrePersist when teacher is null */
@@ -261,7 +206,7 @@ public class BragLogTests {
         @Test
         @DisplayName("@PrePersist doesn't set points generated when behaviors are null")
         public void testPrePersistDoesNotSetPointsGeneratedWhenBehaviorsAreNull() {
-            Teacher teacher = createValidTeacher(1L);
+            Teacher teacher = createValidTeacher();
             Student student = createValidStudent(teacher);
             BragLog bragLog = new BragLog();
             bragLog.setStudent(student);
@@ -275,7 +220,7 @@ public class BragLogTests {
         @Test
         @DisplayName("@PrePersist doesn't set points generated when behaviors are empty (not null)")
         public void testPrePersistDoesNotSetPointsGeneratedWhenBehaviorsAreEmpty() {
-            Teacher teacher = createValidTeacher(1L);
+            Teacher teacher = createValidTeacher();
             Student student = createValidStudent(teacher);
             BragLog bragLog = new BragLog();
             bragLog.setStudent(student);
