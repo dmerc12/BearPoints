@@ -1,0 +1,75 @@
+package com.bearpoints.api.specification;
+
+import com.bearpoints.api.criteria.RewardItemSearchCriteria;
+import com.bearpoints.api.entity.RewardItem;
+import jakarta.persistence.criteria.Predicate;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * JPA Specification implementation for dynamic reward item queries.
+ *
+ * <p>Translates {@link RewardItemSearchCriteria} into JPA criteria predicates
+ * for building dynamic database queries with flexible filtering.
+ *
+ * <p>Implements case-insensitive partial matching for text fields.
+ * All conditions are combined using AND logic.
+ *
+ * @see RewardItemSearchCriteria
+ * @see Specification
+ * @version 1.0
+ * @author Dylan Mercer
+ */
+@Component
+public class RewardItemSpecification {
+    /**
+     * Creates a JPA Specification for reward item entities based on search criteria.
+     * <p>Builds predicates for each non-null filter in the search criteria and combines
+     * them using AND logic. Supports partial matching for text fields.
+     *
+     * @param criteria Search criteria containing filter values
+     * @return JPA specification that can be used with Reward Item DAO queries
+     */
+    public static Specification<RewardItem> withCriteria(RewardItemSearchCriteria criteria) {
+        return (root, _, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            // Name filter
+            if (criteria.getName() != null && !criteria.getName().trim().isEmpty()) {
+                predicates.add(criteriaBuilder.like(
+                        criteriaBuilder.lower(root.get("name")),
+                        "%" + criteria.getName().toLowerCase() + "%"
+                ));
+            }
+            // Point cost range filters
+            if (criteria.getMinPointCost() != null) {
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(
+                        root.get("pointCost"),
+                        criteria.getMinPointCost()
+                ));
+            }
+            if (criteria.getMaxPointCost() != null) {
+                predicates.add(criteriaBuilder.lessThanOrEqualTo(
+                        root.get("pointCost"),
+                        criteria.getMaxPointCost()
+                ));
+            }
+            // Stock range filter
+            if (criteria.getMinStock() != null) {
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(
+                        root.get("stock"),
+                        criteria.getMinStock()
+                ));
+            }
+            if (criteria.getMaxStock() != null) {
+                predicates.add(criteriaBuilder.lessThanOrEqualTo(
+                        root.get("stock"),
+                        criteria.getMaxStock()
+                ));
+            }
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+    }
+}

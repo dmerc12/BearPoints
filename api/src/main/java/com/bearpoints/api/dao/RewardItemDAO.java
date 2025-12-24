@@ -1,99 +1,70 @@
 package com.bearpoints.api.dao;
 
-import com.bearpoints.api.projection.RewardItemProjection;
 import com.bearpoints.api.entity.RewardItem;
 import io.micrometer.common.lang.NonNull;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.rest.core.annotation.RepositoryRestResource;
-import org.springframework.data.rest.core.annotation.RestResource;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.lang.Nullable;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * JPA repository for {@link RewardItem} entities.
- * <p>Provides CRUD operations and custom queries for reward item management.
- * Exposes REST endpoints under '/reward-items' with granular access control.
+ * <p>Provides CRUD operations and queries for reward item management.
  *
  * <p>Key features:
  * <ul>
- *     <li>Authenticated read access for all roles</li>
- *     <li>Admin-only write operations</li>
- *     <li>Alphabetical ordering of items</li>
+ *     <li>Standard-CRUD operations</li>
+ *     <li>Pagination and sorting support</li>
+ *     <li>Advanced filtering via specifications</li>
  *     <li>Internal synchronization methods</li>
- *     <li>Uses {@link RewardItemProjection} for condensed REST representations</li>
  * </ul>
- *
- * <p>Security constraints:
- * <ul>
- *     <li>Read: All authenticated roles</li>
- *     <li>Write: ADMIN only</li>
- *     <li>Sync methods: Internal use only</li>
- * </ul>
- *
- * <p>Projection Usage:
- * REST representations use {@link RewardItemProjection} by default for condensed views.
  *
  * @see RewardItem
- * @see RewardItemProjection
- * @version 1.2
+ * @version 2.0
  * @author Dylan Mercer
  */
-@RepositoryRestResource(
-        path = "reward-items",
-        excerptProjection = RewardItemProjection.class
-)
-public interface RewardItemDAO extends JpaRepository<RewardItem, Long> {
+public interface RewardItemDAO extends JpaRepository<RewardItem, Long>, JpaSpecificationExecutor<RewardItem> {
     /**
-     * Finds all reward items ordered alphabetically by name.
-     * <p>Requires any authenticated role. Used for reward store listings.
+     * Retrieves all reward items with pagination and caching support.
      *
-     * @return List of reward items sorted by name
-     */
-    @PreAuthorize("isAuthenticated()")
-    List<RewardItem> findAllByOrderByNameAsc();
-
-    /**
-     * Retrieves all reward items.
-     * <p>Requires any authenticated role. Used for reward management.
-     *
-     * @return List of all reward items
+     * @param pageable Pagination information
+     * @return Paginated list of all reward items
      */
     @NonNull
     @Override
-    @PreAuthorize("isAuthenticated()")
-    List<RewardItem> findAll();
+    @Cacheable("rewardItems")
+    Page<RewardItem> findAll(@NonNull Pageable pageable);
 
     /**
-     * Saves a reward item.
-     * <p>Requires ADMIN role. Used for reward management.
+     * Finds reward items using specification with pagination.
      *
-     * @param entity RewardItem to save
-     * @return Saved reward item
+     * @param spec Specification to search / filter for
+     * @param pageable Pagination information
+     * @return Paginated list of all reward items
      */
     @NonNull
     @Override
-    @PreAuthorize("hasRole('ADMIN')")
-    <S extends RewardItem> S save(@NonNull S entity);
+    Page<RewardItem> findAll(@Nullable Specification<RewardItem> spec, @NonNull Pageable pageable);
 
-    @Override
-    @PreAuthorize("hasRole('ADMIN')")
-    void delete(@NonNull RewardItem entity);
-
-    @Override
-    @PreAuthorize("hasRole('ADMIN')")
-    void deleteAll();
-
-    @Override
-    @PreAuthorize("hasRole('ADMIN')")
-    void deleteAll(@NonNull Iterable<? extends RewardItem> entities);
 
     /**
      * Finds unsynced reward items (internal use).
-     * <p>Not exposed via REST API. Used for Google Sheets synchronization.
      *
      * @return List of unsynced reward items
      */
-    @RestResource(exported = false)
     List<RewardItem> findBySyncedToSheetsFalse();
+
+    /**
+     * Finds reward item by name
+     *
+     * @param name Reward item name
+     * @return Optional containing reward item if found
+     */
+    Optional<RewardItem> findByName(String name);
 }
