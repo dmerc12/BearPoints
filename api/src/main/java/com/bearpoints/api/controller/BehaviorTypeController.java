@@ -1,5 +1,6 @@
 package com.bearpoints.api.controller;
 
+import com.bearpoints.api.annotation.PaginationAndSorting;
 import com.bearpoints.api.criteria.BehaviorTypeSearchCriteria;
 import com.bearpoints.api.dto.BehaviorTypeDTO;
 import com.bearpoints.api.dto.PagedResponseDTO;
@@ -7,9 +8,7 @@ import com.bearpoints.api.service.BehaviorTypeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -22,12 +21,12 @@ import org.springframework.web.bind.annotation.*;
  *
  * <p>Endpoints:
  * <ul>
- *     <li>GET /api/behavior-types - Retrieve all behavior types (any authenticated user)</li>
- *     <li>GET /api/behavior-types/search - Search behavior types with (any authenticated user)</li>
- *     <li>GET /api/behavior-types/{id} - Retrieve behavior type by ID (any authenticated user)</li>
- *     <li>POST /api/behavior-types - Create a new behavior type (ADMIN only)</li>
- *     <li>PUT /api/behavior-types/{id} - Update existing behavior type (ADMIN only)</li>
- *     <li>DELETE /api/behavior-types/{id} - Delete a behavior type (ADMIN only)</li>
+ *     <li>GET /api/behaviors - Retrieve all behavior types (any authenticated user)</li>
+ *     <li>GET /api/behaviors/search - Search behavior types with (any authenticated user)</li>
+ *     <li>GET /api/behaviors/{id} - Retrieve behavior type by ID (any authenticated user)</li>
+ *     <li>POST /api/behaviors - Create a new behavior type (ADMIN only)</li>
+ *     <li>PUT /api/behaviors/{id} - Update existing behavior type (ADMIN only)</li>
+ *     <li>DELETE /api/behaviors/{id} - Delete a behavior type (ADMIN only)</li>
  * </ul>
  *
  * <p>Security:
@@ -36,13 +35,14 @@ import org.springframework.web.bind.annotation.*;
  *     <li>POST, PUT, DELETE endpoints - ADMIN role required</li>
  * </ul>
  *
- * @version 1.0
+ * @version 2.0
  * @author Dylan Mercer
  */
 @Slf4j
+@CrossOrigin
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/behavior-types")
+@RequestMapping("/api/behaviors")
 @PreAuthorize("isAuthenticated()")
 public class BehaviorTypeController {
     private final BehaviorTypeService behaviorTypeService;
@@ -51,23 +51,18 @@ public class BehaviorTypeController {
      * Retrieves all behavior types with pagination and sorting.
      * <p>Accessible to any authenticated user.
      *
-     * @param page Page number (default: 0)
-     * @param size Page size (default: 20)
-     * @param sort Sort criteria (default: name,asc)
+     * @param pageable Automatically resolved pagination and sorting parameters
      * @return Paginated response of behavior types
      */
     @GetMapping
     public ResponseEntity<PagedResponseDTO<BehaviorTypeDTO>> getAllBehaviorTypes(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "name,asc") String sort
+            @PaginationAndSorting(
+                    defaultSort = "name,asc",
+                    allowedSortProperties = {"id", "name", "pointValue", "active"}
+            ) Pageable pageable
     ) {
-        log.debug("Retrieving all behavior types - page: {}, size: {}, sort: {}", page, size, sort);
-        String[] sortParams = splitSortParams(sort);
-        Sort.Direction direction = sortParams.length > 1 && "desc".equalsIgnoreCase(sortParams[1])
-                ? Sort.Direction.DESC
-                : Sort.Direction.ASC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortParams[0]));
+        log.debug("Retrieving all behavior types - page: {}, size: {}, sort: {}",
+                pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
         PagedResponseDTO<BehaviorTypeDTO> response = behaviorTypeService.getAllBehaviorTypes(pageable);
         log.info("Retrieved {} behavior types", response.getNumberOfElements());
         return ResponseEntity.ok(response);
@@ -81,9 +76,7 @@ public class BehaviorTypeController {
      * @param active Active status (optional)
      * @param minPointValue Minimum point value threshold (optional)
      * @param maxPointValue Maximum point value threshold (optional)
-     * @param page Page number (default: 0)
-     * @param size Page size (default: 20)
-     * @param sort Sort criteria (default: name,asc)
+     * @param pageable Automatically resolved pagination and sorting parameters
      * @return Paginated response of matching behavior types
      */
     @GetMapping("/search")
@@ -92,22 +85,19 @@ public class BehaviorTypeController {
             @RequestParam(required = false) Boolean active,
             @RequestParam(required = false) Integer minPointValue,
             @RequestParam(required = false) Integer maxPointValue,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "name,asc") String sort
+            @PaginationAndSorting(
+                    defaultSort = "name,asc",
+                    allowedSortProperties = {"id", "name", "pointValue", "active"}
+            ) Pageable pageable
     ) {
         log.debug("Searching behavior types - name: {}, active: {}, minPointValue: {}, maxPointValue: {} - " +
-                "page: {}, size: {}, sort: {}", name, active, minPointValue, maxPointValue, page, size, sort);
-        BehaviorTypeSearchCriteria criteria = new  BehaviorTypeSearchCriteria();
+                "page: {}, size: {}, sort: {}", name, active, minPointValue, maxPointValue,
+                pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
+        BehaviorTypeSearchCriteria criteria = new BehaviorTypeSearchCriteria();
         criteria.setName(name);
         criteria.setActive(active);
         criteria.setMinPointValue(minPointValue);
         criteria.setMaxPointValue(maxPointValue);
-        String[] sortParams = splitSortParams(sort);
-        Sort.Direction direction = sortParams.length > 1 && "desc".equalsIgnoreCase(sortParams[1])
-                ? Sort.Direction.DESC
-                : Sort.Direction.ASC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortParams[0]));
         PagedResponseDTO<BehaviorTypeDTO> response = behaviorTypeService.searchBehaviorTypes(criteria, pageable);
         log.info("Found {} behavior types matching search criteria", response.getNumberOfElements());
         return ResponseEntity.ok(response);
@@ -141,7 +131,9 @@ public class BehaviorTypeController {
         log.debug("Creating new behavior type with name: {}", behaviorTypeDTO.getName());
         BehaviorTypeDTO createdBehaviorType = behaviorTypeService.createBehaviorType(behaviorTypeDTO);
         log.info("Created behavior type with ID: {}", createdBehaviorType.getId());
-        return ResponseEntity.status(HttpStatus.CREATED).contentType(MediaType.APPLICATION_JSON).body(createdBehaviorType);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(createdBehaviorType);
     }
 
     /**
@@ -178,9 +170,5 @@ public class BehaviorTypeController {
         behaviorTypeService.deleteBehaviorType(id);
         log.info("Deleted behavior type with ID: {}", id);
         return ResponseEntity.noContent().build();
-    }
-
-    private String[] splitSortParams(String sort) {
-        return sort.split(",");
     }
 }

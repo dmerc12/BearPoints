@@ -13,10 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -37,7 +34,7 @@ import static org.mockito.Mockito.*;
  * </ul>
  *
  * @see BehaviorTypeController
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @ExtendWith(MockitoExtension.class)
@@ -54,7 +51,7 @@ public class BehaviorTypeControllerTests {
     }
 
     @Nested
-    @DisplayName("When retrieving all behavior types")
+    @DisplayName("GET /api/behaviors - When retrieving all behavior types")
     class WhenRetrievingAllBehaviorTypes {
         @Test
         @DisplayName("Should return paginated behavior types with default parameters")
@@ -63,11 +60,14 @@ public class BehaviorTypeControllerTests {
                     createBehaviorTypeDTO(1L, "test", 2, true),
                     createBehaviorTypeDTO(2L, "other", 3, false)
             );
-            Page<BehaviorTypeDTO> behaviorTypePage = new PageImpl<>(behaviorTypes, PageRequest.of(0, 20), 2L);
+            Page<BehaviorTypeDTO> behaviorTypePage = new PageImpl<>(behaviorTypes,
+                    PageRequest.of(0, 20, Sort.by(Sort.Direction.ASC, "name")),
+                    2L);
             PagedResponseDTO<BehaviorTypeDTO> expectedResponse = PagedResponseDTO.of(behaviorTypePage);
             when(behaviorTypeService.getAllBehaviorTypes(any(Pageable.class))).thenReturn(expectedResponse);
             ResponseEntity<PagedResponseDTO<BehaviorTypeDTO>> response = behaviorTypeController
-                    .getAllBehaviorTypes(0, 20, "name,asc");
+                    .getAllBehaviorTypes(PageRequest.of(0, 20,
+                            Sort.by(Sort.Direction.ASC, "name")));
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
             assertEquals(2, response.getBody().getContent().size());
@@ -80,11 +80,14 @@ public class BehaviorTypeControllerTests {
             List<BehaviorTypeDTO> behaviorTypes = List.of(
                     createBehaviorTypeDTO(1L, "test", 2, true)
             );
-            Page<BehaviorTypeDTO> behaviorTypePage = new PageImpl<>(behaviorTypes, PageRequest.of(0, 20), 15L);
+            Page<BehaviorTypeDTO> behaviorTypePage = new PageImpl<>(behaviorTypes,
+                    PageRequest.of(1, 10, Sort.by(Sort.Direction.DESC, "name")),
+                    15L);
             PagedResponseDTO<BehaviorTypeDTO> expectedResponse = PagedResponseDTO.of(behaviorTypePage);
             when(behaviorTypeService.getAllBehaviorTypes(any(Pageable.class))).thenReturn(expectedResponse);
             ResponseEntity<PagedResponseDTO<BehaviorTypeDTO>> response = behaviorTypeController
-                    .getAllBehaviorTypes(1, 10, "name,desc");
+                    .getAllBehaviorTypes(PageRequest.of(1, 10,
+                            Sort.by(Sort.Direction.DESC, "name")));
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
             assertEquals(1, response.getBody().getContent().size());
@@ -92,64 +95,23 @@ public class BehaviorTypeControllerTests {
         }
 
         @Test
-        @DisplayName("Should handle sort parameter with DESC in uppercase")
-        void shouldHandleSortingParameterWithDESCInUppercase() {
+        @DisplayName("Should handle multiple sort parameters")
+        void shouldHandleMultipleSortParameters() {
             List<BehaviorTypeDTO> behaviorTypes = List.of(
                     createBehaviorTypeDTO(1L, "test", 2, true)
             );
-            Page<BehaviorTypeDTO> behaviorTypePage = new PageImpl<>(behaviorTypes, PageRequest.of(0, 20), 1L);
-            PagedResponseDTO<BehaviorTypeDTO> expectedResponse = PagedResponseDTO.of(behaviorTypePage);
-            when(behaviorTypeService.getAllBehaviorTypes(any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<BehaviorTypeDTO>> response = behaviorTypeController
-                    .getAllBehaviorTypes(1, 10, "name,DESC");
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            verify(behaviorTypeService).getAllBehaviorTypes(any(Pageable.class));
-        }
-
-        @Test
-        @DisplayName("Should handle sort parameter with mixed case direction")
-        void shouldHandleSortParameterWithMixedCaseDirection() {
-            List<BehaviorTypeDTO> behaviorTypes = List.of(
-                    createBehaviorTypeDTO(1L, "test", 2, true)
+            Sort multiSort = Sort.by(
+                    Sort.Order.asc("name"),
+                    Sort.Order.desc("pointValue"),
+                    Sort.Order.asc("active")
             );
-            Page<BehaviorTypeDTO> behaviorTypePage = new PageImpl<>(behaviorTypes, PageRequest.of(0, 20), 15L);
+            Page<BehaviorTypeDTO> behaviorTypePage = new PageImpl<>(behaviorTypes,
+                    PageRequest.of(0, 20, multiSort),
+                    1L);
             PagedResponseDTO<BehaviorTypeDTO> expectedResponse = PagedResponseDTO.of(behaviorTypePage);
             when(behaviorTypeService.getAllBehaviorTypes(any(Pageable.class))).thenReturn(expectedResponse);
             ResponseEntity<PagedResponseDTO<BehaviorTypeDTO>> response = behaviorTypeController
-                    .getAllBehaviorTypes(1, 10, "name,DeSc");
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            verify(behaviorTypeService).getAllBehaviorTypes(any(Pageable.class));
-        }
-
-        @Test
-        @DisplayName("Should handle sort parameter with single field (no direction)")
-        void shouldHandleSortParameterWithSingleFieldNoDirection() {
-            List<BehaviorTypeDTO> behaviorTypes = List.of(
-                    createBehaviorTypeDTO(1L, "test", 2, true)
-            );
-            Page<BehaviorTypeDTO> behaviorTypePage = new PageImpl<>(behaviorTypes, PageRequest.of(0, 20), 1L);
-            PagedResponseDTO<BehaviorTypeDTO> expectedResponse = PagedResponseDTO.of(behaviorTypePage);
-            when(behaviorTypeService.getAllBehaviorTypes(any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<BehaviorTypeDTO>> response = behaviorTypeController
-                    .getAllBehaviorTypes(1, 10, "name");
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            verify(behaviorTypeService).getAllBehaviorTypes(any(Pageable.class));
-        }
-
-        @Test
-        @DisplayName("Should handle sort parameter with invalid direction")
-        void shouldHandleSortParameterWithInvalidDirection() {
-            List<BehaviorTypeDTO> behaviorTypes = List.of(
-                    createBehaviorTypeDTO(1L, "test", 2, true)
-            );
-            Page<BehaviorTypeDTO> behaviorTypePage = new PageImpl<>(behaviorTypes, PageRequest.of(0, 20), 1L);
-            PagedResponseDTO<BehaviorTypeDTO> expectedResponse = PagedResponseDTO.of(behaviorTypePage);
-            when(behaviorTypeService.getAllBehaviorTypes(any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<BehaviorTypeDTO>> response = behaviorTypeController
-                    .getAllBehaviorTypes(1, 10, "name,invalid");
+                    .getAllBehaviorTypes(PageRequest.of(0, 20, multiSort));
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
             verify(behaviorTypeService).getAllBehaviorTypes(any(Pageable.class));
@@ -157,7 +119,7 @@ public class BehaviorTypeControllerTests {
     }
 
     @Nested
-    @DisplayName("When searching behavior types")
+    @DisplayName("GET /api/behaviors/search - When searching behavior types")
     class WhenSearchingBehaviorTypes {
         @Test
         @DisplayName("Should search behavior types with name criteria")
@@ -166,12 +128,15 @@ public class BehaviorTypeControllerTests {
             List<BehaviorTypeDTO> behaviorTypes = List.of(
                     createBehaviorTypeDTO(1L, "test", 2, true)
             );
-            Page<BehaviorTypeDTO> behaviorTypePage = new PageImpl<>(behaviorTypes, PageRequest.of(0, 20), 1L);
+            Page<BehaviorTypeDTO> behaviorTypePage = new PageImpl<>(behaviorTypes,
+                    PageRequest.of(1, 10, Sort.by(Sort.Direction.ASC, "name")),
+                    1L);
             PagedResponseDTO<BehaviorTypeDTO> expectedResponse = PagedResponseDTO.of(behaviorTypePage);
             when(behaviorTypeService.searchBehaviorTypes(any(BehaviorTypeSearchCriteria.class), any(Pageable.class)))
                     .thenReturn(expectedResponse);
             ResponseEntity<PagedResponseDTO<BehaviorTypeDTO>> response = behaviorTypeController
-                    .searchBehaviorTypes(name, null, null, null, 1, 10, "name,asc");
+                    .searchBehaviorTypes(name, null, null, null,
+                            PageRequest.of(1, 10, Sort.by(Sort.Direction.ASC, "name")));
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
             assertEquals(1, response.getBody().getContent().size());
@@ -184,12 +149,15 @@ public class BehaviorTypeControllerTests {
             List<BehaviorTypeDTO> behaviorTypes = List.of(
                     createBehaviorTypeDTO(1L, "test", 2, true)
             );
-            Page<BehaviorTypeDTO> behaviorTypePage = new PageImpl<>(behaviorTypes, PageRequest.of(0, 20), 1L);
+            Page<BehaviorTypeDTO> behaviorTypePage = new PageImpl<>(behaviorTypes,
+                    PageRequest.of(1, 10, Sort.by(Sort.Direction.DESC, "active")),
+                    1L);
             PagedResponseDTO<BehaviorTypeDTO> expectedResponse = PagedResponseDTO.of(behaviorTypePage);
             when(behaviorTypeService.searchBehaviorTypes(any(BehaviorTypeSearchCriteria.class), any(Pageable.class)))
                     .thenReturn(expectedResponse);
             ResponseEntity<PagedResponseDTO<BehaviorTypeDTO>> response = behaviorTypeController
-                    .searchBehaviorTypes(null, true, null, null, 1, 10, "active,desc");
+                    .searchBehaviorTypes(null, true, null, null,
+                            PageRequest.of(1, 10, Sort.by(Sort.Direction.DESC, "active")));
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
             assertEquals(1, response.getBody().getContent().size());
@@ -203,12 +171,15 @@ public class BehaviorTypeControllerTests {
             List<BehaviorTypeDTO> behaviorTypes = List.of(
                     createBehaviorTypeDTO(1L, "test", 2, true)
             );
-            Page<BehaviorTypeDTO> behaviorTypePage = new PageImpl<>(behaviorTypes, PageRequest.of(0, 20), 1L);
+            Page<BehaviorTypeDTO> behaviorTypePage = new PageImpl<>(behaviorTypes,
+                    PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "pointValue")),
+                    1L);
             PagedResponseDTO<BehaviorTypeDTO> expectedResponse = PagedResponseDTO.of(behaviorTypePage);
             when(behaviorTypeService.searchBehaviorTypes(any(BehaviorTypeSearchCriteria.class), any(Pageable.class)))
                     .thenReturn(expectedResponse);
             ResponseEntity<PagedResponseDTO<BehaviorTypeDTO>> response = behaviorTypeController
-                    .searchBehaviorTypes(name, null, 1, 2, 1, 10, "pointValue,desc");
+                    .searchBehaviorTypes(name, null, 1, 2,
+                            PageRequest.of(1, 10, Sort.by(Sort.Direction.DESC, "pointValue")));
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
             assertEquals(1, response.getBody().getContent().size());
@@ -222,31 +193,15 @@ public class BehaviorTypeControllerTests {
             List<BehaviorTypeDTO> behaviorTypes = List.of(
                     createBehaviorTypeDTO(1L, "test", 2, true)
             );
-            Page<BehaviorTypeDTO> behaviorTypePage = new PageImpl<>(behaviorTypes, PageRequest.of(0, 20), 1L);
+            Page<BehaviorTypeDTO> behaviorTypePage = new PageImpl<>(behaviorTypes,
+                    PageRequest.of(1, 10, Sort.by(Sort.Direction.ASC, "name")),
+                    1L);
             PagedResponseDTO<BehaviorTypeDTO> expectedResponse = PagedResponseDTO.of(behaviorTypePage);
             when(behaviorTypeService.searchBehaviorTypes(any(BehaviorTypeSearchCriteria.class), any(Pageable.class)))
                     .thenReturn(expectedResponse);
             ResponseEntity<PagedResponseDTO<BehaviorTypeDTO>> response = behaviorTypeController
-                    .searchBehaviorTypes(name, true, 1, 2, 1, 10, "name,asc");
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            assertEquals(1, response.getBody().getContent().size());
-            verify(behaviorTypeService).searchBehaviorTypes(any(BehaviorTypeSearchCriteria.class), any(Pageable.class));
-        }
-
-        @Test
-        @DisplayName("Should handle single sort parameter")
-        void shouldHandleSingleSortParameter() {
-            String name = "test";
-            List<BehaviorTypeDTO> behaviorTypes = List.of(
-                    createBehaviorTypeDTO(1L, "test", 2, true)
-            );
-            Page<BehaviorTypeDTO> behaviorTypePage = new PageImpl<>(behaviorTypes, PageRequest.of(0, 20), 1L);
-            PagedResponseDTO<BehaviorTypeDTO> expectedResponse = PagedResponseDTO.of(behaviorTypePage);
-            when(behaviorTypeService.searchBehaviorTypes(any(BehaviorTypeSearchCriteria.class), any(Pageable.class)))
-                    .thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<BehaviorTypeDTO>> response = behaviorTypeController
-                    .searchBehaviorTypes(name, null, null, null, 1, 10, "name");
+                    .searchBehaviorTypes(name, true, 1, 2,
+                            PageRequest.of(1, 10, Sort.by(Sort.Direction.ASC, "name")));
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
             assertEquals(1, response.getBody().getContent().size());
@@ -255,7 +210,7 @@ public class BehaviorTypeControllerTests {
     }
 
     @Nested
-    @DisplayName("When retrieving behavior type by ID")
+    @DisplayName("GET /api/behaviors/{id} - When retrieving behavior type by ID")
     class WhenRetrievingBehaviorTypeById {
         @Test
         @DisplayName("Should return behavior type when found")
@@ -283,7 +238,7 @@ public class BehaviorTypeControllerTests {
     }
 
     @Nested
-    @DisplayName("When creating behavior type")
+    @DisplayName("POST /api/behaviors - When creating behavior type")
     class WhenCreatingBehaviorType {
         @Test
         @DisplayName("Should create new behavior type and return 201 status")
@@ -307,7 +262,7 @@ public class BehaviorTypeControllerTests {
     }
 
     @Nested
-    @DisplayName("When updating behavior type")
+    @DisplayName("PUT /api/behaviors/{id} - When updating behavior type")
     class WhenUpdatingBehaviorType {
         @Test
         @DisplayName("Should update existing behavior type and return 200 status")
@@ -343,7 +298,7 @@ public class BehaviorTypeControllerTests {
     }
 
     @Nested
-    @DisplayName("When deleting behavior type")
+    @DisplayName("DELETE /api/behaviors/{id} - When deleting behavior type")
     class WhenDeletingBehaviorType {
         @Test
         @DisplayName("Should delete behavior type and return 204 status")
@@ -364,25 +319,6 @@ public class BehaviorTypeControllerTests {
             assertThrows(ResourceNotFoundException.class,
                     () -> behaviorTypeController.deleteBehaviorType(behaviorTypeId));
             verify(behaviorTypeService).deleteBehaviorType(behaviorTypeId);
-        }
-    }
-
-    @Nested
-    @DisplayName("When testing sort parameter splitting")
-    class WhenTestingSortParameterSplitting {
-        @Test
-        @DisplayName("Should handle sort parameter with multiple commas")
-        void shouldHandleSortParameterWithMultipleCommas() {
-            List<BehaviorTypeDTO> behaviorTypes = List.of(
-                    createBehaviorTypeDTO(1L, "test", 2, true)
-            );
-            Page<BehaviorTypeDTO> behaviorTypePage = new PageImpl<>(behaviorTypes, PageRequest.of(0, 20), 2L);
-            PagedResponseDTO<BehaviorTypeDTO> expectedResponse = PagedResponseDTO.of(behaviorTypePage);
-            when(behaviorTypeService.getAllBehaviorTypes(any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<BehaviorTypeDTO>> response = behaviorTypeController
-                    .getAllBehaviorTypes(0, 20, "name,asc,active,asc,pointValue,desc");
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            verify(behaviorTypeService).getAllBehaviorTypes(any(Pageable.class));
         }
     }
 }

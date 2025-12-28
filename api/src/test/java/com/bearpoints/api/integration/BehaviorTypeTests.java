@@ -4,23 +4,12 @@ import com.bearpoints.api.config.TestDataInitializer;
 import com.bearpoints.api.controller.BehaviorTypeController;
 import com.bearpoints.api.dao.BehaviorTypeDAO;
 import com.bearpoints.api.entity.BehaviorType;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.Optional;
 
@@ -30,8 +19,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * Full-stack integration tests for {@link BehaviorTypeController} utilizing Testcontainers with PostgreSQL and
- * comprehensive test data initialization.
+ * Full-stack integration tests for {@link BehaviorTypeController}.
+ * Extends {@link BaseIntegrationTest} for common test configuration.
  *
  * <p>Tests the complete behavior type management flow from HTTP endpoint through service layer to
  * database, validating system behavior against production-like database environment with existing
@@ -46,25 +35,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * </ul>
  *
  * @see TestDataInitializer
- * @see MockMvc
+ * @see BaseIntegrationTest
+ * @version 1.2
  * @author Dylan Mercer
  */
-@SpringBootTest
-@Testcontainers
-@AutoConfigureMockMvc
-@ActiveProfiles("test")
 @DisplayName("Behavior Type Integration Tests")
-public class BehaviorTypeTests {
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine");
-
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-    }
-
+public class BehaviorTypeTests extends BaseIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
 
@@ -75,11 +51,11 @@ public class BehaviorTypeTests {
 
     @BeforeAll
     static void setUp() {
-        baseUrl = "/api/behavior-types";
+        baseUrl = "/api/behaviors";
     }
 
     @Nested
-    @DisplayName("GET /behavior-types - Retrieve behavior types")
+    @DisplayName("GET /api/behaviors - Retrieve behavior types")
     class GetAllBehaviorTypes {
         @Test
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
@@ -92,38 +68,14 @@ public class BehaviorTypeTests {
                     .andExpect(jsonPath("$.size").value(20));
         }
 
-        @Nested
-        @DisplayName("GET /behavior-types - Sort direction edge cases")
-        class SortDirectionTests {
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns sorted results when sort asc parameters provided")
-            void returnsSortedBehaviorTypesAsc() throws Exception {
-                mockMvc.perform(get(baseUrl)
-                                .param("sort", "name,asc"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content[0].name").exists());
-            }
-
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns sorted results when sort desc parameters provided")
-            void returnsSortedBehaviorTypesDesc() throws Exception {
-                mockMvc.perform(get(baseUrl)
-                                .param("sort", "name,desc"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content[0].name").exists());
-            }
-
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns sorted results when no sort direction parameter is provided")
-            void returnsSortedBehaviorTypesNoDirection() throws Exception {
-                mockMvc.perform(get(baseUrl)
-                                .param("sort", "name"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content[0].name").exists());
-            }
+        @Test
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @DisplayName("returns sorted results when sort parameter provided")
+        void returnsSortedBehaviorTypes() throws Exception {
+            mockMvc.perform(get(baseUrl)
+                            .param("sort", "name,asc;pointValue,desc"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").isArray());
         }
 
         @Test
@@ -138,7 +90,7 @@ public class BehaviorTypeTests {
     }
 
     @Nested
-    @DisplayName("GET /behavior-types/search - Search behavior types")
+    @DisplayName("GET /api/behaviors/search - Search behavior types")
     class SearchBehaviorTypes {
         @Test
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
@@ -219,52 +171,20 @@ public class BehaviorTypeTests {
                     .andExpect(jsonPath("$.content").isEmpty());
         }
 
-        @Nested
-        @DisplayName("GET /behavior-types/search - Sort direction edge cases")
-        class SortDirectionTests {
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns sorted results when sort asc parameters provided")
-            void returnsSortedBehaviorTypesAsc() throws Exception {
-                String searchTerm = "B";
-                mockMvc.perform(get(baseUrl + "/search")
-                                .param("name", searchTerm)
-                                .param("sort", "name,asc"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content[*].name",
-                                everyItem(containsStringIgnoringCase(searchTerm))));
-            }
-
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns sorted results when sort desc parameters provided")
-            void returnsSortedBehaviorTypesDesc() throws Exception {
-                String searchTerm = "B";
-                mockMvc.perform(get(baseUrl + "/search")
-                                .param("name", searchTerm)
-                                .param("sort", "name,desc"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content[*].name",
-                                everyItem(containsStringIgnoringCase(searchTerm))));
-            }
-
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns sorted results when no sort direction parameter is provided")
-            void returnsSortedBehaviorTypesNoDirection() throws Exception {
-                String searchTerm = "B";
-                mockMvc.perform(get(baseUrl + "/search")
-                                .param("name", searchTerm)
-                                .param("sort", "name"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content[*].name",
-                                everyItem(containsStringIgnoringCase(searchTerm))));
-            }
+        @Test
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @DisplayName("returns sorted search results when sort parameter provided")
+        void returnsSortedSearchResults() throws Exception {
+            mockMvc.perform(get(baseUrl + "/search")
+                            .param("name", "")
+                            .param("sort", "pointValue,desc"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").isArray());
         }
     }
 
     @Nested
-    @DisplayName("GET /behavior-types/{id} - Get behavior type by ID")
+    @DisplayName("GET /api/behaviors/{id} - Get behavior type by ID")
     class GetBehaviorTypeById {
         @Test
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
@@ -290,7 +210,7 @@ public class BehaviorTypeTests {
     }
 
     @Nested
-    @DisplayName("POST /behavior-types - Create behavior type")
+    @DisplayName("POST /api/behaviors - Create behavior type")
     class CreateBehaviorType {
         @Test
         @WithMockUser(roles = "ADMIN")
@@ -452,7 +372,7 @@ public class BehaviorTypeTests {
     }
 
     @Nested
-    @DisplayName("PUT /behavior-types/{id} - Update behavior type")
+    @DisplayName("PUT /api/behaviors/{id} - Update behavior type")
     class UpdateBehaviorType {
         @Test
         @WithMockUser(roles = "ADMIN")
@@ -699,7 +619,7 @@ public class BehaviorTypeTests {
     }
 
     @Nested
-    @DisplayName("DELETE /behavior-types/{id} - Delete behavior type")
+    @DisplayName("DELETE /api/behaviors/{id} - Delete behavior type")
     class DeleteBehaviorType {
         @Test
         @WithMockUser(roles = "ADMIN")
