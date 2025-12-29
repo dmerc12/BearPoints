@@ -14,10 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -39,7 +36,7 @@ import static org.mockito.Mockito.when;
  * </ul>
  *
  * @see AdminController
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @ExtendWith(MockitoExtension.class)
@@ -62,7 +59,7 @@ public class AdminControllerTests {
     }
 
     @Nested
-    @DisplayName("When retrieving all admin users")
+    @DisplayName("GET /api/admins - When retrieving all admin users")
     class WhenRetrievingAllAdminUsers {
         @Test
         @DisplayName("Should return paginated admin users with default parameters")
@@ -71,10 +68,14 @@ public class AdminControllerTests {
                     new UserDTO(createUser(1L, "admin1@okcps.org", "Admin1", "Admin2")),
                     new UserDTO(createUser(2L, "admin2@okcps.org", "Admin2", "Admin2"))
             );
-            Page<UserDTO> adminPage = new PageImpl<>(adminUsers, PageRequest.of(0, 20), 2L);
+            Page<UserDTO> adminPage = new PageImpl<>(adminUsers,
+                    PageRequest.of(0, 20, Sort.by(Sort.Direction.ASC, "lastName")),
+                    2L);
             PagedResponseDTO<UserDTO> expectedResponse = PagedResponseDTO.of(adminPage);
             when(adminService.getAllAdmins(any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<UserDTO>> response = adminController.getAllAdmins(0, 20, "lastName,asc");
+            ResponseEntity<PagedResponseDTO<UserDTO>> response = adminController
+                    .getAllAdmins(PageRequest.of(0, 20,
+                            Sort.by(Sort.Direction.ASC, "lastName")));
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
             assertEquals(2, response.getBody().getContent().size());
@@ -87,10 +88,14 @@ public class AdminControllerTests {
             List<UserDTO> adminUsers = List.of(
                     new UserDTO(createUser(1L, "admin1@okcps.org", "Admin1", "User1"))
             );
-            Page<UserDTO> adminPage = new PageImpl<>(adminUsers, PageRequest.of(1, 10), 15L);
+            Page<UserDTO> adminPage = new PageImpl<>(adminUsers,
+                    PageRequest.of(1, 10, Sort.by(Sort.Direction.DESC, "email")),
+                    15L);
             PagedResponseDTO<UserDTO> expectedResponse = PagedResponseDTO.of(adminPage);
             when(adminService.getAllAdmins(any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<UserDTO>> response = adminController.getAllAdmins(1, 10, "email,desc");
+            ResponseEntity<PagedResponseDTO<UserDTO>> response = adminController
+                    .getAllAdmins(PageRequest.of(1, 10,
+                            Sort.by(Sort.Direction.DESC, "email")));
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
             assertEquals(1, response.getBody().getContent().size());
@@ -98,60 +103,23 @@ public class AdminControllerTests {
         }
 
         @Test
-        @DisplayName("Should handle sort parameter with DESC in uppercase")
-        void shouldHandleSortParameterWithDescInUppercase() {
+        @DisplayName("Should handle multiple sort parameters")
+        void shouldHandleMultipleSortParameters() {
             List<UserDTO> adminUsers = List.of(
                     new UserDTO(createUser(1L, "admin1@okcps.org", "Admin1", "User1"))
             );
-            Page<UserDTO> adminPage = new PageImpl<>(adminUsers, PageRequest.of(0, 20), 1L);
-            PagedResponseDTO<UserDTO> expectedResponse = PagedResponseDTO.of(adminPage);
-            when(adminService.getAllAdmins(any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<UserDTO>> response = adminController.getAllAdmins(0, 20, "firstName,DESC");
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            verify(adminService).getAllAdmins(any(Pageable.class));
-        }
-
-        @Test
-        @DisplayName("Should handle sort parameter with mixed case direction")
-        void shouldHandleSortParameterWithMixedCaseDirection() {
-            List<UserDTO> adminUsers = List.of(
-                    new UserDTO(createUser(1L, "admin1@okcps.org", "Admin1", "User1"))
+            Sort multiSort = Sort.by(
+                    Sort.Order.asc("lastName"),
+                    Sort.Order.desc("firstName"),
+                    Sort.Order.asc("email")
             );
-            Page<UserDTO> adminPage = new PageImpl<>(adminUsers, PageRequest.of(0, 20), 1L);
+            Page<UserDTO> adminPage = new PageImpl<>(adminUsers,
+                    PageRequest.of(0, 20, multiSort),
+                    1L);
             PagedResponseDTO<UserDTO> expectedResponse = PagedResponseDTO.of(adminPage);
             when(adminService.getAllAdmins(any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<UserDTO>> response = adminController.getAllAdmins(0, 20, "firstName,DeSc");
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            verify(adminService).getAllAdmins(any(Pageable.class));
-        }
-
-        @Test
-        @DisplayName("Should handle sort parameter with single field (no direction)")
-        void shouldHandleSortParameterWithSingleField() {
-            List<UserDTO> adminUsers = List.of(
-                    new UserDTO(createUser(1L, "admin1@okcps.org", "Admin1", "User1"))
-            );
-            Page<UserDTO> adminPage = new PageImpl<>(adminUsers, PageRequest.of(0, 20), 1L);
-            PagedResponseDTO<UserDTO> expectedResponse = PagedResponseDTO.of(adminPage);
-            when(adminService.getAllAdmins(any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<UserDTO>> response = adminController.getAllAdmins(0, 20, "email");
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            verify(adminService).getAllAdmins(any(Pageable.class));
-        }
-
-        @Test
-        @DisplayName("Should handle sort parameter with invalid direction")
-        void shouldHandleSortParameterWithInvalidDirection() {
-            List<UserDTO> adminUsers = List.of(
-                    new UserDTO(createUser(1L, "admin1@okcps.org", "Admin1", "User1"))
-            );
-            Page<UserDTO> adminPage = new PageImpl<>(adminUsers, PageRequest.of(0, 20), 1L);
-            PagedResponseDTO<UserDTO> expectedResponse = PagedResponseDTO.of(adminPage);
-            when(adminService.getAllAdmins(any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<UserDTO>> response = adminController.getAllAdmins(0, 20, "lastName,invalid");
+            ResponseEntity<PagedResponseDTO<UserDTO>> response = adminController
+                    .getAllAdmins(PageRequest.of(0, 20, multiSort));
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
             verify(adminService).getAllAdmins(any(Pageable.class));
@@ -159,7 +127,7 @@ public class AdminControllerTests {
     }
 
     @Nested
-    @DisplayName("When searching admin users")
+    @DisplayName("GET /api/admins/search - When searching admin users")
     class WhenSearchingAdminUsers {
         @Test
         @DisplayName("Should search admin users by email")
@@ -168,11 +136,14 @@ public class AdminControllerTests {
             List<UserDTO> adminUsers = List.of(
                     new UserDTO(createUser(1L, email + "1@okcps.org", "Admin1", "User1"))
             );
-            Page<UserDTO> adminPage = new PageImpl<>(adminUsers, PageRequest.of(0, 20), 1L);
+            Page<UserDTO> adminPage = new PageImpl<>(adminUsers,
+                    PageRequest.of(0, 20, Sort.by(Sort.Direction.ASC, "email")),
+                    1L);
             PagedResponseDTO<UserDTO> expectedResponse = PagedResponseDTO.of(adminPage);
             when(adminService.searchAdmins(any(AdminSearchCriteria.class), any(Pageable.class))).thenReturn(expectedResponse);
             ResponseEntity<PagedResponseDTO<UserDTO>> response = adminController.searchAdmins(email,
-                    null, null, 0, 20, "email");
+                    null, null,
+                    PageRequest.of(0, 20, Sort.by(Sort.Direction.ASC, "email")));
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
             assertEquals(1, response.getBody().getContent().size());
@@ -186,11 +157,14 @@ public class AdminControllerTests {
             List<UserDTO> adminUsers = List.of(
                     new UserDTO(createUser(1L, "john@okcps.org", firstName, "Doe"))
             );
-            Page<UserDTO> adminPage = new PageImpl<>(adminUsers, PageRequest.of(0, 20), 1L);
+            Page<UserDTO> adminPage = new PageImpl<>(adminUsers,
+                    PageRequest.of(0, 20, Sort.by(Sort.Direction.ASC, "firstName")),
+                    1L);
             PagedResponseDTO<UserDTO> expectedResponse = PagedResponseDTO.of(adminPage);
             when(adminService.searchAdmins(any(AdminSearchCriteria.class), any(Pageable.class))).thenReturn(expectedResponse);
             ResponseEntity<PagedResponseDTO<UserDTO>> response = adminController.searchAdmins(null,
-                    firstName, null, 0, 20, "firstName,asc");
+                    firstName, null,
+                    PageRequest.of(0, 20, Sort.by(Sort.Direction.ASC, "firstName")));
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
             assertEquals(1, response.getBody().getContent().size());
@@ -204,11 +178,14 @@ public class AdminControllerTests {
             List<UserDTO> adminUsers = List.of(
                     new UserDTO(createUser(1L, "john@okcps.org", "John", lastName))
             );
-            Page<UserDTO> adminPage = new PageImpl<>(adminUsers, PageRequest.of(0, 20), 1L);
+            Page<UserDTO> adminPage = new PageImpl<>(adminUsers,
+                    PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "lastName")),
+                    1L);
             PagedResponseDTO<UserDTO> expectedResponse = PagedResponseDTO.of(adminPage);
             when(adminService.searchAdmins(any(AdminSearchCriteria.class), any(Pageable.class))).thenReturn(expectedResponse);
             ResponseEntity<PagedResponseDTO<UserDTO>> response = adminController.searchAdmins(null,
-                    null, lastName, 0, 20, "lastName,desc");
+                    null, lastName,
+                    PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "lastName")));
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
             assertEquals(1, response.getBody().getContent().size());
@@ -224,11 +201,14 @@ public class AdminControllerTests {
             List<UserDTO> adminUsers = List.of(
                     new UserDTO(createUser(1L, email + "ohn@okcps.org", firstName, lastName))
             );
-            Page<UserDTO> adminPage = new PageImpl<>(adminUsers, PageRequest.of(0, 20), 1L);
+            Page<UserDTO> adminPage = new PageImpl<>(adminUsers,
+                    PageRequest.of(0, 20, Sort.by(Sort.Direction.ASC, "firstName")),
+                    1L);
             PagedResponseDTO<UserDTO> expectedResponse = PagedResponseDTO.of(adminPage);
             when(adminService.searchAdmins(any(AdminSearchCriteria.class), any(Pageable.class))).thenReturn(expectedResponse);
             ResponseEntity<PagedResponseDTO<UserDTO>> response = adminController.searchAdmins(email,
-                    firstName, lastName, 0, 20, "lastName,desc,firstName,desc,email,desc");
+                    firstName, lastName,
+                    PageRequest.of(0, 20, Sort.by(Sort.Direction.ASC, "lastName")));
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
             assertEquals(1, response.getBody().getContent().size());
@@ -237,7 +217,7 @@ public class AdminControllerTests {
     }
 
     @Nested
-    @DisplayName("When retrieving admin user by ID")
+    @DisplayName("GET /api/admins/{id} - When retrieving admin user by ID")
     class WhenRetrievingAdminUserById {
         @Test
         @DisplayName("Should return admin user when found")
@@ -255,7 +235,7 @@ public class AdminControllerTests {
     }
 
     @Nested
-    @DisplayName("When creating admin user")
+    @DisplayName("POST /api/admins - When creating admin user")
     class WhenCreatingAdminUser {
         @Test
         @DisplayName("Should create new admin user and return 201 status")
@@ -273,7 +253,7 @@ public class AdminControllerTests {
     }
 
     @Nested
-    @DisplayName("When updating admin user")
+    @DisplayName("PUT /api/admins/{id} - When updating admin user")
     class WhenUpdatingAdminUser {
         @Test
         @DisplayName("Should update existing admin user and return 200 status")
@@ -292,7 +272,7 @@ public class AdminControllerTests {
     }
 
     @Nested
-    @DisplayName("When deleting admin user")
+    @DisplayName("DELETE /api/admins/{id} - When deleting admin user")
     class WhenDeletingAdminUser {
         @Test
         @DisplayName("Should delete admin user and return 204 status")
@@ -302,24 +282,6 @@ public class AdminControllerTests {
             assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
             assertNull(response.getBody());
             verify(adminService).deleteAdmin(adminId);
-        }
-    }
-
-    @Nested
-    @DisplayName("When testing sort parameter splitting")
-    class WhenTestingSortParameterSplitting {
-        @Test
-        @DisplayName("Should handle sort parameter with multiple commas")
-        void shouldHandleSortParameterWithMultipleCommas() {
-            List<UserDTO> adminUsers = List.of(
-                    new UserDTO(createUser(1L, "admin1@okcps.org", "Admin1", "User1"))
-            );
-            Page<UserDTO> adminPage = new PageImpl<>(adminUsers, PageRequest.of(0, 20), 1L);
-            PagedResponseDTO<UserDTO> expectedResponse = PagedResponseDTO.of(adminPage);
-            when(adminService.getAllAdmins(any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<UserDTO>> response = adminController.getAllAdmins(0, 20, "field1,field2,field3");
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            verify(adminService).getAllAdmins(any(Pageable.class));
         }
     }
 }

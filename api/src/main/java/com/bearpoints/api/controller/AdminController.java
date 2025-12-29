@@ -1,5 +1,6 @@
 package com.bearpoints.api.controller;
 
+import com.bearpoints.api.annotation.PaginationAndSorting;
 import com.bearpoints.api.criteria.AdminSearchCriteria;
 import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.dto.UserDTO;
@@ -7,9 +8,7 @@ import com.bearpoints.api.service.AdminService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -36,10 +35,11 @@ import org.springframework.web.bind.annotation.*;
  *     <li>POST, PUT, DELETE endpoints - ADMIN role required</li>
  * </ul>
  *
- * @version 1.0
+ * @version 2.0
  * @author Dylan Mercer
  */
 @Slf4j
+@CrossOrigin
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/admins")
@@ -51,23 +51,18 @@ public class AdminController {
      * Retrieves all admin users with pagination and sorting.
      * <p>Accessible to any authenticated user.
      *
-     * @param page Page number (default: 0)
-     * @param size Page size (default: 20)
-     * @param sort Sort criteria (default: lastName, asc)
+     * @param pageable Automatically resolved pagination and sorting parameters
      * @return Paginated response of admin users
      */
     @GetMapping
     public ResponseEntity<PagedResponseDTO<UserDTO>> getAllAdmins(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "lastName,asc") String sort
+            @PaginationAndSorting(
+                    defaultSort = "lastName,asc",
+                    allowedSortProperties = {"id", "firstName", "lastName", "email"}
+            ) Pageable pageable
     ) {
-        log.debug("Retrieving all admin users - page: {}, size: {}, sort: {}", page, size, sort);
-        String[] sortParams = splitSortParams(sort);
-        Sort.Direction direction = sortParams.length > 1 && "desc".equalsIgnoreCase(sortParams[1])
-                ? Sort.Direction.DESC
-                : Sort.Direction.ASC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortParams[0]));
+        log.debug("Retrieving all admin users - page: {}, size: {}, sort: {}",
+                pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
         PagedResponseDTO<UserDTO> response = adminService.getAllAdmins(pageable);
         log.info("Retrieved {} admin users", response.getNumberOfElements());
         return ResponseEntity.ok(response);
@@ -80,9 +75,7 @@ public class AdminController {
      * @param email Email search term (optional)
      * @param firstName First name search term (optional)
      * @param lastName Last name search term (optional)
-     * @param page Page number (default: 0)
-     * @param size Page size (default: 20)
-     * @param sort Sort criteria (default: lastName,asc)
+     * @param pageable Automatically resolved pagination and sorting parameters
      * @return Paginated response of matching admins
      */
     @GetMapping("/search")
@@ -90,21 +83,17 @@ public class AdminController {
             @RequestParam(required = false) String email,
             @RequestParam(required = false) String firstName,
             @RequestParam(required = false) String lastName,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "lastName,asc") String sort
+            @PaginationAndSorting(
+                    defaultSort = "lastName,asc",
+                    allowedSortProperties = {"id", "firstName", "lastName", "email"}
+            ) Pageable pageable
     ) {
         log.debug("Searching admins - email: {}, firstName: {}, lastName: {} - page: {}, size: {}, sort: {}",
-                email, firstName, lastName, page, size, sort);
+                email, firstName, lastName, pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
         AdminSearchCriteria criteria = new AdminSearchCriteria();
         criteria.setEmail(email);
         criteria.setFirstName(firstName);
         criteria.setLastName(lastName);
-        String[] sortParams = splitSortParams(sort);
-        Sort.Direction direction = sortParams.length > 1 && "desc".equalsIgnoreCase(sortParams[1])
-                ? Sort.Direction.DESC
-                : Sort.Direction.ASC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortParams[0]));
         PagedResponseDTO<UserDTO> response = adminService.searchAdmins(criteria, pageable);
         log.info("Retrieved {} admins matching search criteria", response.getNumberOfElements());
         return ResponseEntity.ok(response);
@@ -172,9 +161,5 @@ public class AdminController {
         adminService.deleteAdmin(id);
         log.info("Deleted admin user with ID: {}", id);
         return ResponseEntity.noContent().build();
-    }
-
-    private String[] splitSortParams(String sort) {
-        return sort.split(",");
     }
 }

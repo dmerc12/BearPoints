@@ -5,23 +5,12 @@ import com.bearpoints.api.controller.AdminController;
 import com.bearpoints.api.dao.UserDAO;
 import com.bearpoints.api.entity.Role;
 import com.bearpoints.api.entity.User;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.Optional;
 
@@ -31,8 +20,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * Full-stack integration tests for {@link AdminController} utilizing Testcontainers with PostgreSQL and
- * comprehensive test data initialization.
+ * Full-stack integration tests for {@link AdminController}.
+ * Extends {@link BaseIntegrationTest} for common test configuration.
  *
  * <p>Tests the complete administrative user management flow from HTTP endpoint through service layer to
  * database, validating system behavior against a production-like database environment with existing
@@ -47,26 +36,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * </ul>
  *
  * @see TestDataInitializer
- * @see MockMvc
- * @version 1.0
+ * @see BaseIntegrationTest
+ * @version 1.2
  * @author Dylan Mercer
  */
-@SpringBootTest
-@Testcontainers
-@AutoConfigureMockMvc
-@ActiveProfiles("test")
 @DisplayName("Admin Integration Tests")
-public class AdminTests {
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine");
-
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-    }
-
+public class AdminTests extends BaseIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
 
@@ -96,30 +71,10 @@ public class AdminTests {
 
         @Test
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-        @DisplayName("returns sorted results when sort asc parameter provided")
-        void returnsSortedAdminsAsc() throws Exception {
+        @DisplayName("returns sorted results when sort parameter provided")
+        void returnsSortedAdmins() throws Exception {
             mockMvc.perform(get(baseUrl)
-                        .param("sort", "firstName,asc"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.content[0].firstName").exists());
-        }
-
-        @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-        @DisplayName("returns sorted results when sort desc parameter provided")
-        void returnsSortedAdminsDesc() throws Exception {
-            mockMvc.perform(get(baseUrl)
-                            .param("sort", "firstName,desc"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.content[0].firstName").exists());
-        }
-
-        @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-        @DisplayName("returns sorted results when sort no direction parameter provided")
-        void returnsSortedAdminsNoDirection() throws Exception {
-            mockMvc.perform(get(baseUrl)
-                            .param("sort", "firstName"))
+                        .param("sort", "firstName,asc;email,desc"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[0].firstName").exists());
         }
@@ -151,82 +106,10 @@ public class AdminTests {
 
         @Test
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-        @DisplayName("by email returns matching admins with sort asc")
-        void searchByEmail_returnsMatchingAdminsSortAsc() throws Exception {
-            mockMvc.perform(get(baseUrl + "/search")
-                            .param("email", "admin")
-                            .param("sort", "email,asc"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.content[*].email",
-                            everyItem(containsStringIgnoringCase("admin"))));
-        }
-
-        @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-        @DisplayName("by email returns matching admins with sort desc")
-        void searchByEmail_returnsMatchingAdminsSortDesc() throws Exception {
-            mockMvc.perform(get(baseUrl + "/search")
-                            .param("email", "admin")
-                            .param("sort", "email,desc"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.content[*].email",
-                            everyItem(containsStringIgnoringCase("admin"))));
-        }
-
-        @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-        @DisplayName("by email returns matching admins with sort no direction")
-        void searchByEmail_returnsMatchingAdminsSortNoDirection() throws Exception {
-            mockMvc.perform(get(baseUrl + "/search")
-                            .param("email", "admin")
-                            .param("sort", "email"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.content[*].email",
-                            everyItem(containsStringIgnoringCase("admin"))));
-        }
-
-        @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
         @DisplayName("by first name returns matching admins")
         void searchByFirstName_returnsMatchingAdmins() throws Exception {
             mockMvc.perform(get(baseUrl + "/search")
                             .param("firstName", "admin"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.content[*].firstName",
-                            everyItem(containsStringIgnoringCase("admin"))));
-        }
-
-        @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-        @DisplayName("by first name returns matching admins with sort asc")
-        void searchByFirstName_returnsMatchingAdminsSortAsc() throws Exception {
-            mockMvc.perform(get(baseUrl + "/search")
-                            .param("firstName", "admin")
-                            .param("sort", "firstName,asc"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.content[*].firstName",
-                            everyItem(containsStringIgnoringCase("admin"))));
-        }
-
-        @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-        @DisplayName("by first name returns matching admins with sort desc")
-        void searchByFirstName_returnsMatchingAdminsSortDesc() throws Exception {
-            mockMvc.perform(get(baseUrl + "/search")
-                            .param("firstName", "admin")
-                            .param("sort", "firstName,desc"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.content[*].firstName",
-                            everyItem(containsStringIgnoringCase("admin"))));
-        }
-
-        @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-        @DisplayName("by first name returns matching admins with sort no direction")
-        void searchByFirstName_returnsMatchingAdminsSortNoDirection() throws Exception {
-            mockMvc.perform(get(baseUrl + "/search")
-                            .param("firstName", "admin")
-                            .param("sort", "firstName"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[*].firstName",
                             everyItem(containsStringIgnoringCase("admin"))));
@@ -245,38 +128,11 @@ public class AdminTests {
 
         @Test
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-        @DisplayName("by last name returns matching admins with sort asc")
-        void searchByLastName_returnsMatchingAdminsSortAsc() throws Exception {
-            mockMvc.perform(get(baseUrl + "/search")
-                            .param("lastName", "admin")
-                            .param("sort", "lastName,asc"))
+        @DisplayName("with empty criteria returns all admins")
+        void searchWithEmptyCriteria_returnsAllAdmins() throws Exception {
+            mockMvc.perform(get(baseUrl + "/search"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.content[*].lastName",
-                            everyItem(containsStringIgnoringCase("admin"))));
-        }
-
-        @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-        @DisplayName("by last name returns matching admins with sort desc")
-        void searchByLastName_returnsMatchingAdminsSortDesc() throws Exception {
-            mockMvc.perform(get(baseUrl + "/search")
-                            .param("lastName", "admin")
-                            .param("sort", "lastName,desc"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.content[*].lastName",
-                            everyItem(containsStringIgnoringCase("admin"))));
-        }
-
-        @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-        @DisplayName("by last name returns matching admins with sort no direction")
-        void searchByLastName_returnsMatchingAdminsSortNoDirection() throws Exception {
-            mockMvc.perform(get(baseUrl + "/search")
-                            .param("lastName", "admin")
-                            .param("sort", "lastName"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.content[*].lastName",
-                            everyItem(containsStringIgnoringCase("admin"))));
+                    .andExpect(jsonPath("$.content").isArray());
         }
 
         @Test
@@ -291,11 +147,31 @@ public class AdminTests {
 
         @Test
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-        @DisplayName("with empty criteria returns all admins")
-        void searchWithEmptyCriteria_returnsAllAdmins() throws Exception {
-            mockMvc.perform(get(baseUrl + "/search"))
+        @DisplayName("with combined criteria returns matching admins")
+        void searchWithCombinedCriteria_returnsMatchingAdmins() throws Exception {
+            mockMvc.perform(get(baseUrl + "/search")
+                            .param("email", "admin")
+                            .param("firstName", "admin")
+                            .param("lastName", "admin"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.content").isArray());
+                    .andExpect(jsonPath("$.content[*].email",
+                            everyItem(containsStringIgnoringCase("admin"))))
+                    .andExpect(jsonPath("$.content[*].firstName",
+                            everyItem(containsStringIgnoringCase("admin"))))
+                    .andExpect(jsonPath("$.content[*].lastName",
+                            everyItem(containsStringIgnoringCase("admin"))));
+        }
+
+        @Test
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @DisplayName("returns sorted search results when sort parameter provided")
+        void returnsSortedSearchResults() throws Exception {
+            mockMvc.perform(get(baseUrl + "/search")
+                            .param("lastName", "admin")
+                            .param("sort", "lastName,desc"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content[*].lastName",
+                            everyItem(containsStringIgnoringCase("admin"))));
         }
     }
 
