@@ -7,24 +7,13 @@ import com.bearpoints.api.dao.UserDAO;
 import com.bearpoints.api.entity.Role;
 import com.bearpoints.api.entity.Teacher;
 import com.bearpoints.api.entity.User;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.List;
 import java.util.Optional;
@@ -35,8 +24,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * Full-stack integration tests for {@link TeacherController} utilizing TestContainers with PostgreSQL and
- * comprehensive test data initialization.
+ * Full-stack integration tests for {@link TeacherController}.
+ * Extends {@link BaseIntegrationTest} for common test configuration.
  *
  * <p>Tests the complete teacher management flow from HTTP endpoint through service layer to
  * database, validating system behavior against a production-like database environment with existing
@@ -51,26 +40,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * </ul>
  *
  * @see TestDataInitializer
- * @see MockMvc
- * @version 1.0
+ * @see BaseIntegrationTest
+ * @version 1.2
  * @author Dylan Mercer
  */
-@SpringBootTest
-@Testcontainers
-@AutoConfigureMockMvc
-@ActiveProfiles("test")
 @DisplayName("Teacher Integration Tests")
-public class TeacherTests {
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine");
-
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-    }
-
+public class TeacherTests extends BaseIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
 
@@ -100,68 +75,14 @@ public class TeacherTests {
                     .andExpect(jsonPath("$.size").value(20));
         }
 
-        @Nested
-        @DisplayName("GET /teachers - Sort direction edge cases")
-        class SortDirectionTests {
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns sorted results when sort asc parameters provided")
-            void returnsSortedTeachersAsc() throws Exception {
-                mockMvc.perform(get(baseUrl)
-                                .param("sort", "user.lastName,asc"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content[0].user.lastName").exists());
-            }
-
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns sorted results when sort desc parameter provided")
-            void returnsSortedTeacherDesc() throws Exception {
-                mockMvc.perform(get(baseUrl)
-                                .param("sort", "user.lastName,desc"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content[0].user.lastName").exists());
-            }
-
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns sorted results when sort no direction parameter is provided")
-            void returnsSortedTeachersNoDirection() throws Exception {
-                mockMvc.perform(get(baseUrl)
-                                .param("sort", "user.lastName"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content[0].user.lastName").exists());
-            }
-
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns ASC direction when sort has only one parameter")
-            void returnsAscDirection_whenSortHasOneParameter() throws Exception {
-                mockMvc.perform(get(baseUrl)
-                                .param("sort", "user.lastName"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content").isArray());
-            }
-
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns DESC direction when sort parameter ends with desc")
-            void returnsAscDirection_whenSorEndsWithDesc() throws Exception {
-                mockMvc.perform(get(baseUrl)
-                                .param("sort", "user.lastName,desc"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content").isArray());
-            }
-
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns ASC direction when sort parameter ends with anything other than desc")
-            void returnsAscDirection_whenSortEndsWithNonDesc() throws Exception {
-                mockMvc.perform(get(baseUrl)
-                                .param("sort", "user.lastName,invalid"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content").isArray());
-            }
+        @Test
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @DisplayName("returns sorted results when sort parameter provided")
+        void returnsSortedTeachersAsc() throws Exception {
+            mockMvc.perform(get(baseUrl)
+                            .param("sort", "user.lastName,asc;grade,desc"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").isArray());
         }
 
         @Test
@@ -272,6 +193,17 @@ public class TeacherTests {
         @DisplayName("with no criteria returns all teachers")
         void searchWithNoCriteria_ReturnsAllTeachers() throws Exception {
             mockMvc.perform(get(baseUrl + "/search"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").isArray());
+        }
+
+        @Test
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @DisplayName("returns sorted search results when sort parameter provided")
+        void returnsSortedSearchResults() throws Exception {
+            mockMvc.perform(get(baseUrl + "/search")
+                            .param("name", "")
+                            .param("sort", "user.firstName,asc"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isArray());
         }

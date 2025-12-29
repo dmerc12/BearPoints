@@ -1,5 +1,6 @@
 package com.bearpoints.api.controller;
 
+import com.bearpoints.api.annotation.PaginationAndSorting;
 import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.dto.TeacherDTO;
 import com.bearpoints.api.criteria.TeacherSearchCriteria;
@@ -8,9 +9,7 @@ import com.bearpoints.api.service.TeacherService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -37,10 +36,11 @@ import org.springframework.web.bind.annotation.*;
  *     <li>POST, PUT, DELETE endpoints - ADMIN role required</li>
  * </ul>
  *
- * @version 1.0
+ * @version 2.0
  * @author Dylan Mercer
  */
 @Slf4j
+@CrossOrigin
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/teachers")
@@ -52,23 +52,18 @@ public class TeacherController {
      * Retrieves all teachers with pagination and sorting.
      * <p>Accessible to any authenticated user.
      *
-     * @param page Page number (default: 0)
-     * @param size Page size (default: 20)
-     * @param sort Sort criteria (default: lastName, asc)
+     * @param pageable Automatically resolved pagination and sorting parameters
      * @return Paginated response of teachers
      */
     @GetMapping
     public ResponseEntity<PagedResponseDTO<TeacherDTO>> getAllTeachers(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "user.lastName,asc") String sort
+            @PaginationAndSorting(
+                    defaultSort = "user.lastName,asc",
+                    allowedSortProperties = {"id, grade, user.firstName, user.lastName, user.email"}
+            ) Pageable pageable
     ) {
-        log.debug("Retrieving all teachers - page: {}, size: {}, sort: {}", page, size, sort);
-        String[] sortParams = splitSortParams(sort);
-        Sort.Direction direction = sortParams.length > 1 && "desc".equalsIgnoreCase(sortParams[1])
-                ? Sort.Direction.DESC
-                : Sort.Direction.ASC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortParams[0]));
+        log.debug("Retrieving all teachers - page: {}, size: {}, sort: {}",
+                pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
         PagedResponseDTO<TeacherDTO> response = teacherService.getAllTeachers(pageable);
         log.info("Retrieved {} teachers", response.getNumberOfElements());
         return ResponseEntity.ok(response);
@@ -82,9 +77,7 @@ public class TeacherController {
      * @param firstName First name search term (optional)
      * @param lastName Last name search term (optional)
      * @param grade Grade level (optional)
-     * @param page Page number (default: 0)
-     * @param size Page size (default: 20)
-     * @param sort Sort criteria (default: user.lastName,asc)
+     * @param pageable Automatically resolved pagination and sorting parameters
      * @return Paginated response of matching teachers
      */
     @GetMapping("/search")
@@ -93,22 +86,19 @@ public class TeacherController {
             @RequestParam(required = false) String firstName,
             @RequestParam(required = false) String lastName,
             @RequestParam(required = false) GradeLevel grade,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "user.lastName,asc") String sort
+            @PaginationAndSorting(
+                    defaultSort = "user.lastName,asc",
+                    allowedSortProperties = {"id, grade, user.firstName, user.lastName, user.email"}
+            ) Pageable pageable
     ) {
         log.debug("Searching teachers - email: {}, firstName: {}, lastName: {}, grade: {} " +
-                "- page: {}, size: {}, sort: {}", email, firstName, lastName, grade, page, size, sort);
+                "- page: {}, size: {}, sort: {}", email, firstName, lastName, grade,
+                pageable.getPageSize(), pageable.getPageSize(), pageable.getSort());
         TeacherSearchCriteria criteria = new TeacherSearchCriteria();
         criteria.setEmail(email);
         criteria.setFirstName(firstName);
         criteria.setLastName(lastName);
         criteria.setGrade(grade);
-        String[] sortParams = splitSortParams(sort);
-        Sort.Direction direction = sortParams.length > 1 && "desc".equalsIgnoreCase(sortParams[1])
-                ? Sort.Direction.DESC
-                : Sort.Direction.ASC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortParams[0]));
         PagedResponseDTO<TeacherDTO> response = teacherService.searchTeachers(criteria, pageable);
         log.info("Retrieved {} teachers matching search criteria", response.getNumberOfElements());
         return ResponseEntity.ok(response);
@@ -185,9 +175,5 @@ public class TeacherController {
         teacherService.deleteTeacher(id);
         log.info("Deleted teacher with ID: {}", id);
         return ResponseEntity.noContent().build();
-    }
-
-    private String[] splitSortParams(String sort) {
-        return sort.split(",");
     }
 }

@@ -16,10 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -41,7 +38,7 @@ import static org.mockito.Mockito.*;
  * </ul>
  *
  * @see TeacherController
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @ExtendWith(MockitoExtension.class)
@@ -59,7 +56,7 @@ public class TeacherControllerTests {
     }
 
     @Nested
-    @DisplayName("When retrieving all teachers")
+    @DisplayName("GET /api/teachers - When retrieving all teachers")
     class WhenRetrievingAllTeachers {
         @Test
         @DisplayName("Should return paginated teachers with default parameters")
@@ -68,10 +65,13 @@ public class TeacherControllerTests {
                     createTeacherDTO(1L, "teacher1@okcps.org", "John", "Doe", GradeLevel.FIRST),
                     createTeacherDTO(2L, "teacher2@okcps.org", "Jane", "Smith", GradeLevel.SECOND)
             );
-            Page<TeacherDTO> teacherPage = new PageImpl<>(teachers, PageRequest.of(0, 20), 2L);
+            Page<TeacherDTO> teacherPage = new PageImpl<>(teachers,
+                    PageRequest.of(0, 20, Sort.by(Sort.Direction.ASC, "user.lastName")),
+                    2L);
             PagedResponseDTO<TeacherDTO> expectedResponse = PagedResponseDTO.of(teacherPage);
             when(teacherService.getAllTeachers(any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<TeacherDTO>> response = teacherController.getAllTeachers(0, 20, "lastName,asc");
+            ResponseEntity<PagedResponseDTO<TeacherDTO>> response = teacherController
+                    .getAllTeachers(PageRequest.of(0, 20, Sort.by(Sort.Direction.ASC, "user.lastName")));
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
             assertEquals(2, response.getBody().getContent().size());
@@ -84,10 +84,13 @@ public class TeacherControllerTests {
             List<TeacherDTO> teachers = List.of(
                     createTeacherDTO(1L, "teacher1@okcps.org", "John", "Doe", GradeLevel.FIRST)
             );
-            Page<TeacherDTO> teacherPage = new PageImpl<>(teachers, PageRequest.of(1, 10), 15L);
+            Page<TeacherDTO> teacherPage = new PageImpl<>(teachers,
+                    PageRequest.of(1, 10, Sort.by(Sort.Direction.DESC, "user.email")),
+                    15L);
             PagedResponseDTO<TeacherDTO> expectedResponse = PagedResponseDTO.of(teacherPage);
             when(teacherService.getAllTeachers(any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<TeacherDTO>> response = teacherController.getAllTeachers(1, 10, "email,desc");
+            ResponseEntity<PagedResponseDTO<TeacherDTO>> response = teacherController
+                    .getAllTeachers(PageRequest.of(1, 10, Sort.by(Sort.Direction.DESC, "user.email")));
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
             assertEquals(1, response.getBody().getContent().size());
@@ -95,60 +98,24 @@ public class TeacherControllerTests {
         }
 
         @Test
-        @DisplayName("Should handle sort parameter with DESC in uppercase")
-        void shouldHandleSortParameterWithDescInUppercase() {
+        @DisplayName("Should handle multiple sort parameters")
+        void shouldHandleMultipleSortParameters() {
             List<TeacherDTO> teachers = List.of(
                     createTeacherDTO(1L, "teacher1@okcps.org", "John", "Doe", GradeLevel.FIRST)
             );
-            Page<TeacherDTO> teacherPage = new PageImpl<>(teachers, PageRequest.of(0, 20), 1L);
-            PagedResponseDTO<TeacherDTO> expectedResponse = PagedResponseDTO.of(teacherPage);
-            when(teacherService.getAllTeachers(any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<TeacherDTO>> response = teacherController.getAllTeachers(0, 20, "firstName,DESC");
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            verify(teacherService).getAllTeachers(any(Pageable.class));
-        }
-
-        @Test
-        @DisplayName("Should handle sort parameter with mixed case direction")
-        void shouldHandleSortParameterWithMixedCaseDirection() {
-            List<TeacherDTO> teachers = List.of(
-                    createTeacherDTO(1L, "teacher1@okcps.org", "John", "Doe", GradeLevel.FIRST)
+            Sort multiSort = Sort.by(
+                    Sort.Order.asc("user.email"),
+                    Sort.Order.desc("user.lastName"),
+                    Sort.Order.asc("user.firstName"),
+                    Sort.Order.desc("grade")
             );
-            Page<TeacherDTO> teacherPage = new PageImpl<>(teachers, PageRequest.of(0, 20), 1L);
+            Page<TeacherDTO> teacherPage = new PageImpl<>(teachers,
+                    PageRequest.of(0, 20, multiSort),
+                    1L);
             PagedResponseDTO<TeacherDTO> expectedResponse = PagedResponseDTO.of(teacherPage);
             when(teacherService.getAllTeachers(any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<TeacherDTO>> response = teacherController.getAllTeachers(0, 20, "firstName,DeSc");
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            verify(teacherService).getAllTeachers(any(Pageable.class));
-        }
-
-        @Test
-        @DisplayName("Should handle sort parameter with single field (no direction)")
-        void shouldHandleSortParameterWithSingleFieldNoDirection() {
-            List<TeacherDTO> teachers = List.of(
-                    createTeacherDTO(1L, "teacher1@okcps.org", "John", "Doe", GradeLevel.FIRST)
-            );
-            Page<TeacherDTO> teacherPage = new PageImpl<>(teachers, PageRequest.of(0, 20), 1L);
-            PagedResponseDTO<TeacherDTO> expectedResponse = PagedResponseDTO.of(teacherPage);
-            when(teacherService.getAllTeachers(any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<TeacherDTO>> response = teacherController.getAllTeachers(0, 20, "email");
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            verify(teacherService).getAllTeachers(any(Pageable.class));
-        }
-
-        @Test
-        @DisplayName("Should handle sort parameter with invalid direction")
-        void shouldHandleSortParameterWithInvalidDirection() {
-            List<TeacherDTO> teachers = List.of(
-                    createTeacherDTO(1L, "teacher1@okcps.org", "John", "Doe", GradeLevel.FIRST)
-            );
-            Page<TeacherDTO> teacherPage = new PageImpl<>(teachers, PageRequest.of(0, 20), 1L);
-            PagedResponseDTO<TeacherDTO> expectedResponse = PagedResponseDTO.of(teacherPage);
-            when(teacherService.getAllTeachers(any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<TeacherDTO>> response = teacherController.getAllTeachers(0, 20, "lastName,invalid");
+            ResponseEntity<PagedResponseDTO<TeacherDTO>> response = teacherController
+                    .getAllTeachers(PageRequest.of(0, 20, multiSort));
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
             verify(teacherService).getAllTeachers(any(Pageable.class));
@@ -156,7 +123,7 @@ public class TeacherControllerTests {
     }
 
     @Nested
-    @DisplayName("When searching teachers")
+    @DisplayName("GET /api/teachers/search - When searching teachers")
     class WhenSearchingTeachers {
         @Test
         @DisplayName("Should search teachers by email")
@@ -165,11 +132,14 @@ public class TeacherControllerTests {
             List<TeacherDTO> teachers = List.of(
                     createTeacherDTO(1L, email + "1@okcps.org", "John", "Doe", GradeLevel.FIRST)
             );
-            Page<TeacherDTO> teacherPage = new PageImpl<>(teachers, PageRequest.of(0, 20), 1L);
+            Page<TeacherDTO> teacherPage = new PageImpl<>(teachers,
+                    PageRequest.of(0, 20, Sort.by(Sort.Direction.ASC, "user.email")),
+                    1L);
             PagedResponseDTO<TeacherDTO> expectedResponse = PagedResponseDTO.of(teacherPage);
             when(teacherService.searchTeachers(any(TeacherSearchCriteria.class), any(Pageable.class))).thenReturn(expectedResponse);
             ResponseEntity<PagedResponseDTO<TeacherDTO>> response = teacherController.searchTeachers(email,
-                    null, null, null, 0, 20, "email");
+                    null, null, null,
+                    PageRequest.of(0, 20, Sort.by(Sort.Direction.ASC, "email")));
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
             assertEquals(1, response.getBody().getContent().size());
@@ -183,11 +153,14 @@ public class TeacherControllerTests {
             List<TeacherDTO> teachers = List.of(
                     createTeacherDTO(1L, "teacher1@okcps.org", firstName, "Doe", GradeLevel.FIRST)
             );
-            Page<TeacherDTO> teacherPage = new PageImpl<>(teachers, PageRequest.of(0, 20), 1L);
+            Page<TeacherDTO> teacherPage = new PageImpl<>(teachers,
+                    PageRequest.of(0, 20, Sort.by(Sort.Direction.ASC, "user.firstName")),
+                    1L);
             PagedResponseDTO<TeacherDTO> expectedResponse = PagedResponseDTO.of(teacherPage);
             when(teacherService.searchTeachers(any(TeacherSearchCriteria.class), any(Pageable.class))).thenReturn(expectedResponse);
             ResponseEntity<PagedResponseDTO<TeacherDTO>> response = teacherController.searchTeachers(null,
-                    firstName, null, null, 0, 20, "firstName,asc");
+                    firstName, null, null,
+                    PageRequest.of(0, 20, Sort.by(Sort.Direction.ASC, "user.firstName")));
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
             assertEquals(1, response.getBody().getContent().size());
@@ -201,11 +174,14 @@ public class TeacherControllerTests {
             List<TeacherDTO> teachers = List.of(
                     createTeacherDTO(1L, "teacher1@okcps.org", "John", lastName, GradeLevel.FIRST)
             );
-            Page<TeacherDTO> teacherPage = new PageImpl<>(teachers, PageRequest.of(0, 20), 1L);
+            Page<TeacherDTO> teacherPage = new PageImpl<>(teachers,
+                    PageRequest.of(0, 20, Sort.by(Sort.Direction.ASC, "user.lastName")),
+                    1L);
             PagedResponseDTO<TeacherDTO> expectedResponse = PagedResponseDTO.of(teacherPage);
             when(teacherService.searchTeachers(any(TeacherSearchCriteria.class), any(Pageable.class))).thenReturn(expectedResponse);
             ResponseEntity<PagedResponseDTO<TeacherDTO>> response = teacherController.searchTeachers(null,
-                    null, lastName, null, 0, 20, "lastName,desc");
+                    null, lastName, null,
+                    PageRequest.of(0, 20, Sort.by(Sort.Direction.ASC, "user.lastName")));
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
             assertEquals(1, response.getBody().getContent().size());
@@ -219,11 +195,14 @@ public class TeacherControllerTests {
             List<TeacherDTO> teachers = List.of(
                     createTeacherDTO(1L, "teacher1@okcps.org", "John", "Doe", grade)
             );
-            Page<TeacherDTO> teacherPage = new PageImpl<>(teachers, PageRequest.of(0, 20), 1L);
+            Page<TeacherDTO> teacherPage = new PageImpl<>(teachers,
+                    PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "grade")),
+                    1L);
             PagedResponseDTO<TeacherDTO> expectedResponse = PagedResponseDTO.of(teacherPage);
             when(teacherService.searchTeachers(any(TeacherSearchCriteria.class), any(Pageable.class))).thenReturn(expectedResponse);
             ResponseEntity<PagedResponseDTO<TeacherDTO>> response = teacherController.searchTeachers(null,
-                    null, null, grade, 0, 20, "lastName,asc");
+                    null, null, grade,
+                    PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "grade")));
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
             assertEquals(1, response.getBody().getContent().size());
@@ -241,11 +220,14 @@ public class TeacherControllerTests {
             List<TeacherDTO> teachers = List.of(
                     createTeacherDTO(1L, email + "1@okcps.org", firstName, lastName, grade)
             );
-            Page<TeacherDTO> teacherPage = new PageImpl<>(teachers, PageRequest.of(0, 20), 1L);
+            Page<TeacherDTO> teacherPage = new PageImpl<>(teachers,
+                    PageRequest.of(0, 20, Sort.by(Sort.Direction.ASC, "user.lastName")),
+                    1L);
             PagedResponseDTO<TeacherDTO> expectedResponse = PagedResponseDTO.of(teacherPage);
             when(teacherService.searchTeachers(any(TeacherSearchCriteria.class), any(Pageable.class))).thenReturn(expectedResponse);
             ResponseEntity<PagedResponseDTO<TeacherDTO>> response = teacherController.searchTeachers(email,
-                    firstName, lastName, grade, 0, 20, "lastName,asc,firstName,desc,email");
+                    firstName, lastName, grade,
+                    PageRequest.of(0, 20, Sort.by(Sort.Direction.ASC, "user.lastName")));
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
             assertEquals(1, response.getBody().getContent().size());
@@ -255,7 +237,7 @@ public class TeacherControllerTests {
     }
 
     @Nested
-    @DisplayName("When retrieving teacher by ID")
+    @DisplayName("GET /api/teachers/{id} - When retrieving teacher by ID")
     class WhenRetrievingTeacherById {
         @Test
         @DisplayName("Should return teacher when found")
@@ -283,7 +265,7 @@ public class TeacherControllerTests {
     }
 
     @Nested
-    @DisplayName("When creating teacher")
+    @DisplayName("POST /api/teachers - When creating teacher")
     class WhenCreatingTeacher {
         @Test
         @DisplayName("Should create new teacher and return 201 status")
@@ -310,7 +292,7 @@ public class TeacherControllerTests {
     }
 
     @Nested
-    @DisplayName("When updating teacher")
+    @DisplayName("PUT /api/teachers/{id} - When updating teacher")
     class WhenUpdatingTeacher {
         @Test
         @DisplayName("Should update existing teacher and return 200 status")
@@ -351,7 +333,7 @@ public class TeacherControllerTests {
     }
 
     @Nested
-    @DisplayName("When deleting teacher")
+    @DisplayName("DELETE /api/teachers/{id} - When deleting teacher")
     class WhenDeletingTeacher {
         @Test
         @DisplayName("Should delete teacher and return 204 status")
@@ -374,24 +356,6 @@ public class TeacherControllerTests {
                     () -> teacherController.deleteTeacher(teacherId)
             );
             verify(teacherService).deleteTeacher(teacherId);
-        }
-    }
-
-    @Nested
-    @DisplayName("When testing sort parameter splitting")
-    class WhenTestingSortParameterSplitting {
-        @Test
-        @DisplayName("Should handle sort parameter with multiple commas")
-        void shouldHandleSortParameterWithMultipleCommas() {
-            List<TeacherDTO> teachers = List.of(
-                    createTeacherDTO(1L, "teacher1@okcps.org", "John", "Doe", GradeLevel.FIRST)
-            );
-            Page<TeacherDTO> teacherPage = new PageImpl<>(teachers, PageRequest.of(0, 20), 1L);
-            PagedResponseDTO<TeacherDTO> expectedResponse = PagedResponseDTO.of(teacherPage);
-            when(teacherService.getAllTeachers(any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<TeacherDTO>> response = teacherController.getAllTeachers(0, 20, "field1,field2,field3");
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            verify(teacherService).getAllTeachers(any(Pageable.class));
         }
     }
 }
