@@ -7,31 +7,23 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * Full-stack integration tests for {@link LeaderboardController} utilizing
- * Testcontainers with PostgreSQL and comprehensive test data initialization with
- * the existing {@link TestDataInitializer}.
+ * Full-stack integration tests for {@link LeaderboardController}.
+ * Extends {@link BaseIntegrationTest} for common test configuration.
  *
  *
  * <p>Tests the complete flow from HTTP endpoint through service layer to database,
- * validating system behavior against a production-like database environment.
+ * validating system behavior against a production-like database environment with existing
+ * {@link TestDataInitializer}.
  *
  * <p>Test Configuration:
  * <ul>
@@ -42,25 +34,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * </ul>
  *
  * @see TestDataInitializer
- * @see MockMvc
- * @author Dylan Mercer
+ * @see BaseIntegrationTest
  * @version 1.1
+ * @author Dylan Mercer
  */
-@Testcontainers
-@SpringBootTest
-@AutoConfigureMockMvc
-@ActiveProfiles("test")
 @DisplayName("Leaderboard Integration Tests")
-public class LeaderboardTests {
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine");
-
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-    }
+public class LeaderboardTests extends BaseIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
 
