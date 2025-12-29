@@ -9,23 +9,12 @@ import com.bearpoints.api.entity.BehaviorType;
 import com.bearpoints.api.entity.BragLog;
 import com.bearpoints.api.entity.GradeLevel;
 import com.bearpoints.api.entity.Student;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -37,8 +26,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * Full-stack integration tests for {@link BragLogController} utilizing Testcontainers with PostgreSQL and
- * comprehensive test data initialization.
+ * Full-stack integration tests for {@link BragLogController}.
+ * Extends {@link BaseIntegrationTest} for common test configuration.
  *
  * <p>Tests the complete brag log management flow from HTTP endpoint through service layer to
  * database, validating system behavior against production-like database environment with existing
@@ -53,25 +42,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * </ul>
  *
  * @see TestDataInitializer
- * @see MockMvc
+ * @see BaseIntegrationTest
+ * @version 1.2
  * @author Dylan Mercer
  */
-@SpringBootTest
-@Testcontainers
-@AutoConfigureMockMvc
-@ActiveProfiles("test")
 @DisplayName("Brag Log Integration Tests")
-public class BragLogTests {
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine");
-
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-    }
-
+public class BragLogTests extends BaseIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
 
@@ -88,11 +64,11 @@ public class BragLogTests {
 
     @BeforeAll
     static void setUp() {
-        baseUrl = "/api/brag-logs";
+        baseUrl = "/api/brags";
     }
 
     @Nested
-    @DisplayName("GET /brag-logs - Retrieve brag logs")
+    @DisplayName("GET /api/brags - Retrieve brag logs")
     class GetAllBragLogs {
         @Test
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
@@ -105,38 +81,14 @@ public class BragLogTests {
                     .andExpect(jsonPath("$.size").value(20));
         }
 
-        @Nested
-        @DisplayName("GET /brag-logs - Sort direction edge cases")
-        class SortDirectionTests {
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns sorted results when sort asc parameters provided")
-            void returnsSortedBragLogsAsc() throws Exception {
-                mockMvc.perform(get(baseUrl)
-                                .param("sort", "student.user.lastName,asc"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content[0].studentName").exists());
-            }
-
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns sorted results when sort desc parameters provided")
-            void returnsSortedBragLogsDesc() throws Exception {
-                mockMvc.perform(get(baseUrl)
-                                .param("sort", "teacher.user.lastName,desc"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content[0].teacherName").exists());
-            }
-
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns sorted results when no sort parameter is provided")
-            void returnsSortedBragLogsNoDirection() throws Exception {
-                mockMvc.perform(get(baseUrl)
-                                .param("sort", "studentId"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content[0].studentId").exists());
-            }
+        @Test
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @DisplayName("returns sorted results when sort parameter provided")
+        void returnsSortedBragLogs() throws Exception {
+            mockMvc.perform(get(baseUrl)
+                            .param("sort", "timestamp,desc;student.points,desc"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").isArray());
         }
 
         @Test
@@ -151,7 +103,7 @@ public class BragLogTests {
     }
 
     @Nested
-    @DisplayName("GET /brag-logs/search - Search brag logs")
+    @DisplayName("GET /api/brags/search - Search brag logs")
     class SearchBragLogs {
         @Test
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
@@ -272,52 +224,39 @@ public class BragLogTests {
                     .andExpect(jsonPath("$.content").isEmpty());
         }
 
-        @Nested
-        @DisplayName("GET /brag-logs/search - Sort direction edge cases")
-        class SortDirectionTests {
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns sorted results when sort asc parameters provided")
-            void returnsSortedBragLogsAsc() throws Exception {
-                String searchTerm = "S";
-                mockMvc.perform(get(baseUrl + "/search")
-                                .param("studentName", searchTerm)
-                                .param("sort", "student.user.firstName,asc"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content[*].studentName",
-                                everyItem(containsStringIgnoringCase(searchTerm))));
-            }
-
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns sorted results when sort desc parameters provided")
-            void returnsSortedBragLogsDesc() throws Exception {
-                String searchTerm = "S";
-                mockMvc.perform(get(baseUrl + "/search")
-                                .param("studentName", searchTerm)
-                                .param("sort", "pointsGenerated,desc"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content[*].studentName",
-                                everyItem(containsStringIgnoringCase(searchTerm))));
-            }
-
-            @Test
-            @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-            @DisplayName("returns sorted results when no sort parameter is provided")
-            void returnsSortedBragLogsNoDirection() throws Exception {
-                String searchTerm = "S";
-                mockMvc.perform(get(baseUrl + "/search")
-                                .param("studentName", searchTerm)
-                                .param("sort", "teacher.user.lastName"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.content[*].studentName",
-                                everyItem(containsStringIgnoringCase(searchTerm))));
-            }
+        @Test
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @DisplayName("with combined criteria returns matching brag logs")
+        void searchWithCombinedCriteria_ReturnsMatchingBragLogs() throws Exception {
+            String studentNameSearch = "";
+            String teacherNameSearch = "";
+            String grade = GradeLevel.FIRST.name();
+            Integer minPoints = 3;
+            Integer maxPoints = 10;
+            String startDate = LocalDateTime.now().minusDays(3).toString();
+            String endDate = LocalDateTime.now().toString();
+            Long studentId = 1L;
+            Long teacherId = 1L;
+            String notesSearch = "";
+            mockMvc.perform(get(baseUrl + "/search")
+                            .param("studentName", studentNameSearch)
+                            .param("teacherName", teacherNameSearch)
+                            .param("grade", grade)
+                            .param("minPoints", String.valueOf(minPoints))
+                            .param("maxPoints", String.valueOf(maxPoints))
+                            .param("startDate", startDate)
+                            .param("endDate", endDate)
+                            .param("studentId", String.valueOf(studentId))
+                            .param("teacherId", String.valueOf(teacherId))
+                            .param("notes", notesSearch)
+                            .param("sort", "grade,asc"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").isArray());
         }
     }
 
     @Nested
-    @DisplayName("GET /brag-logs/{id} - Get brag log by ID")
+    @DisplayName("GET /api/brags/{id} - Get brag log by ID")
     class GetBragLogById {
         @Test
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
@@ -354,7 +293,7 @@ public class BragLogTests {
     }
 
     @Nested
-    @DisplayName("POST /brag-logs - Create brag log")
+    @DisplayName("POST /api/brags - Create brag log")
     class CreateBragLog {
         @Test
         @WithMockUser
@@ -497,7 +436,7 @@ public class BragLogTests {
     }
 
     @Nested
-    @DisplayName("PUT /brag-logs/{id} - Update brag log")
+    @DisplayName("PUT /api/brags/{id} - Update brag log")
     class UpdateBragLog {
         @Test
         @WithMockUser(roles = {"ADMIN", "TEACHER"})
@@ -697,7 +636,7 @@ public class BragLogTests {
     }
 
     @Nested
-    @DisplayName("DELETE /brag-logs/{id} - Delete brag log")
+    @DisplayName("DELETE /api/brags/{id} - Delete brag log")
     class DeleteBragLog {
         @Test
         @WithMockUser(roles = {"ADMIN", "TEACHER"})

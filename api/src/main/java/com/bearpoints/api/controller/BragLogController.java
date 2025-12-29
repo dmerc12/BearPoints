@@ -1,5 +1,6 @@
 package com.bearpoints.api.controller;
 
+import com.bearpoints.api.annotation.PaginationAndSorting;
 import com.bearpoints.api.criteria.BragLogSearchCriteria;
 import com.bearpoints.api.dto.BragLogDTO;
 import com.bearpoints.api.dto.PagedResponseDTO;
@@ -8,9 +9,7 @@ import com.bearpoints.api.service.BragLogService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -21,17 +20,16 @@ import java.time.LocalDateTime;
 
 /**
  * REST controller for brag log management operations.
- * <p>Provides endpoints for managing behavior types with pagination, sorting, and filtering.
+ * <p>Provides endpoints for managing brag logs with pagination, sorting, and filtering.
  *
  * <p>Endpoint:
  * <ul>
- *     <li>GET /api/brag-logs - Retrieve all brag logs (any authenticated user)</li>
- *     <li>GET /api/brag-logs/search - Search brag logs (any authenticated user)</li>
- *     <li>GET /api/brag-logs/{id} - Retrieve brag log by ID (any authenticated user)</li>
- *     <li>POST /api/brag-logs - Create new brag log (any unauthenticated user)</li>
- *     <li>PUT /api/brag-logs/{id} - Update existing brag log (ADMIN and TEACHER only)</li>
- *     <li>DELETE /api/brag-logs/{id} - Delete existing brag log (ADMIN and TEACHER only)</li>
- *     <li>{@code POST /api/public/brag-logs} - Submits a new brag log</li>
+ *     <li>GET /api/brags - Retrieve all brag logs (any authenticated user)</li>
+ *     <li>GET /api/brags/search - Search brag logs (any authenticated user)</li>
+ *     <li>GET /api/brags/{id} - Retrieve brag log by ID (any authenticated user)</li>
+ *     <li>POST /api/brags - Create new brag log (any unauthenticated user)</li>
+ *     <li>PUT /api/brags/{id} - Update existing brag log (ADMIN and TEACHER only)</li>
+ *     <li>DELETE /api/brags/{id} - Delete existing brag log (ADMIN and TEACHER only)</li>
  * </ul>
  *
  * <p>Security:
@@ -41,7 +39,7 @@ import java.time.LocalDateTime;
  *     <li>PUT, DELETE endpoints - ADMIN or TEACHER role required</li>
  * </ul>
  *
- * @version 2.0
+ * @version 2.1
  * @author Dylan Mercer
  */
 @Slf4j
@@ -49,7 +47,7 @@ import java.time.LocalDateTime;
 @RestController
 @RequiredArgsConstructor
 @PreAuthorize("permitAll()")
-@RequestMapping("/api/brag-logs")
+@RequestMapping("/api/brags")
 public class BragLogController {
     private final BragLogService bragLogService;
 
@@ -57,24 +55,21 @@ public class BragLogController {
      * Retrieves all brag logs with pagination and sorting.
      * <p>Accessible to any authenticated user.
      *
-     * @param page Page number (default: 0)
-     * @param size Page size (default: 20)
-     * @param sort Sort criteria (default: timestamp,desc)
+     * @param pageable Automatically resolved pagination and sorting parameters
      * @return Paginated response of brag logs
      */
     @GetMapping
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<PagedResponseDTO<BragLogDTO>> getAllBragLogs(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "timestamp,desc") String sort
+            @PaginationAndSorting(
+                    defaultSort = "timestamp,desc",
+                    allowedSortProperties = {"id", "student.id", "student.user.firstName", "student.user.lastName",
+                            "student.user.email", "teacher.id", "teacher.user.firstName", "teacher.user.lastName",
+                            "teacher.user.email", "grade", "pointsGenerated", "notes", "timestamp"}
+            ) Pageable pageable
     ) {
-        log.debug("Retrieving all brag logs - page: {}, size: {}, sort: {}", page, size, sort);
-        String[] sortParams = splitSortParams(sort);
-        Sort.Direction direction = sortParams.length > 1 && "desc".equalsIgnoreCase(sortParams[1])
-                ? Sort.Direction.DESC
-                : Sort.Direction.ASC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortParams[0]));
+        log.debug("Retrieving all brag logs - page: {}, size: {}, sort: {}",
+                pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
         PagedResponseDTO<BragLogDTO> response = bragLogService.getAllBragLogs(pageable);
         log.info("Retrieved {} brag logs", response.getNumberOfElements());
         return ResponseEntity.ok(response);
@@ -95,9 +90,7 @@ public class BragLogController {
      * @param teacherId Teacher ID filter (optional)
      * @param studentId Student ID filter (optional)
      * @param notes Notes search term (optional)
-     * @param page Page number (default: 0)
-     * @param size Page size (default: 20)
-     * @param sort Sort criteria (default: timestamp,desc)
+     * @param pageable Automatically resolved pagination and sorting parameters
      * @return Paginated response of matching brag logs
      */
     @GetMapping("/search")
@@ -113,14 +106,17 @@ public class BragLogController {
             @RequestParam(required = false) Long teacherId,
             @RequestParam(required = false) Long studentId,
             @RequestParam(required = false) String notes,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "timestamp,desc") String sort
+            @PaginationAndSorting(
+                    defaultSort = "timestamp,desc",
+                    allowedSortProperties = {"id", "student.id", "student.user.firstName", "student.user.lastName",
+                            "student.user.email", "teacher.id", "teacher.user.firstName", "teacher.user.lastName",
+                            "teacher.user.email", "grade", "pointsGenerated", "notes", "timestamp"}
+            ) Pageable pageable
     ) {
         log.debug("Searching brag logs - studentName: {}, teacherName: {}, grade: {}, minPoints: {}, maxPoints: {} " +
                 "startDate: {}, endDate: {}, teacherId: {} studentId: {}, notes: {} - page: {}, size: {}, sort: {}",
                 studentName, teacherName, grade, minPoints, maxPoints, startDate, endDate, teacherId, studentId,
-                notes, page, size, sort);
+                notes, pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
         BragLogSearchCriteria criteria = new BragLogSearchCriteria();
         criteria.setStudentName(studentName);
         criteria.setTeacherName(teacherName);
@@ -132,11 +128,6 @@ public class BragLogController {
         criteria.setTeacherId(teacherId);
         criteria.setStudentId(studentId);
         criteria.setNotes(notes);
-        String[] sortParams = splitSortParams(sort);
-        Sort.Direction direction = sortParams.length > 1 && "desc".equalsIgnoreCase(sortParams[1])
-                ? Sort.Direction.DESC
-                : Sort.Direction.ASC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortParams[0]));
         PagedResponseDTO<BragLogDTO> response = bragLogService.searchBragLogs(criteria, pageable);
         log.info("Found {} brag logs matching search criteria", response.getNumberOfElements());
         return ResponseEntity.ok(response);
@@ -208,9 +199,5 @@ public class BragLogController {
         bragLogService.deleteBragLog(id);
         log.info("Deleted brag log with ID: {}", id);
         return ResponseEntity.noContent().build();
-    }
-
-    private String[] splitSortParams(String sort) {
-        return sort.split(",");
     }
 }

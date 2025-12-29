@@ -15,10 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -41,7 +38,7 @@ import static org.mockito.Mockito.*;
  * </ul>
  *
  * @see BragLogController
- * @version 2.0
+ * @version 2.1
  * @author Dylan Mercer
  */
 @ExtendWith(MockitoExtension.class)
@@ -63,7 +60,7 @@ public class BragLogControllerTests {
     }
 
     @Nested
-    @DisplayName("When retrieving all brag logs")
+    @DisplayName("GET /api/brags - When retrieving all brag logs")
     class RetrieveAllBragLogs {
         @Test
         @DisplayName("Should return paginated brag logs with default parameters")
@@ -72,11 +69,13 @@ public class BragLogControllerTests {
                     createBragLogDTO(1L, 1L, 1L, "John Doe", "Jane Smith"),
                     createBragLogDTO(2L, 2L, 2L, "Bill Johnson", "Alice Garcia")
             );
-            Page<BragLogDTO> bragLogPage = new PageImpl<>(bragLogs);
+            Page<BragLogDTO> bragLogPage = new PageImpl<>(bragLogs,
+                    PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "timestamp")),
+                    2L);
             PagedResponseDTO<BragLogDTO> expectedResponse = PagedResponseDTO.of(bragLogPage);
             when(bragLogService.getAllBragLogs(any(Pageable.class))).thenReturn(expectedResponse);
             ResponseEntity<PagedResponseDTO<BragLogDTO>> response = bragLogController
-                    .getAllBragLogs(0, 20, "timestamp,desc");
+                    .getAllBragLogs(PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "timestamp")));
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
             verify(bragLogService).getAllBragLogs(any(Pageable.class));
@@ -89,79 +88,37 @@ public class BragLogControllerTests {
                     createBragLogDTO(1L, 1L, 1L, "John Doe", "Jane Smith"),
                     createBragLogDTO(2L, 2L, 2L, "Bill Johnson", "Alice Garcia")
             );
-            Page<BragLogDTO> bragLogPage = new PageImpl<>(bragLogs, PageRequest.of(0, 20), 2L);
+            Page<BragLogDTO> bragLogPage = new PageImpl<>(bragLogs,
+                    PageRequest.of(1, 10, Sort.by(Sort.Direction.ASC, "student.id")),
+                    2L);
             PagedResponseDTO<BragLogDTO> expectedResponse = PagedResponseDTO.of(bragLogPage);
             when(bragLogService.getAllBragLogs(any(Pageable.class))).thenReturn(expectedResponse);
             ResponseEntity<PagedResponseDTO<BragLogDTO>> response = bragLogController
-                    .getAllBragLogs(1, 10, "timestamp,asc");
+                    .getAllBragLogs(PageRequest.of(1, 10, Sort.by(Sort.Direction.ASC, "student.id")));
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
             verify(bragLogService).getAllBragLogs(any(Pageable.class));
         }
 
         @Test
-        @DisplayName("Should handle sort parameter with DESC in uppercase")
-        void shouldHandleSortingParameterWithDESCInUppercase() {
+        @DisplayName("Should handle multiple sort parameters")
+        void shouldHandleMultipleSortParameters() {
             List<BragLogDTO> bragLogs = List.of(
                     createBragLogDTO(1L, 1L, 1L, "John Doe", "Jane Smith"),
                     createBragLogDTO(2L, 2L, 2L, "Bill Johnson", "Alice Garcia")
             );
-            Page<BragLogDTO> bragLogPage = new PageImpl<>(bragLogs, PageRequest.of(0, 20), 2L);
-            PagedResponseDTO<BragLogDTO> expectedResponse = PagedResponseDTO.of(bragLogPage);
-            when(bragLogService.getAllBragLogs(any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<BragLogDTO>> response = bragLogController
-                    .getAllBragLogs(1, 10, "timestamp,DESC");
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            verify(bragLogService).getAllBragLogs(any(Pageable.class));
-        }
-
-        @Test
-        @DisplayName("Should handle sort parameter with mixed case direction")
-        void shouldHandleSortParameterWithMixedCaseDirection() {
-            List<BragLogDTO> bragLogs = List.of(
-                    createBragLogDTO(1L, 1L, 1L, "John Doe", "Jane Smith"),
-                    createBragLogDTO(2L, 2L, 2L, "Bill Johnson", "Alice Garcia")
+            Sort multiSort = Sort.by(
+                    Sort.Order.desc("timestamp"),
+                    Sort.Order.asc("student.id"),
+                    Sort.Order.asc("teacher.id")
             );
-            Page<BragLogDTO> bragLogPage = new PageImpl<>(bragLogs, PageRequest.of(0, 20), 2L);
+            Page<BragLogDTO> bragLogPage = new PageImpl<>(bragLogs,
+                    PageRequest.of(1, 10, multiSort),
+                    2L);
             PagedResponseDTO<BragLogDTO> expectedResponse = PagedResponseDTO.of(bragLogPage);
             when(bragLogService.getAllBragLogs(any(Pageable.class))).thenReturn(expectedResponse);
             ResponseEntity<PagedResponseDTO<BragLogDTO>> response = bragLogController
-                    .getAllBragLogs(1, 10, "timestamp,DeSc");
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            verify(bragLogService).getAllBragLogs(any(Pageable.class));
-        }
-
-        @Test
-        @DisplayName("Should handle sort parameter with single field (no direction)")
-        void shouldHandleSortParameterWithSingleFieldNoDirection() {
-            List<BragLogDTO> bragLogs = List.of(
-                    createBragLogDTO(1L, 1L, 1L, "John Doe", "Jane Smith"),
-                    createBragLogDTO(2L, 2L, 2L, "Bill Johnson", "Alice Garcia")
-            );
-            Page<BragLogDTO> bragLogPage = new PageImpl<>(bragLogs, PageRequest.of(0, 20), 2L);
-            PagedResponseDTO<BragLogDTO> expectedResponse = PagedResponseDTO.of(bragLogPage);
-            when(bragLogService.getAllBragLogs(any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<BragLogDTO>> response = bragLogController
-                    .getAllBragLogs(1, 10, "timestamp");
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            verify(bragLogService).getAllBragLogs(any(Pageable.class));
-        }
-
-        @Test
-        @DisplayName("Should handle sort parameter with invalid direction")
-        void shouldHandleSortParameterWithInvalidDirection() {
-            List<BragLogDTO> bragLogs = List.of(
-                    createBragLogDTO(1L, 1L, 1L, "John Doe", "Jane Smith"),
-                    createBragLogDTO(2L, 2L, 2L, "Bill Johnson", "Alice Garcia")
-            );
-            Page<BragLogDTO> bragLogPage = new PageImpl<>(bragLogs, PageRequest.of(0, 20), 2L);
-            PagedResponseDTO<BragLogDTO> expectedResponse = PagedResponseDTO.of(bragLogPage);
-            when(bragLogService.getAllBragLogs(any(Pageable.class))).thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<BragLogDTO>> response = bragLogController
-                    .getAllBragLogs(1, 10, "timestamp,invalid");
+                    .getAllBragLogs(PageRequest.of(1, 10, multiSort));
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
             verify(bragLogService).getAllBragLogs(any(Pageable.class));
@@ -169,7 +126,7 @@ public class BragLogControllerTests {
     }
 
     @Nested
-    @DisplayName("When searching brag logs")
+    @DisplayName("GET /api/brags/search - When searching brag logs")
     class WhenSearchingBragLogs {
         @Test
         @DisplayName("Should search brag logs with student name criteria")
@@ -178,98 +135,14 @@ public class BragLogControllerTests {
                     createBragLogDTO(1L, 1L, 1L, "John Doe", "Jane Smith"),
                     createBragLogDTO(2L, 2L, 2L, "Bill Johnson", "Alice Garcia")
             );
-            Page<BragLogDTO> bragLogPage = new PageImpl<>(bragLogs, PageRequest.of(0, 20), 2L);
+            Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "timestamp"));
+            Page<BragLogDTO> bragLogPage = new PageImpl<>(bragLogs, pageable, 2L);
             PagedResponseDTO<BragLogDTO> expectedResponse = PagedResponseDTO.of(bragLogPage);
             when(bragLogService.searchBragLogs(any(BragLogSearchCriteria.class), any(Pageable.class)))
                     .thenReturn(expectedResponse);
             ResponseEntity<PagedResponseDTO<BragLogDTO>> response = bragLogController
                     .searchBragLogs("J", null, null, null, null,
-                            null, null, null, null, null,
-                            1, 10, "timestamp,desc");
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            assertEquals(2, response.getBody().getTotalElements());
-            verify(bragLogService).searchBragLogs(any(BragLogSearchCriteria.class), any(Pageable.class));
-        }
-
-        @Test
-        @DisplayName("Should handle sort parameter with DESC in uppercase")
-        void shouldHandleSortingParameterWithDESCInUppercase() {
-            List<BragLogDTO> bragLogs = List.of(
-                    createBragLogDTO(1L, 1L, 1L, "John Doe", "Jane Smith"),
-                    createBragLogDTO(2L, 2L, 2L, "Bill Johnson", "Alice Garcia")
-            );
-            Page<BragLogDTO> bragLogPage = new PageImpl<>(bragLogs, PageRequest.of(0, 20), 2L);
-            PagedResponseDTO<BragLogDTO> expectedResponse = PagedResponseDTO.of(bragLogPage);
-            when(bragLogService.searchBragLogs(any(BragLogSearchCriteria.class), any(Pageable.class)))
-                    .thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<BragLogDTO>> response = bragLogController
-                    .searchBragLogs("J", null, null, null, null,
-                            null, null, null, null, null,
-                            1, 10, "timestamp,DESC");
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            assertEquals(2, response.getBody().getTotalElements());
-            verify(bragLogService).searchBragLogs(any(BragLogSearchCriteria.class), any(Pageable.class));
-        }
-
-        @Test
-        @DisplayName("Should handle sort parameter with mixed case direction")
-        void shouldHandleSortParameterWithMixedCaseDirection() {
-            List<BragLogDTO> bragLogs = List.of(
-                    createBragLogDTO(1L, 1L, 1L, "John Doe", "Jane Smith"),
-                    createBragLogDTO(2L, 2L, 2L, "Bill Johnson", "Alice Garcia")
-            );
-            Page<BragLogDTO> bragLogPage = new PageImpl<>(bragLogs, PageRequest.of(0, 20), 2L);
-            PagedResponseDTO<BragLogDTO> expectedResponse = PagedResponseDTO.of(bragLogPage);
-            when(bragLogService.searchBragLogs(any(BragLogSearchCriteria.class), any(Pageable.class)))
-                    .thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<BragLogDTO>> response = bragLogController
-                    .searchBragLogs("J", null, null, null, null,
-                            null, null, null, null, null,
-                            1, 10, "timestamp,DeSc");
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            assertEquals(2, response.getBody().getTotalElements());
-            verify(bragLogService).searchBragLogs(any(BragLogSearchCriteria.class), any(Pageable.class));
-        }
-
-        @Test
-        @DisplayName("Should handle sort parameter with single field (no direction)")
-        void shouldHandleSortParameterWithSingleFieldNoDirection() {
-            List<BragLogDTO> bragLogs = List.of(
-                    createBragLogDTO(1L, 1L, 1L, "John Doe", "Jane Smith"),
-                    createBragLogDTO(2L, 2L, 2L, "Bill Johnson", "Alice Garcia")
-            );
-            Page<BragLogDTO> bragLogPage = new PageImpl<>(bragLogs, PageRequest.of(0, 20), 2L);
-            PagedResponseDTO<BragLogDTO> expectedResponse = PagedResponseDTO.of(bragLogPage);
-            when(bragLogService.searchBragLogs(any(BragLogSearchCriteria.class), any(Pageable.class)))
-                    .thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<BragLogDTO>> response = bragLogController
-                    .searchBragLogs("J", null, null, null, null,
-                            null, null, null, null, null,
-                            1, 10, "timestamp");
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            assertEquals(2, response.getBody().getTotalElements());
-            verify(bragLogService).searchBragLogs(any(BragLogSearchCriteria.class), any(Pageable.class));
-        }
-
-        @Test
-        @DisplayName("Should handle sort parameter with invalid direction")
-        void shouldHandleSortParameterWithInvalidDirection() {
-            List<BragLogDTO> bragLogs = List.of(
-                    createBragLogDTO(1L, 1L, 1L, "John Doe", "Jane Smith"),
-                    createBragLogDTO(2L, 2L, 2L, "Bill Johnson", "Alice Garcia")
-            );
-            Page<BragLogDTO> bragLogPage = new PageImpl<>(bragLogs, PageRequest.of(0, 20), 2L);
-            PagedResponseDTO<BragLogDTO> expectedResponse = PagedResponseDTO.of(bragLogPage);
-            when(bragLogService.searchBragLogs(any(BragLogSearchCriteria.class), any(Pageable.class)))
-                    .thenReturn(expectedResponse);
-            ResponseEntity<PagedResponseDTO<BragLogDTO>> response = bragLogController
-                    .searchBragLogs("J", null, null, null, null,
-                            null, null, null, null, null,
-                            1, 10, "timestamp,invalid");
+                            null, null, null, null, null, pageable);
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
             assertEquals(2, response.getBody().getTotalElements());
@@ -278,7 +151,7 @@ public class BragLogControllerTests {
     }
 
     @Nested
-    @DisplayName("When retrieving brag log by ID")
+    @DisplayName("GET /api/brags/{id} - When retrieving brag log by ID")
     class WhenRetrievingBragLogById {
         @Test
         @DisplayName("Should return brag log when found")
@@ -306,7 +179,7 @@ public class BragLogControllerTests {
     }
 
     @Nested
-    @DisplayName("When creating brag log")
+    @DisplayName("POST /api/brags - When creating brag log")
     class WhenCreatingBragLog {
         @Test
         @DisplayName("Should create new brag log and return 201 status")
@@ -325,7 +198,7 @@ public class BragLogControllerTests {
     }
 
     @Nested
-    @DisplayName("When updating brag log")
+    @DisplayName("PUT /api/brags/{id} - When updating brag log")
     class WhenUpdatingBragLog {
         @Test
         @DisplayName("Should update existing brag log and return 200 status")
@@ -359,7 +232,7 @@ public class BragLogControllerTests {
     }
 
     @Nested
-    @DisplayName("When deleting brag log")
+    @DisplayName("DELETE /api/brags/{id} - When deleting brag log")
     class WhenDeletingBragLog {
         @Test
         @DisplayName("Should delete brag log and return 204 status")
