@@ -5,7 +5,6 @@ import com.bearpoints.api.criteria.BragLogSearchCriteria;
 import com.bearpoints.api.dao.BehaviorTypeDAO;
 import com.bearpoints.api.dao.BragLogDAO;
 import com.bearpoints.api.dao.StudentDAO;
-import com.bearpoints.api.dao.TeacherDAO;
 import com.bearpoints.api.dto.BragLogDTO;
 import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.entity.*;
@@ -22,18 +21,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Represents service responsible for public brag log submissions.
- * <p>Implements with {@link BragLogService}
+ * Implementation of {@link BragLogService} for brag log management.
  *
- * @see Student
- * @see StudentDAO
- * @see Teacher
- * @see TeacherDAO
- * @see BehaviorType
- * @see BehaviorTypeDAO
- * @see BragLog
- * @see BragLogDAO
- *
+ * @see BragLogService
  * @version 2.0
  * @author Dylan Mercer
  */
