@@ -34,7 +34,7 @@ import static org.mockito.Mockito.*;
  * </ul>
  *
  * @see RewardItemController
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @ExtendWith(MockitoExtension.class)
@@ -51,7 +51,7 @@ public class RewardItemControllerTests {
     }
 
     @Nested
-    @DisplayName("GET /api/rewards - When retrieving all reward items")
+    @DisplayName("GET /api/items - When retrieving all reward items")
     class WhenRetrievingAllRewardItems {
         @Test
         @DisplayName("Should return paginated reward items with default parameters")
@@ -117,7 +117,7 @@ public class RewardItemControllerTests {
     }
 
     @Nested
-    @DisplayName("GET /api/rewards/search - When searching reward items")
+    @DisplayName("GET /api/items/search - When searching reward items")
     class WhenSearchingRewardItems {
         @Test
         @DisplayName("Should search reward items with name criteria")
@@ -215,7 +215,7 @@ public class RewardItemControllerTests {
     }
 
     @Nested
-    @DisplayName("GET /api/rewards/{id} - When retrieving reward item by ID")
+    @DisplayName("GET /api/items/{id} - When retrieving reward item by ID")
     class WhenRetrievingRewardItemById {
         @Test
         @DisplayName("Should return reward item when found")
@@ -243,7 +243,7 @@ public class RewardItemControllerTests {
     }
 
     @Nested
-    @DisplayName("POST /api/rewards - When creating reward item")
+    @DisplayName("POST /api/items - When creating reward item")
     class WhenCreatingRewardItem {
         @Test
         @DisplayName("Should create new reward item and return 201 status")
@@ -267,7 +267,7 @@ public class RewardItemControllerTests {
     }
 
     @Nested
-    @DisplayName("PUT /api/rewards/{id} - When updating reward item")
+    @DisplayName("PUT /api/items/{id} - When updating reward item")
     class WhenUpdatingRewardItem {
         @Test
         @DisplayName("Should update existing reward item and return 200 status")
@@ -303,7 +303,7 @@ public class RewardItemControllerTests {
     }
 
     @Nested
-    @DisplayName("DELETE /api/rewards/{id} - When deleting reward item")
+    @DisplayName("DELETE /api/items/{id} - When deleting reward item")
     class WhenDeletingRewardItem {
         @Test
         @DisplayName("Should delete reward item and return 204 status")

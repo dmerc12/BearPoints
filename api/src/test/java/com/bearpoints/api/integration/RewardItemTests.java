@@ -39,7 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *
  * @see TestDataInitializer
  * @see BaseIntegrationTest
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @DisplayName("Reward Item Integration Tests")
@@ -54,11 +54,11 @@ public class RewardItemTests extends BaseIntegrationTest {
 
     @BeforeAll
     static void setUp() {
-        baseUrl = "/api/rewards";
+        baseUrl = "/api/items";
     }
 
     @Nested
-    @DisplayName("GET /api/rewards - Retrieve reward items")
+    @DisplayName("GET /api/items - Retrieve reward items")
     class GetAllRewardItems {
         @Test
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
@@ -93,7 +93,7 @@ public class RewardItemTests extends BaseIntegrationTest {
     }
 
     @Nested
-    @DisplayName("GET /api/rewards/search - Search reward items")
+    @DisplayName("GET /api/items/search - Search reward items")
     class SearchRewardItems {
         @Test
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
@@ -193,7 +193,7 @@ public class RewardItemTests extends BaseIntegrationTest {
     }
 
     @Nested
-    @DisplayName("GET /api/rewards/{id} - Get reward item by ID")
+    @DisplayName("GET /api/items/{id} - Get reward item by ID")
     class GetRewardItemById {
         @Test
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
@@ -219,7 +219,7 @@ public class RewardItemTests extends BaseIntegrationTest {
     }
 
     @Nested
-    @DisplayName("POST /api/rewards - Create reward item")
+    @DisplayName("POST /api/items - Create reward item")
     class CreateRewardItem {
         @Test
         @WithMockUser(roles = "ADMIN")
@@ -423,7 +423,7 @@ public class RewardItemTests extends BaseIntegrationTest {
     }
 
     @Nested
-    @DisplayName("PUT /api/rewards/{id} - Update reward item")
+    @DisplayName("PUT /api/items/{id} - Update reward item")
     class UpdateRewardItem {
         @Test
         @WithMockUser(roles = "ADMIN")
@@ -728,7 +728,7 @@ public class RewardItemTests extends BaseIntegrationTest {
     }
 
     @Nested
-    @DisplayName("DELETE /api/rewards/{id} - Delete reward item")
+    @DisplayName("DELETE /api/items/{id} - Delete reward item")
     class DeleteRewardItem {
         @Test
         @WithMockUser(roles = "ADMIN")

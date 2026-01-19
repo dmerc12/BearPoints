@@ -21,12 +21,12 @@ import org.springframework.web.bind.annotation.*;
  *
  * <p>Endpoints:
  * <ul>
- *     <li>GET /api/rewards - Retrieve all reward items (any authenticated user)</li>
- *     <li>GET /api/rewards/search - Search reward items (any authenticated user)</li>
- *     <li>GET /api/rewards/{id} - Retrieve reward item by ID (any authenticated user)</li>
- *     <li>POST /api/rewards - Create a new reward item (ADMIN only)</li>
- *     <li>PUT /api/rewards/{id} - Update existing reward item (ADMIN only)</li>
- *     <li>DELETE /api/rewards/{id} - Delete a reward item (ADMIN only)</li>
+ *     <li>GET /api/items - Retrieve all reward items (any authenticated user)</li>
+ *     <li>GET /api/items/search - Search reward items (any authenticated user)</li>
+ *     <li>GET /api/items/{id} - Retrieve reward item by ID (any authenticated user)</li>
+ *     <li>POST /api/items - Create a new reward item (ADMIN only)</li>
+ *     <li>PUT /api/items/{id} - Update existing reward item (ADMIN only)</li>
+ *     <li>DELETE /api/items/{id} - Delete a reward item (ADMIN only)</li>
  * </ul>
  *
  * <p>Security:
@@ -35,14 +35,14 @@ import org.springframework.web.bind.annotation.*;
  *     <li>POST, PUT, DELETE endpoints - ADMIN role required</li>
  * </ul>
  *
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @Slf4j
 @CrossOrigin
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/rewards")
+@RequestMapping("/api/items")
 @PreAuthorize("isAuthenticated()")
 public class RewardItemController {
     private final RewardItemService rewardItemService;
@@ -52,7 +52,7 @@ public class RewardItemController {
      * <p>Accessible to any authenticated user.
      *
      * @param pageable Automatically resolved pagination and sorting parameters
-     * @return Paginated response of behavior types
+     * @return Paginated response of reward items
      */
     @GetMapping
     public ResponseEntity<PagedResponseDTO<RewardItemDTO>> getAllRewardItems(
