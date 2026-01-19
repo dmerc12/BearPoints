@@ -34,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *     <li>Uses PostgreSQL Testcontainers for realistic database testing</li>
  *     <li>Activates "test" profile for isolated test execution</li>
  *     <li>Configures security context with mock authentication</li>
- *     <li>Leverages application's test data initializer for comprehensive behavior type data</li>
+ *     <li>Leverages application's test data initializer for comprehensive reward item data</li>
  * </ul>
  *
  * @see TestDataInitializer
