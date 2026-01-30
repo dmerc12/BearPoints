@@ -19,7 +19,7 @@ import java.util.UUID;
  * @see User
  * @see Role
  * @see Syncable
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @Data

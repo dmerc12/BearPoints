@@ -34,7 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  *  </ul>
  *
  * @see Teacher
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 public class TeacherTests {

@@ -17,7 +17,7 @@ import java.util.Set;
  * @see Role
  * @see Syncable
  * @see GradeLevel
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @Data
