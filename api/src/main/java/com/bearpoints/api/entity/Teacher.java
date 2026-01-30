@@ -50,6 +50,17 @@ public class Teacher implements Syncable {
     private User user;
 
     /**
+     * Teacher's active status.
+     * <p>Constraints:
+     * <ul>
+     *     <li>Non-null</li>
+     * </ul>
+     */
+    @NotNull(message = "Active status is required")
+    @Column(nullable = false)
+    private Boolean active = true;
+
+    /**
      * Associated students in teacher's class
      * <p>Characteristics:
      * <ul>

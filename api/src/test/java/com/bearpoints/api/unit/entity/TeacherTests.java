@@ -30,6 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * <ul>
  *   <li>Grade (blank, null, invalid)</li>
  *   <li>User (null)</li>
+ *   <li>Active (null)</li>
  *  </ul>
  *
  * @see Teacher
@@ -88,6 +89,18 @@ public class TeacherTests {
                 .filteredOn(v -> v.getPropertyPath().toString().equals("user"))
                 .extracting(ConstraintViolation::getMessage)
                 .containsExactly("User reference is required");
+    }
+
+    /** Tests null active status validation */
+    @Test
+    @DisplayName("Null active status fails validation")
+    public void teacherActiveStatusNull() {
+        validTeacher.setActive(null);
+        Set<ConstraintViolation<Teacher>> violations = validator.validate(validTeacher);
+        assertThat(violations)
+                .filteredOn(v -> v.getPropertyPath().toString().equals("active"))
+                .extracting(ConstraintViolation::getMessage)
+                .containsExactly("Active status is required");
     }
 
     /** Version field tests */
