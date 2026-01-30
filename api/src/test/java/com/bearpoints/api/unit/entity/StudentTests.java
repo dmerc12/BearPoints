@@ -166,6 +166,18 @@ public class StudentTests {
         }
     }
 
+    /** Tests null active status validation */
+    @Test
+    @DisplayName("Null active status fails validation")
+    public void studentActiveStatusNull() {
+        validStudent.setActive(null);
+        Set<ConstraintViolation<Student>> violations = validator.validate(validStudent);
+        assertThat(violations)
+                .filteredOn(v -> v.getPropertyPath().toString().equals("active"))
+                .extracting(ConstraintViolation::getMessage)
+                .containsExactly("Active status is required");
+    }
+
     /** Version field tests */
     @Nested
     @DisplayName("Version field tests")

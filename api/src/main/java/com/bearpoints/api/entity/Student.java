@@ -51,6 +51,17 @@ public class Student implements Syncable {
     @Column(nullable = false, unique = true, length = 36)
     private String token;
 
+    /**
+     * Student's active status.
+     * <p>Constraints:
+     * <ul>
+     *     <li>Non-null</li>
+     * </ul>
+     */
+    @NotNull(message = "Active status is required")
+    @Column(nullable = false)
+    private Boolean active = true;
+
     /** Student's personal user information */
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false)
