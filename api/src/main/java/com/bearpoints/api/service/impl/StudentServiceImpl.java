@@ -28,7 +28,7 @@ import java.util.Optional;
  * Implementation of {@link StudentService} for student management.
  *
  * @see StudentService
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @Slf4j
@@ -148,7 +148,20 @@ public class StudentServiceImpl implements StudentService {
         log.debug("Deleting student with ID: {}", id);
         Student student = studentDAO.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with ID: " + id));
-        studentDAO.delete(student);
-        log.info("Successfully deleted student with ID: {}", id);
+        // Check if student is used in any brag logs or student rewards
+        boolean isUsed = studentDAO.isStudentUsed(id);
+        if (isUsed) {
+            // Student is used - soft delete (deactivate)
+            student.setActive(false);
+            studentDAO.save(student);
+            student.getUser().setActive(false);
+            userDAO.save(student.getUser());
+            log.warn("Student with ID: {} is used in brag logs or student rewards and has been deactivated", id);
+        } else {
+            // Student is not used - hard delete
+            studentDAO.delete(student);
+            userDAO.delete(student.getUser());
+            log.info("Successfully deleted student with ID: {}", id);
+        }
     }
 }

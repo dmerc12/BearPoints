@@ -36,7 +36,7 @@ import static org.mockito.Mockito.*;
  * search with criteria, and classroom leaderboards.
  *
  * @see StudentServiceImpl
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @DisplayName("StudentService Tests")
@@ -503,14 +503,36 @@ public class StudentServiceTests {
     @DisplayName("When deleting student")
     class WhenDeletingStudent {
         @Test
-        @DisplayName("Should delete student successfully")
-        void shouldDeleteStudentSuccessfully() {
+        @DisplayName("Should hard delete student when not used")
+        void shouldHardDeleteStudentWhenNotUsed() {
             Long studentId = 1L;
             Student student = createStudent(studentId, 150);
             when(studentDAO.findById(studentId)).thenReturn(Optional.of(student));
+            when(studentDAO.isStudentUsed(studentId)).thenReturn(false);
             studentService.deleteStudent(studentId);
             verify(studentDAO).findById(studentId);
+            verify(studentDAO).isStudentUsed(studentId);
             verify(studentDAO).delete(student);
+            verify(studentDAO, never()).save(any(Student.class));
+            verify(userDAO).delete(student.getUser());
+            verify(userDAO, never()).save(any(User.class));
+        }
+
+        @Test
+        @DisplayName("Should soft delete student when used in brag logs or student rewards")
+        void shouldSoftDeleteStudentWhenUsedInBragLogsOrStudentRewards() {
+            Long studentId = 1L;
+            Student student = createStudent(studentId, 150);
+            when(studentDAO.findById(studentId)).thenReturn(Optional.of(student));
+            when(studentDAO.isStudentUsed(studentId)).thenReturn(true);
+            studentService.deleteStudent(studentId);
+            assertFalse(student.getActive());
+            verify(studentDAO).findById(studentId);
+            verify(studentDAO).isStudentUsed(studentId);
+            verify(studentDAO, never()).delete(any(Student.class));
+            verify(studentDAO).save(student);
+            verify(userDAO).save(student.getUser());
+            verify(userDAO, never()).delete(any(User.class));
         }
 
         @Test
