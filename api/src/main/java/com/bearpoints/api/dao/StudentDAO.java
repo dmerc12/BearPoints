@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.lang.Nullable;
 
@@ -29,7 +30,7 @@ import java.util.Optional;
  * </ul>
 
  * @see Student
- * @version 2.0
+ * @version 2.1
  * @author Dylan Mercer
  */
 public interface StudentDAO extends JpaRepository<Student, Long>, JpaSpecificationExecutor<Student> {
@@ -88,4 +89,16 @@ public interface StudentDAO extends JpaRepository<Student, Long>, JpaSpecificati
      * @return List of unsynced students
      */
     List<Student> findBySyncedToSheetsFalse();
+
+    /**
+     * Checks if student is used in any brag logs or student rewards (internal use only).
+     *
+     * @param studentId Student ID to check
+     * @return true if student is used in brag logs or student rewards, false otherwise
+     */
+    @Query("SELECT (" +
+            "SELECT COUNT(bl) FROM BragLog bl WHERE bl.student.id = :studentId) > 0 " +
+            "OR " +
+            "(SELECT COUNT(sr) FROM StudentReward sr WHERE sr.student.id = :studentId) > 0")
+    boolean isStudentUsed(@Param("studentId") Long studentId);
 }
