@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.lang.Nullable;
 
@@ -28,7 +29,7 @@ import java.util.Optional;
  * </ul>
 
  * @see User
- * @version 2.0
+ * @version 2.1
  * @author Dylan Mercer
  */
 public interface UserDAO extends JpaRepository<User, Long>, JpaSpecificationExecutor<User> {
@@ -76,4 +77,16 @@ public interface UserDAO extends JpaRepository<User, Long>, JpaSpecificationExec
      * @return List of unsynced users
      */
     List<User> findBySyncedToSheetsFalse();
+
+    /**
+     * Checks if user is used in any teachers or students (internal use only).
+     *
+     * @param userId User ID to check
+     * @return true if user is used in teachers or students, false otherwise
+     */
+    @Query("SELECT (" +
+            "SELECT COUNT(t) FROM Teacher t WHERE t.user.id = :userId) > 0 " +
+            "OR " +
+            "(SELECT COUNT(s) FROM Student s WHERE s.user.id = :userId) > 0")
+    boolean isUserUsed(@Param("userId") Long userId);
 }
