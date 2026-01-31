@@ -40,7 +40,7 @@ import static org.mockito.Mockito.*;
  * <p>Verifies teacher user management functionality including CRUD operations and search.
  *
  * @see TeacherServiceImpl
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @DisplayName("TeacherService Tests")
@@ -481,14 +481,36 @@ public class TeacherServiceTests {
     @DisplayName("When deleting teacher")
     class WhenDeletingTeacherTests {
         @Test
-        @DisplayName("Should delete teacher and associated user successfully")
-        void shouldDeleteTeacherAndAssociatedUserSuccessfully() {
+        @DisplayName("Should hard delete teacher when not used")
+        void shouldHardDeleteTeacherWhenNotUsed() {
             Long teacherId = 1L;
             Teacher teacher = createTeacher(teacherId, 1L, "teacher@okcps.org", "Teacher", "User", Role.TEACHER, GradeLevel.FIRST);
             when(teacherDAO.findById(teacherId)).thenReturn(Optional.of(teacher));
+            when(teacherDAO.isTeacherUsed(teacherId)).thenReturn(false);
             teacherService.deleteTeacher(teacherId);
             verify(teacherDAO).findById(teacherId);
+            verify(teacherDAO).isTeacherUsed(teacherId);
             verify(teacherDAO).delete(teacher);
+            verify(teacherDAO, never()).save(any(Teacher.class));
+            verify(userDAO).delete(teacher.getUser());
+            verify(userDAO, never()).save(any(User.class));
+        }
+
+        @Test
+        @DisplayName("Should soft delete teacher when used in brag logs or students")
+        void shouldSoftDeleteTeacherWhenUsedInBragLogsOrStudents() {
+            Long teacherId = 1L;
+            Teacher teacher = createTeacher(teacherId, 1L, "teacher@okcps.org", "Teacher", "User", Role.TEACHER, GradeLevel.FIRST);
+            when(teacherDAO.findById(teacherId)).thenReturn(Optional.of(teacher));
+            when(teacherDAO.isTeacherUsed(teacherId)).thenReturn(true);
+            teacherService.deleteTeacher(teacherId);
+            assertFalse(teacher.getActive());
+            verify(teacherDAO).findById(teacherId);
+            verify(teacherDAO).isTeacherUsed(teacherId);
+            verify(teacherDAO, never()).delete(any(Teacher.class));
+            verify(teacherDAO).save(teacher);
+            verify(userDAO, never()).delete(any(User.class));
+            verify(userDAO).save(teacher.getUser());
         }
 
         @Test

@@ -22,6 +22,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
+/**
+ * Implementation of {@link TeacherService} for teacher management.
+ *
+ * @see TeacherService
+ * @version 1.1
+ * @author Dylan Mercer
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -115,7 +122,20 @@ public class TeacherServiceImpl implements TeacherService {
         log.debug("Deleting teacher with ID: {}", id);
         Teacher teacher = teacherDAO.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Teacher not found with ID: " + id));
-        teacherDAO.delete(teacher);
-        log.info("Successfully deleted teacher with ID: {}", id);
+        // Check if teacher is used in any brag log or student
+        boolean isUsed = teacherDAO.isTeacherUsed(id);
+        if (isUsed) {
+            // Teacher is used - soft delete (deactivate)
+            teacher.setActive(false);
+            teacherDAO.save(teacher);
+            teacher.getUser().setActive(false);
+            userDAO.save(teacher.getUser());
+            log.warn("Teacher with ID: {} is used in brag logs and students and has been deactivated", id);
+        } else {
+            // Teacher is not used - hard delete
+            teacherDAO.delete(teacher);
+            userDAO.delete(teacher.getUser());
+            log.info("Successfully deleted teacher with ID: {}", id);
+        }
     }
 }
