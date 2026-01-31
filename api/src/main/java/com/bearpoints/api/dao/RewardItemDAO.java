@@ -8,6 +8,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.lang.Nullable;
 
 import java.util.List;
@@ -26,7 +28,7 @@ import java.util.Optional;
  * </ul>
  *
  * @see RewardItem
- * @version 2.0
+ * @version 2.1
  * @author Dylan Mercer
  */
 public interface RewardItemDAO extends JpaRepository<RewardItem, Long>, JpaSpecificationExecutor<RewardItem> {
@@ -67,4 +69,13 @@ public interface RewardItemDAO extends JpaRepository<RewardItem, Long>, JpaSpeci
      * @return Optional containing reward item if found
      */
     Optional<RewardItem> findByName(String name);
+
+    /**
+     * Checks if reward item is used in any student rewards (internal use only).
+     *
+     * @param rewardItemId Reward item ID to check
+     * @return true if reward item is used in student rewards, false otherwise
+     */
+    @Query("SELECT COUNT(sr) > 0 FROM StudentReward sr WHERE sr.rewardItem.id = :rewardItemId")
+    boolean isRewardItemUsed(@Param("rewardItemId") Long rewardItemId);
 }
