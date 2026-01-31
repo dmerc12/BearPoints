@@ -8,6 +8,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.lang.Nullable;
 
 import java.util.List;
@@ -27,7 +29,7 @@ import java.util.Optional;
  * </ul>
  *
  * @see Teacher
- * @version 2.0
+ * @version 2.1
  * @author Dylan Mercer
  */
 public interface TeacherDAO extends JpaRepository<Teacher, Long>, JpaSpecificationExecutor<Teacher> {
@@ -68,4 +70,16 @@ public interface TeacherDAO extends JpaRepository<Teacher, Long>, JpaSpecificati
      * @return List of unsynced teachers
      */
     List<Teacher> findBySyncedToSheetsFalse();
+
+    /**
+     * Checks if teacher is used in any brag logs or students (internal use only).
+     *
+     * @param teacherId Teacher ID to check
+     * @return true if teacher is used in brag logs or students, false otherwise
+     */
+    @Query("SELECT (" +
+            "SELECT COUNT(bl) FROM BragLog bl WHERE bl.teacher.id = :teacherId) > 0 " +
+            "OR " +
+            "(SELECT COUNT(s) FROM Student s WHERE s.teacher.id = :teacherId) > 0")
+    boolean isTeacherUsed(@Param("teacherId") Long teacherId);
 }
