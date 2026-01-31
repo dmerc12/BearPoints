@@ -17,7 +17,7 @@ import java.util.Set;
  * <p>Implements {@link Syncable} for Google Sheets synchronization
  *
  * @see Syncable
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @Data
@@ -71,6 +71,17 @@ public class RewardItem implements Syncable {
     @Min(value = 0, message = "Minimum stock quantity is 0")
     @Column(nullable = false)
     private Integer stock;
+
+    /**
+     * Reward Item's active status
+     * <p>Constraints:
+     * <ul>
+     *     <li>Non-null</li>
+     * </ul>
+     */
+    @NotNull(message = "Active status is required")
+    @Column(nullable = false)
+    private Boolean active = true;
 
     /** Associated student rewards used with reward item */
     @OneToMany(mappedBy = "rewardItem", cascade = CascadeType.ALL)
