@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
  *
  * @see Role
  * @see Syncable
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @Data
@@ -86,6 +86,17 @@ public class User implements Syncable {
     @NotNull(message = "Role is required")
     @Column(nullable = false)
     private Role role;
+
+    /**
+     * User's active status.
+     * <p>Constraints:
+     * <ul>
+     *     <li>Non-null</li>
+     * </ul>
+     */
+    @NotNull(message = "Active status is required")
+    @Column(nullable = false)
+    private Boolean active = true;
 
     /**
      * Creation timestamp (auto-generated).

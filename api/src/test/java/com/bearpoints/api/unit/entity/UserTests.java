@@ -33,7 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 *  </ul>
  *
 * @see User
-* @version 1.0
+* @version 1.1
 * @author Dylan Mercer
 */
 public class UserTests {
@@ -242,6 +242,18 @@ public class UserTests {
                 .filteredOn(v -> v.getPropertyPath().toString().equals("role"))
                 .extracting(ConstraintViolation::getMessage)
                 .containsExactly("Role is required");
+    }
+
+    /** Tests null active status validation */
+    @Test
+    @DisplayName("Null active status fails validation")
+    public void userActiveStatusNull() {
+        validUser.setActive(null);
+        Set<ConstraintViolation<User>> violations = validator.validate(validUser);
+        assertThat(violations)
+                .filteredOn(v -> v.getPropertyPath().toString().equals("active"))
+                .extracting(ConstraintViolation::getMessage)
+                .containsExactly("Active status is required");
     }
 
     /** Version field tests */
