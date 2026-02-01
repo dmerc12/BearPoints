@@ -43,7 +43,7 @@ public class GlobalHandlers {
     private static final Logger logger = LoggerFactory.getLogger(GlobalHandlers.class);
 
     /**
-     * Handles User not found exceptions.
+     * Handles Resource not found exceptions.
      * <p>Returns a 404 Not Found status with the exception message in the response body.
      *
      * @param ex The caught ResourceNotFoundException
@@ -51,10 +51,25 @@ public class GlobalHandlers {
      */
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorResponseDTO> handleUserNotFoundException(ResourceNotFoundException ex) {
-        logger.warn("User not found", ex);
+    public ResponseEntity<ErrorResponseDTO> handleResourceNotFoundException(ResourceNotFoundException ex) {
+        logger.warn("Resource not found", ex);
         ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO(ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponseDTO);
+    }
+
+    /**
+     * Handles Insufficient resources exceptions.
+     * <p>Returns a 400 Bad request status with the exception message in the response body.
+     *
+     * @param ex The caught InsufficientResourcesException
+     * @return Response entity with error message and status code
+     */
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(InsufficientResourcesException.class)
+    public ResponseEntity<ErrorResponseDTO> handleInsufficientResourcesException(InsufficientResourcesException ex) {
+        logger.warn("Insufficient points", ex);
+        ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponseDTO);
     }
 
     /**

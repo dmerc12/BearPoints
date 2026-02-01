@@ -3,6 +3,7 @@ package com.bearpoints.api.unit.exception;
 import com.bearpoints.api.dto.ErrorResponseDTO;
 import com.bearpoints.api.exception.DuplicateResourceException;
 import com.bearpoints.api.exception.GlobalHandlers;
+import com.bearpoints.api.exception.InsufficientResourcesException;
 import com.bearpoints.api.exception.ResourceNotFoundException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
@@ -54,10 +55,22 @@ public class GlobalHandlersTests {
     @Test
     @DisplayName("Handle ResourceNotFoundException - returns 404 with message")
     void handleResourceNotFoundException() {
-        String errorMessage = "User not found with ID: 123";
+        String errorMessage = "Resource not found with ID: 123";
         ResourceNotFoundException ex = new ResourceNotFoundException(errorMessage);
-        ResponseEntity<ErrorResponseDTO> response = globalHandlers.handleUserNotFoundException(ex);
+        ResponseEntity<ErrorResponseDTO> response = globalHandlers.handleResourceNotFoundException(ex);
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(errorMessage, response.getBody().getMessage());
+        assertNotNull(response.getBody().getTimestamp());
+    }
+
+    @Test
+    @DisplayName("Handle InsufficientResourcesException - returns 400 with message")
+    void handleInsufficientPointsException() {
+        String errorMessage = "Insufficient points or stock to redeem this reward";
+        InsufficientResourcesException ex = new InsufficientResourcesException(errorMessage);
+        ResponseEntity<ErrorResponseDTO> response = globalHandlers.handleInsufficientResourcesException(ex);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals(errorMessage, response.getBody().getMessage());
         assertNotNull(response.getBody().getTimestamp());
