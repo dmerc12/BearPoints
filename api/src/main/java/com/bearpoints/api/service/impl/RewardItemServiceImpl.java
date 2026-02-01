@@ -23,7 +23,7 @@ import java.util.Optional;
  * Implementation of {@link RewardItemService} for reward item management.
  *
  * @see RewardItemService
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @Slf4j
@@ -126,7 +126,17 @@ public class RewardItemServiceImpl implements RewardItemService {
         log.debug("Deleting reward item with ID: {}", id);
         RewardItem rewardItem = rewardItemDAO.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Reward item not found with ID: " + id));
-        rewardItemDAO.delete(rewardItem);
-        log.info("Reward item '{}' (ID: {}) has been permanently deleted", rewardItem.getName(), id);
+        // Check if reward item is used in student rewards
+        boolean isUsed = rewardItemDAO.isRewardItemUsed(id);
+        if (isUsed) {
+            // Reward item is used - soft delete (deactivate)
+            rewardItem.setActive(false);
+            rewardItemDAO.save(rewardItem);
+            log.warn("Reward item with ID: {} is used in student rewards and has been deactivated", id);
+        } else {
+            // Reward item is not used - hard delete
+            rewardItemDAO.delete(rewardItem);
+            log.info("Reward item '{}' (ID: {}) has been permanently deleted", rewardItem.getName(), id);
+        }
     }
 }

@@ -36,7 +36,7 @@ import static org.mockito.Mockito.*;
  * search with criteria.
  *
  * @see RewardItemServiceImpl
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @ExtendWith(MockitoExtension.class)
@@ -332,14 +332,31 @@ public class RewardItemServiceTests {
     @DisplayName("When deleting reward item")
     class WhenDeletingRewardItem {
         @Test
-        @DisplayName("Should delete reward item successfully")
-        void shouldDeleteRewardItemSuccessfully() {
+        @DisplayName("Should hard delete reward item when not used")
+        void shouldHardDeleteRewardItemWhenNotUsed() {
             Long rewardItemId = 1L;
             RewardItem rewardItem = createRewardItem(rewardItemId, "Test", 1, 5);
             when(rewardItemDAO.findById(rewardItemId)).thenReturn(Optional.of(rewardItem));
+            when(rewardItemDAO.isRewardItemUsed(rewardItemId)).thenReturn(false);
             rewardItemService.deleteRewardItem(rewardItemId);
             verify(rewardItemDAO).findById(rewardItemId);
+            verify(rewardItemDAO).isRewardItemUsed(rewardItemId);
             verify(rewardItemDAO).delete(rewardItem);
+            verify(rewardItemDAO, never()).save(any(RewardItem.class));
+        }
+
+        @Test
+        @DisplayName("Should soft delete reward item when used in student rewards")
+        void shouldSoftDeleteRewardItemWhenUsedInStudentRewards() {
+            Long rewardItemId = 1L;
+            RewardItem rewardItem = createRewardItem(rewardItemId, "Test", 1, 5);
+            when(rewardItemDAO.findById(rewardItemId)).thenReturn(Optional.of(rewardItem));
+            when(rewardItemDAO.isRewardItemUsed(rewardItemId)).thenReturn(true);
+            rewardItemService.deleteRewardItem(rewardItemId);
+            verify(rewardItemDAO).findById(rewardItemId);
+            verify(rewardItemDAO).isRewardItemUsed(rewardItemId);
+            verify(rewardItemDAO, never()).delete(any(RewardItem.class));
+            verify(rewardItemDAO).save(rewardItem);
         }
 
         @Test
