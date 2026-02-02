@@ -9,6 +9,7 @@ import com.bearpoints.api.dto.StudentRewardDTO;
 import com.bearpoints.api.entity.RewardItem;
 import com.bearpoints.api.entity.Student;
 import com.bearpoints.api.entity.StudentReward;
+import com.bearpoints.api.exception.InsufficientResourcesException;
 import com.bearpoints.api.exception.ResourceNotFoundException;
 import com.bearpoints.api.service.StudentRewardService;
 import com.bearpoints.api.specification.StudentRewardSpecification;
@@ -91,12 +92,24 @@ public class StudentRewardServiceImpl implements StudentRewardService {
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with ID: " + studentRewardDTO.getStudentId()));
         RewardItem rewardItem = rewardItemDAO.findById(studentRewardDTO.getItemId())
                 .orElseThrow(() -> new ResourceNotFoundException("Reward item not found with ID: " + studentRewardDTO.getItemId()));
-        StudentReward studentReward = new StudentReward();
-        studentReward.setStudent(student);
-        studentReward.setRewardItem(rewardItem);
-        StudentReward savedStudentReward = studentRewardDAO.save(studentReward);
-        log.info("Successfully created a student reward with ID: {}", savedStudentReward.getId());
-        return new StudentRewardDTO(savedStudentReward);
+        int newPoints = student.getPoints() - rewardItem.getPointCost();
+        int newStock = rewardItem.getStock() - 1;
+        if (newPoints < 0) {
+            throw new InsufficientResourcesException("Insufficient points to redeem this reward");
+        } else if (newStock < 0) {
+            throw new InsufficientResourcesException("Insufficient stock to redeem this reward");
+        } else {
+            student.setPoints(newPoints);
+            studentDAO.save(student);
+            rewardItem.setStock(newStock);
+            rewardItemDAO.save(rewardItem);
+            StudentReward studentReward = new StudentReward();
+            studentReward.setStudent(student);
+            studentReward.setRewardItem(rewardItem);
+            StudentReward savedStudentReward = studentRewardDAO.save(studentReward);
+            log.info("Successfully created a student reward with ID: {}", savedStudentReward.getId());
+            return new StudentRewardDTO(savedStudentReward);
+        }
     }
 
     /**
@@ -110,17 +123,46 @@ public class StudentRewardServiceImpl implements StudentRewardService {
                 .orElseThrow(() -> new ResourceNotFoundException("Student reward not found with ID: " + id));
         Long studentId = studentRewardDTO.getStudentId();
         Long itemId = studentRewardDTO.getItemId();
-        boolean studentChanged = !existingStudentReward.getStudent().getId().equals(studentId);
-        boolean itemChanged = !existingStudentReward.getRewardItem().getId().equals(itemId);
+        Student originalStudent = existingStudentReward.getStudent();
+        RewardItem originalItem = existingStudentReward.getRewardItem();
+        boolean studentChanged = !originalStudent.getId().equals(studentId);
+        boolean itemChanged = !originalItem.getId().equals(itemId);
+        if (!studentChanged && !itemChanged) {
+            log.info("No changes detected for student reward with ID: {}", id);
+            return new StudentRewardDTO(existingStudentReward);
+        }
+        Student newStudent = studentChanged ? studentDAO.findById(studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found with ID: " + studentId))
+                : originalStudent;
+        RewardItem newItem = itemChanged ? rewardItemDAO.findById(itemId)
+                .orElseThrow(() -> new ResourceNotFoundException("Reward item not found with ID: " + itemId))
+                : originalItem;
+        // Reverse original transaction
+        int originalStudentNewPoints = originalStudent.getPoints() + originalItem.getPointCost();
+        originalStudent.setPoints(originalStudentNewPoints);
+        studentDAO.save(originalStudent);
+        int originalItemNewStock = originalItem.getStock() + 1;
+        originalItem.setStock(originalItemNewStock);
+        rewardItemDAO.save(originalItem);
+        // Check if new student has enough points
+        int newStudentPointsAfterDeduction = newStudent.getPoints() - newItem.getPointCost();
+        if (newStudentPointsAfterDeduction < 0) {
+            throw new InsufficientResourcesException("Insufficient points to redeem this reward");
+        }
+        // Check if new item has enough stock
+        int newItemStockAfterDeduction = newItem.getStock() - 1;
+        if (newItemStockAfterDeduction < 0) {
+            throw new InsufficientResourcesException("Insufficient stock to redeem this reward");
+        }
+        newStudent.setPoints(newStudentPointsAfterDeduction);
+        newItem.setStock(newItemStockAfterDeduction);
         if (studentChanged) {
-            Student newStudent = studentDAO.findById(studentId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Student not found with ID: " + studentId));
+            studentDAO.save(newStudent);
             existingStudentReward.setStudent(newStudent);
         }
         if (itemChanged) {
-            RewardItem newRewardItem = rewardItemDAO.findById(itemId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Reward item not found with ID: " + itemId));
-            existingStudentReward.setRewardItem(newRewardItem);
+            rewardItemDAO.save(newItem);
+            existingStudentReward.setRewardItem(newItem);
         }
         StudentReward updatedStudentReward = studentRewardDAO.save(existingStudentReward);
         log.info("Successfully updated student reward with ID: {}", updatedStudentReward.getId());
@@ -136,6 +178,16 @@ public class StudentRewardServiceImpl implements StudentRewardService {
         log.debug("Deleting student reward with ID: {}", id);
         StudentReward studentReward = studentRewardDAO.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Student reward not found with ID: " + id));
+        // Reverse transaction
+        Student student = studentReward.getStudent();
+        RewardItem rewardItem = studentReward.getRewardItem();
+        int studentNewPoints = student.getPoints() + rewardItem.getPointCost();
+        student.setPoints(studentNewPoints);
+        studentDAO.save(student);
+        int rewardItemNewStock = rewardItem.getStock() + 1;
+        rewardItem.setStock(rewardItemNewStock);
+        rewardItemDAO.save(rewardItem);
+        // Perform delete
         studentRewardDAO.delete(studentReward);
         log.info("Successfully deleted student reward with ID: {}", id);
     }

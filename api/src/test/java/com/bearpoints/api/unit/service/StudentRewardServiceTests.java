@@ -7,6 +7,7 @@ import com.bearpoints.api.dao.StudentRewardDAO;
 import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.dto.StudentRewardDTO;
 import com.bearpoints.api.entity.*;
+import com.bearpoints.api.exception.InsufficientResourcesException;
 import com.bearpoints.api.exception.ResourceNotFoundException;
 import com.bearpoints.api.service.impl.StudentRewardServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -164,15 +165,53 @@ public class StudentRewardServiceTests {
         void shouldCreateNewStudentRewardSuccessfully() {
             StudentRewardDTO createDTO = new StudentRewardDTO(null, student.getId(), item.getId(),
                     null, null, null, null);
+            int expectedPoints = student.getPoints() - item.getPointCost();
+            int expectedStock = item.getStock() - 1;
             when(studentDAO.findById(student.getId())).thenReturn(Optional.of(student));
             when(rewardItemDAO.findById(item.getId())).thenReturn(Optional.of(item));
             when(studentRewardDAO.save(any(StudentReward.class))).thenReturn(studentReward);
+            when(studentDAO.save(any(Student.class))).thenReturn(student);
             StudentRewardDTO result = studentRewardService.createStudentReward(createDTO);
+            assertEquals(expectedPoints, studentReward.getStudent().getPoints());
+            assertEquals(expectedStock, studentReward.getRewardItem().getStock());
             assertNotNull(result);
             assertEquals(studentReward.getId(), result.getId());
             verify(studentDAO).findById(student.getId());
             verify(rewardItemDAO).findById(item.getId());
             verify(studentRewardDAO).save(any(StudentReward.class));
+            verify(studentDAO).save(any(Student.class));
+        }
+
+        @Test
+        @DisplayName("Should throw InsufficientResourcesException when student does not have enough points")
+        void shouldThrowInsufficientPointsResourcesExceptionWhenStudentDoesNotHaveEnoughPoints() {
+            student.setPoints(0);
+            StudentRewardDTO createDTO = new StudentRewardDTO(null, student.getId(), item.getId(),
+                    null, null, null, null);
+            when(studentDAO.findById(student.getId())).thenReturn(Optional.of(student));
+            when(rewardItemDAO.findById(item.getId())).thenReturn(Optional.of(item));
+            assertThrows(InsufficientResourcesException.class,
+                    () -> studentRewardService.createStudentReward(createDTO));
+            verify(studentDAO).findById(student.getId());
+            verify(rewardItemDAO).findById(item.getId());
+            verify(studentRewardDAO, never()).save(any(StudentReward.class));
+            verify(studentDAO, never()).save(any(Student.class));
+        }
+
+        @Test
+        @DisplayName("Should throw InsufficientResourcesException when reward item does not have enough stock")
+        void shouldThrowInsufficientPointsResourcesExceptionWhenRewardItemDoesNotHaveEnoughStock() {
+            item.setStock(0);
+            StudentRewardDTO createDTO = new StudentRewardDTO(null, student.getId(), item.getId(),
+                    null, null, null, null);
+            when(studentDAO.findById(student.getId())).thenReturn(Optional.of(student));
+            when(rewardItemDAO.findById(item.getId())).thenReturn(Optional.of(item));
+            assertThrows(InsufficientResourcesException.class,
+                    () -> studentRewardService.createStudentReward(createDTO));
+            verify(studentDAO).findById(student.getId());
+            verify(rewardItemDAO).findById(item.getId());
+            verify(studentRewardDAO, never()).save(any(StudentReward.class));
+            verify(studentDAO, never()).save(any(Student.class));
         }
 
         @Test
@@ -209,11 +248,70 @@ public class StudentRewardServiceTests {
     @DisplayName("When updating student reward")
     class WhenUpdatingStudentReward {
         @Test
-        @DisplayName("Should update existing student reward successfully")
-        void shouldUpdateExistingStudentRewardSuccessfully() {
+        @DisplayName("Should update existing student reward when student changes")
+        void shouldUpdateExistingStudentRewardWhenStudentChanges() {
             Long studentRewardId = studentReward.getId();
             Student otherStudent = createStudent(2L);
+            otherStudent.setPoints(50);
+            int originalStudentInitialPoints = student.getPoints();
+            int originalItemInitialStock = item.getStock();
+            StudentRewardDTO updateDTO = new StudentRewardDTO(studentRewardId, otherStudent.getId(), item.getId(),
+                    null, null, null, null);
+            when(studentRewardDAO.findById(studentRewardId)).thenReturn(Optional.of(studentReward));
+            when(studentDAO.findById(otherStudent.getId())).thenReturn(Optional.of(otherStudent));
+            when(studentRewardDAO.save(any(StudentReward.class))).thenReturn(studentReward);
+            StudentRewardDTO result = studentRewardService.updateStudentReward(studentRewardId, updateDTO);
+            assertNotNull(result);
+            assertEquals(originalStudentInitialPoints + item.getPointCost(), student.getPoints());
+            assertEquals(50 - item.getPointCost(), otherStudent.getPoints());
+            assertEquals(originalItemInitialStock, item.getStock());
+            verify(studentRewardDAO).findById(studentRewardId);
+            verify(studentDAO).findById(otherStudent.getId());
+            verify(studentRewardDAO).save(any(StudentReward.class));
+            verify(studentDAO).save(student);
+            verify(studentDAO).save(otherStudent);
+        }
+
+        @Test
+        @DisplayName("Should update existing student reward when item changes")
+        void shouldUpdateExistingStudentRewardWhenItemChanges() {
+            Long studentRewardId = studentReward.getId();
             RewardItem otherItem = createRewardItem(2L, "Pencil");
+            otherItem.setStock(10);
+            otherItem.setPointCost(15);
+            int originalStudentInitialPoints = student.getPoints();
+            int originalItemInitialStock = item.getStock();
+            StudentRewardDTO updateDTO = new StudentRewardDTO(studentRewardId, student.getId(), otherItem.getId(),
+                    null, null, null, null);
+            when(studentRewardDAO.findById(studentRewardId)).thenReturn(Optional.of(studentReward));
+            when(rewardItemDAO.findById(otherItem.getId())).thenReturn(Optional.of(otherItem));
+            when(studentRewardDAO.save(any(StudentReward.class))).thenReturn(studentReward);
+            StudentRewardDTO result = studentRewardService.updateStudentReward(studentRewardId, updateDTO);
+            assertNotNull(result);
+            int expectedStudentPoints = originalStudentInitialPoints + item.getPointCost() - otherItem.getPointCost();
+            assertEquals(expectedStudentPoints, student.getPoints());
+            assertEquals(originalItemInitialStock + 1, item.getStock());
+            assertEquals(10 - 1, otherItem.getStock());
+            verify(studentRewardDAO).findById(studentRewardId);
+            verify(rewardItemDAO).findById(otherItem.getId());
+            verify(studentDAO).save(student);
+            verify(rewardItemDAO).save(item);
+            verify(rewardItemDAO).save(otherItem);
+            verify(studentRewardDAO).save(any(StudentReward.class));
+        }
+
+        @Test
+        @DisplayName("Should update existing student reward when both student and item change")
+        void shouldUpdateExistingStudentRewardWhenBothStudentAndItemChange() {
+            Long studentRewardId = studentReward.getId();
+            Student otherStudent = createStudent(2L);
+            otherStudent.setPoints(50);
+            RewardItem otherItem = createRewardItem(2L, "Pencil");
+            otherItem.setStock(10);
+            otherItem.setPointCost(15);
+            int originalStudentInitialPoints = student.getPoints() + item.getPointCost();
+            int newStudentsFinalPoints = otherStudent.getPoints() - otherItem.getPointCost();
+            int newItemStock = otherItem.getStock() - 1;
             StudentRewardDTO updateDTO = new StudentRewardDTO(studentRewardId, otherStudent.getId(), otherItem.getId(),
                     null, null, null, null);
             when(studentRewardDAO.findById(studentRewardId)).thenReturn(Optional.of(studentReward));
@@ -222,6 +320,9 @@ public class StudentRewardServiceTests {
             when(studentRewardDAO.save(any(StudentReward.class))).thenReturn(studentReward);
             StudentRewardDTO result = studentRewardService.updateStudentReward(studentRewardId, updateDTO);
             assertNotNull(result);
+            assertEquals(originalStudentInitialPoints, student.getPoints());
+            assertEquals(newStudentsFinalPoints, otherStudent.getPoints());
+            assertEquals(newItemStock, otherItem.getStock());
             verify(studentRewardDAO).findById(studentRewardId);
             verify(studentDAO).findById(otherStudent.getId());
             verify(rewardItemDAO).findById(otherItem.getId());
@@ -232,16 +333,63 @@ public class StudentRewardServiceTests {
         @DisplayName("Should handle nothing changing")
         void shouldHandleNothingChanging() {
             Long studentRewardId = studentReward.getId();
+            int initialStudentPoints = student.getPoints();
+            int initialItemStock = item.getStock();
             StudentRewardDTO updateDTO = new StudentRewardDTO(studentRewardId, student.getId(), item.getId(),
                     null, null, null, null);
             when(studentRewardDAO.findById(studentRewardId)).thenReturn(Optional.of(studentReward));
-            when(studentRewardDAO.save(any(StudentReward.class))).thenReturn(studentReward);
             StudentRewardDTO result = studentRewardService.updateStudentReward(studentRewardId, updateDTO);
             assertNotNull(result);
+            assertEquals(initialStudentPoints, student.getPoints());
+            assertEquals(initialItemStock, item.getStock());
             verify(studentRewardDAO).findById(studentRewardId);
             verify(studentDAO, never()).findById(anyLong());
             verify(rewardItemDAO, never()).findById(anyLong());
-            verify(studentRewardDAO).save(any(StudentReward.class));
+            verify(studentDAO, never()).save(any(Student.class));
+            verify(rewardItemDAO, never()).save(any(RewardItem.class));
+            verify(studentRewardDAO, never()).save(any(StudentReward.class));
+        }
+
+        @Test
+        @DisplayName("Should throw InsufficientResourcesException when student does not have enough points")
+        void shouldThrowInsufficientPointsResourcesExceptionWhenStudentDoesNotHaveEnoughPoints() {
+            Long studentRewardId = studentReward.getId();
+            Student otherStudent = createStudent(2L);
+            otherStudent.setPoints(5);
+            RewardItem otherItem = createRewardItem(2L, "Pencil");
+            otherItem.setPointCost(10);
+            StudentRewardDTO updateDTO = new StudentRewardDTO(studentRewardId, otherStudent.getId(), otherItem.getId(),
+                    null, null, null, null);
+            when(studentRewardDAO.findById(studentRewardId)).thenReturn(Optional.of(studentReward));
+            when(studentDAO.findById(otherStudent.getId())).thenReturn(Optional.of(otherStudent));
+            when(rewardItemDAO.findById(otherItem.getId())).thenReturn(Optional.of(otherItem));
+            assertThrows(InsufficientResourcesException.class,
+                    () -> studentRewardService.updateStudentReward(studentRewardId, updateDTO));
+            verify(studentRewardDAO).findById(studentRewardId);
+            verify(studentDAO).findById(otherStudent.getId());
+            verify(rewardItemDAO).findById(otherItem.getId());
+            verify(studentRewardDAO, never()).save(any(StudentReward.class));
+        }
+
+        @Test
+        @DisplayName("Should throw InsufficientResourcesException when reward item does not have enough stock")
+        void shouldThrowInsufficientPointsResourcesExceptionWhenRewardItemDoesNotHaveEnoughStock() {
+            Long studentRewardId = studentReward.getId();
+            Student otherStudent = createStudent(2L);
+            otherStudent.setPoints(50);
+            RewardItem otherItem = createRewardItem(2L, "Pencil");
+            otherItem.setStock(0);
+            StudentRewardDTO updateDTO = new StudentRewardDTO(studentRewardId, otherStudent.getId(), otherItem.getId(),
+                    null, null, null, null);
+            when(studentRewardDAO.findById(studentRewardId)).thenReturn(Optional.of(studentReward));
+            when(studentDAO.findById(otherStudent.getId())).thenReturn(Optional.of(otherStudent));
+            when(rewardItemDAO.findById(otherItem.getId())).thenReturn(Optional.of(otherItem));
+            assertThrows(InsufficientResourcesException.class,
+                    () -> studentRewardService.updateStudentReward(studentRewardId, updateDTO));
+            verify(studentRewardDAO).findById(studentRewardId);
+            verify(studentDAO).findById(otherStudent.getId());
+            verify(rewardItemDAO).findById(otherItem.getId());
+            verify(studentRewardDAO, never()).save(any(StudentReward.class));
         }
 
         @Test
@@ -298,13 +446,20 @@ public class StudentRewardServiceTests {
     @DisplayName("When deleting student reward")
     class WhenDeletingStudentReward {
         @Test
-        @DisplayName("Should delete student reward successfully")
-        void shouldDeleteStudentRewardSuccessfully() {
+        @DisplayName("Should delete student reward successfully and reverse transaction")
+        void shouldDeleteStudentRewardSuccessfullyAndReverseTransaction() {
             Long studentRewardId = studentReward.getId();
+            int initialStudentPoints = student.getPoints();
+            int initialItemStock = item.getStock();
+            int itemPointCost = item.getPointCost();
             when(studentRewardDAO.findById(studentRewardId)).thenReturn(Optional.of(studentReward));
             doNothing().when(studentRewardDAO).delete(studentReward);
             studentRewardService.deleteStudentReward(studentRewardId);
+            assertEquals(initialStudentPoints + itemPointCost, student.getPoints());
+            assertEquals(initialItemStock + 1, item.getStock());
             verify(studentRewardDAO).findById(studentRewardId);
+            verify(studentDAO).save(student);
+            verify(rewardItemDAO).save(item);
             verify(studentRewardDAO).delete(studentReward);
         }
 
@@ -316,6 +471,8 @@ public class StudentRewardServiceTests {
             assertThrows(ResourceNotFoundException.class,
                     () -> studentRewardService.deleteStudentReward(studentRewardId));
             verify(studentRewardDAO).findById(studentRewardId);
+            verify(studentDAO, never()).save(any(Student.class));
+            verify(rewardItemDAO, never()).save(any(RewardItem.class));
             verify(studentRewardDAO, never()).delete(any(StudentReward.class));
         }
     }
@@ -345,6 +502,7 @@ public class StudentRewardServiceTests {
         student.setUser(studentUser);
         student.setTeacher(teacher);
         student.generateToken();
+        student.setPoints(50);
         return student;
     }
 
