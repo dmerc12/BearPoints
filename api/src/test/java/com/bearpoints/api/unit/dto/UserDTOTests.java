@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * </ul>
  *
  * @see UserDTO
- * @version 1.2
+ * @version 1.3
  * @author Dylan Mercer
  */
 @DisplayName("UserDTO Tests")
@@ -359,6 +359,17 @@ public class UserDTOTests {
                             || v.getPropertyPath().toString().equals("lastName"));
             assertThat(hasNameViolations).isFalse();
         }
+
+        @Test
+        @DisplayName("Should validate role constraints")
+        void shouldValidateRoleConstraints() {
+            UserDTO dto = new UserDTO(1L, "test@okcps.org", "John", "Doe", null);
+            Set<ConstraintViolation<UserDTO>> violations = validator.validate(dto);
+            boolean hasRoleViolations = violations.stream()
+                    .anyMatch(v -> v.getPropertyPath().toString().equals("role"));
+            assertThat(hasRoleViolations).isTrue();
+        }
+
 
         @Test
         @DisplayName("Should handle null values in validation")

@@ -4,6 +4,7 @@ import com.bearpoints.api.entity.Role;
 import com.bearpoints.api.entity.User;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
@@ -21,7 +22,7 @@ import lombok.Getter;
  *     <li>{@code role} - User's assigned role (enum name)</li>
  * </ul>
  *
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @Getter
@@ -37,6 +38,7 @@ public class UserDTO {
     @Size(min = 1, max = 100, message = "Last name must be between 1 and 100 characters")
     private final String lastName;
 
+    @NotNull(message = "Role is required")
     private final Role role;
 
     /**
