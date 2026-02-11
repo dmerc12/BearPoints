@@ -1,52 +1,171 @@
 package com.bearpoints.api.controller;
 
+import com.bearpoints.api.annotation.PaginationAndSorting;
+import com.bearpoints.api.criteria.UserSearchCriteria;
+import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.dto.UserDTO;
-import com.bearpoints.api.entity.User;
-import com.bearpoints.api.security.FirebaseUserDetails;
-import jakarta.validation.constraints.NotNull;
+import com.bearpoints.api.entity.Role;
+import com.bearpoints.api.service.UserService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
 /**
- * REST controller for user-related operations.
- * <p>Provides endpoints for:
- * <ul>
- *     <li>Retrieving authenticated user details</li>
- * </ul>
+ * REST controller for user management operations.
+ * <p>Provides endpoints for managing users with pagination, sorting, and filtering.
  *
  * <p>Endpoints:
  * <ul>
- *     <li>{@code GET /api/users/me} - Returns current authenticated user's details</li>
+ *     <li>GET /api/users - Retrieve all users (any authenticated user)</li>
+ *     <li>GET /api/users/search - Search users with flexible criteria (any authenticated user)</li>
+ *     <li>GET /api/users/{id} - Retrieve user by ID (any authenticated user)</li>
+ *     <li>POST /api/users - Create new user (ADMIN only)</li>
+ *     <li>PUT /api/users/{id} - Update existing user (ADMIN only)</li>
+ *     <li>DELETE /api/users/{id} - Delete user (ADMIN only)</li>
  * </ul>
  *
- * @see FirebaseUserDetails
- * @see UserDTO
- * @version 1.1
+ * <p>Security:
+ * <ul>
+ *     <li>GET endpoints - Any authenticated user</li>
+ *     <li>POST, PUT, DELETE endpoints - ADMIN role required</li>
+ * </ul>
+ *
+ * @version 3.0
  * @author Dylan Mercer
  */
+@Slf4j
 @CrossOrigin
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/users")
+@PreAuthorize("isAuthenticated()")
 public class UserController {
+    private final UserService userService;
+
     /**
-     * Retrieves details of the currently authenticated user.
-     * <p>Requires valid authentication token. Returns user information in simplified DTO format.
+     * Retrieves all users with pagination and sorting.
+     * <p>Accessible to any authenticated user.
      *
-     * @param userDetails Authenticated user's security context (required)
-     * @return HTTP 200 OK with user details
-     * @throws IllegalStateException if user details are invalid
+     * @param pageable Automatically resolved pagination and sorting parameters
+     * @return Paginated response of users
      */
-    @GetMapping("/me")
-    public ResponseEntity<UserDTO> getCurrentUser(
-            @NotNull @AuthenticationPrincipal FirebaseUserDetails userDetails) {
-        User user = userDetails.getUser();
-        if (user == null) {
-            throw new IllegalStateException("Invalid user details");
+    @GetMapping
+    public ResponseEntity<PagedResponseDTO<UserDTO>> getAllUsers(
+            @PaginationAndSorting(
+                    defaultSort = "lastName,asc",
+                    allowedSortProperties = {"id", "firstName", "lastName", "email", "role"}
+            ) Pageable pageable
+    ) {
+        log.debug("Retrieving all users - page: {}, size: {}, sort: {}",
+                pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
+        PagedResponseDTO<UserDTO> response = userService.getAllUsers(pageable);
+        log.info("Retrieved {} users", response.getNumberOfElements());
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Searches users with flexible criteria including email, name, and role.
+     * <p>Accessible to any authenticated user.
+     *
+     * @param email Email search term (optional)
+     * @param firstName First name search term (optional)
+     * @param lastName Last name search term (optional)
+     * @param role Role filter (optional)
+     * @param pageable Automatically resolved pagination and sorting parameters
+     * @return Paginated response of matching admins
+     */
+    @GetMapping("/search")
+    public ResponseEntity<PagedResponseDTO<UserDTO>> searchUsers(
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String firstName,
+            @RequestParam(required = false) String lastName,
+            @RequestParam(required = false) String role,
+            @PaginationAndSorting(
+                    defaultSort = "lastName,asc",
+                    allowedSortProperties = {"id", "firstName", "lastName", "email", "role"}
+            ) Pageable pageable
+    ) {
+        log.debug("Searching users - email: {}, firstName: {}, lastName: {} - page: {}, size: {}, sort: {}",
+                email, firstName, lastName, pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
+        UserSearchCriteria criteria = new UserSearchCriteria();
+        criteria.setEmail(email);
+        criteria.setFirstName(firstName);
+        criteria.setLastName(lastName);
+        if (role != null) {
+            criteria.setRole(Role.valueOf(role));
         }
-        return ResponseEntity.ok(new UserDTO(user));
+        PagedResponseDTO<UserDTO> response = userService.searchUsers(criteria, pageable);
+        log.info("Retrieved {} users matching search criteria", response.getNumberOfElements());
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Retrieves a user by ID.
+     * <p>Accessible to any authenticated user.
+     *
+     * @param id User ID
+     * @return User details
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<UserDTO> getUserById(@PathVariable Long id) {
+        log.debug("Retrieving user with ID: {}", id);
+        UserDTO user = userService.getUserById(id);
+        log.info("Retrieved user with ID: {}", id);
+        return ResponseEntity.ok(user);
+    }
+
+    /**
+     * Creates a new user.
+     * <p>Accessible only to ADMIN users.
+     *
+     * @param userDTO User data
+     * @return Created user details
+     */
+    @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserDTO> createUser(@Valid @RequestBody UserDTO userDTO) {
+        log.debug("Creating new user with email: {}", userDTO.getEmail());
+        UserDTO createdUser = userService.createUser(userDTO);
+        log.info("Created user ID: {}", createdUser.getId());
+        return ResponseEntity.status(HttpStatus.CREATED).contentType(MediaType.APPLICATION_JSON).body(createdUser);
+    }
+
+    /**
+     * Updates an existing user.
+     * <p>Accessible only to ADMIN users.
+     *
+     * @param id User ID
+     * @param userDTO Updated user data
+     * @return Updated user details
+     */
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @Valid @RequestBody UserDTO userDTO) {
+        log.debug("Updating user with ID: {}", id);
+        UserDTO updatedUser = userService.updateUser(id, userDTO);
+        log.info("Updated user ID: {}", id);
+        return ResponseEntity.ok(updatedUser);
+    }
+
+    /**
+     * Deletes a user by ID.
+     * <p>Accessible only to ADMIN users.
+     *
+     * @param id User ID
+     * @return No content response
+     */
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserDTO> deleteUser(@PathVariable Long id) {
+        log.debug("Deleting user with ID: {}", id);
+        userService.deleteUser(id);
+        log.info("Deleted user with ID: {}", id);
+        return ResponseEntity.noContent().build();
     }
 }
