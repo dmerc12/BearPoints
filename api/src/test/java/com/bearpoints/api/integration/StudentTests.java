@@ -36,7 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *
  * @see TestDataInitializer
  * @see BaseIntegrationTest
- * @version 1.2
+ * @version 1.3
  * @author Dylan Mercer
  */
 @DisplayName("Student Integration Tests")
