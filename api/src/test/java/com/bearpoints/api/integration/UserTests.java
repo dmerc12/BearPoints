@@ -1,7 +1,7 @@
 package com.bearpoints.api.integration;
 
 import com.bearpoints.api.config.TestDataInitializer;
-import com.bearpoints.api.controller.AdminController;
+import com.bearpoints.api.controller.UserController;
 import com.bearpoints.api.dao.UserDAO;
 import com.bearpoints.api.entity.Role;
 import com.bearpoints.api.entity.User;
@@ -20,10 +20,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * Full-stack integration tests for {@link AdminController}.
+ * Full-stack integration tests for {@link UserController}.
  * Extends {@link BaseIntegrationTest} for common test configuration.
  *
- * <p>Tests the complete administrative user management flow from HTTP endpoint through service layer to
+ * <p>Tests the complete user management flow from HTTP endpoint through service layer to
  * database, validating system behavior against a production-like database environment with existing
  * {@link TestDataInitializer}.
  *
@@ -37,11 +37,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *
  * @see TestDataInitializer
  * @see BaseIntegrationTest
- * @version 1.2
+ * @version 2.0
  * @author Dylan Mercer
  */
-@DisplayName("Admin Integration Tests")
-public class AdminTests extends BaseIntegrationTest {
+@DisplayName("User Integration Tests")
+public class UserTests extends BaseIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
 
@@ -52,37 +52,38 @@ public class AdminTests extends BaseIntegrationTest {
 
     @BeforeAll
     static void setUp() {
-        baseUrl = "/api/admins";
+        baseUrl = "/api/users";
     }
 
     @Nested
-    @DisplayName("GET /admins - Retrieve admin users")
-    class GetAllAdmins {
+    @DisplayName("GET /users - Retrieve users")
+    class GetAllUsers {
         @Test
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-        @DisplayName("returns paginated admin users with default parameters")
-        void returnsPaginatedAdminsWithDefaults() throws Exception {
+        @DisplayName("returns paginated users with default parameters")
+        void returnsPaginatedUsersWithDefaults() throws Exception {
             mockMvc.perform(get(baseUrl))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isArray())
                     .andExpect(jsonPath("$.number").value(0))
-                    .andExpect(jsonPath("$.size").value(20));
+                    .andExpect(jsonPath("$.size").value(20))
+                    .andExpect(jsonPath("$.content[*].role", everyItem(is("ADMIN"))));
         }
 
         @Test
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
         @DisplayName("returns sorted results when sort parameter provided")
-        void returnsSortedAdmins() throws Exception {
+        void returnsSortedUsers() throws Exception {
             mockMvc.perform(get(baseUrl)
-                        .param("sort", "firstName,asc;email,desc"))
+                        .param("sort", "firstName,asc;email,desc;role,asc"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.content[0].firstName").exists());
+                    .andExpect(jsonPath("$.content[*].role", everyItem(is("ADMIN"))));
         }
 
         @Test
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-        @DisplayName("returns empty page when no admins exist")
-        void returnsEmptyPageWhenNoAdmins() throws Exception {
+        @DisplayName("returns empty page when no users exist")
+        void returnsEmptyPageWhenNoUsers() throws Exception {
             mockMvc.perform(get(baseUrl)
                             .param("page", "1000"))
                     .andExpect(status().isOk())
@@ -91,48 +92,67 @@ public class AdminTests extends BaseIntegrationTest {
     }
 
     @Nested
-    @DisplayName("GET /admins/search - Search admin users")
-    class SearchAdmins {
+    @DisplayName("GET /users/search - Search users")
+    class SearchUsers {
         @Test
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-        @DisplayName("by email returns matching admins")
-        void searchByEmail_returnsMatchingAdmins() throws Exception {
+        @DisplayName("by email returns matching ADMIN users only")
+        void searchByEmail_returnsMatchingUsersOnly() throws Exception {
             mockMvc.perform(get(baseUrl + "/search")
                             .param("email", "admin"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[*].email",
-                            everyItem(containsStringIgnoringCase("admin"))));
+                            everyItem(containsStringIgnoringCase("admin"))))
+                    .andExpect(jsonPath("$.content[*].role",
+                            everyItem(is("ADMIN"))));
         }
 
         @Test
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-        @DisplayName("by first name returns matching admins")
-        void searchByFirstName_returnsMatchingAdmins() throws Exception {
+        @DisplayName("by first name returns matching ADMIN users")
+        void searchByFirstName_returnsMatchingAdminUsers() throws Exception {
             mockMvc.perform(get(baseUrl + "/search")
                             .param("firstName", "admin"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[*].firstName",
-                            everyItem(containsStringIgnoringCase("admin"))));
+                            everyItem(containsStringIgnoringCase("admin"))))
+                    .andExpect(jsonPath("$.content[*].role",
+                            everyItem(is("ADMIN"))));
         }
 
         @Test
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-        @DisplayName("by last name returns matching admins")
-        void searchByLastName_returnsMatchingAdmins() throws Exception {
+        @DisplayName("by last name returns matching ADMIN users")
+        void searchByLastName_returnsMatchingAdminUsers() throws Exception {
             mockMvc.perform(get(baseUrl + "/search")
                             .param("lastName", "admin"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[*].lastName",
-                            everyItem(containsStringIgnoringCase("admin"))));
+                            everyItem(containsStringIgnoringCase("admin"))))
+                    .andExpect(jsonPath("$.content[*].role",
+                            everyItem(is("ADMIN"))));
         }
 
         @Test
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-        @DisplayName("with empty criteria returns all admins")
+        @DisplayName("by role returns matching ADMIN users")
+        void searchByRole_returnsMatchingAdminUsers() throws Exception {
+            mockMvc.perform(get(baseUrl + "/search")
+                            .param("role", "ADMIN"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content[*].role",
+                            everyItem(containsStringIgnoringCase("ADMIN"))));
+        }
+
+        @Test
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @DisplayName("with empty criteria returns all ADMIN users (no TEACHER/STUDENT)")
         void searchWithEmptyCriteria_returnsAllAdmins() throws Exception {
             mockMvc.perform(get(baseUrl + "/search"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.content").isArray());
+                    .andExpect(jsonPath("$.content").isArray())
+                    .andExpect(jsonPath("$.content[*].role",
+                            everyItem(containsStringIgnoringCase("ADMIN"))));
         }
 
         @Test
@@ -147,19 +167,22 @@ public class AdminTests extends BaseIntegrationTest {
 
         @Test
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-        @DisplayName("with combined criteria returns matching admins")
+        @DisplayName("with combined criteria returns matching ADMIN users")
         void searchWithCombinedCriteria_returnsMatchingAdmins() throws Exception {
             mockMvc.perform(get(baseUrl + "/search")
                             .param("email", "admin")
                             .param("firstName", "admin")
-                            .param("lastName", "admin"))
+                            .param("lastName", "admin")
+                            .param("role", "ADMIN"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[*].email",
                             everyItem(containsStringIgnoringCase("admin"))))
                     .andExpect(jsonPath("$.content[*].firstName",
                             everyItem(containsStringIgnoringCase("admin"))))
                     .andExpect(jsonPath("$.content[*].lastName",
-                            everyItem(containsStringIgnoringCase("admin"))));
+                            everyItem(containsStringIgnoringCase("admin"))))
+                    .andExpect(jsonPath("$.content[*].role",
+                            everyItem(containsStringIgnoringCase("ADMIN"))));
         }
 
         @Test
@@ -171,24 +194,46 @@ public class AdminTests extends BaseIntegrationTest {
                             .param("sort", "lastName,desc"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[*].lastName",
-                            everyItem(containsStringIgnoringCase("admin"))));
+                            everyItem(containsStringIgnoringCase("admin"))))
+                    .andExpect(jsonPath("$.content[*].role",
+                            everyItem(is("ADMIN"))));
+        }
+
+        @Test
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @DisplayName("search for TEACHER role returns empty results (not allowed)")
+        void searchByTeacherRole_returnsEmptyResults() throws Exception {
+            mockMvc.perform(get(baseUrl + "/search")
+                            .param("role", "TEACHER"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").isEmpty());
+        }
+
+        @Test
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @DisplayName("search for STUDENT role returns empty results (not allowed)")
+        void searchByStudentRole_returnsEmptyResults() throws Exception {
+            mockMvc.perform(get(baseUrl + "/search")
+                            .param("role", "STUDENT"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").isEmpty());
         }
     }
 
     @Nested
-    @DisplayName("GET /admins/{id} - Get admin by ID")
-    class GetAdminById {
+    @DisplayName("GET /users/{id} - Get user by ID")
+    class GetUserById {
         @Test
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-        @DisplayName("returns admin when ID exists and user is admin")
-        void returnsAdmin_whenIdExists() throws Exception {
-            Optional<User> adminUser = userDAO.findByRole(Role.ADMIN, PageRequest.of(0, 1))
+        @DisplayName("returns user when ID exists and user is ADMIN")
+        void returnsUser_whenIdExistsAndAdmin() throws Exception {
+            Optional<User> user = userDAO.findByRole(Role.ADMIN, PageRequest.of(0, 1))
                     .stream().findFirst();
-            if (adminUser.isPresent()) {
-                Long adminId = adminUser.get().getId();
-                mockMvc.perform(get(baseUrl + "/{id}", adminId))
+            if (user.isPresent()) {
+                Long userId = user.get().getId();
+                mockMvc.perform(get(baseUrl + "/{id}", userId))
                         .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.id").value(adminId))
+                        .andExpect(jsonPath("$.id").value(userId))
                         .andExpect(jsonPath("$.role").value("ADMIN"));
             }
         }
@@ -201,66 +246,109 @@ public class AdminTests extends BaseIntegrationTest {
             mockMvc.perform(get(baseUrl + "/{id}", nonExistentId))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.message")
-                            .value("Administrator not found with ID: " + nonExistentId))
+                            .value("User not found with ID: " + nonExistentId))
                     .andExpect(jsonPath("$.timestamp").exists());
         }
 
         @Test
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-        @DisplayName("returns 404 when ID belongs to a student")
-        void returns404_whenIdIsStudent() throws Exception {
+        @DisplayName("returns 400 when ID belongs to a student")
+        void returns400_whenIdIsStudent() throws Exception {
             Optional<User> studentUser = userDAO.findByRole(Role.STUDENT, PageRequest.of(0, 1))
                     .stream().findFirst();
             if (studentUser.isPresent()) {
                 Long studentId = studentUser.get().getId();
                 mockMvc.perform(get(baseUrl + "/{id}", studentId))
-                        .andExpect(status().isNotFound())
+                        .andExpect(status().isBadRequest())
                         .andExpect(jsonPath("$.message")
-                                .value("Administrator not found with ID: " + studentId))
+                                .value("User service can only handle users with roles: [ADMIN], but found role: STUDENT"))
                         .andExpect(jsonPath("$.timestamp").exists());
             }
         }
 
         @Test
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
-        @DisplayName("returns 404 when ID belongs to a teacher")
-        void returns404_whenIdIsTeacher() throws Exception {
+        @DisplayName("returns 400 when ID belongs to a teacher")
+        void returns400_whenIdIsTeacher() throws Exception {
             Optional<User> teacherUser = userDAO.findByRole(Role.TEACHER, PageRequest.of(0, 1))
                     .stream().findFirst();
             if (teacherUser.isPresent()) {
                 Long teacherId = teacherUser.get().getId();
                 mockMvc.perform(get(baseUrl + "/{id}", teacherId))
-                        .andExpect(status().isNotFound())
+                        .andExpect(status().isBadRequest())
                         .andExpect(jsonPath("$.message")
-                                .value("Administrator not found with ID: " + teacherId))
+                                .value("User service can only handle users with roles: [ADMIN], but found role: TEACHER"))
                         .andExpect(jsonPath("$.timestamp").exists());
             }
         }
     }
 
     @Nested
-    @DisplayName("POST /admins - Create admin")
-    class CreateAdmin {
+    @DisplayName("POST /users - Create user")
+    class CreateUser {
         @Test
         @WithMockUser(roles = "ADMIN")
-        @DisplayName("creates admin with valid data")
-        void createdAdmin_withValidData() throws Exception {
+        @DisplayName("creates ADMIN user with valid data")
+        void createdAdminUser_withValidData() throws Exception {
             String uniqueEmail = "unique-admin-" + System.currentTimeMillis() + "@okcps.org";
-            String adminJson = """
+            String userJson = """
                     {
                         "email": "%s",
                         "firstName": "New",
-                        "lastName": "Admin"
+                        "lastName": "Admin",
+                        "role": "ADMIN"
                     }
                     """.formatted(uniqueEmail);
             mockMvc.perform(post(baseUrl)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(adminJson))
+                        .content(userJson))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.email").value(uniqueEmail))
                     .andExpect(jsonPath("$.firstName").value("New"))
                     .andExpect(jsonPath("$.lastName").value("Admin"))
                     .andExpect(jsonPath("$.role").value("ADMIN"));
+        }
+
+        @Test
+        @WithMockUser(roles = "ADMIN")
+        @DisplayName("returns 400 when attempting to create user with TEACHER role")
+        void returns400_whenCreatingTeacher() throws Exception {
+            String uniqueEmail = "unique-teacher-" + System.currentTimeMillis() + "@okcps.org";
+            String userJson = """
+                    {
+                        "email": "%s",
+                        "firstName": "New",
+                        "lastName": "Teacher",
+                        "role": "TEACHER"
+                    }
+                    """.formatted(uniqueEmail);
+            mockMvc.perform(post(baseUrl)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(userJson))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.message")
+                            .value(containsString("User service can only handle users with roles")));
+        }
+
+        @Test
+        @WithMockUser(roles = "ADMIN")
+        @DisplayName("returns 400 when attempting to create user with STUDENT role")
+        void returns400_whenCreatingStudent() throws Exception {
+            String uniqueEmail = "unique-student-" + System.currentTimeMillis() + "@okcps.org";
+            String userJson = """
+                    {
+                        "email": "%s",
+                        "firstName": "New",
+                        "lastName": "Student",
+                        "role": "STUDENT"
+                    }
+                    """.formatted(uniqueEmail);
+            mockMvc.perform(post(baseUrl)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(userJson))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.message")
+                            .value(containsString("User service can only handle users with roles")));
         }
 
         @Test
@@ -271,7 +359,8 @@ public class AdminTests extends BaseIntegrationTest {
                     {
                         "email": "invalid-email",
                         "firstName": "New",
-                        "lastName": "Admin"
+                        "lastName": "Admin",
+                        "role": "ADMIN"
                     }
                     """;
             mockMvc.perform(post(baseUrl)
@@ -291,7 +380,8 @@ public class AdminTests extends BaseIntegrationTest {
                     {
                         "email": "test@example.com",
                         "firstName": "New",
-                        "lastName": "Admin"
+                        "lastName": "Admin",
+                        "role": "ADMIN"
                     }
                     """;
             mockMvc.perform(post(baseUrl)
@@ -315,14 +405,16 @@ public class AdminTests extends BaseIntegrationTest {
                     {
                         "email": "%s",
                         "firstName": "New",
-                        "lastName": "Admin"
+                        "lastName": "Admin",
+                        "role": "ADMIN"
                     }
                     """.formatted(adminEmail);
                 mockMvc.perform(post(baseUrl)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(adminJson))
                         .andExpect(status().isConflict())
-                        .andExpect(jsonPath("$.message").value(containsString("A user with this email already exists")));
+                        .andExpect(jsonPath("$.message")
+                                .value(containsString("A user with this email already exists")));
             }
         }
 
@@ -334,7 +426,8 @@ public class AdminTests extends BaseIntegrationTest {
                     {
                         "email": "",
                         "firstName": "New",
-                        "lastName": "Admin"
+                        "lastName": "Admin",
+                        "role": "ADMIN"
                     }
                     """;
             mockMvc.perform(post(baseUrl)
@@ -354,7 +447,8 @@ public class AdminTests extends BaseIntegrationTest {
                     {
                         "email": "test@okcps.org",
                         "firstName": "",
-                        "lastName": "Admin"
+                        "lastName": "Admin",
+                        "role": "ADMIN"
                     }
                     """;
             mockMvc.perform(post(baseUrl)
@@ -375,7 +469,8 @@ public class AdminTests extends BaseIntegrationTest {
                     {
                         "email": "test@okcps.org",
                         "firstName": "%s",
-                        "lastName": "Admin"
+                        "lastName": "Admin",
+                        "role": "ADMIN"
                     }
                     """.formatted(longName);
             mockMvc.perform(post(baseUrl)
@@ -395,7 +490,8 @@ public class AdminTests extends BaseIntegrationTest {
                     {
                         "email": "test@okcps.org",
                         "firstName": "New",
-                        "lastName": ""
+                        "lastName": "",
+                        "role": "ADMIN"
                     }
                     """;
             mockMvc.perform(post(baseUrl)
@@ -416,7 +512,8 @@ public class AdminTests extends BaseIntegrationTest {
                     {
                         "email": "test@okcps.org",
                         "firstName": "New",
-                        "lastName": "%s"
+                        "lastName": "%s",
+                        "role": "ADMIN"
                     }
                     """.formatted(longName);
             mockMvc.perform(post(baseUrl)
@@ -437,7 +534,8 @@ public class AdminTests extends BaseIntegrationTest {
                     {
                         "email": "%s",
                         "firstName": "New",
-                        "lastName": "Admin"
+                        "lastName": "Admin",
+                        "role": "ADMIN"
                     }
                     """.formatted(uniqueEmail);
             mockMvc.perform(post(baseUrl)
@@ -448,12 +546,12 @@ public class AdminTests extends BaseIntegrationTest {
     }
 
     @Nested
-    @DisplayName("PUT /admins/{id} - Update admin")
-    class UpdateAdmin {
+    @DisplayName("PUT /users/{id} - Update user")
+    class UpdateUser {
         @Test
         @WithMockUser(roles = "ADMIN")
-        @DisplayName("updates admin with valid data")
-        void updatedAdmin_withValidData() throws Exception {
+        @DisplayName("updates ADMIN user with valid data")
+        void updatedAdminUser_withValidData() throws Exception {
             Optional<User> adminUser = userDAO.findByRole(Role.ADMIN, PageRequest.of(0, 1))
                     .stream().findFirst();
             if (adminUser.isPresent()) {
@@ -462,7 +560,8 @@ public class AdminTests extends BaseIntegrationTest {
                     {
                         "email": "updated.email@okcps.org",
                         "firstName": "Updated",
-                        "lastName": "Updated"
+                        "lastName": "Updated",
+                        "role": "ADMIN"
                     }
                     """;
                 mockMvc.perform(put(baseUrl + "/{id}", adminId)
@@ -474,7 +573,7 @@ public class AdminTests extends BaseIntegrationTest {
                         .andExpect(jsonPath("$.email").value("updated.email@okcps.org"))
                         .andExpect(jsonPath("$.firstName").value("Updated"))
                         .andExpect(jsonPath("$.lastName").value("Updated"))
-                        .andExpect(jsonPath("$.role").value(adminUser.get().getRole().name()));
+                        .andExpect(jsonPath("$.role").value("ADMIN"));
             }
         }
 
@@ -487,7 +586,8 @@ public class AdminTests extends BaseIntegrationTest {
                 {
                     "email": "updated.email@okcps.org",
                     "firstName": "Updated",
-                    "lastName": "Updated"
+                    "lastName": "Updated",
+                    "role": "ADMIN"
                 }
                 """;
             mockMvc.perform(put(baseUrl + "/{id}", nonExistentId)
@@ -496,14 +596,14 @@ public class AdminTests extends BaseIntegrationTest {
                             .with(csrf()))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.message")
-                            .value("Administrator not found with ID: " + nonExistentId))
+                            .value("User not found with ID: " + nonExistentId))
                     .andExpect(jsonPath("$.timestamp").exists());
         }
 
         @Test
         @WithMockUser(roles = "ADMIN")
-        @DisplayName("returns 404 when updating non-admin, student user")
-        void returns404_whenUpdatingNonAdminStudentUser() throws Exception {
+        @DisplayName("returns 400 when updating STUDENT user")
+        void returns404_whenUpdatingStudentUser() throws Exception {
             Optional<User> studentUser = userDAO.findByRole(Role.STUDENT, PageRequest.of(0, 1))
                     .stream().findFirst();
             if (studentUser.isPresent()) {
@@ -512,24 +612,25 @@ public class AdminTests extends BaseIntegrationTest {
                 {
                     "email": "updated.email@okcps.org",
                     "firstName": "Updated",
-                    "lastName": "Updated"
+                    "lastName": "Updated",
+                    "role": "ADMIN"
                 }
                 """;
                 mockMvc.perform(put(baseUrl + "/{id}", studentId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updateJson)
                                 .with(csrf()))
-                        .andExpect(status().isNotFound())
+                        .andExpect(status().isBadRequest())
                         .andExpect(jsonPath("$.message")
-                                .value("Administrator not found with ID: " + studentId))
+                                .value("User service can only handle users with roles: [ADMIN], but found role: STUDENT"))
                         .andExpect(jsonPath("$.timestamp").exists());
             }
         }
 
         @Test
         @WithMockUser(roles = "ADMIN")
-        @DisplayName("returns 404 when updating non-admin, teacher user")
-        void returns404_whenUpdatingNonAdminTeacherUser() throws Exception {
+        @DisplayName("returns 400 when updating TEACHER user")
+        void returns404_whenUpdatingTeacherUser() throws Exception {
             Optional<User> teacherUser = userDAO.findByRole(Role.TEACHER, PageRequest.of(0, 1))
                     .stream().findFirst();
             if (teacherUser.isPresent()) {
@@ -538,24 +639,79 @@ public class AdminTests extends BaseIntegrationTest {
                 {
                     "email": "updated.email@okcps.org",
                     "firstName": "Updated",
-                    "lastName": "Updated"
+                    "lastName": "Updated",
+                    "role": "ADMIN"
                 }
                 """;
                 mockMvc.perform(put(baseUrl + "/{id}", teacherId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updateJson)
                                 .with(csrf()))
-                        .andExpect(status().isNotFound())
+                        .andExpect(status().isBadRequest())
                         .andExpect(jsonPath("$.message")
-                                .value("Administrator not found with ID: " + teacherId))
+                                .value("User service can only handle users with roles: [ADMIN], but found role: TEACHER"))
+                        .andExpect(jsonPath("$.timestamp").exists());
+            }
+        }
+
+        @Test
+        @WithMockUser(roles = "ADMIN")
+        @DisplayName("returns 400 when updating an ADMIN user to TEACHER role")
+        void returns400_whenUpdatingAdminToTeacherRole() throws Exception {
+            Optional<User> adminUser = userDAO.findByRole(Role.ADMIN, PageRequest.of(0, 1))
+                    .stream().findFirst();
+            if (adminUser.isPresent()) {
+                Long teacherId = adminUser.get().getId();
+                String updateJson = """
+                {
+                    "email": "updated.email@okcps.org",
+                    "firstName": "Updated",
+                    "lastName": "Updated",
+                    "role": "TEACHER"
+                }
+                """;
+                mockMvc.perform(put(baseUrl + "/{id}", teacherId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(updateJson)
+                                .with(csrf()))
+                        .andExpect(status().isBadRequest())
+                        .andExpect(jsonPath("$.message")
+                                .value("User service can only handle users with roles: [ADMIN], but found role: TEACHER"))
+                        .andExpect(jsonPath("$.timestamp").exists());
+            }
+        }
+
+        @Test
+        @WithMockUser(roles = "ADMIN")
+        @DisplayName("returns 400 when updating an ADMIN user to STUDENT role")
+        void returns400_whenUpdatingAdminToStudentRole() throws Exception {
+            Optional<User> adminUser = userDAO.findByRole(Role.ADMIN, PageRequest.of(0, 1))
+                    .stream().findFirst();
+            if (adminUser.isPresent()) {
+                Long teacherId = adminUser.get().getId();
+                String updateJson = """
+                {
+                    "email": "updated.email@okcps.org",
+                    "firstName": "Updated",
+                    "lastName": "Updated",
+                    "role": "STUDENT"
+                }
+                """;
+                mockMvc.perform(put(baseUrl + "/{id}", teacherId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(updateJson)
+                                .with(csrf()))
+                        .andExpect(status().isBadRequest())
+                        .andExpect(jsonPath("$.message")
+                                .value("User service can only handle users with roles: [ADMIN], but found role: STUDENT"))
                         .andExpect(jsonPath("$.timestamp").exists());
             }
         }
 
         @Test
         @WithMockUser(roles = {"TEACHER", "STUDENT"})
-        @DisplayName("returns 403 when non-admin tries to update admin")
-        void returns403_whenNonAdminTriesToDelete() throws Exception {
+        @DisplayName("returns 403 when non-admin tries to update user")
+        void returns403_whenNonAdminTriesToUpdate() throws Exception {
             Optional<User> adminUser = userDAO.findByRole(Role.ADMIN, PageRequest.of(0, 1))
                     .stream().findFirst();
             if (adminUser.isPresent()) {
@@ -564,7 +720,8 @@ public class AdminTests extends BaseIntegrationTest {
                     {
                         "email": "updated@okcps.org",
                         "firstName": "Updated",
-                        "lastName": "Updated"
+                        "lastName": "Updated",
+                        "role": "ADMIN"
                     }
                     """;
                 mockMvc.perform(put(baseUrl + "/{id}", adminId)
@@ -577,12 +734,12 @@ public class AdminTests extends BaseIntegrationTest {
     }
 
     @Nested
-    @DisplayName("DELETE /admins/{id} - Delete admin")
-    class DeleteAdmin {
+    @DisplayName("DELETE /users/{id} - Delete user")
+    class DeleteUser {
         @Test
         @WithMockUser(roles = "ADMIN")
-        @DisplayName("deletes admin and returns 204")
-        void deletesAdmin_andReturns204() throws Exception {
+        @DisplayName("deletes user and returns 204")
+        void deletesUser_andReturns204() throws Exception {
             Optional<User> existingUser = userDAO.findByRole(Role.ADMIN, PageRequest.of(0, 1))
                     .stream().findFirst();
             if (existingUser.isPresent()) {
@@ -594,47 +751,47 @@ public class AdminTests extends BaseIntegrationTest {
 
         @Test
         @WithMockUser(roles = "ADMIN")
-        @DisplayName("returns 404 when deleting non-existent admin")
-        void returns404_whenDeletingNonExistentAdmin() throws Exception {
+        @DisplayName("returns 404 when deleting non-existent user")
+        void returns404_whenDeletingNonExistentUser() throws Exception {
             Long nonExistentId = 9999L;
             mockMvc.perform(delete(baseUrl + "/{id}", nonExistentId)
                             .with(csrf()))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.message")
-                            .value("Administrator not found with ID: " + nonExistentId))
+                            .value("User not found with ID: " + nonExistentId))
                     .andExpect(jsonPath("$.timestamp").exists());
         }
 
         @Test
         @WithMockUser(roles = "ADMIN")
-        @DisplayName("returns 404 when deleting non-admin, student user")
-        void returns404_whenDeletingNonAdminStudentUser() throws Exception {
+        @DisplayName("returns 400 when deleting STUDENT user")
+        void returns400_whenDeletingStudentUser() throws Exception {
             Optional<User> studentUser = userDAO.findByRole(Role.STUDENT, PageRequest.of(0, 1))
                     .stream().findFirst();
             if (studentUser.isPresent()) {
                 Long studentId = studentUser.get().getId();
                 mockMvc.perform(delete(baseUrl + "/{id}", studentId)
                                 .with(csrf()))
-                        .andExpect(status().isNotFound())
+                        .andExpect(status().isBadRequest())
                         .andExpect(jsonPath("$.message")
-                                .value("Administrator not found with ID: " + studentId))
+                                .value("User service can only handle users with roles: [ADMIN], but found role: STUDENT"))
                         .andExpect(jsonPath("$.timestamp").exists());
             }
         }
 
         @Test
         @WithMockUser(roles = "ADMIN")
-        @DisplayName("returns 404 when deleting non-admin, teacher user")
-        void returns404_whenDeletingNonAdminTeacherUser() throws Exception {
+        @DisplayName("returns 400 when deleting TEACHER user")
+        void returns404_whenDeletingTeacherUser() throws Exception {
             Optional<User> teacherUser = userDAO.findByRole(Role.TEACHER, PageRequest.of(0, 1))
                     .stream().findFirst();
             if (teacherUser.isPresent()) {
-                Long teacherId = teacherUser.get().getId();
-                mockMvc.perform(delete(baseUrl + "/{id}", teacherId)
+                Long studentId = teacherUser.get().getId();
+                mockMvc.perform(delete(baseUrl + "/{id}", studentId)
                                 .with(csrf()))
-                        .andExpect(status().isNotFound())
+                        .andExpect(status().isBadRequest())
                         .andExpect(jsonPath("$.message")
-                                .value("Administrator not found with ID: " + teacherId))
+                                .value("User service can only handle users with roles: [ADMIN], but found role: TEACHER"))
                         .andExpect(jsonPath("$.timestamp").exists());
             }
         }

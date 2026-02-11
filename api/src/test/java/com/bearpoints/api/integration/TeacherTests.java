@@ -254,7 +254,8 @@ public class TeacherTests extends BaseIntegrationTest {
                         "user": {
                             "email": "%s",
                             "firstName": "New",
-                            "lastName": "Teacher"
+                            "lastName": "Teacher",
+                            "role": "TEACHER"
                         },
                         "grade": "FIRST"
                     }
@@ -280,7 +281,8 @@ public class TeacherTests extends BaseIntegrationTest {
                         "user": {
                             "email": "invalid-email",
                             "firstName": "New",
-                            "lastName": "Teacher"
+                            "lastName": "Teacher",
+                            "role": "TEACHER"
                         },
                         "grade": "FIRST"
                     }
@@ -303,7 +305,8 @@ public class TeacherTests extends BaseIntegrationTest {
                         "user": {
                             "email": "test@example.com",
                             "firstName": "New",
-                            "lastName": "Teacher"
+                            "lastName": "Teacher",
+                            "role": "TEACHER"
                         },
                         "grade": "FIRST"
                     }
@@ -330,7 +333,8 @@ public class TeacherTests extends BaseIntegrationTest {
                         "user": {
                             "email": "%s",
                             "firstName": "New",
-                            "lastName": "Teacher"
+                            "lastName": "Teacher",
+                            "role": "TEACHER"
                         },
                         "grade": "FIRST"
                     }
@@ -354,7 +358,8 @@ public class TeacherTests extends BaseIntegrationTest {
                         "user": {
                             "email": "test@okcps.org",
                             "firstName": "New",
-                            "lastName": "Teacher"
+                            "lastName": "Teacher",
+                            "role": "TEACHER"
                         },
                         "grade": "INVALID_GRADE"
                     }
@@ -377,7 +382,8 @@ public class TeacherTests extends BaseIntegrationTest {
                         "user": {
                             "email": "test@okcps.org",
                             "firstName": "",
-                            "lastName": "Teacher"
+                            "lastName": "Teacher",
+                            "role": "TEACHER"
                         },
                         "grade": "FIRST"
                     }
@@ -401,7 +407,8 @@ public class TeacherTests extends BaseIntegrationTest {
                         "user": {
                             "email": "test@okcps.org",
                             "firstName": "%s",
-                            "lastName": "Teacher"
+                            "lastName": "Teacher",
+                            "role": "TEACHER"
                         },
                         "grade": "FIRST"
                     }
@@ -424,7 +431,8 @@ public class TeacherTests extends BaseIntegrationTest {
                         "user": {
                             "email": "test@okcps.org",
                             "firstName": "New",
-                            "lastName": ""
+                            "lastName": "",
+                            "role": "TEACHER"
                         },
                         "grade": "FIRST"
                     }
@@ -448,7 +456,8 @@ public class TeacherTests extends BaseIntegrationTest {
                         "user": {
                             "email": "test@okcps.org",
                             "firstName": "New",
-                            "lastName": "%s"
+                            "lastName": "%s",
+                            "role": "TEACHER"
                         },
                         "grade": "FIRST"
                     }
@@ -472,7 +481,8 @@ public class TeacherTests extends BaseIntegrationTest {
                         "user": {
                             "email": "%s",
                             "firstName": "New",
-                            "lastName": "Teacher"
+                            "lastName": "Teacher",
+                            "role": "TEACHER"
                         },
                         "grade": "FIRST"
                     }
@@ -501,7 +511,8 @@ public class TeacherTests extends BaseIntegrationTest {
                             "user" : {
                                 "email": "updated.email@okcps.org",
                                 "firstName": "Updated",
-                                "lastName": "Teacher"
+                                "lastName": "Teacher",
+                                "role": "TEACHER"
                             },
                             "grade": "SECOND"
                         }
@@ -536,7 +547,8 @@ public class TeacherTests extends BaseIntegrationTest {
                                 "user" : {
                                     "email": "%s",
                                     "firstName": "Updated",
-                                    "lastName": "Teacher"
+                                    "lastName": "Teacher",
+                                    "role": "TEACHER"
                                 },
                                 "grade": "SECOND"
                             }
@@ -562,7 +574,8 @@ public class TeacherTests extends BaseIntegrationTest {
                                 "user" : {
                                     "email": "%s",
                                     "firstName": "Updated",
-                                    "lastName": "Teacher"
+                                    "lastName": "Teacher",
+                                    "role": "TEACHER"
                                 },
                                 "grade": "SECOND"
                             }
@@ -590,7 +603,8 @@ public class TeacherTests extends BaseIntegrationTest {
                                 "user" : {
                                     "email": "%s",
                                     "firstName": "Updated",
-                                    "lastName": "Teacher"
+                                    "lastName": "Teacher",
+                                    "role": "TEACHER"
                                 },
                                 "grade": "SECOND"
                             }
@@ -615,7 +629,8 @@ public class TeacherTests extends BaseIntegrationTest {
                             "user" : {
                                 "email": "updated.email@okcps.org",
                                 "firstName": "Updated",
-                                "lastName": "Teacher"
+                                "lastName": "Teacher",
+                                "role": "TEACHER"
                             },
                             "grade": "SECOND"
                         }
@@ -642,7 +657,8 @@ public class TeacherTests extends BaseIntegrationTest {
                     "user" : {
                         "email": "updated@okcps.org",
                         "firstName": "Updated",
-                        "lastName": "Teacher"
+                        "lastName": "Teacher",
+                        "role": "TEACHER"
                     },
                     "grade": "SECOND"
                 }

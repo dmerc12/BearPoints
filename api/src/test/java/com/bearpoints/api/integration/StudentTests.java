@@ -305,7 +305,8 @@ public class StudentTests extends BaseIntegrationTest {
                         "user": {
                             "email": "%s",
                             "firstName": "New",
-                            "lastName": "Student"
+                            "lastName": "Student",
+                            "role": "STUDENT"
                         },
                         "teacher": {
                             "id": %d
@@ -336,7 +337,8 @@ public class StudentTests extends BaseIntegrationTest {
                         "user": {
                             "email": "invalid-email",
                             "firstName": "New",
-                            "lastName": "Student"
+                            "lastName": "Student",
+                            "role": "STUDENT"
                         },
                         "teacher": {
                             "id": 1
@@ -362,7 +364,8 @@ public class StudentTests extends BaseIntegrationTest {
                         "user": {
                             "email": "test@example.com",
                             "firstName": "New",
-                            "lastName": "Student"
+                            "lastName": "Student",
+                            "role": "STUDENT"
                         },
                         "teacher": {
                             "id": 1
@@ -391,7 +394,8 @@ public class StudentTests extends BaseIntegrationTest {
                         "user": {
                             "email": "%s",
                             "firstName": "New",
-                            "lastName": "Student"
+                            "lastName": "Student",
+                            "role": "STUDENT"
                         },
                         "teacher": {
                             "id": 1
@@ -419,7 +423,8 @@ public class StudentTests extends BaseIntegrationTest {
                         "user": {
                             "email": "%s",
                             "firstName": "New",
-                            "lastName": "Student"
+                            "lastName": "Student",
+                            "role": "STUDENT"
                         },
                         "teacher": {
                             "id": 9999
@@ -444,7 +449,8 @@ public class StudentTests extends BaseIntegrationTest {
                         "user": {
                             "email": "test@example.com",
                             "firstName": "",
-                            "lastName": "Student"
+                            "lastName": "Student",
+                            "role": "STUDENT"
                         },
                         "teacher": {
                             "id": 1
@@ -470,7 +476,8 @@ public class StudentTests extends BaseIntegrationTest {
                         "user": {
                             "email": "test@example.com",
                             "firstName": "New",
-                            "lastName": ""
+                            "lastName": "",
+                            "role": "STUDENT"
                         },
                         "teacher": {
                             "id": 1
@@ -497,7 +504,8 @@ public class StudentTests extends BaseIntegrationTest {
                         "user": {
                             "email": "%s",
                             "firstName": "New",
-                            "lastName": "Student"
+                            "lastName": "Student",
+                            "role": "STUDENT"
                         },
                         "teacher": {
                             "id": 1
@@ -529,7 +537,8 @@ public class StudentTests extends BaseIntegrationTest {
                         "user": {
                             "email": "%s",
                             "firstName": "Updated",
-                            "lastName": "Student-Name"
+                            "lastName": "Student-Name",
+                            "role": "STUDENT"
                         },
                         "teacher": {
                             "id": 2
@@ -564,7 +573,8 @@ public class StudentTests extends BaseIntegrationTest {
                         "user": {
                             "email": "%s",
                             "firstName": "Updated",
-                            "lastName": "Student-Name"
+                            "lastName": "Student-Name",
+                            "role": "STUDENT"
                         },
                         "teacher": {
                             "id": 1
@@ -595,7 +605,8 @@ public class StudentTests extends BaseIntegrationTest {
                         "user": {
                             "email": "%s",
                             "firstName": "Updated",
-                            "lastName": "Student-Name"
+                            "lastName": "Student-Name",
+                            "role": "STUDENT"
                         },
                         "teacher": {
                             "id": 1
@@ -625,7 +636,8 @@ public class StudentTests extends BaseIntegrationTest {
                         "user": {
                             "email": "%s",
                             "firstName": "Updated",
-                            "lastName": "Student-Name"
+                            "lastName": "Student-Name",
+                            "role": "STUDENT"
                         },
                         "teacher": {
                             "id": 9999
@@ -651,7 +663,8 @@ public class StudentTests extends BaseIntegrationTest {
                     "user": {
                         "email": "updated.email@okcps.org",
                         "firstName": "Updated",
-                        "lastName": "Student-Name"
+                        "lastName": "Student-Name",
+                        "role": "STUDENT"
                     },
                     "teacher": {
                         "id": 2
@@ -680,7 +693,8 @@ public class StudentTests extends BaseIntegrationTest {
                         "user": {
                             "email": "updated.email@okcps.org",
                             "firstName": "Updated",
-                            "lastName": "Student-Name"
+                            "lastName": "Student-Name",
+                            "role": "STUDENT"
                         },
                         "teacher": {
                             "id": 2
