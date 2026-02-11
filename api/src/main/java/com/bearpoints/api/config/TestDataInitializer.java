@@ -61,7 +61,7 @@ import java.util.stream.Collectors;
  * </ul>
  *
  * @see CommandLineRunner
- * @version 2.0
+ * @version 2.1
  * @author Dylan Mercer
  */
 @Component
@@ -199,6 +199,7 @@ public class TestDataInitializer implements CommandLineRunner {
         Student student = new Student();
         student.setTeacher(teacher);
         student.setUser(user);
+        student.setPoints(100);
         student.generateToken();
         user.setStudent(student);
         User studentUser = userDAO.save(user);
@@ -265,6 +266,7 @@ public class TestDataInitializer implements CommandLineRunner {
         bragLog.setBehaviors(behaviors);
         bragLog.setPointsGenerated(pointsGenerated);
         bragLog.setNotes(notes);
+        bragLog.setSubmitterName("John Doe");
         BragLog brag = bragLogDAO.save(bragLog);
         log.info("Created test brag log: {}", brag);
     }
