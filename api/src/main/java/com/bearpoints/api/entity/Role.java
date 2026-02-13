@@ -7,10 +7,11 @@ package com.bearpoints.api.entity;
  *      <li>Student</li>
  *      <li>Teacher</li>
  *      <li>Admin</li>
+ *      <li>Staff</li>
  * </ul>
  *
  * @see User
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 public enum Role {
@@ -21,5 +22,8 @@ public enum Role {
     TEACHER,
 
     /** Administrative system account */
-    ADMIN
+    ADMIN,
+
+    /** Standard staff account */
+    STAFF
 }
