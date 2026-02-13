@@ -13,6 +13,7 @@ import lombok.Setter;
  *     <li>{@code email} - Partial match on user email (case-insensitive)</li>
  *     <li>{@code firstName} - Partial match on user first name (case-insensitive)</li>
  *     <li>{@code lastName} - Partial match on user last name (case-insensitive)</li>
+ *     <li>{@code role} - Role filter</li>
  * </ul>
  *
  * <p>Usage examples:
