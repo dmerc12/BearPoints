@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * </ul>
  *
  * @see UserDTO
- * @version 1.3
+ * @version 1.4
  * @author Dylan Mercer
  */
 @DisplayName("UserDTO Tests")
@@ -86,6 +86,18 @@ public class UserDTOTests {
         @DisplayName("Should correctly map ADMIN role")
         void shouldCorrectlyMapAdminRole() {
             User user = createUser(4L, "admin@okcps.org", "John", "Doe", Role.ADMIN);
+            UserDTO dto = new UserDTO(user);
+            assertEquals(user.getId(), dto.getId());
+            assertEquals(user.getFirstName(), dto.getFirstName());
+            assertEquals(user.getLastName(), dto.getLastName());
+            assertEquals(user.getEmail(),  dto.getEmail());
+            assertEquals(user.getRole(), dto.getRole());
+        }
+
+        @Test
+        @DisplayName("Should correctly map STAFF role")
+        void shouldCorrectlyMapStaffRole() {
+            User user = createUser(5L, "staff@okcps.org", "John", "Doe", Role.STAFF);
             UserDTO dto = new UserDTO(user);
             assertEquals(user.getId(), dto.getId());
             assertEquals(user.getFirstName(), dto.getFirstName());
@@ -189,9 +201,11 @@ public class UserDTOTests {
             UserDTO dto1 = new UserDTO(1L, "test@okcps.org", "John", "Doe", "student");
             UserDTO dto2 = new UserDTO(2L, "test2@okcps.org", "Jane", "Smith", "teacher");
             UserDTO dto3 = new UserDTO(3L, "test3@okcps.org", "Bob", "Johnson", "admin");
+            UserDTO dto4 = new UserDTO(4L, "test4@okcps.org", "Greg", "Eastman", "staff");
             assertThat(dto1.getRole()).isEqualTo(Role.STUDENT);
             assertThat(dto2.getRole()).isEqualTo(Role.TEACHER);
             assertThat(dto3.getRole()).isEqualTo(Role.ADMIN);
+            assertThat(dto4.getRole()).isEqualTo(Role.STAFF);
         }
 
         @Test
@@ -207,11 +221,11 @@ public class UserDTOTests {
             UserDTO dto1 = new UserDTO(1L, "test1@okcps.org", "John", "Doe", "student");
             UserDTO dto2 = new UserDTO(2L, "test2@okcps.org", "John", "Doe", "Teacher");
             UserDTO dto3 = new UserDTO(3L, "test3@okcps.org", "John", "Doe", "ADMIN");
-            UserDTO dto4 = new UserDTO(4L, "test4@okcps.org", "John", "Doe", "sTudeNt");
+            UserDTO dto4 = new UserDTO(4L, "test4@okcps.org", "John", "Doe", "Staff");
             assertThat(dto1.getRole()).isEqualTo(Role.STUDENT);
             assertThat(dto2.getRole()).isEqualTo(Role.TEACHER);
             assertThat(dto3.getRole()).isEqualTo(Role.ADMIN);
-            assertThat(dto4.getRole()).isEqualTo(Role.STUDENT);
+            assertThat(dto4.getRole()).isEqualTo(Role.STAFF);
         }
 
         @Test
@@ -246,9 +260,11 @@ public class UserDTOTests {
             UserDTO dto1 = new UserDTO(1L, "test@okcps.org", "John", "Doe", "   student   ");
             UserDTO dto2 = new UserDTO(2L, "test2@okcps.org", "John", "Doe", "\tteacher\t");
             UserDTO dto3 = new UserDTO(3L, "test3@okcps.org", "John", "Doe", "\nadmin\n");
+            UserDTO dto4 = new UserDTO(4L, "test4@okcps.org", "John", "Doe", " staff ");
             assertThat(dto1.getRole()).isEqualTo(Role.STUDENT);
             assertThat(dto2.getRole()).isEqualTo(Role.TEACHER);
             assertThat(dto3.getRole()).isEqualTo(Role.ADMIN);
+            assertThat(dto4.getRole()).isEqualTo(Role.STAFF);
         }
     }
 
@@ -415,12 +431,15 @@ public class UserDTOTests {
             UserDTO studentDTO = new UserDTO(1L, "test@okcps.org", "John", "Doe", "STUDENT");
             UserDTO teacherDTO = new UserDTO(1L, "test@okcps.org", "John", "Doe", "TEACHER");
             UserDTO adminDTO = new UserDTO(1L, "test@okcps.org", "John", "Doe", "ADMIN");
+            UserDTO staffDTO = new UserDTO(1L, "test@okcps.org", "John", "Doe", "STAFF");
             assertThat(studentDTO.getRole()).isEqualTo(Role.STUDENT);
             assertThat(teacherDTO.getRole()).isEqualTo(Role.TEACHER);
             assertThat(adminDTO.getRole()).isEqualTo(Role.ADMIN);
+            assertThat(staffDTO.getRole()).isEqualTo(Role.STAFF);
             assertThat(studentDTO.getRole()).isNotEqualTo(teacherDTO.getRole());
             assertThat(teacherDTO.getRole()).isNotEqualTo(adminDTO.getRole());
-            assertThat(adminDTO.getRole()).isNotEqualTo(studentDTO.getRole());
+            assertThat(adminDTO.getRole()).isNotEqualTo(staffDTO.getRole());
+            assertThat(staffDTO.getRole()).isNotEqualTo(studentDTO.getRole());
         }
     }
 
