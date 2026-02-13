@@ -17,10 +17,10 @@ import java.util.stream.Collectors;
 /**
  * Data Transfer Object for {@link BragLog} operations.
  * <p>Used for both creating / updating brag logs and returning brag log data.
- * <p>For creation: Only studentId, teacherId, and behaviorIds are required; notes are optional.
- * <p>For response: All fields including id, grade, pointsGenerated, and timestamp are populated.
+ * <p>For creation: Only studentId, teacherId, behaviorIds, and submitterName are required; notes is optional.
+ * <p>For response: All fields including id, grade, pointsGenerated, timestamp, and submitterUserId are populated.
  *
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @Getter
@@ -33,6 +33,7 @@ public class BragLogDTO {
     private final Set<BehaviorTypeDTO> behaviors;
     private final Integer pointsGenerated;
     private final LocalDateTime timestamp;
+    private final Long submitterUserId;
 
     // Request / response fields (client sends, server returns)
     private final Long id;
@@ -46,6 +47,9 @@ public class BragLogDTO {
     @Size(max = 500, message = "Notes cannot exceed 500 characters")
     private final String notes;
 
+    @Size(min = 2, max = 250, message = "Submitter name must be between 2 and 250 characters")
+    private final String submitterName;
+
     /**
      * Constructor for JSON deserialization (create/update operations)
      */
@@ -55,6 +59,7 @@ public class BragLogDTO {
                       @JsonProperty("teacherId") Long teacherId,
                       @JsonProperty("behaviorIds") Set<Long> behaviorIds,
                       @JsonProperty("notes") String notes,
+                      @JsonProperty("submitterName") String submitterName,
                       @JsonProperty("studentName") String studentName,
                       @JsonProperty("teacherName") String teacherName,
                       @JsonProperty("grade") GradeLevel grade,
@@ -67,6 +72,8 @@ public class BragLogDTO {
         this.teacherId = teacherId;
         this.behaviorIds = behaviorIds;
         this.notes = notes;
+        this.submitterName = submitterName;
+        this.submitterUserId = null;
         this.studentName = studentName;
         this.teacherName = teacherName;
         this.grade = grade;
@@ -98,6 +105,9 @@ public class BragLogDTO {
         this.timestamp = bragLog.getTimestamp();
         // Notes
         this.notes = bragLog.getNotes();
+        // Submitter fields
+        this.submitterName = bragLog.getSubmitterName();
+        this.submitterUserId = bragLog.getSubmitterUser() != null ? bragLog.getSubmitterUser().getId() : null;
         // Behaviors
         this.behaviorIds = bragLog.getBehaviors() != null ?
                 bragLog.getBehaviors().stream()
@@ -107,8 +117,5 @@ public class BragLogDTO {
                 bragLog.getBehaviors().stream()
                         .map(BehaviorTypeDTO::new)
                         .collect(Collectors.toSet()) : null;
-
-
-
     }
 }

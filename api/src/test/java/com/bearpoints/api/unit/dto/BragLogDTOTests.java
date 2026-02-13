@@ -27,10 +27,11 @@ import static org.assertj.core.api.Assertions.assertThat;
  *     <li>Entity constructor for response scenarios</li>
  *     <li>JSON deserialization and constructor</li>
  *     <li>Edge cases and null handling</li>
+ *     <li>Submitter name and user ID handling</li>
  * </ul>
  *
  * @see BragLogDTO
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @DisplayName("BragLogDTO Tests")
@@ -70,8 +71,9 @@ public class BragLogDTOTests {
             Long teacherId = 20L;
             Set<Long> behaviorIds = Set.of(101L, 102L);
             String notes = "Good behavior";
-            String studentName = "John Doe";
-            String teacherName = "Jane Doe";
+            String submitterName = "John Doe";
+            String studentName = "Student Name";
+            String teacherName = "Teacher Name";
             GradeLevel grade = GradeLevel.FIRST;
             Set<BehaviorTypeDTO> behaviors = Set.of(
                     new BehaviorTypeDTO(101L, "Helped Others", 3, true),
@@ -80,12 +82,14 @@ public class BragLogDTOTests {
             Integer pointsGenerated = 5;
             LocalDateTime timestamp = LocalDateTime.now();
             BragLogDTO dto = new BragLogDTO(id, studentId, teacherId, behaviorIds, notes,
-                    studentName, teacherName, grade, behaviors, pointsGenerated, timestamp);
+                    submitterName, studentName, teacherName, grade, behaviors, pointsGenerated, timestamp);
             assertThat(dto.getId()).isEqualTo(id);
             assertThat(dto.getStudentId()).isEqualTo(studentId);
             assertThat(dto.getTeacherId()).isEqualTo(teacherId);
             assertThat(dto.getBehaviorIds()).isEqualTo(behaviorIds);
             assertThat(dto.getNotes()).isEqualTo(notes);
+            assertThat(dto.getSubmitterName()).isEqualTo(submitterName);
+            assertThat(dto.getSubmitterUserId()).isNull();
             assertThat(dto.getStudentName()).isEqualTo(studentName);
             assertThat(dto.getTeacherName()).isEqualTo(teacherName);
             assertThat(dto.getGrade()).isEqualTo(grade);
@@ -101,13 +105,16 @@ public class BragLogDTOTests {
             Long teacherId = 20L;
             Set<Long> behaviorIds = Set.of(101L);
             String notes = "Good behavior";
+            String submitterName = "John Doe";
             BragLogDTO dto = new BragLogDTO(null, studentId, teacherId, behaviorIds, notes,
-                    null, null, null, null, null, null);
+                    submitterName, null, null, null, null, null, null);
             assertThat(dto.getId()).isNull();
             assertThat(dto.getStudentId()).isEqualTo(studentId);
             assertThat(dto.getTeacherId()).isEqualTo(teacherId);
             assertThat(dto.getBehaviorIds()).isEqualTo(behaviorIds);
             assertThat(dto.getNotes()).isEqualTo(notes);
+            assertThat(dto.getSubmitterName()).isEqualTo(submitterName);
+            assertThat(dto.getSubmitterUserId()).isNull();
             assertThat(dto.getStudentName()).isNull();
             assertThat(dto.getTeacherName()).isNull();
             assertThat(dto.getGrade()).isNull();
@@ -142,6 +149,12 @@ public class BragLogDTOTests {
             bragLog.setPointsGenerated(5);
             bragLog.setNotes("Excellent work today!");
             bragLog.setTimestamp(LocalDateTime.now());
+            bragLog.setSubmitterName("Admin User");
+            User submitterUser = new User();
+            submitterUser.setId(30L);
+            submitterUser.setFirstName("Admin");
+            submitterUser.setLastName("User");
+            bragLog.setSubmitterUser(submitterUser);
             BragLogDTO dto = new BragLogDTO(bragLog);
             assertThat(dto.getId()).isEqualTo(bragLog.getId());
             assertThat(dto.getStudentId()).isEqualTo(student.getId());
@@ -154,6 +167,8 @@ public class BragLogDTOTests {
             assertThat(dto.getPointsGenerated()).isEqualTo(bragLog.getPointsGenerated());
             assertThat(dto.getNotes()).isEqualTo(bragLog.getNotes());
             assertThat(dto.getTimestamp()).isEqualTo(bragLog.getTimestamp());
+            assertThat(dto.getSubmitterName()).isEqualTo(submitterUser.getFirstName() + " " + submitterUser.getLastName());
+            assertThat(dto.getSubmitterUserId()).isEqualTo(submitterUser.getId());
             assertThat(dto.getBehaviorIds()).containsExactlyInAnyOrder(behavior1.getId(), behavior2.getId());
             assertThat(dto.getBehaviors()).hasSize(bragLog.getBehaviors().size());
             BehaviorTypeDTO behavior1DTO = dto.getBehaviors().stream()
@@ -173,6 +188,29 @@ public class BragLogDTOTests {
         }
 
         @Test
+        @DisplayName("Should handle brag log with submitter name but no submitter user")
+        void shouldHandleBragLogWithSubmitterNameButNoSubmitterUser() {
+            BragLog bragLog = new BragLog();
+            bragLog.setId(1L);
+            Student student = new Student();
+            student.setId(10L);
+            bragLog.setStudent(student);
+            Teacher teacher = new Teacher();
+            teacher.setId(20L);
+            bragLog.setTeacher(teacher);
+            bragLog.setBehaviors(Set.of());
+            bragLog.setGrade(GradeLevel.FIRST);
+            bragLog.setPointsGenerated(3);
+            bragLog.setNotes("Test notes");
+            bragLog.setTimestamp(LocalDateTime.now());
+            bragLog.setSubmitterName("Parent Volunteer");
+            bragLog.setSubmitterUser(null);
+            BragLogDTO dto = new BragLogDTO(bragLog);
+            assertThat(dto.getSubmitterName()).isEqualTo(bragLog.getSubmitterName());
+            assertThat(dto.getSubmitterUserId()).isNull();
+        }
+
+        @Test
         @DisplayName("Should handle null student and teacher relationships")
         void shouldHandleNullStudentAndTeacherRelationships() {
             BragLog bragLog = new BragLog();
@@ -184,11 +222,14 @@ public class BragLogDTOTests {
             bragLog.setPointsGenerated(3);
             bragLog.setNotes("Test notes");
             bragLog.setTimestamp(LocalDateTime.now());
+            bragLog.setSubmitterName("Test Submitter");
             BragLogDTO dto = new BragLogDTO(bragLog);
             assertThat(dto.getStudentId()).isNull();
             assertThat(dto.getStudentName()).isNull();
             assertThat(dto.getTeacherId()).isNull();
             assertThat(dto.getTeacherName()).isNull();
+            assertThat(dto.getSubmitterName()).isEqualTo(bragLog.getSubmitterName());
+            assertThat(dto.getSubmitterUserId()).isNull();
             assertThat(dto.getBehaviorIds()).isEmpty();
             assertThat(dto.getBehaviors()).isEmpty();
         }
@@ -208,6 +249,7 @@ public class BragLogDTOTests {
             bragLog.setGrade(GradeLevel.FIRST);
             bragLog.setPointsGenerated(3);
             bragLog.setNotes("Test notes");
+            bragLog.setSubmitterName("Test Submitter");
             bragLog.setTimestamp(LocalDateTime.now());
             BragLogDTO dto = new BragLogDTO(bragLog);
             assertThat(dto.getBehaviorIds()).isNull();
@@ -231,6 +273,7 @@ public class BragLogDTOTests {
             bragLog.setGrade(GradeLevel.FIRST);
             bragLog.setPointsGenerated(3);
             bragLog.setNotes("Test notes");
+            bragLog.setSubmitterName("Test Submitter");
             bragLog.setTimestamp(LocalDateTime.now());
             BragLogDTO dto = new BragLogDTO(bragLog);
             assertThat(dto.getStudentId()).isEqualTo(student.getId());
@@ -247,16 +290,79 @@ public class BragLogDTOTests {
         @DisplayName("Valid creation request passes all constraints")
         void validCreationRequestPassesAllConstraints() {
             BragLogDTO dto = new BragLogDTO(null, 1L, 2L, Set.of(101L), "Good job!",
-                    null, null, null, null, null, null);
+                    "John Doe", null, null, null, null, null, null);
             Set<ConstraintViolation<BragLogDTO>> violations = validator.validate(dto);
             assertThat(violations).isEmpty();
+        }
+
+        @Test
+        @DisplayName("Blank submitterName violates @NotBlank constraint")
+        void blankSubmitterNameViolatesNotBlankConstraint() {
+            BragLogDTO dto = new BragLogDTO(null, 1L, 2L, Set.of(101L), "Notes",
+                    "", null, null, null, null, null, null);
+            Set<ConstraintViolation<BragLogDTO>> violations = validator.validate(dto);
+            assertThat(violations).hasSize(2);
+            assertThat(violations).extracting(ConstraintViolation::getMessage).contains("Submitter name is required",
+                    "Submitter name must be between 2 and 250 characters");
+        }
+
+        @Test
+        @DisplayName("Null submitterName violates @NotBlank constraint")
+        void nullSubmitterNameViolatesNotBlankConstraint() {
+            BragLogDTO dto = new BragLogDTO(null, 1L, 2L, Set.of(101L), "Notes",
+                    null, null, null, null, null, null, null);
+            Set<ConstraintViolation<BragLogDTO>> violations = validator.validate(dto);
+            assertThat(violations).hasSize(1);
+            assertThat(violations).extracting(ConstraintViolation::getMessage).contains("Submitter name is required");
+        }
+
+        @Test
+        @DisplayName("1-character submitterName violates @Size constraint")
+        void oneCharacterSubmitterNameViolatesSizeConstraint() {
+            BragLogDTO dto = new BragLogDTO(null, 1L, 2L, Set.of(101L), "Notes",
+                    "A", null, null, null, null, null, null);
+            Set<ConstraintViolation<BragLogDTO>> violations = validator.validate(dto);
+            assertThat(violations).hasSize(1);
+            assertThat(violations).extracting(ConstraintViolation::getMessage)
+                    .contains("Submitter name must be between 2 and 250 characters");
+        }
+
+        @Test
+        @DisplayName("2-character submitterName passes violation")
+        void twoCharacterSubmitterNamePassesValidation() {
+            BragLogDTO dto = new BragLogDTO(null, 1L, 2L, Set.of(101L), "Notes",
+                    "AJ", null, null, null, null, null, null);
+            Set<ConstraintViolation<BragLogDTO>> violations = validator.validate(dto);
+            assertThat(violations).isEmpty();
+        }
+
+        @Test
+        @DisplayName("250-character submitterName passes violation")
+        void twoHundredFiftyCharacterSubmitterNamePassesValidation() {
+            String validName = "A".repeat(250);
+            BragLogDTO dto = new BragLogDTO(null, 1L, 2L, Set.of(101L), "Notes",
+                    validName, null, null, null, null, null, null);
+            Set<ConstraintViolation<BragLogDTO>> violations = validator.validate(dto);
+            assertThat(violations).isEmpty();
+        }
+
+        @Test
+        @DisplayName("251-character submitterName violates @Size constraint")
+        void twoHundredFiftyOneCharacterSubmitterNameViolatesSizeConstraint() {
+            String longName = "A".repeat(251);
+            BragLogDTO dto = new BragLogDTO(null, 1L, 2L, Set.of(101L), "Notes",
+                    longName, null, null, null, null, null, null);
+            Set<ConstraintViolation<BragLogDTO>> violations = validator.validate(dto);
+            assertThat(violations).hasSize(1);
+            assertThat(violations).extracting(ConstraintViolation::getMessage)
+                    .contains("Submitter name must be between 2 and 250 characters");
         }
 
         @Test
         @DisplayName("Null studentId violates @NotNull constraint")
         void nullStudentIdViolatesNotNullConstraint() {
             BragLogDTO dto = new BragLogDTO(null, null, 2L, Set.of(101L), "Notes",
-                    null, null, null, null, null, null);
+                    "John Doe", null, null, null, null, null, null);
             Set<ConstraintViolation<BragLogDTO>> violations = validator.validate(dto);
             assertThat(violations).hasSize(1);
             assertThat(violations.iterator().next().getMessage()).isEqualTo("Student ID is required");
@@ -266,7 +372,7 @@ public class BragLogDTOTests {
         @DisplayName("Empty behaviorIds violates @NotEmpty constraint")
         void emptyBehaviorIdsViolatesNotEmptyConstraint() {
             BragLogDTO dto = new BragLogDTO(null, 1L, 2L, Set.of(), "Notes",
-                    null, null, null, null, null, null);
+                    "John Doe", null, null, null, null, null, null);
             Set<ConstraintViolation<BragLogDTO>> violations = validator.validate(dto);
             assertThat(violations).hasSize(1);
             assertThat(violations.iterator().next().getMessage())
@@ -277,7 +383,7 @@ public class BragLogDTOTests {
         @DisplayName("Null behaviorIds violates @NotEmpty constraint")
         void nullBehaviorIdViolatesNotEmptyConstraint() {
             BragLogDTO dto = new BragLogDTO(null, 1L, 2L, null, "Notes",
-                    null, null, null, null, null, null);
+                    "John Doe", null, null, null, null, null, null);
             Set<ConstraintViolation<BragLogDTO>> violations = validator.validate(dto);
             assertThat(violations).hasSize(1);
             assertThat(violations.iterator().next().getMessage())
@@ -290,7 +396,7 @@ public class BragLogDTOTests {
         void notesExceeding500CharactersViolatesSizeConstraint(int length) {
             String longNotes = "A".repeat(length);
             BragLogDTO dto = new BragLogDTO(
-                    null, 1L, 2L, Set.of(101L), longNotes,
+                    null, 1L, 2L, Set.of(101L), longNotes, "John Doe",
                     null, null, null, null, null, null
             );
             Set<ConstraintViolation<BragLogDTO>> violations = validator.validate(dto);
@@ -304,7 +410,7 @@ public class BragLogDTOTests {
         void notesAtExactly500CharactersPassesValidation() {
             String notes = "A".repeat(500);
             BragLogDTO dto = new BragLogDTO(
-                    null, 1L, 2L, Set.of(101L), notes, null,
+                    null, 1L, 2L, Set.of(101L), notes, "John Doe", null,
                     null, null, null, null, null
             );
             Set<ConstraintViolation<BragLogDTO>> violations = validator.validate(dto);
@@ -315,7 +421,7 @@ public class BragLogDTOTests {
         @DisplayName("Null notes at passes validation (optional field)")
         void nullNotesPassesValidation() {
             BragLogDTO dto = new BragLogDTO(
-                    null, 1L, 2L, Set.of(101L), null, null,
+                    null, 1L, 2L, Set.of(101L), null, "John Doe", null,
                     null, null, null, null, null
             );
             Set<ConstraintViolation<BragLogDTO>> violations = validator.validate(dto);
@@ -326,7 +432,7 @@ public class BragLogDTOTests {
         @DisplayName("Empty notes at passes validation (optional field)")
         void emptyNotesPassesValidation() {
             BragLogDTO dto = new BragLogDTO(
-                    null, 1L, 2L, Set.of(101L), "", null,
+                    null, 1L, 2L, Set.of(101L), "", "John Doe", null,
                     null, null, null, null, null
             );
             Set<ConstraintViolation<BragLogDTO>> violations = validator.validate(dto);
@@ -341,7 +447,7 @@ public class BragLogDTOTests {
         @DisplayName("Update request with ID passes validation")
         void updateRequestWithIDPassesValidation() {
             BragLogDTO dto = new BragLogDTO(
-                    1L, 10L, 20L, Set.of(101L), "Updated notes", null,
+                    1L, 10L, 20L, Set.of(101L), "Updated notes", "John Doe", null,
                     null, null, null, null, null
             );
             Set<ConstraintViolation<BragLogDTO>> violations = validator.validate(dto);
@@ -352,7 +458,7 @@ public class BragLogDTOTests {
         @DisplayName("Multiple behavior IDs are handled correctly")
         void multipleBehaviorIDsAreHandledCorrectly() {
             BragLogDTO dto = new BragLogDTO(
-                    1L, 10L, 20L, Set.of(101L, 102L, 103L), "Multiple behaviors",
+                    1L, 10L, 20L, Set.of(101L, 102L, 103L), "Multiple behaviors", "John Doe",
                     null, null, null, null, null, null
             );
             Set<ConstraintViolation<BragLogDTO>> violations = validator.validate(dto);
@@ -364,7 +470,7 @@ public class BragLogDTOTests {
         @DisplayName("Response fields do not affect validation for requests")
         void responseFieldsDoNotAffectValidationForRequests() {
             BragLogDTO dto = new BragLogDTO(
-                    1L, 10L, 20L, Set.of(101L), "Updated notes", "John Doe",
+                    1L, 10L, 20L, Set.of(101L), "Updated notes", "John Doe", "John Doe",
                     "Jane Smith", GradeLevel.FIRST, Set.of(new BehaviorTypeDTO(101L, "Test",
                     3, true)), 5, LocalDateTime.now()
             );
