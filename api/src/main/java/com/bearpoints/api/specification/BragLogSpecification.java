@@ -7,6 +7,7 @@ import com.bearpoints.api.entity.Teacher;
 import com.bearpoints.api.entity.User;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
@@ -25,7 +26,7 @@ import java.util.List;
  *
  * @see BragLogSearchCriteria
  * @see Specification
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @Component
@@ -128,6 +129,21 @@ public class BragLogSpecification {
                 predicates.add(criteriaBuilder.like(
                         criteriaBuilder.lower(root.get("notes")),
                         "%" + criteria.getNotes().toLowerCase() + "%"
+                ));
+            }
+            // Submitter name filter
+            if (criteria.getSubmitterName() != null && !criteria.getSubmitterName().trim().isEmpty()) {
+                predicates.add(criteriaBuilder.like(
+                        criteriaBuilder.lower(root.get("submitterName")),
+                        "%" + criteria.getSubmitterName().toLowerCase() + "%"
+                ));
+            }
+            // Submitter user ID filter
+            if (criteria.getSubmitterUserId() != null) {
+                Join<BragLog, User> submitterUserJoin = root.join("submitterUser", JoinType.LEFT);
+                predicates.add(criteriaBuilder.equal(
+                        submitterUserJoin.get("id"),
+                        criteria.getSubmitterUserId()
                 ));
             }
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));

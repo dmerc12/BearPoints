@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * and handles various filter combinations appropriately.
  *
  * @see BragLogSpecification
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @DataJpaTest
@@ -48,6 +48,8 @@ public class BragLogSpecificationTests {
 
     private Teacher teacher1;
 
+    private Teacher teacher3;
+
     private Student student1;
 
     private Student student4;
@@ -56,7 +58,7 @@ public class BragLogSpecificationTests {
     void setUp() {
         teacher1 = createTeacher("john.doe@okcps.org", "John", "Doe", GradeLevel.SECOND);
         Teacher teacher2 = createTeacher("jane.smith@okcps.org", "Jane", "Smith", GradeLevel.THIRD);
-        Teacher teacher3 = createTeacher("doug.johnson@okcps.org", "Doug", "Johnson", GradeLevel.FOURTH);
+        teacher3 = createTeacher("doug.johnson@okcps.org", "Doug", "Johnson", GradeLevel.FOURTH);
         student1 = createStudent("bill.reed@okcps.org", "Bill", "Reed", teacher1);
         Student student2 = createStudent("alice.stephens@okcps.org", "Alice", "Stephens", teacher2);
         Student student3 = createStudent("jenny.long@okcps.org", "Jenny", "Long", teacher3);
@@ -65,10 +67,14 @@ public class BragLogSpecificationTests {
         BehaviorType behavior2 = createBehaviorType("Sensational Bear Time", 3);
         BehaviorType behavior3 = createBehaviorType("Answered Thoughtfully", 2);
         BehaviorType behavior4 = createBehaviorType("Kind To Others", 5);
-        createBragLog(student1, Set.of(behavior1, behavior3, behavior4), "first test notes"); //8
-        createBragLog(student2, Set.of(behavior1, behavior2), "second test notes"); //4
-        createBragLog(student3, Set.of(behavior1, behavior4), "third test notes"); //6
-        createBragLog(student4, Set.of(behavior3, behavior4), "final test notes"); //7
+        createBragLog(student1, Set.of(behavior1, behavior3, behavior4), "first test notes",
+                "John Doe", teacher1.getUser()); //8
+        createBragLog(student2, Set.of(behavior1, behavior2), "second test notes",
+                "Jane Smith", teacher2.getUser()); //4
+        createBragLog(student3, Set.of(behavior1, behavior4), "third test notes",
+                "John Doe", teacher1.getUser()); //6
+        createBragLog(student4, Set.of(behavior3, behavior4), "final test notes",
+                "Doug Johnson", teacher3.getUser()); //7
     }
 
     @Test
@@ -168,6 +174,29 @@ public class BragLogSpecificationTests {
     }
 
     @Test
+    @DisplayName("Should create predicate with submitter name criteria")
+    void shouldCreatePredicateWithSubmitterNameCriteria() {
+        BragLogSearchCriteria criteria = new BragLogSearchCriteria();
+        criteria.setSubmitterName("John");
+        Specification<BragLog> spec = BragLogSpecification.withCriteria(criteria);
+        Page<BragLog> results = bragLogDAO.findAll(spec, PageRequest.of(0, 10));
+        assertEquals(3, results.getTotalElements());
+        assertTrue(results.getContent().stream().allMatch(bl -> bl.getSubmitterName().contains("John")));
+    }
+
+    @Test
+    @DisplayName("Should create predicate with submitter user ID criteria")
+    void shouldCreatePredicateWithSubmitterIDCriteria() {
+        BragLogSearchCriteria criteria = new BragLogSearchCriteria();
+        criteria.setSubmitterUserId(teacher1.getUser().getId());
+        Specification<BragLog> spec = BragLogSpecification.withCriteria(criteria);
+        Page<BragLog> results = bragLogDAO.findAll(spec, PageRequest.of(0, 10));
+        assertEquals(2, results.getTotalElements());
+        assertTrue(results.getContent().stream().allMatch(bl -> bl.getSubmitterUser() != null &&
+                bl.getSubmitterUser().getId().equals(teacher1.getUser().getId())));
+    }
+
+    @Test
     @DisplayName("Should create predicate with all criteria")
     void shouldCreatePredicateWithAllCriteria() {
         BragLogSearchCriteria criteria = new BragLogSearchCriteria();
@@ -181,6 +210,8 @@ public class BragLogSpecificationTests {
         criteria.setStartDate(LocalDateTime.now().minusDays(1));
         criteria.setEndDate(LocalDateTime.now());
         criteria.setNotes("final");
+        criteria.setSubmitterName("Doug");
+        criteria.setSubmitterUserId(teacher3.getUser().getId());
         Specification<BragLog> spec = BragLogSpecification.withCriteria(criteria);
         Page<BragLog> results = bragLogDAO.findAll(spec, PageRequest.of(0, 10));
         assertEquals(1, results.getTotalElements());
@@ -204,6 +235,7 @@ public class BragLogSpecificationTests {
         criteria.setStudentName(" ");
         criteria.setTeacherName(" ");
         criteria.setNotes(" ");
+        criteria.setSubmitterName(" ");
         Specification<BragLog> spec = BragLogSpecification.withCriteria(criteria);
         Page<BragLog> results = bragLogDAO.findAll(spec, PageRequest.of(0, 10));
         assertEquals(4, results.getTotalElements());
@@ -216,6 +248,7 @@ public class BragLogSpecificationTests {
         criteria.setStudentName("JESSI");
         criteria.setTeacherName("JOHN");
         criteria.setNotes("FINAL");
+        criteria.setSubmitterName("DOUG");
         Specification<BragLog> spec = BragLogSpecification.withCriteria(criteria);
         Page<BragLog> results = bragLogDAO.findAll(spec, PageRequest.of(0, 10));
         assertEquals(1, results.getTotalElements());
@@ -256,12 +289,15 @@ public class BragLogSpecificationTests {
         return behaviorTypeDAO.save(behaviorType);
     }
 
-    private void createBragLog(Student student, Set<BehaviorType> behaviors, String notes) {
+    private void createBragLog(Student student, Set<BehaviorType> behaviors, String notes,
+                               String submitterName, User submitterUser) {
         BragLog bragLog = new BragLog();
         bragLog.setStudent(student);
         bragLog.setTeacher(student.getTeacher());
         bragLog.setBehaviors(behaviors);
         bragLog.setNotes(notes);
+        bragLog.setSubmitterName(submitterName);
+        bragLog.setSubmitterUser(submitterUser);
         bragLogDAO.save(bragLog);
     }
 }
