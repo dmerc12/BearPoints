@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * and handles various filter combinations appropriately.
  *
  * @see UserSpecification
- * @version 2.0
+ * @version 2.1
  * @author Dylan Mercer
  */
 @DataJpaTest
@@ -41,6 +41,7 @@ public class UserSpecificationTests {
         createUser("b.johnson@okcps.org", "Bill", "Johnson", Role.TEACHER);
         createUser("s.williams@okcps.org", "Sarah", "Williams", Role.TEACHER);
         createUser("m.brown@okcps.org", "Mike", "Brown", Role.STUDENT);
+        createUser("staff@okcps.org", "Alex", "Staff", Role.STAFF);
     }
 
     private void createUser(String email, String firstName, String lastName, Role role) {
@@ -56,8 +57,8 @@ public class UserSpecificationTests {
     @DisplayName("When using withCriteria")
     class WhenUsingWithCriteria {
         @Test
-        @DisplayName("Should filter by role when role criteria is provided")
-        void shouldFilterByRoleWhenRoleCriteriaIsProvided() {
+        @DisplayName("Should filter by ADMIN role when role criteria is provided")
+        void shouldFilterByAdminRole() {
             UserSearchCriteria criteria = new UserSearchCriteria();
             criteria.setRole(Role.ADMIN);
             Specification<User> spec = UserSpecification.withCriteria(criteria);
@@ -67,12 +68,45 @@ public class UserSpecificationTests {
         }
 
         @Test
+        @DisplayName("Should filter by STAFF role when role criteria is provided")
+        void shouldFilterByStaffRole() {
+            UserSearchCriteria criteria = new UserSearchCriteria();
+            criteria.setRole(Role.STAFF);
+            Specification<User> spec = UserSpecification.withCriteria(criteria);
+            Page<User> results = userDAO.findAll(spec, PageRequest.of(0, 10));
+            assertEquals(1, results.getTotalElements());
+            assertTrue(results.getContent().stream().allMatch(user -> user.getRole() == Role.STAFF));
+        }
+
+        @Test
+        @DisplayName("Should filter by TEACHER role when role criteria is provided")
+        void shouldFilterByTeacherRole() {
+            UserSearchCriteria criteria = new UserSearchCriteria();
+            criteria.setRole(Role.TEACHER);
+            Specification<User> spec = UserSpecification.withCriteria(criteria);
+            Page<User> results = userDAO.findAll(spec, PageRequest.of(0, 10));
+            assertEquals(2, results.getTotalElements());
+            assertTrue(results.getContent().stream().allMatch(user -> user.getRole() == Role.TEACHER));
+        }
+
+        @Test
+        @DisplayName("Should filter by STUDENT role when role criteria is provided")
+        void shouldFilterByStudentRole() {
+            UserSearchCriteria criteria = new UserSearchCriteria();
+            criteria.setRole(Role.STUDENT);
+            Specification<User> spec = UserSpecification.withCriteria(criteria);
+            Page<User> results = userDAO.findAll(spec, PageRequest.of(0, 10));
+            assertEquals(1, results.getTotalElements());
+            assertTrue(results.getContent().stream().allMatch(user -> user.getRole() == Role.STUDENT));
+        }
+
+        @Test
         @DisplayName("Should not filter by role when role criteria is null")
         void shouldNotFilterByRoleWhenRoleCriteriaIsNull() {
             UserSearchCriteria criteria = new UserSearchCriteria();
             Specification<User> spec = UserSpecification.withCriteria(criteria);
             Page<User> results = userDAO.findAll(spec, PageRequest.of(0, 10));
-            assertEquals(5, results.getTotalElements());
+            assertEquals(6, results.getTotalElements());
         }
 
         @Test
@@ -164,7 +198,7 @@ public class UserSpecificationTests {
             UserSearchCriteria criteria = new UserSearchCriteria();
             Specification<User> spec = UserSpecification.withCriteria(criteria);
             Page<User> results = userDAO.findAll(spec, PageRequest.of(0, 10));
-            assertEquals(5, results.getTotalElements());
+            assertEquals(6, results.getTotalElements());
         }
 
         @Test
@@ -176,7 +210,7 @@ public class UserSpecificationTests {
             criteria.setLastName(" ");
             Specification<User> spec = UserSpecification.withCriteria(criteria);
             Page<User> results = userDAO.findAll(spec, PageRequest.of(0, 10));
-            assertEquals(5, results.getTotalElements());
+            assertEquals(6, results.getTotalElements());
         }
 
         @Test
