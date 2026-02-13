@@ -296,24 +296,25 @@ public class BragLogDTOTests {
         }
 
         @Test
-        @DisplayName("Blank submitterName violates @NotBlank constraint")
-        void blankSubmitterNameViolatesNotBlankConstraint() {
+        @DisplayName("Blank submitterName violates @Size constraint")
+        void blankSubmitterNameViolatesSizeConstraint() {
             BragLogDTO dto = new BragLogDTO(null, 1L, 2L, Set.of(101L), "Notes",
                     "", null, null, null, null, null, null);
             Set<ConstraintViolation<BragLogDTO>> violations = validator.validate(dto);
-            assertThat(violations).hasSize(2);
-            assertThat(violations).extracting(ConstraintViolation::getMessage).contains("Submitter name is required",
-                    "Submitter name must be between 2 and 250 characters");
+            assertThat(violations).hasSize(1);
+            assertThat(violations).extracting(ConstraintViolation::getMessage)
+                    .contains("Submitter name must be between 2 and 250 characters");
         }
 
         @Test
-        @DisplayName("Null submitterName violates @NotBlank constraint")
-        void nullSubmitterNameViolatesNotBlankConstraint() {
+        @DisplayName("Null submitterName violates @NotNull constraint")
+        void nullSubmitterNameViolatesNotNullConstraint() {
             BragLogDTO dto = new BragLogDTO(null, 1L, 2L, Set.of(101L), "Notes",
                     null, null, null, null, null, null, null);
             Set<ConstraintViolation<BragLogDTO>> violations = validator.validate(dto);
             assertThat(violations).hasSize(1);
-            assertThat(violations).extracting(ConstraintViolation::getMessage).contains("Submitter name is required");
+            assertThat(violations).extracting(ConstraintViolation::getMessage)
+                    .contains("Submitter name is required");
         }
 
         @Test

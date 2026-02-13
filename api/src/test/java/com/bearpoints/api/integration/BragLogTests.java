@@ -370,6 +370,30 @@ public class BragLogTests extends BaseIntegrationTest {
 
         @Test
         @WithMockUser
+        @DisplayName("returns 400 when submitter name is null")
+        void returns400_whenSubmitterNameIsNull() throws Exception {
+            Optional<Student> student = studentDAO.findAll(PageRequest.of(0, 1))
+                    .stream().findFirst();
+            Optional<BehaviorType> behaviorType = behaviorTypeDAO.findAll(PageRequest.of(0, 1))
+                    .stream().findFirst();
+            if (student.isPresent() && behaviorType.isPresent()) {
+                Set<Long> behaviorIds = Set.of(behaviorType.get().getId());
+                String createJson = buildBragLogJson(student.get().getId(), behaviorIds, null);
+                mockMvc.perform(post(baseUrl)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(createJson)
+                                .with(csrf()))
+                        .andExpect(status().isBadRequest())
+                        .andExpect(jsonPath("$.message")
+                                .value(containsString("Validation failed")))
+                        .andExpect(jsonPath("$.fieldErrors.submitterName")
+                                .value(containsString("Submitter name is required")))
+                        .andExpect(jsonPath("$.timestamp").exists());
+            }
+        }
+
+        @Test
+        @WithMockUser
         @DisplayName("returns 400 when submitter name is blank")
         void returns400_whenSubmitterNameIsBlank() throws Exception {
             Optional<Student> student = studentDAO.findAll(PageRequest.of(0, 1))
@@ -579,6 +603,30 @@ public class BragLogTests extends BaseIntegrationTest {
                             .with(csrf()))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.submitterName").value(newSubmitterName));
+            }
+        }
+
+        @Test
+        @WithMockUser(roles = {"ADMIN", "TEACHER"})
+        @DisplayName("returns 400 when updated submitter name is null")
+        void returns400_whenUpdatedSubmitterNameIsNull() throws Exception {
+            Optional<Student> student = studentDAO.findAll(PageRequest.of(0, 1))
+                    .stream().findFirst();
+            Optional<BehaviorType> behaviorType = behaviorTypeDAO.findAll(PageRequest.of(0, 1))
+                    .stream().findFirst();
+            if (student.isPresent() && behaviorType.isPresent()) {
+                Set<Long> behaviorIds = Set.of(behaviorType.get().getId());
+                String updateJson = buildBragLogJson(student.get().getId(), behaviorIds, null);
+                mockMvc.perform(post(baseUrl)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(updateJson)
+                                .with(csrf()))
+                        .andExpect(status().isBadRequest())
+                        .andExpect(jsonPath("$.message")
+                                .value(containsString("Validation failed")))
+                        .andExpect(jsonPath("$.fieldErrors.submitterName")
+                                .value(containsString("Submitter name is required")))
+                        .andExpect(jsonPath("$.timestamp").exists());
             }
         }
 
@@ -822,12 +870,13 @@ public class BragLogTests extends BaseIntegrationTest {
     }
 
     private String buildBragLogJson(Long studentId, Set<Long> behaviorIds, String submitterName) {
+        String submitterNameJson = submitterName == null ? "null" : "\"" + submitterName + "\"";
         return """
                 {
                     "studentId": %s,
                     "behaviorIds": %s,
-                    "submitterName": "%s"
+                    "submitterName": %s
                 }
-                """.formatted(studentId, behaviorIds, submitterName);
+                """.formatted(studentId, behaviorIds, submitterNameJson);
     }
 }

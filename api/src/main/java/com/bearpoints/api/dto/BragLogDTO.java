@@ -47,6 +47,7 @@ public class BragLogDTO {
     @Size(max = 500, message = "Notes cannot exceed 500 characters")
     private final String notes;
 
+    @NotNull(message = "Submitter name is required")
     @Size(min = 2, max = 250, message = "Submitter name must be between 2 and 250 characters")
     private final String submitterName;
 
