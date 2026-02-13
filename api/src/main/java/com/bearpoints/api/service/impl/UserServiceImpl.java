@@ -26,7 +26,7 @@ import java.util.Set;
  * Security is handled at the controller level.
  *
  * @see UserService
- * @version 2.0
+ * @version 2.1
  * @author Dylan Mercer
  */
 @Slf4j
@@ -34,7 +34,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
-    private static final Set<Role> ALLOWED_ROLES = Set.of(Role.ADMIN);
+    private static final Set<Role> ALLOWED_ROLES = Set.of(Role.ADMIN, Role.STAFF);
 
     private final UserDAO userDAO;
 

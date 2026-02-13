@@ -36,7 +36,7 @@ import static org.mockito.Mockito.*;
  * <p>Verifies user management functionality including CRUD operations and search.
  *
  * @see UserServiceImpl
- * @version 2.0
+ * @version 2.1
  * @author Dylan Mercer
  */
 @DisplayName("UserService Tests")
@@ -55,20 +55,21 @@ public class UserServiceTests {
     @DisplayName("When retrieving users")
     class WhenRetrievingUsers {
         @Test
-        @DisplayName("Should return only base users")
-        void shouldReturnOnlyBaseUsers() {
+        @DisplayName("Should return only allowed users (ADMIN and STAFF")
+        void shouldReturnOnlyAllowedUsers() {
             List<User> users = List.of(
                     createUser(1L, "admin1@okcps.org", "Admin1", "One", Role.ADMIN),
-                    createUser(2L, "teacher@okcps.org", "Teacher", "One", Role.ADMIN),
+                    createUser(4L, "staff@okcps.org", "Staff1", "One", Role.STAFF),
+                    createUser(2L, "teacher@okcps.org", "Teacher", "One", Role.TEACHER),
                     createUser(3L, "student@okcps.org", "Student", "One", Role.STUDENT)
             );
-            List<User> filtered = List.of(users.getFirst());
-            Page<User> userPage = new PageImpl<>(filtered, pageable, 1L);
+            List<User> filtered = List.of(users.getFirst(), users.get(1));
+            Page<User> userPage = new PageImpl<>(filtered, pageable, 2L);
             when(userDAO.findAll(any(Specification.class), eq(pageable))).thenReturn(userPage);
             PagedResponseDTO<UserDTO> result = userService.getAllUsers(pageable);
             assertNotNull(result);
-            assertEquals(1, result.getContent().size());
-            assertEquals(1L, result.getTotalElements());
+            assertEquals(2, result.getContent().size());
+            assertEquals(2L, result.getTotalElements());
             verify(userDAO).findAll(any(Specification.class), eq(pageable));
             verify(userDAO, never()).findAll(eq(pageable));
         }
@@ -163,7 +164,7 @@ public class UserServiceTests {
     class WhenRetrievingUserById {
         @Test
         @DisplayName("Should return user when found and role is ADMIN")
-        void shouldReturnUserWhenFound() {
+        void shouldReturAdminnUserWhenFound() {
             Long userId = 1L;
             User user = createUser(userId, "user@okcps.org", "User", "User", Role.ADMIN);
             when(userDAO.findById(userId)).thenReturn(Optional.of(user));
@@ -174,6 +175,22 @@ public class UserServiceTests {
             assertEquals("User", result.getFirstName());
             assertEquals("User", result.getLastName());
             assertEquals(Role.ADMIN, result.getRole());
+            verify(userDAO).findById(userId);
+        }
+
+        @Test
+        @DisplayName("Should return user when found and role is STAFF")
+        void shouldReturnStaffUserWhenFound() {
+            Long userId = 1L;
+            User user = createUser(userId, "user@okcps.org", "User", "User", Role.STAFF);
+            when(userDAO.findById(userId)).thenReturn(Optional.of(user));
+            UserDTO result = userService.getUserById(userId);
+            assertNotNull(result);
+            assertEquals(userId, result.getId());
+            assertEquals("user@okcps.org", result.getEmail());
+            assertEquals("User", result.getFirstName());
+            assertEquals("User", result.getLastName());
+            assertEquals(Role.STAFF, result.getRole());
             verify(userDAO).findById(userId);
         }
 
@@ -195,7 +212,9 @@ public class UserServiceTests {
                     IllegalArgumentException.class,
                     () -> userService.getUserById(userId)
             );
-            assertTrue(ex.getMessage().contains("only handle users with roles: [ADMIN]"));
+            String message = ex.getMessage();
+            assertTrue(message.contains("only handle users with roles:"));
+            assertTrue(message.contains("ADMIN") && message.contains("STAFF"));
             verify(userDAO).findById(userId);
         }
 
@@ -209,7 +228,9 @@ public class UserServiceTests {
                     IllegalArgumentException.class,
                     () -> userService.getUserById(userId)
             );
-            assertTrue(ex.getMessage().contains("only handle users with roles: [ADMIN]"));
+            String message = ex.getMessage();
+            assertTrue(message.contains("only handle users with roles:"));
+            assertTrue(message.contains("ADMIN") && message.contains("STAFF"));
             verify(userDAO).findById(userId);
         }
     }
@@ -230,6 +251,23 @@ public class UserServiceTests {
             assertEquals(userId, result.getId());
             assertEquals(email, result.getEmail());
             assertEquals(Role.ADMIN, result.getRole());
+            verify(userDAO).findByEmail(anyString());
+            verify(userDAO).save(any(User.class));
+        }
+
+        @Test
+        @DisplayName("Should create new STAFF user successfully")
+        void shouldCreateNewStaffUserSuccessfully() {
+            Long userId = 1L;
+            String email = "new.staff@okcps.org";
+            UserDTO userDTO = new UserDTO(createUser(null, "new.staff1@okcps.org", "New", "Staff", Role.STAFF));
+            User savedUser = createUser(userId, email, "New", "User", Role.STAFF);
+            when(userDAO.save(any(User.class))).thenReturn(savedUser);
+            UserDTO result = userService.createUser(userDTO);
+            assertNotNull(result);
+            assertEquals(userId, result.getId());
+            assertEquals(email, result.getEmail());
+            assertEquals(Role.STAFF, result.getRole());
             verify(userDAO).findByEmail(anyString());
             verify(userDAO).save(any(User.class));
         }
@@ -257,7 +295,9 @@ public class UserServiceTests {
                     IllegalArgumentException.class,
                     () -> userService.createUser(userDTO)
             );
-            assertTrue(ex.getMessage().contains("only handle users with roles: [ADMIN]"));
+            String message = ex.getMessage();
+            assertTrue(message.contains("only handle users with roles:"));
+            assertTrue(message.contains("ADMIN") && message.contains("STAFF"));
             verify(userDAO, never()).findByEmail(anyString());
             verify(userDAO, never()).save(any(User.class));
         }
@@ -270,7 +310,9 @@ public class UserServiceTests {
                     IllegalArgumentException.class,
                     () -> userService.createUser(userDTO)
             );
-            assertTrue(ex.getMessage().contains("only handle users with roles: [ADMIN]"));
+            String message = ex.getMessage();
+            assertTrue(message.contains("only handle users with roles:"));
+            assertTrue(message.contains("ADMIN") && message.contains("STAFF"));
             verify(userDAO, never()).findByEmail(anyString());
             verify(userDAO, never()).save(any(User.class));
         }
@@ -280,8 +322,8 @@ public class UserServiceTests {
     @DisplayName("When updating user")
     class WhenUpdatingUserUser {
         @Test
-        @DisplayName("Should update existing user successfully")
-        void shouldUpdateExistingUserUserSuccessfully() {
+        @DisplayName("Should update existing ADMIN user successfully")
+        void shouldUpdateExistingAdminUserUserSuccessfully() {
             Long userId = 1L;
             User existingUser = createUser(userId, "old@okcps.org", "Old", "Name", Role.ADMIN);
             UserDTO updateDTO = new UserDTO(createUser(userId, "new@okcps.org", "New", "Last-Name", Role.ADMIN));
@@ -300,6 +342,61 @@ public class UserServiceTests {
             assertEquals("new@okcps.org", existingUser.getEmail());
             assertEquals("New", existingUser.getFirstName());
             assertEquals("Last-Name", existingUser.getLastName());
+        }
+
+        @Test
+        @DisplayName("Should update existing STAFF user successfully")
+        void shouldUpdateExistingStaffUserUserSuccessfully() {
+            Long userId = 1L;
+            User existingUser = createUser(userId, "old@okcps.org", "Old", "Name", Role.STAFF);
+            UserDTO updateDTO = new UserDTO(createUser(userId, "new@okcps.org", "New", "Last-Name", Role.STAFF));
+            User updatedUser = createUser(userId, "new@okcps.org", "New", "Last-Name", Role.STAFF);
+            when(userDAO.findById(userId)).thenReturn(Optional.of(existingUser));
+            when(userDAO.findByEmail("new@okcps.org")).thenReturn(Optional.empty());
+            when(userDAO.save(any(User.class))).thenReturn(updatedUser);
+            UserDTO result = userService.updateUser(userId, updateDTO);
+            assertNotNull(result);
+            assertEquals("new@okcps.org", result.getEmail());
+            assertEquals("New", result.getFirstName());
+            assertEquals("Last-Name",  result.getLastName());
+            verify(userDAO).findById(userId);
+            verify(userDAO).findByEmail("new@okcps.org");
+            verify(userDAO).save(existingUser);
+            assertEquals("new@okcps.org", existingUser.getEmail());
+            assertEquals("New", existingUser.getFirstName());
+            assertEquals("Last-Name", existingUser.getLastName());
+        }
+
+        @Test
+        @DisplayName("Should update ADMIN user to STAFF role successfully")
+        void shouldUpdateAdminToStaffSuccessfully() {
+            Long userId = 1L;
+            User existingUser = createUser(userId, "admin@okcps.org", "Admin", "User", Role.ADMIN);
+            UserDTO updateDTO = new UserDTO(userId, "admin@okcps.org", "Admin", "User", "STAFF");
+            User updatedUser = createUser(userId, "admin@okcps.org", "Admin", "User", Role.STAFF);
+            when(userDAO.findById(userId)).thenReturn(Optional.of(existingUser));
+            when(userDAO.save(any(User.class))).thenReturn(updatedUser);
+            UserDTO result = userService.updateUser(userId, updateDTO);
+            assertEquals(Role.STAFF, result.getRole());
+            verify(userDAO).findById(userId);
+            verify(userDAO, never()).findByEmail(anyString());
+            verify(userDAO).save(existingUser);
+        }
+
+        @Test
+        @DisplayName("Should update STAFF user to ADMIN role successfully")
+        void shouldUpdateStaffToAdminSuccessfully() {
+            Long userId = 1L;
+            User existingUser = createUser(userId, "staff@okcps.org", "Staff", "User", Role.STAFF);
+            UserDTO updateDTO = new UserDTO(userId, "staff@okcps.org", "Staff", "User", "ADMIN");
+            User updatedUser = createUser(userId, "staff@okcps.org", "Staff", "User", Role.ADMIN);
+            when(userDAO.findById(userId)).thenReturn(Optional.of(existingUser));
+            when(userDAO.save(any(User.class))).thenReturn(updatedUser);
+            UserDTO result = userService.updateUser(userId, updateDTO);
+            assertEquals(Role.ADMIN, result.getRole());
+            verify(userDAO).findById(userId);
+            verify(userDAO, never()).findByEmail(anyString());
+            verify(userDAO).save(existingUser);
         }
 
         @Test
@@ -384,7 +481,9 @@ public class UserServiceTests {
                     IllegalArgumentException.class,
                     () -> userService.updateUser(userId, updateDTO)
             );
-            assertTrue(ex.getMessage().contains("only handle users with roles: [ADMIN]"));
+            String message = ex.getMessage();
+            assertTrue(message.contains("only handle users with roles:"));
+            assertTrue(message.contains("ADMIN") && message.contains("STAFF"));
             verify(userDAO).findById(userId);
             verify(userDAO, never()).findByEmail(anyString());
             verify(userDAO, never()).save(any(User.class));
@@ -401,7 +500,9 @@ public class UserServiceTests {
                     IllegalArgumentException.class,
                     () -> userService.updateUser(userId, updateDTO)
             );
-            assertTrue(ex.getMessage().contains("only handle users with roles: [ADMIN]"));
+            String message = ex.getMessage();
+            assertTrue(message.contains("only handle users with roles:"));
+            assertTrue(message.contains("ADMIN") && message.contains("STAFF"));
             verify(userDAO).findById(userId);
             verify(userDAO, never()).findByEmail(anyString());
             verify(userDAO, never()).save(any(User.class));
@@ -418,7 +519,9 @@ public class UserServiceTests {
                     IllegalArgumentException.class,
                     () -> userService.updateUser(userId, updateDTO)
             );
-            assertTrue(ex.getMessage().contains("only handle users with roles: [ADMIN]"));
+            String message = ex.getMessage();
+            assertTrue(message.contains("only handle users with roles:"));
+            assertTrue(message.contains("ADMIN") && message.contains("STAFF"));
             verify(userDAO).findById(userId);
             verify(userDAO, never()).findByEmail(anyString());
             verify(userDAO, never()).save(any(User.class));
@@ -435,7 +538,9 @@ public class UserServiceTests {
                     IllegalArgumentException.class,
                     () -> userService.updateUser(userId, updateDTO)
             );
-            assertTrue(ex.getMessage().contains("only handle users with roles: [ADMIN]"));
+            String message = ex.getMessage();
+            assertTrue(message.contains("only handle users with roles:"));
+            assertTrue(message.contains("ADMIN") && message.contains("STAFF"));
             verify(userDAO).findById(userId);
             verify(userDAO, never()).findByEmail(anyString());
             verify(userDAO, never()).save(any(User.class));
@@ -446,10 +551,21 @@ public class UserServiceTests {
     @DisplayName("When deleting user")
     class WhenDeletingUser {
         @Test
-        @DisplayName("Should delete user successfully")
-        void shouldDeleteUserSuccessfully() {
+        @DisplayName("Should delete ADMIN user successfully")
+        void shouldDeleteAdminUserSuccessfully() {
             Long userId = 1L;
             User user = createUser(userId, "user@okcps.org", "User", "User", Role.ADMIN);
+            when(userDAO.findById(userId)).thenReturn(Optional.of(user));
+            userService.deleteUser(userId);
+            verify(userDAO).findById(userId);
+            verify(userDAO).delete(user);
+        }
+
+        @Test
+        @DisplayName("Should delete STAFF user successfully")
+        void shouldDeleteStaffUserSuccessfully() {
+            Long userId = 1L;
+            User user = createUser(userId, "user@okcps.org", "User", "User", Role.STAFF);
             when(userDAO.findById(userId)).thenReturn(Optional.of(user));
             userService.deleteUser(userId);
             verify(userDAO).findById(userId);
@@ -476,7 +592,9 @@ public class UserServiceTests {
                     IllegalArgumentException.class,
                     () -> userService.deleteUser(userId)
             );
-            assertTrue(ex.getMessage().contains("only handle users with roles: [ADMIN]"));
+            String message = ex.getMessage();
+            assertTrue(message.contains("only handle users with roles:"));
+            assertTrue(message.contains("ADMIN") && message.contains("STAFF"));
             verify(userDAO).findById(userId);
             verify(userDAO, never()).delete(user);
         }
@@ -491,7 +609,9 @@ public class UserServiceTests {
                     IllegalArgumentException.class,
                     () -> userService.deleteUser(userId)
             );
-            assertTrue(ex.getMessage().contains("only handle users with roles: [ADMIN]"));
+            String message = ex.getMessage();
+            assertTrue(message.contains("only handle users with roles:"));
+            assertTrue(message.contains("ADMIN") && message.contains("STAFF"));
             verify(userDAO).findById(userId);
             verify(userDAO, never()).delete(user);
         }
