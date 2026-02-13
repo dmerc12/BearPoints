@@ -182,14 +182,10 @@ public class BragLogServiceTests {
     @SuppressWarnings("unchecked")
     @DisplayName("When creating brag log")
     class WhenCreatingBragLog {
-        private final String validSubmitterName = "Jane Smith";
-        private final String[] nameParts = validSubmitterName.split("\\s+");
-        private final String firstName = nameParts[0];
-        private final String lastName = validSubmitterName.substring(firstName.length()).trim();
-
         @Test
         @DisplayName("Should create new brag log with submitter name only (no matching user)")
         void shouldCreateNewBragLogWithSubmitterNameOnly() {
+            String validSubmitterName = "Jane Smith";
             Set<Long> behaviorIds = Set.of(behaviorType1.getId(), behaviorType2.getId());
             BragLogDTO createDTO = new BragLogDTO(null, student.getId(), null,
                     behaviorIds, bragLog.getNotes(), validSubmitterName, null, null, null,
