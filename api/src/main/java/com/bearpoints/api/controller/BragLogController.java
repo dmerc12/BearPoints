@@ -39,7 +39,7 @@ import java.time.LocalDateTime;
  *     <li>PUT, DELETE endpoints - ADMIN or TEACHER role required</li>
  * </ul>
  *
- * @version 2.1
+ * @version 2.2
  * @author Dylan Mercer
  */
 @Slf4j
@@ -65,7 +65,8 @@ public class BragLogController {
                     defaultSort = "timestamp,desc",
                     allowedSortProperties = {"id", "student.id", "student.user.firstName", "student.user.lastName",
                             "student.user.email", "teacher.id", "teacher.user.firstName", "teacher.user.lastName",
-                            "teacher.user.email", "grade", "pointsGenerated", "notes", "timestamp"}
+                            "teacher.user.email", "grade", "pointsGenerated", "notes", "timestamp",
+                            "submitterName", "submitterUserId"}
             ) Pageable pageable
     ) {
         log.debug("Retrieving all brag logs - page: {}, size: {}, sort: {}",
@@ -77,7 +78,7 @@ public class BragLogController {
 
     /**
      * Searches brag logs with flexible criteria including student name, teacher name, grade, points generated range,
-     * timestamp date range, teacher ID, student ID, and notes.
+     * timestamp date range, teacher ID, student ID, notes, "submitter name", and "submitter user ID".
      * <p>Accessible ot any authenticated user.
      *
      * @param studentName Student name search term (optional)
@@ -90,6 +91,8 @@ public class BragLogController {
      * @param teacherId Teacher ID filter (optional)
      * @param studentId Student ID filter (optional)
      * @param notes Notes search term (optional)
+     * @param submitterName Submitter name search term (optional)
+     * @param submitterUserId Submitter user ID filter (optional)
      * @param pageable Automatically resolved pagination and sorting parameters
      * @return Paginated response of matching brag logs
      */
@@ -106,17 +109,21 @@ public class BragLogController {
             @RequestParam(required = false) Long teacherId,
             @RequestParam(required = false) Long studentId,
             @RequestParam(required = false) String notes,
+            @RequestParam(required = false) String submitterName,
+            @RequestParam(required = false) Long submitterUserId,
             @PaginationAndSorting(
                     defaultSort = "timestamp,desc",
                     allowedSortProperties = {"id", "student.id", "student.user.firstName", "student.user.lastName",
                             "student.user.email", "teacher.id", "teacher.user.firstName", "teacher.user.lastName",
-                            "teacher.user.email", "grade", "pointsGenerated", "notes", "timestamp"}
+                            "teacher.user.email", "grade", "pointsGenerated", "notes", "timestamp",
+                            "submitterName", "submitterUserId"}
             ) Pageable pageable
     ) {
         log.debug("Searching brag logs - studentName: {}, teacherName: {}, grade: {}, minPoints: {}, maxPoints: {} " +
-                "startDate: {}, endDate: {}, teacherId: {} studentId: {}, notes: {} - page: {}, size: {}, sort: {}",
+                "startDate: {}, endDate: {}, teacherId: {} studentId: {}, notes: {}, submitterName: {}, " +
+                        "submitterUserId: {} - page: {}, size: {}, sort: {}",
                 studentName, teacherName, grade, minPoints, maxPoints, startDate, endDate, teacherId, studentId,
-                notes, pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
+                notes, submitterName, submitterUserId, pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
         BragLogSearchCriteria criteria = new BragLogSearchCriteria();
         criteria.setStudentName(studentName);
         criteria.setTeacherName(teacherName);
@@ -128,6 +135,8 @@ public class BragLogController {
         criteria.setTeacherId(teacherId);
         criteria.setStudentId(studentId);
         criteria.setNotes(notes);
+        criteria.setSubmitterName(submitterName);
+        criteria.setSubmitterUserId(submitterUserId);
         PagedResponseDTO<BragLogDTO> response = bragLogService.searchBragLogs(criteria, pageable);
         log.info("Found {} brag logs matching search criteria", response.getNumberOfElements());
         return ResponseEntity.ok(response);

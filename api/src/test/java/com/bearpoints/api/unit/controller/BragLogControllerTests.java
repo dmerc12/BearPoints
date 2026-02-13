@@ -38,7 +38,7 @@ import static org.mockito.Mockito.*;
  * </ul>
  *
  * @see BragLogController
- * @version 2.1
+ * @version 2.2
  * @author Dylan Mercer
  */
 @ExtendWith(MockitoExtension.class)
@@ -55,7 +55,7 @@ public class BragLogControllerTests {
         BehaviorTypeDTO behavior2 = new BehaviorTypeDTO(2L, "Listened", 1, true);
         Integer pointsGenerated = behavior1.getPointValue() + behavior2.getPointValue();
         return new BragLogDTO(id, studentId, teacherId, Set.of(1L, 2L), "test notes" + id,
-                studentName, teacherName, GradeLevel.SECOND,
+                "John Doe", studentName, teacherName, GradeLevel.SECOND,
                 Set.of(behavior1, behavior2), pointsGenerated, LocalDateTime.now());
     }
 
@@ -142,7 +142,8 @@ public class BragLogControllerTests {
                     .thenReturn(expectedResponse);
             ResponseEntity<PagedResponseDTO<BragLogDTO>> response = bragLogController
                     .searchBragLogs("J", null, null, null, null,
-                            null, null, null, null, null, pageable);
+                            null, null, null, null, null,
+                            null, null, pageable);
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
             assertEquals(2, response.getBody().getTotalElements());
@@ -186,7 +187,7 @@ public class BragLogControllerTests {
         void shouldCreateNewBragLogAndReturn201Status() {
             BragLogDTO createdBragLog = createBragLogDTO(1L, 1L, 1L, "John Doe", "Jane Smith");
             BragLogDTO bragLogDTO = new BragLogDTO(null, createdBragLog.getStudentId(), null,
-                    createdBragLog.getBehaviorIds(), "test notes 1", null, null,
+                    createdBragLog.getBehaviorIds(), "test notes 1", "John Doe", null, null,
                     null, null, null, null);
             when(bragLogService.createBragLog(bragLogDTO)).thenReturn(createdBragLog);
             ResponseEntity<BragLogDTO> response = bragLogController.createBragLog(bragLogDTO);
@@ -206,7 +207,7 @@ public class BragLogControllerTests {
             BragLogDTO existingBragLog = createBragLogDTO(1L, 1L, 1L, "John Doe", "Jane Smith");
             BragLogDTO updatedBragLog = createBragLogDTO(1L, 2L, 2L, "Bill Johnson", "Alice Garcia");
             BragLogDTO bragLogDTO = new BragLogDTO(null, 2L, null,
-                    existingBragLog.getBehaviorIds(), updatedBragLog.getNotes(), null, null,
+                    existingBragLog.getBehaviorIds(), updatedBragLog.getNotes(), "John Doe", null, null,
                     null, null, null, null);
             when(bragLogService.updateBragLog(existingBragLog.getId(), bragLogDTO)).thenReturn(updatedBragLog);
             ResponseEntity<BragLogDTO> response = bragLogController.updateBragLog(existingBragLog.getId(), bragLogDTO);
@@ -221,7 +222,7 @@ public class BragLogControllerTests {
         void shouldReturn404WhenBragLogNotFound() {
             Long bragLogId = 9990L;
             BragLogDTO bragLogDTO = new BragLogDTO(null, 2L, null,
-                    Set.of(1L, 2L), "notes", null, null,
+                    Set.of(1L, 2L), "notes", "John Doe", null, null,
                     null, null, null, null);
             when(bragLogService.updateBragLog(bragLogId, bragLogDTO))
                     .thenThrow(new ResourceNotFoundException("Brag log not found with ID: " + bragLogId));
