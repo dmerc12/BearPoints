@@ -1,5 +1,6 @@
 package com.bearpoints.api.service.impl;
 
+import com.bearpoints.api.dao.UserDAO;
 import com.bearpoints.api.exception.ResourceNotFoundException;
 import com.bearpoints.api.criteria.BragLogSearchCriteria;
 import com.bearpoints.api.dao.BehaviorTypeDAO;
@@ -10,6 +11,7 @@ import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.entity.*;
 import com.bearpoints.api.service.BragLogService;
 import com.bearpoints.api.specification.BragLogSpecification;
+import com.bearpoints.api.specification.UserSpecification;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,13 +20,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 /**
  * Implementation of {@link BragLogService} for brag log management.
  *
  * @see BragLogService
- * @version 2.0
+ * @version 3.0
  * @author Dylan Mercer
  */
 @Slf4j
@@ -33,11 +36,13 @@ public class BragLogServiceImpl implements BragLogService {
     private final BragLogDAO bragLogDAO;
     private final StudentDAO studentDAO;
     private final BehaviorTypeDAO behaviorTypeDAO;
+    private final UserDAO userDAO;
 
-    public BragLogServiceImpl(BragLogDAO bragLogDAO, StudentDAO studentDAO, BehaviorTypeDAO behaviorTypeDAO) {
+    public BragLogServiceImpl(BragLogDAO bragLogDAO, StudentDAO studentDAO, BehaviorTypeDAO behaviorTypeDAO, UserDAO userDAO) {
         this.bragLogDAO = bragLogDAO;
         this.studentDAO = studentDAO;
         this.behaviorTypeDAO = behaviorTypeDAO;
+        this.userDAO = userDAO;
     }
 
     /**
@@ -100,6 +105,9 @@ public class BragLogServiceImpl implements BragLogService {
         bragLog.setStudent(student);
         bragLog.setBehaviors(behaviors);
         bragLog.setNotes(bragLogDTO.getNotes());
+        String submitterName = bragLogDTO.getSubmitterName();
+        bragLog.setSubmitterName(submitterName);
+        resolveAndSetSubmitterUser(bragLog, submitterName);
         bragLog.setDefaultsBeforePersist();
         BragLog savedBragLog = bragLogDAO.save(bragLog);
         log.info("Successfully created a brag log with ID: {}", savedBragLog.getId());
@@ -137,6 +145,11 @@ public class BragLogServiceImpl implements BragLogService {
             }
             existingBragLog.setDefaultsBeforePersist();
         }
+        String newSubmitterName = bragLogDTO.getSubmitterName();
+        if (!existingBragLog.getSubmitterName().equals(newSubmitterName)) {
+            existingBragLog.setSubmitterName(newSubmitterName);
+            resolveAndSetSubmitterUser(existingBragLog, newSubmitterName);
+        }
         if (!existingBragLog.getNotes().equals(bragLogDTO.getNotes())) {
             existingBragLog.setNotes(bragLogDTO.getNotes());
         }
@@ -156,5 +169,33 @@ public class BragLogServiceImpl implements BragLogService {
                 .orElseThrow(() -> new ResourceNotFoundException("Brag log not found with ID: " + id));
         bragLogDAO.delete(bragLog);
         log.info("Successfully deleted brag log with ID: {}", id);
+    }
+
+    private void resolveAndSetSubmitterUser(BragLog bragLog, String fullName) {
+        if (fullName == null || fullName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Submitter name must not be blank");
+        }
+        String[] nameParts = fullName.trim().split("\\s+");
+        if (nameParts.length < 2) {
+            throw new IllegalArgumentException("Submitter name must contain both first and last name");
+        }
+        Specification<User> spec = createExactNameSpec(fullName);
+        Optional<User> userOptional = userDAO.findOne(spec);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            if (user.getRole() == Role.STUDENT) {
+                throw new IllegalArgumentException("Students cannot submit brag logs");
+            }
+            bragLog.setSubmitterUser(user);
+        } else {
+            bragLog.setSubmitterUser(null);
+        }
+    }
+
+    private Specification<User> createExactNameSpec(String fullName) {
+        String[] nameParts = fullName.trim().split("\\s+");
+        String firstName = nameParts[0];
+        String lastName = fullName.trim().substring(firstName.length()).trim();
+        return UserSpecification.byExactName(firstName, lastName);
     }
 }

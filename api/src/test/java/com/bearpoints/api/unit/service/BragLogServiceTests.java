@@ -4,6 +4,7 @@ import com.bearpoints.api.criteria.BragLogSearchCriteria;
 import com.bearpoints.api.dao.BehaviorTypeDAO;
 import com.bearpoints.api.dao.BragLogDAO;
 import com.bearpoints.api.dao.StudentDAO;
+import com.bearpoints.api.dao.UserDAO;
 import com.bearpoints.api.dto.BragLogDTO;
 import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.entity.*;
@@ -39,7 +40,7 @@ import static org.mockito.Mockito.*;
  *
  * @see BragLogServiceImpl
  *
- * @version 2.0
+ * @version 3.0
  * @author Dylan Mercer
  */
 @ExtendWith(MockitoExtension.class)
@@ -53,6 +54,9 @@ public class BragLogServiceTests {
     @Mock
     private BehaviorTypeDAO behaviorTypeDAO;
 
+    @Mock
+    private UserDAO userDAO;
+
     @InjectMocks
     private BragLogServiceImpl bragLogService;
 
@@ -62,6 +66,9 @@ public class BragLogServiceTests {
     private Student student;
     private BehaviorType behaviorType1;
     private BehaviorType behaviorType2;
+    private User adminUser;
+    private User teacherUser;
+    private User studentUser;
     private BragLog bragLog;
     private BragLogDTO bragLogDTO;
 
@@ -71,10 +78,16 @@ public class BragLogServiceTests {
         student = createValidStudent(1L, teacher);
         behaviorType1 = createValidBehaviorType(1L, "Helping Others", 2);
         behaviorType2 = createValidBehaviorType(2L, "Participated", 5);
+        adminUser = createValidUser(100L, Role.ADMIN);
+        teacherUser = createValidUser(101L, Role.TEACHER);
+        studentUser = createValidUser(102L, Role.STUDENT);
         bragLog = createValidBragLog(student, Set.of(behaviorType1, behaviorType2));
-        bragLogDTO = new BragLogDTO(1L, student.getId(), null,
+        bragLog.setSubmitterName("John Doe");
+        bragLog.setSubmitterUser(adminUser);
+        bragLogDTO = new BragLogDTO(1L, student.getId(), teacher.getId(),
                 Set.of(behaviorType1.getId(), behaviorType2.getId()), "test notes 1",
-                null, null, null, null, null, null);
+                "John Doe", "ValidFirstName", "ValidLastName", GradeLevel.FIRST,
+                null, 7, null);
     }
 
     @Nested
@@ -101,14 +114,13 @@ public class BragLogServiceTests {
             PagedResponseDTO<BragLogDTO> result = bragLogService.getAllBragLogs(pageable);
             assertNotNull(result);
             assertTrue(result.getContent().isEmpty());
-            assertTrue(result.isEmpty());
         }
     }
 
     @Nested
     @SuppressWarnings("unchecked")
-    @DisplayName("When searching brag logs with criteria")
-    class WhenSearchingBragLogsWithCriteria {
+    @DisplayName("When searching brag logs")
+    class WhenSearchingBragLogs {
         @Test
         @DisplayName("Should search brag logs with student name criteria")
         void shouldSearchBragLogsWithStudentNameCriteria() {
@@ -167,25 +179,178 @@ public class BragLogServiceTests {
     }
 
     @Nested
+    @SuppressWarnings("unchecked")
     @DisplayName("When creating brag log")
     class WhenCreatingBragLog {
+        private final String validSubmitterName = "Jane Smith";
+        private final String[] nameParts = validSubmitterName.split("\\s+");
+        private final String firstName = nameParts[0];
+        private final String lastName = validSubmitterName.substring(firstName.length()).trim();
+
         @Test
-        @DisplayName("Should create new brag log successfully")
-        void shouldCreateNewBragLogSuccessfully() {
-            Set<Long> behaviorIds = bragLogDTO.getBehaviorIds();
+        @DisplayName("Should create new brag log with submitter name only (no matching user)")
+        void shouldCreateNewBragLogWithSubmitterNameOnly() {
+            Set<Long> behaviorIds = Set.of(behaviorType1.getId(), behaviorType2.getId());
             BragLogDTO createDTO = new BragLogDTO(null, student.getId(), null,
-                    behaviorIds, bragLog.getNotes(), null, null, null,
+                    behaviorIds, bragLog.getNotes(), validSubmitterName, null, null, null,
                     null, null, null);
             when(studentDAO.findById(student.getId())).thenReturn(Optional.of(student));
             when(behaviorTypeDAO.findById(behaviorType1.getId())).thenReturn(Optional.of(behaviorType1));
             when(behaviorTypeDAO.findById(behaviorType2.getId())).thenReturn(Optional.of(behaviorType2));
-            when(bragLogDAO.save(any(BragLog.class))).thenReturn(bragLog);
+            when(userDAO.findOne(any(Specification.class))).thenReturn(Optional.empty());
+            BragLog savedBragLog = createValidBragLog(student, Set.of(behaviorType1, behaviorType2));
+            savedBragLog.setSubmitterName(validSubmitterName);
+            savedBragLog.setSubmitterUser(null);
+            when(bragLogDAO.save(any(BragLog.class))).thenReturn(savedBragLog);
             BragLogDTO result = bragLogService.createBragLog(createDTO);
             assertNotNull(result);
             assertEquals(bragLog.getId(), result.getId());
+            assertEquals(validSubmitterName, result.getSubmitterName());
+            assertNull(result.getSubmitterUserId());
             verify(studentDAO).findById(student.getId());
             verify(behaviorTypeDAO, times(2)).findById(anyLong());
+            verify(userDAO).findOne(any(Specification.class));
             verify(bragLogDAO).save(any(BragLog.class));
+        }
+
+        @Test
+        @DisplayName("Should create new brag log and link existing ADMIN user")
+        void shouldCreateNewBragLogAndLinkAdminUser() {
+            Set<Long> behaviorIds = Set.of(behaviorType1.getId(), behaviorType2.getId());
+            String submitterName = "ValidFirstName ValidLastName";
+            BragLogDTO createDTO = new BragLogDTO(null, student.getId(), null,
+                    behaviorIds, bragLog.getNotes(), submitterName, null, null, null,
+                    null, null, null);
+            when(studentDAO.findById(student.getId())).thenReturn(Optional.of(student));
+            when(behaviorTypeDAO.findById(behaviorType1.getId())).thenReturn(Optional.of(behaviorType1));
+            when(behaviorTypeDAO.findById(behaviorType2.getId())).thenReturn(Optional.of(behaviorType2));
+            when(userDAO.findOne(any(Specification.class))).thenReturn(Optional.of(adminUser));
+            BragLog savedBragLog = createValidBragLog(student, Set.of(behaviorType1, behaviorType2));
+            savedBragLog.setSubmitterName(submitterName);
+            savedBragLog.setSubmitterUser(adminUser);
+            when(bragLogDAO.save(any(BragLog.class))).thenReturn(savedBragLog);
+            BragLogDTO result = bragLogService.createBragLog(createDTO);
+            assertNotNull(result);
+            assertEquals(bragLog.getId(), result.getId());
+            assertEquals(submitterName, result.getSubmitterName());
+            assertEquals(adminUser.getId(), result.getSubmitterUserId());
+            verify(studentDAO).findById(student.getId());
+            verify(behaviorTypeDAO, times(2)).findById(anyLong());
+            verify(userDAO).findOne(any(Specification.class));
+            verify(bragLogDAO).save(any(BragLog.class));
+        }
+
+        @Test
+        @DisplayName("Should create new brag log and link existing TEACHER user")
+        void shouldCreateNewBragLogAndLinkTeacherUser() {
+            Set<Long> behaviorIds = Set.of(behaviorType1.getId(), behaviorType2.getId());
+            String submitterName = "ValidFirstName ValidLastName";
+            BragLogDTO createDTO = new BragLogDTO(null, student.getId(), null,
+                    behaviorIds, bragLog.getNotes(), submitterName, null, null, null,
+                    null, null, null);
+            when(studentDAO.findById(student.getId())).thenReturn(Optional.of(student));
+            when(behaviorTypeDAO.findById(behaviorType1.getId())).thenReturn(Optional.of(behaviorType1));
+            when(behaviorTypeDAO.findById(behaviorType2.getId())).thenReturn(Optional.of(behaviorType2));
+            when(userDAO.findOne(any(Specification.class))).thenReturn(Optional.of(teacherUser));
+            BragLog savedBragLog = createValidBragLog(student, Set.of(behaviorType1, behaviorType2));
+            savedBragLog.setSubmitterName(submitterName);
+            savedBragLog.setSubmitterUser(teacherUser);
+            when(bragLogDAO.save(any(BragLog.class))).thenReturn(savedBragLog);
+            BragLogDTO result = bragLogService.createBragLog(createDTO);
+            assertNotNull(result);
+            assertEquals(bragLog.getId(), result.getId());
+            assertEquals(submitterName, result.getSubmitterName());
+            assertEquals(teacherUser.getId(), result.getSubmitterUserId());
+            verify(studentDAO).findById(student.getId());
+            verify(behaviorTypeDAO, times(2)).findById(anyLong());
+            verify(userDAO).findOne(any(Specification.class));
+            verify(bragLogDAO).save(any(BragLog.class));
+        }
+
+        @Test
+        @DisplayName("Should throw IllegalArgumentException when submitter name matches a STUDENT")
+        void shouldThrowWhenSubmitterIsStudent() {
+            Set<Long> behaviorIds = Set.of(behaviorType1.getId(), behaviorType2.getId());
+            String submitterName = "ValidFirstName ValidLastName";
+            BragLogDTO createDTO = new BragLogDTO(null, student.getId(), null,
+                    behaviorIds, bragLog.getNotes(), submitterName, null, null, null,
+                    null, null, null);
+            when(studentDAO.findById(student.getId())).thenReturn(Optional.of(student));
+            when(behaviorTypeDAO.findById(behaviorType1.getId())).thenReturn(Optional.of(behaviorType1));
+            when(behaviorTypeDAO.findById(behaviorType2.getId())).thenReturn(Optional.of(behaviorType2));
+            when(userDAO.findOne(any(Specification.class))).thenReturn(Optional.of(studentUser));
+            IllegalArgumentException ex = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> bragLogService.createBragLog(createDTO)
+            );
+            assertEquals("Students cannot submit brag logs", ex.getMessage());
+            verify(studentDAO).findById(student.getId());
+            verify(behaviorTypeDAO, times(2)).findById(anyLong());
+            verify(userDAO).findOne(any(Specification.class));
+            verify(bragLogDAO, never()).save(any(BragLog.class));
+        }
+
+        @Test
+        @DisplayName("Should throw IllegalArgumentException when submitter name has no space")
+        void shouldThrowWhenSubmitterNameHasNoSpace() {
+            Set<Long> behaviorIds = Set.of(behaviorType1.getId(), behaviorType2.getId());
+            BragLogDTO createDTO = new BragLogDTO(null, student.getId(), null,
+                    behaviorIds, bragLog.getNotes(), "SingleName", null, null, null,
+                    null, null, null);
+            when(studentDAO.findById(student.getId())).thenReturn(Optional.of(student));
+            when(behaviorTypeDAO.findById(behaviorType1.getId())).thenReturn(Optional.of(behaviorType1));
+            when(behaviorTypeDAO.findById(behaviorType2.getId())).thenReturn(Optional.of(behaviorType2));
+            IllegalArgumentException ex = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> bragLogService.createBragLog(createDTO)
+            );
+            assertEquals("Submitter name must contain both first and last name", ex.getMessage());
+            verify(studentDAO).findById(student.getId());
+            verify(behaviorTypeDAO, times(2)).findById(anyLong());
+            verify(userDAO, never()).findOne(any(Specification.class));
+            verify(bragLogDAO, never()).save(any(BragLog.class));
+        }
+
+        @Test
+        @DisplayName("Should throw IllegalArgumentException when submitter name is blank")
+        void shouldThrowWhenSubmitterNameIsBlank() {
+            Set<Long> behaviorIds = Set.of(behaviorType1.getId(), behaviorType2.getId());
+            BragLogDTO createDTO = new BragLogDTO(null, student.getId(), null, behaviorIds,
+                    bragLog.getNotes(), "", null, null,
+                    null, null, null, null);
+            when(studentDAO.findById(student.getId())).thenReturn(Optional.of(student));
+            when(behaviorTypeDAO.findById(behaviorType1.getId())).thenReturn(Optional.of(behaviorType1));
+            when(behaviorTypeDAO.findById(behaviorType2.getId())).thenReturn(Optional.of(behaviorType2));
+            IllegalArgumentException ex = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> bragLogService.createBragLog(createDTO)
+            );
+            assertEquals("Submitter name must not be blank", ex.getMessage());
+            verify(studentDAO).findById(student.getId());
+            verify(behaviorTypeDAO, times(2)).findById(anyLong());
+            verify(userDAO, never()).findOne(any(Specification.class));
+            verify(bragLogDAO, never()).save(any(BragLog.class));
+        }
+
+        @Test
+        @DisplayName("Should throw IllegalArgumentException when submitter name is null")
+        void shouldThrowWhenSubmitterNameIsNull() {
+            Set<Long> behaviorIds = Set.of(behaviorType1.getId(), behaviorType2.getId());
+            BragLogDTO createDTO = new BragLogDTO(null, student.getId(), null, behaviorIds,
+                    bragLog.getNotes(), null, null, null,
+                    null, null, null, null);
+            when(studentDAO.findById(student.getId())).thenReturn(Optional.of(student));
+            when(behaviorTypeDAO.findById(behaviorType1.getId())).thenReturn(Optional.of(behaviorType1));
+            when(behaviorTypeDAO.findById(behaviorType2.getId())).thenReturn(Optional.of(behaviorType2));
+            IllegalArgumentException ex = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> bragLogService.createBragLog(createDTO)
+            );
+            assertEquals("Submitter name must not be blank", ex.getMessage());
+            verify(studentDAO).findById(student.getId());
+            verify(behaviorTypeDAO, times(2)).findById(anyLong());
+            verify(userDAO, never()).findOne(any(Specification.class));
+            verify(bragLogDAO, never()).save(any(BragLog.class));
         }
 
         @Test
@@ -194,13 +359,14 @@ public class BragLogServiceTests {
             Long studentId = 9999L;
             Set<Long> behaviorIds = bragLogDTO.getBehaviorIds();
             BragLogDTO createDTO = new BragLogDTO(null, studentId, null,
-                    behaviorIds, bragLog.getNotes(), null, null, null,
+                    behaviorIds, bragLog.getNotes(), "John Doe", null, null, null,
                     null, null, null);
             when(studentDAO.findById(studentId)).thenReturn(Optional.empty());
             assertThrows(ResourceNotFoundException.class,
                     () -> bragLogService.createBragLog(createDTO));
             verify(studentDAO).findById(studentId);
             verify(behaviorTypeDAO, never()).findById(anyLong());
+            verify(userDAO, never()).findOne(any(Specification.class));
             verify(bragLogDAO, never()).save(any(BragLog.class));
         }
 
@@ -210,7 +376,7 @@ public class BragLogServiceTests {
             Long behaviorTypeId = 9999L;
             Set<Long> behaviorIds = Set.of(behaviorTypeId);
             BragLogDTO createDTO = new BragLogDTO(null, student.getId(), null,
-                    behaviorIds, bragLog.getNotes(), null, null, null,
+                    behaviorIds, bragLog.getNotes(), "John Doe", null, null, null,
                     null, null, null);
             when(studentDAO.findById(student.getId())).thenReturn(Optional.of(student));
             when(behaviorTypeDAO.findById(behaviorTypeId)).thenReturn(Optional.empty());
@@ -218,11 +384,13 @@ public class BragLogServiceTests {
                     () -> bragLogService.createBragLog(createDTO));
             verify(studentDAO).findById(student.getId());
             verify(behaviorTypeDAO).findById(behaviorTypeId);
+            verify(userDAO, never()).findOne(any(Specification.class));
             verify(bragLogDAO, never()).save(any(BragLog.class));
         }
     }
 
     @Nested
+    @SuppressWarnings("unchecked")
     @DisplayName("When updating brag log")
     class WhenUpdatingBragLog {
         @Test
@@ -232,7 +400,7 @@ public class BragLogServiceTests {
             String updatedNotes = "Updated notes";
             Set<Long> updatedBehaviorIds = Set.of(1L);
             BragLogDTO updateDTO = new BragLogDTO(bragLogId, student.getId(), teacher.getId(),
-                    updatedBehaviorIds, updatedNotes, null, null,
+                    updatedBehaviorIds, updatedNotes, "John Doe", null, null,
                     null, null, null, null);
             when(bragLogDAO.findById(bragLogId)).thenReturn(Optional.of(bragLog));
             when(behaviorTypeDAO.findById(behaviorType1.getId())).thenReturn(Optional.of(behaviorType1));
@@ -253,7 +421,7 @@ public class BragLogServiceTests {
             Teacher newTeacher = createValidTeacher(2L, GradeLevel.SECOND);
             Student newStudent = createValidStudent(2L, newTeacher);
             BragLogDTO updateDTO = new BragLogDTO(bragLogId, newStudent.getId(), newTeacher.getId(),
-                    bragLogDTO.getBehaviorIds(), bragLogDTO.getNotes(), null, null, null,
+                    bragLogDTO.getBehaviorIds(), bragLogDTO.getNotes(), "John Doe", null, null, null,
                     null, null, null);
             when(bragLogDAO.findById(bragLogId)).thenReturn(Optional.of(bragLog));
             when(studentDAO.findById(newStudent.getId())).thenReturn(Optional.of(newStudent));
@@ -272,7 +440,7 @@ public class BragLogServiceTests {
             Long bragLogId = bragLog.getId();
             String newNotes = "updated notes";
             BragLogDTO updateDTO = new BragLogDTO(bragLogId, bragLogDTO.getStudentId(), bragLogDTO.getTeacherId(),
-                    bragLogDTO.getBehaviorIds(), newNotes, null, null, null,
+                    bragLogDTO.getBehaviorIds(), newNotes, "John Doe", null, null, null,
                     null, null, null);
             when(bragLogDAO.findById(bragLogId)).thenReturn(Optional.of(bragLog));
             when(bragLogDAO.save(any(BragLog.class))).thenReturn(bragLog);
@@ -284,13 +452,161 @@ public class BragLogServiceTests {
         }
 
         @Test
+        @DisplayName("Should update submitter name and re-resolve to ADMIN user")
+        void shouldUpdateSubmitterNameAndReResolveToAdminUser() {
+            Long bragLogId = bragLog.getId();
+            String newName = "Jane Admin";
+            BragLogDTO updateDTO = new BragLogDTO(bragLogId, student.getId(), teacher.getId(),
+                    bragLogDTO.getBehaviorIds(), bragLog.getNotes(), newName, null,
+                    null, null, null, null, null);
+            when(bragLogDAO.findById(bragLogId)).thenReturn(Optional.of(bragLog));
+            when(userDAO.findOne(any(Specification.class))).thenReturn(Optional.of(adminUser));
+            when(bragLogDAO.save(any(BragLog.class))).thenReturn(bragLog);
+            bragLogService.updateBragLog(bragLogId, updateDTO);
+            verify(userDAO).findOne(any(Specification.class));
+            verify(bragLogDAO).save(argThat(log ->
+                    log.getSubmitterName().equals(newName) &&
+                    log.getSubmitterUser() != null &&
+                    log.getSubmitterUser().getId().equals(adminUser.getId())
+            ));
+        }
+
+        @Test
+        @DisplayName("Should update submitter name and re-resolve to TEACHER user")
+        void shouldUpdateSubmitterNameAndReResolveToTeacherUser() {
+            Long bragLogId = bragLog.getId();
+            String newName = "Jane Teacher";
+            BragLogDTO updateDTO = new BragLogDTO(bragLogId, student.getId(), teacher.getId(),
+                    bragLogDTO.getBehaviorIds(), bragLog.getNotes(), newName, null,
+                    null, null, null, null, null);
+            when(bragLogDAO.findById(bragLogId)).thenReturn(Optional.of(bragLog));
+            when(userDAO.findOne(any(Specification.class))).thenReturn(Optional.of(teacherUser));
+            when(bragLogDAO.save(any(BragLog.class))).thenReturn(bragLog);
+            bragLogService.updateBragLog(bragLogId, updateDTO);
+            verify(userDAO).findOne(any(Specification.class));
+            verify(bragLogDAO).save(argThat(log ->
+                    log.getSubmitterName().equals(newName) &&
+                    log.getSubmitterUser() != null &&
+                    log.getSubmitterUser().getId().equals(teacherUser.getId())
+            ));
+        }
+
+        @Test
+        @DisplayName("Should clear submitter user when updated name matches no user")
+        void shouldClearSubmitterUserWhenUpdatedNameMatchesNoUser() {
+            Long bragLogId = bragLog.getId();
+            String newName = "Unknown Person";
+            BragLogDTO updateDTO = new BragLogDTO(bragLogId, student.getId(), teacher.getId(),
+                    bragLogDTO.getBehaviorIds(), bragLog.getNotes(), newName, null,
+                    null, null, null, null, null);
+            when(bragLogDAO.findById(bragLogId)).thenReturn(Optional.of(bragLog));
+            when(userDAO.findOne(any(Specification.class))).thenReturn(Optional.empty());
+            when(bragLogDAO.save(any(BragLog.class))).thenReturn(bragLog);
+            bragLogService.updateBragLog(bragLogId, updateDTO);
+            verify(userDAO).findOne(any(Specification.class));
+            verify(bragLogDAO).save(argThat(log ->
+                    log.getSubmitterName().equals(newName) &&
+                    log.getSubmitterUser() == null
+            ));
+        }
+
+        @Test
+        @DisplayName("Should throw IllegalArgumentException when updated submitter name matches a STUDENT")
+        void shouldThrowIllegalArgumentExceptionWhenUpdatedSubmitterNameMatchesAStudent() {
+            Long bragLogId = bragLog.getId();
+            String newName = "ValidFirstName ValidLastName";
+            BragLogDTO updateDTO = new BragLogDTO(bragLogId, student.getId(), teacher.getId(),
+                    bragLogDTO.getBehaviorIds(), bragLog.getNotes(), newName, null,
+                    null, null, null, null, null);
+            when(bragLogDAO.findById(bragLogId)).thenReturn(Optional.of(bragLog));
+            when(userDAO.findOne(any(Specification.class))).thenReturn(Optional.of(studentUser));
+            IllegalArgumentException ex = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> bragLogService.updateBragLog(bragLogId, updateDTO)
+            );
+            assertEquals("Students cannot submit brag logs", ex.getMessage());
+            verify(bragLogDAO).findById(bragLogId);
+            verify(userDAO).findOne(any(Specification.class));
+            verify(bragLogDAO, never()).save(any(BragLog.class));
+        }
+
+        @Test
+        @DisplayName("Should throw IllegalArgumentException when updated submitter name has no space")
+        void shouldThrowIllegalArgumentExceptionWhenUpdatedSubmitterNameHasNoSpace() {
+            Long bragLogId = bragLog.getId();
+            String newName = "SingleName";
+            BragLogDTO updateDTO = new BragLogDTO(bragLogId, student.getId(), teacher.getId(),
+                    bragLogDTO.getBehaviorIds(), bragLog.getNotes(), newName, null,
+                    null, null, null, null, null);
+            when(bragLogDAO.findById(bragLogId)).thenReturn(Optional.of(bragLog));
+            IllegalArgumentException ex = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> bragLogService.updateBragLog(bragLogId, updateDTO)
+            );
+            assertEquals("Submitter name must contain both first and last name", ex.getMessage());
+            verify(bragLogDAO).findById(bragLogId);
+            verify(userDAO, never()).findOne(any(Specification.class));
+            verify(bragLogDAO, never()).save(any(BragLog.class));
+        }
+
+        @Test
+        @DisplayName("Should throw IllegalArgumentException when updated submitter name is blank")
+        void shouldThrowIllegalArgumentExceptionWhenUpdatedSubmitterNameIsBlank() {
+            Long bragLogId = bragLog.getId();
+            BragLogDTO updateDTO = new BragLogDTO(bragLogId, student.getId(), teacher.getId(),
+                    bragLogDTO.getBehaviorIds(), bragLog.getNotes(), "", null,
+                    null, null, null, null, null);
+            when(bragLogDAO.findById(bragLogId)).thenReturn(Optional.of(bragLog));
+            IllegalArgumentException ex = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> bragLogService.updateBragLog(bragLogId, updateDTO)
+            );
+            assertEquals("Submitter name must not be blank", ex.getMessage());
+            verify(bragLogDAO).findById(bragLogId);
+            verify(userDAO, never()).findOne(any(Specification.class));
+            verify(bragLogDAO, never()).save(any(BragLog.class));
+        }
+
+        @Test
+        @DisplayName("Should throw IllegalArgumentException when updated submitter name is null")
+        void shouldThrowIllegalArgumentExceptionWhenUpdatedSubmitterNameIsNull() {
+            Long bragLogId = bragLog.getId();
+            BragLogDTO updateDTO = new BragLogDTO(bragLogId, student.getId(), teacher.getId(),
+                    bragLogDTO.getBehaviorIds(), bragLog.getNotes(), null, null,
+                    null, null, null, null, null);
+            when(bragLogDAO.findById(bragLogId)).thenReturn(Optional.of(bragLog));
+            IllegalArgumentException ex = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> bragLogService.updateBragLog(bragLogId, updateDTO)
+            );
+            assertEquals("Submitter name must not be blank", ex.getMessage());
+            verify(bragLogDAO).findById(bragLogId);
+            verify(userDAO, never()).findOne(any(Specification.class));
+            verify(bragLogDAO, never()).save(any(BragLog.class));
+        }
+
+        @Test
+        @DisplayName("Should not re-resolve user if submitter name unchanged")
+        void shouldNotReResolveUserIfSubmitterNameUnchanged() {
+            Long bragLogId = bragLog.getId();
+            BragLogDTO updateDTO = new BragLogDTO(bragLogId, student.getId(), teacher.getId(),
+                    bragLogDTO.getBehaviorIds(), bragLog.getNotes(), bragLog.getSubmitterName(), null,
+                    null, null, null, null, null);
+            when(bragLogDAO.findById(bragLogId)).thenReturn(Optional.of(bragLog));
+            when(bragLogDAO.save(any(BragLog.class))).thenReturn(bragLog);
+            bragLogService.updateBragLog(bragLogId, updateDTO);
+            verify(userDAO, never()).findOne(any(Specification.class));
+            verify(bragLogDAO).save(any(BragLog.class));
+        }
+
+        @Test
         @DisplayName("Should throw ResourceNotFoundException when brag log not found by ID")
         void shouldThrowResourceNotFoundExceptionWhenBragLogNotFoundById() {
             Long bragLogId = 999L;
             Set<Long> newBehaviorIds = Set.of(behaviorType1.getId());
             String newNotes = "updated notes";
             BragLogDTO updateDTO = new BragLogDTO(bragLogId, student.getId(), teacher.getId(), newBehaviorIds,
-                    newNotes, null, null, null, null,
+                    newNotes, "John Doe", null, null, null, null,
                     null, null);
             when(bragLogDAO.findById(bragLogId)).thenReturn(Optional.empty());
             assertThrows(ResourceNotFoundException.class,
