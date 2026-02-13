@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * </ul>
  *
  * @see BragLogSearchCriteria
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @DisplayName("BragLogSearchCriteria Tests")
@@ -181,6 +181,24 @@ public class BragLogSearchCriteriaTests {
             criteria.setTeacherId(1L);
             criteria.setStudentId(1L);
             criteria.setNotes("test notes");
+            boolean hasFilters = criteria.hasFilters();
+            assertTrue(hasFilters);
+        }
+
+        @Test
+        @DisplayName("should return true when submitter name is set")
+        void shouldReturnTrueWhenSubmitterNameIsSet() {
+            BragLogSearchCriteria criteria = new BragLogSearchCriteria();
+            criteria.setSubmitterName("John Doe");
+            boolean hasFilters = criteria.hasFilters();
+            assertTrue(hasFilters);
+        }
+
+        @Test
+        @DisplayName("should return true when submitter user ID is set")
+        void shouldReturnTrueWhenSubmitterUserIdIsSet() {
+            BragLogSearchCriteria criteria = new BragLogSearchCriteria();
+            criteria.setSubmitterUserId(2L);
             boolean hasFilters = criteria.hasFilters();
             assertTrue(hasFilters);
         }

@@ -23,6 +23,8 @@ import java.time.LocalDateTime;
  *     <li>{@code studentId} - Student ID filter</li>
  *     <li>{@code teacherId} - Teacher ID filter</li>
  *     <li>{@code notes} - Partial match on notes (case-insensitive)</li>
+ *     <li>{@code submitterName} - Partial match on submitter name (case-insensitive)</li>
+ *     <li>{@code submitterUserId} - Submitter user ID filter</li>
  * </ul>
  *
  * <p>Usage examples:
@@ -37,9 +39,11 @@ import java.time.LocalDateTime;
  *     <li>Filter by teacherId: {@code teacherId=1}</li>
  *     <li>Filter by studentId: {@code studentId=1}</li>
  *     <li>Search by notes: {@code notes=Good}</li>
+ *     <li>Search by submitter name: {@code submitterName=John}</li>
+ *     <li>Filter by submitter user ID: {@code submitterUserId=1}</li>
  * </ul>
  *
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @Getter
@@ -55,6 +59,8 @@ public class BragLogSearchCriteria {
     private Long teacherId;
     private Long studentId;
     private String notes;
+    private String submitterName;
+    private Long submitterUserId;
 
     /**
      * Determines if any search filters have been specified.
@@ -63,6 +69,7 @@ public class BragLogSearchCriteria {
      */
     public boolean hasFilters() {
         return studentName != null || teacherName != null || grade != null || minPoints != null || maxPoints != null
-                || startDate != null || endDate != null || teacherId != null || studentId != null || notes != null;
+                || startDate != null || endDate != null || teacherId != null || studentId != null || notes != null
+                || submitterName != null || submitterUserId != null;
     }
 }
