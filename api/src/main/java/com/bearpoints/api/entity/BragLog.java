@@ -1,10 +1,7 @@
 package com.bearpoints.api.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -19,7 +16,7 @@ import java.util.Set;
  * @see Teacher
  * @see Syncable
  * @see BehaviorType
- * @version 1.1
+ * @version 1.2
  * @author Dylan Mercer
  */
 @Data
@@ -111,6 +108,29 @@ public class BragLog implements Syncable {
     @Column
     @Size(max = 500, message = "Notes cannot exceed 500 characters")
     private String notes;
+
+    /**
+     * Name of the person who submitted the brag log
+     * <p>Stores "First Last" format for display
+     * <p>Constraints:
+     * <ul>
+     *     <li>Non-blank</li>
+     *     <li>Between 2 and 250 characters</li>
+     * </ul>
+     */
+    @Column(name = "submitter_name", nullable = false)
+    @NotBlank(message = "Submitter name is required")
+    @Size(min = 2, max = 250, message = "Submitter name must be between 2 and 250 characters")
+    private String submitterName;
+
+    /**
+     * Associated user if submitter exists in the system
+     * <p>Optional relationship - null if submitter is not a registered user
+     * <p>Used for role validation and user details when available
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "submitter_user_id")
+    private User submitterUser;
 
     /**
      * Version field for JPA optimistic locking.

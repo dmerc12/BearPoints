@@ -28,11 +28,12 @@ import static org.assertj.core.api.Assertions.assertThat;
  *     <li>Behaviors (empty)</li>
  *     <li>Points generated (min when set)</li>
  *     <li>Notes (max)</li>
+ *     <li>Submitter name (blank, min, max)</li>
  *  </ul>
  *
  * @see BragLog*
  *
- * @version 1.1
+ * @version 1.2
  * @author Dylan Mercer
  */
 public class BragLogTests {
@@ -56,6 +57,7 @@ public class BragLogTests {
         bragLog.setBehaviors(Set.of(behaviorType));
         bragLog.setPointsGenerated(behaviorType.getPointValue());
         bragLog.setNotes("test notes");
+        bragLog.setSubmitterName("John Doe");
         return bragLog;
     }
 
@@ -311,6 +313,80 @@ public class BragLogTests {
             validBragLog.setNotes("A".repeat(500));
             Set<ConstraintViolation<BragLog>> violations = validator.validate(validBragLog);
             assertThat(violations).isEmpty();
+        }
+    }
+
+    /** Submitter name tests */
+    @Nested
+    @DisplayName("Submitter name validation tests")
+    class SubmitterNameValidation {
+        /** Tests blank submitter name validation */
+        @Test
+        @DisplayName("Blank submitter name fails validation")
+        public void submitterNameBlank() {
+            validBragLog.setSubmitterName("");
+            Set<ConstraintViolation<BragLog>> violations = validator.validate(validBragLog);
+            assertThat(violations)
+                    .filteredOn(v -> v.getPropertyPath().toString().equals("submitterName"))
+                    .extracting(ConstraintViolation::getMessage)
+                    .contains("Submitter name is required")
+                    .contains("Submitter name must be between 2 and 250 characters");
+        }
+
+        /** Tests null submitter name validation */
+        @Test
+        @DisplayName("Null submitter name fails validation")
+        public void submitterNameNull() {
+            validBragLog.setSubmitterName(null);
+            Set<ConstraintViolation<BragLog>> violations = validator.validate(validBragLog);
+            assertThat(violations)
+                    .filteredOn(v -> v.getPropertyPath().toString().equals("submitterName"))
+                    .extracting(ConstraintViolation::getMessage)
+                    .containsExactly("Submitter name is required");
+        }
+
+        /** Tests submitter name below min length validation */
+        @Test
+        @DisplayName("1-character submitter name fails validation")
+        public void submitterNameOneCharacter() {
+            validBragLog.setSubmitterName("A");
+            Set<ConstraintViolation<BragLog>> violations = validator.validate(validBragLog);
+            assertThat(violations)
+                    .filteredOn(v -> v.getPropertyPath().toString().equals("submitterName"))
+                    .extracting(ConstraintViolation::getMessage)
+                    .containsExactly("Submitter name must be between 2 and 250 characters");
+        }
+
+        /** Tests submitter name min length validation */
+        @Test
+        @DisplayName("2-character submitter name passes validation")
+        public void submitterNameTwoCharacters() {
+            validBragLog.setSubmitterName("AJ");
+            Set<ConstraintViolation<BragLog>> violations = validator.validate(validBragLog);
+            assertThat(violations).isEmpty();
+        }
+
+        /** Tests submitter name max length validation */
+        @Test
+        @DisplayName("250-character submitter name passes validation")
+        public void submitterNameTwoHundredFiftyCharacters() {
+            String validName = "A".repeat(250);
+            validBragLog.setSubmitterName(validName);
+            Set<ConstraintViolation<BragLog>> violations = validator.validate(validBragLog);
+            assertThat(violations).isEmpty();
+        }
+
+        /** Tests submitter name over max length validation */
+        @Test
+        @DisplayName("251-character submitter name fails validation")
+        public void submitterNameTwoHundredFiftyOneCharacters() {
+            String longName = "A".repeat(251);
+            validBragLog.setSubmitterName(longName);
+            Set<ConstraintViolation<BragLog>> violations = validator.validate(validBragLog);
+            assertThat(violations)
+                    .filteredOn(v -> v.getPropertyPath().toString().equals("submitterName"))
+                    .extracting(ConstraintViolation::getMessage)
+                    .containsExactly("Submitter name must be between 2 and 250 characters");
         }
     }
 
