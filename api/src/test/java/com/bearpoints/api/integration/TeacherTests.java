@@ -41,7 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *
  * @see TestDataInitializer
  * @see BaseIntegrationTest
- * @version 1.3
+ * @version 1.4
  * @author Dylan Mercer
  */
 @DisplayName("Teacher Integration Tests")
@@ -65,7 +65,7 @@ public class TeacherTests extends BaseIntegrationTest {
     @DisplayName("GET /teachers - Retrieve teachers")
     class GetAllTeachers {
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns paginated teachers with default parameters")
         void returnsPaginatedTeachersWithDefaults() throws Exception {
             mockMvc.perform(get(baseUrl))
@@ -76,7 +76,7 @@ public class TeacherTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns sorted results when sort parameter provided")
         void returnsSortedTeachersAsc() throws Exception {
             mockMvc.perform(get(baseUrl)
@@ -86,7 +86,7 @@ public class TeacherTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns empty page when no teachers exist")
         void returnsEmptyPageWhenNoTeachers() throws Exception {
             mockMvc.perform(get(baseUrl)
@@ -100,7 +100,7 @@ public class TeacherTests extends BaseIntegrationTest {
     @DisplayName("GET /teachers/search - Search teachers")
     class SearchTeachers {
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("with email criteria returns matching teachers")
         void searchWithEmailCriteria_ReturnsMatchingTeachers() throws Exception {
             mockMvc.perform(get(baseUrl + "/search")
@@ -111,7 +111,7 @@ public class TeacherTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("with first name criteria returns matching teachers")
         void searchWithFirstNameCriteria_ReturnsMatchingTeachers() throws Exception {
             mockMvc.perform(get(baseUrl + "/search")
@@ -123,7 +123,7 @@ public class TeacherTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("with last name criteria returns matching teachers")
         void searchWithLastNameCriteria_ReturnsMatchingTeachers() throws Exception {
             mockMvc.perform(get(baseUrl + "/search")
@@ -135,7 +135,7 @@ public class TeacherTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by grade level returns matching teachers")
         void searchByGrade_ReturnsMatchingTeachers() throws Exception {
             mockMvc.perform(get(baseUrl + "/search")
@@ -147,7 +147,7 @@ public class TeacherTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by grade level handles case-insensitive grade strings")
         void searchByGrade_HandlesCaseInsensitiveGrade() throws Exception {
             mockMvc.perform(get(baseUrl + "/search")
@@ -158,7 +158,7 @@ public class TeacherTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by grade level handles hyphenated grade strings")
         void searchByGrade_HandlesHyphenatedGrade() throws Exception {
             mockMvc.perform(get(baseUrl + "/search")
@@ -169,7 +169,7 @@ public class TeacherTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("with non-matching criteria returns empty results")
         void searchWithNonMatchingCriteria_returnsEmptyResults() throws Exception {
             mockMvc.perform(get(baseUrl + "/search")
@@ -179,7 +179,7 @@ public class TeacherTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("with non-matching grade returns empty results")
         void searchWithNonMatchingGrade_returnsEmptyResults() throws Exception {
             mockMvc.perform(get(baseUrl + "/search")
@@ -189,7 +189,7 @@ public class TeacherTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("with no criteria returns all teachers")
         void searchWithNoCriteria_ReturnsAllTeachers() throws Exception {
             mockMvc.perform(get(baseUrl + "/search"))
@@ -198,7 +198,7 @@ public class TeacherTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns sorted search results when sort parameter provided")
         void returnsSortedSearchResults() throws Exception {
             mockMvc.perform(get(baseUrl + "/search")
@@ -213,7 +213,7 @@ public class TeacherTests extends BaseIntegrationTest {
     @DisplayName("GET /teachers/{id} - Get teacher by ID")
     class GetTeacherById {
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns teacher when ID exists")
         void returnsTeacher_whenIdExists() throws Exception {
             Optional<Teacher> teacher = teacherDAO.findAll(PageRequest.of(0, 1))
@@ -229,7 +229,7 @@ public class TeacherTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns 404 when ID does not exist")
         void returns404_whenIdDoesNotExists() throws Exception {
             Long nonExistentId = 9999L;
@@ -472,7 +472,7 @@ public class TeacherTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "STAFF"})
         @DisplayName("returns 403 when user is not ADMIN")
         void returns403_whenUserIsNotAdmin() throws Exception {
             String uniqueEmail = "unique-teacher-" + System.currentTimeMillis() + "@okcps.org";
@@ -645,7 +645,7 @@ public class TeacherTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"TEACHER", "STUDENT"})
+        @WithMockUser(roles = {"TEACHER", "STUDENT", "STAFF"})
         @DisplayName("returns 403 when non-admin tries to update teacher")
         void returns403_whenNonAdminTriesToUpdate() throws Exception {
             Optional<Teacher> teacher = teacherDAO.findAll(PageRequest.of(0, 1))
@@ -702,7 +702,7 @@ public class TeacherTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"TEACHER", "STUDENT"})
+        @WithMockUser(roles = {"TEACHER", "STUDENT", "STAFF"})
         @DisplayName("returns 403 when non-admin tries to delete teacher")
         void returns403_whenNonAdminTriesToDelete() throws Exception {
             mockMvc.perform(delete(baseUrl + "/{id}", 1L)
