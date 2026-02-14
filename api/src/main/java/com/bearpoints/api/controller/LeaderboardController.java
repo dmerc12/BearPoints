@@ -31,13 +31,13 @@ import org.springframework.web.bind.annotation.*;
  *
  * @see LeaderboardService
  * @see Timeframe
- * @version 3.1
+ * @version 3.2
  * @author Dylan Mercer
  */
 @CrossOrigin
 @RestController
 @RequestMapping("/api/leaderboard")
-@PreAuthorize("hasAnyRole('STUDENT', 'TEACHER', 'ADMIN')")
+@PreAuthorize("hasAnyRole('STUDENT', 'TEACHER', 'ADMIN', 'STAFF')")
 public class LeaderboardController {
     private final LeaderboardService leaderboardService;
 

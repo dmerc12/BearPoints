@@ -35,7 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *
  * @see TestDataInitializer
  * @see BaseIntegrationTest
- * @version 1.1
+ * @version 1.2
  * @author Dylan Mercer
  */
 @DisplayName("Leaderboard Integration Tests")
@@ -65,7 +65,7 @@ public class LeaderboardTests extends BaseIntegrationTest {
      * ranking algorithm with real data distribution.</p>
      */
     @Test
-    @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+    @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
     @DisplayName("GET /leaderboard returns ranked results with comprehensive test data")
     void getLeaderboard_WithFullTestData_ReturnsRankedResults() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get(baseUrl)
@@ -99,7 +99,7 @@ public class LeaderboardTests extends BaseIntegrationTest {
      * to validate realistic class sizes.
      */
     @Test
-    @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+    @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
     @DisplayName("GET /leaderboard with teacher filter returns class-specific ranking")
     void getLeaderboard_WithTeacherFilter_ReturnsClassRanking() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get(baseUrl)
@@ -124,7 +124,7 @@ public class LeaderboardTests extends BaseIntegrationTest {
      * </ul>
      */
     @Test
-    @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+    @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
     @DisplayName("GET /leaderboard with grade filter returns grade-specific ranking")
     void getLeaderboard_WithGradeFilter_ReturnsGradeRanking() throws Exception {
         String grade = "FIRST";
@@ -146,7 +146,7 @@ public class LeaderboardTests extends BaseIntegrationTest {
      * brag log timestamps, ensuring recent data is included while properly excluding older records.
      */
     @Test
-    @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+    @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
     @DisplayName("GET /leaderboard with WEEK timeframe filters recent brag logs correctly")
     void getLeaderboard_WeekTimeframe_FiltersRecentData() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get(baseUrl)
@@ -163,7 +163,7 @@ public class LeaderboardTests extends BaseIntegrationTest {
      * temporal data distribution.
      */
     @Test
-    @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+    @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
     @DisplayName("GET /leaderboard handles all timeframe values correctly")
     void getLeaderboard_HandlesAllTimeframes_ReturnResults() throws Exception {
         for (Timeframe timeframe : Timeframe.values()) {
@@ -181,7 +181,7 @@ public class LeaderboardTests extends BaseIntegrationTest {
      * ensuring correct page metadata and result slicing.
      */
     @Test
-    @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+    @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
     @DisplayName("GET /leaderboard with pagination returns correct page metadata")
     void getLeaderboard_WithPagination_ReturnsCorrectPageData() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get(baseUrl)
@@ -203,7 +203,7 @@ public class LeaderboardTests extends BaseIntegrationTest {
      * complex data relationships.
      */
     @Test
-    @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+    @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
     @DisplayName("GET /leaderboard with combined filters returns precise results")
     void getLeaderboard_WithCombinedFilters_ReturnsPreciseResults() throws Exception {
         String grade = "FIRST";
@@ -222,7 +222,7 @@ public class LeaderboardTests extends BaseIntegrationTest {
      * <p>Validates graceful handling of scenarios where no data matches the filter criteria.
      */
     @Test
-    @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+    @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
     @DisplayName("GET /leaderboard with non-matching filters returns empty results gracefully")
     void getLeaderboard_WithNonMatchingFilters_ReturnsEmptyResults() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get(baseUrl)
@@ -243,7 +243,7 @@ public class LeaderboardTests extends BaseIntegrationTest {
     @Test
     @DisplayName("All authorized roles can access leaderboard endpoint")
     void getLeaderboard_AllAuthorizedRoles_CanAccess() throws Exception {
-        String[] roles = {"STUDENT", "TEACHER", "ADMIN"};
+        String[] roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"};
         for (String role : roles) {
             mockMvc.perform(MockMvcRequestBuilders.get(baseUrl)
                         .param("timeframe", "WEEK")
