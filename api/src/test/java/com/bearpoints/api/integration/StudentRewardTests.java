@@ -44,7 +44,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *
  * @see TestDataInitializer
  * @see BaseIntegrationTest
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @DisplayName("Student Reward Integration Tests")
@@ -72,7 +72,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
     @DisplayName("GET /api/rewards - Retrieve student rewards")
     class GetAllStudentRewards {
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns paginated student rewards with default parameters")
         void returnsPaginatedStudentRewardsWithDefaults() throws Exception {
             mockMvc.perform(get(baseUrl))
@@ -83,7 +83,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns sorted results when sort parameter provided")
         void returnsSortedStudentRewards() throws Exception {
             mockMvc.perform(get(baseUrl)
@@ -93,7 +93,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns empty page when no student rewards exist")
         void returnsEmptyPageWhenNoStudentRewardsExist() throws Exception {
             mockMvc.perform(get(baseUrl)
@@ -107,7 +107,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
     @DisplayName("GET /api/rewards/search - Search student rewards")
     class SearchStudentRewards {
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("no criteria returns all student rewards")
         void noCriteriaReturnsAllStudentRewards() throws Exception {
             mockMvc.perform(get(baseUrl + "/search"))
@@ -118,7 +118,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by student name returns matching student rewards")
         void byStudentNameCriteriaReturnsMatchingStudentRewards() throws Exception {
             String searchTerm = "S";
@@ -130,7 +130,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by student ID returns matching student rewards")
         void byStudentIdCriteriaReturnsMatchingStudentRewards() throws Exception {
             Long studentId = 1L;
@@ -142,7 +142,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by item name returns matching student rewards")
         void byItemNameCriteriaReturnsMatchingStudentRewards() throws Exception {
             String searchTerm = "S";
@@ -154,7 +154,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by item ID returns matching student rewards")
         void byItemIdCriteriaReturnsMatchingStudentRewards() throws Exception {
             Long itemId = 1L;
@@ -166,7 +166,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by points used range returns matching student rewards")
         void byPointsUsedRangeCriteriaReturnsMatchingStudentRewards() throws Exception {
             Integer minPointsUsed = 5;
@@ -182,7 +182,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by redeemed at date range returns matching student rewards")
         void byRedeemedAtDateRangeCriteriaReturnsMatchingStudentRewards() throws Exception {
             LocalDateTime startDate = LocalDateTime.now().minusDays(3);
@@ -198,7 +198,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("with combined criteria returns matching student rewards")
         void withCombinedCriteriaReturnsMatchingStudentRewards() throws Exception {
             String studentName = "S";
@@ -238,7 +238,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("with non-matching criteria returns empty results")
         void withNonMatchingCriteriaReturnsEmptyResults() throws Exception {
             mockMvc.perform(get(baseUrl + "/search")
@@ -248,7 +248,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns sorted search results when sort parameter provided")
         void returnsSortedSearchResultsWhenSortParameterProvided() throws Exception {
             mockMvc.perform(get(baseUrl + "/search")
@@ -263,7 +263,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
     @DisplayName("GET /api/rewards/{id} - Get student reward by ID")
     class GetStudentRewardById {
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns student reward when ID exists")
         void returnsStudentRewardWhenIdExists() throws Exception {
             Optional<StudentReward> studentReward = studentRewardDAO.findAll(PageRequest.of(0, 1))
@@ -282,7 +282,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns 404 when ID does not exist")
         void returns404WhenIdDoesNotExist() throws Exception {
             mockMvc.perform(get(baseUrl + "/{id}", "9999"))
@@ -436,7 +436,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"TEACHER", "STUDENT"})
+        @WithMockUser(roles = {"TEACHER", "STUDENT", "STAFF"})
         @DisplayName("returns 403 when user is not ADMIN")
         void returns403WhenUserIsNotAdmin() throws Exception {
             Optional<Student> student = studentDAO.findAll(PageRequest.of(0, 1))
@@ -648,7 +648,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"TEACHER", "STUDENT"})
+        @WithMockUser(roles = {"TEACHER", "STUDENT", "STAFF"})
         @DisplayName("returns 403 when user is not ADMIN")
         void returns403WhenUserIsNotAdmin() throws Exception {
             Optional<Student> student = studentDAO.findAll(PageRequest.of(0, 1))
@@ -705,7 +705,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"TEACHER", "STUDENT"})
+        @WithMockUser(roles = {"TEACHER", "STUDENT", "STAFF"})
         @DisplayName("returns 403 when user is ADMIN")
         void returns403WhenUserIsNotAdmin() throws Exception {
             Optional<StudentReward> studentReward = studentRewardDAO.findAll(PageRequest.of(0, 1))
