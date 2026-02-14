@@ -36,7 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *
  * @see TestDataInitializer
  * @see BaseIntegrationTest
- * @version 1.2
+ * @version 1.3
  * @author Dylan Mercer
  */
 @DisplayName("Behavior Type Integration Tests")
@@ -58,7 +58,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
     @DisplayName("GET /api/behaviors - Retrieve behavior types")
     class GetAllBehaviorTypes {
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns paginated behavior types with default parameters")
         void returnsPaginatedBehaviorTypesWithDefaults() throws Exception {
             mockMvc.perform(get(baseUrl))
@@ -69,7 +69,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns sorted results when sort parameter provided")
         void returnsSortedBehaviorTypes() throws Exception {
             mockMvc.perform(get(baseUrl)
@@ -79,7 +79,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns empty page when no behavior types exist")
         void returnsEmptyPageWhenNoBehaviorTypesExist() throws Exception {
             mockMvc.perform(get(baseUrl)
@@ -93,7 +93,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
     @DisplayName("GET /api/behaviors/search - Search behavior types")
     class SearchBehaviorTypes {
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("no criteria returns all behavior types")
         void noCriteriaReturnsAllBehaviorTypes() throws Exception {
             mockMvc.perform(get(baseUrl + "/search"))
@@ -102,7 +102,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by name returns matching behavior types")
         void searchByName_ReturnsMatchingBehaviorTypes() throws Exception {
             String searchTerm = "B";
@@ -114,7 +114,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by active returns matching behavior types")
         void searchByActive_ReturnsMatchingBehaviorTypes() throws Exception {
             Boolean searchTerm = true;
@@ -126,7 +126,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by point value range returns matching behavior types")
         void searchByPointValueRange_ReturnsMatchingBehaviorTypes() throws Exception {
             Integer minPointValue = 2;
@@ -140,7 +140,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("with combined criteria returns matching behavior types")
         void searchWithCombinedCriteria_ReturnsMatchingBehaviorTypes() throws Exception {
             String searchTerm = "B";
@@ -162,7 +162,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("with non-matching criteria returns empty results")
         void searchWithNonMatchingCriteria_ReturnsEmptyResults() throws Exception {
             mockMvc.perform(get(baseUrl + "/search")
@@ -172,7 +172,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns sorted search results when sort parameter provided")
         void returnsSortedSearchResults() throws Exception {
             mockMvc.perform(get(baseUrl + "/search")
@@ -187,7 +187,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
     @DisplayName("GET /api/behaviors/{id} - Get behavior type by ID")
     class GetBehaviorTypeById {
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns behavior type when ID exists")
         void returnsBehaviorType_whenIdExists() throws Exception {
             mockMvc.perform(get(baseUrl + "/{id}", "1"))
@@ -199,7 +199,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns 404 when ID does not exist")
         void returns404_whenIdDoesNotExist() throws Exception {
             mockMvc.perform(get(baseUrl + "/{id}", "9999"))
@@ -351,7 +351,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER"})        @DisplayName("returns 403 when user is not ADMIN")
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "STAFF"})        @DisplayName("returns 403 when user is not ADMIN")
         void returns403_whenUserIsNotAdmin() throws Exception {
             String uniqueName = "unique-name-" + System.currentTimeMillis();
             Integer pointValue = 2;
@@ -595,7 +595,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "STAFF"})
         @DisplayName("returns 403 when user is not ADMIN")
         void returns403_whenUserIsNotAdmin() throws Exception {
             Optional<BehaviorType> existingBehaviorType = behaviorTypeDAO.findAll(PageRequest.of(0, 1))
@@ -644,7 +644,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "STAFF"})
         @DisplayName("returns 403 when user is not ADMIN")
         void returns403_whenUserIsNotAdmin() throws Exception {
             mockMvc.perform(delete(baseUrl + "/{id}", 1L)
