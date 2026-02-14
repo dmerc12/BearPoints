@@ -58,7 +58,7 @@ public class StudentTests extends BaseIntegrationTest {
     @DisplayName("GET /students - Retrieve students")
     class GetAllStudents {
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns paginated students with default parameters")
         void returnsPaginatedStudentsWithDefaults() throws Exception {
             mockMvc.perform(get(baseUrl))
@@ -69,7 +69,7 @@ public class StudentTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns sorted results when sort parameter provided")
         void returnsSortedStudents() throws Exception {
             mockMvc.perform(get(baseUrl)
@@ -81,7 +81,7 @@ public class StudentTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns empty page when no students exist")
         void returnsEmptyPageWhenNoStudents() throws Exception {
             mockMvc.perform(get(baseUrl)
@@ -95,7 +95,7 @@ public class StudentTests extends BaseIntegrationTest {
     @DisplayName("GET /students/search - Search students")
     class SearchStudents {
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("no criteria returns all students")
         void searchNoCriteria_ReturnsAllStudents() throws Exception {
             mockMvc.perform(get(baseUrl + "/search"))
@@ -104,7 +104,7 @@ public class StudentTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by email returns matching students")
         void searchByEmail_ReturnsMatchingStudents() throws Exception {
             mockMvc.perform(get(baseUrl + "/search")
@@ -115,7 +115,7 @@ public class StudentTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by first name returns matching students")
         void searchByFirstName_ReturnsMatchingStudents() throws Exception {
             mockMvc.perform(get(baseUrl + "/search")
@@ -126,7 +126,7 @@ public class StudentTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by last name returns matching students")
         void searchByLastName_ReturnsMatchingStudents() throws Exception {
             mockMvc.perform(get(baseUrl + "/search")
@@ -137,7 +137,7 @@ public class StudentTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by teacher ID returns matching students")
         void searchByTeacherId_ReturnsMatchingStudents() throws Exception {
             mockMvc.perform(get(baseUrl + "/search")
@@ -149,7 +149,7 @@ public class StudentTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by points range returns matching students")
         void searchByPointsRange_ReturnsMatchingStudents() throws Exception {
             mockMvc.perform(get(baseUrl + "/search")
@@ -161,7 +161,7 @@ public class StudentTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("with combined criteria returns matching students")
         void searchWithCombinedCriteria_ReturnsMatchingStudents() throws Exception {
             mockMvc.perform(get(baseUrl + "/search")
@@ -175,7 +175,7 @@ public class StudentTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("with non-matching criteria returns empty results")
         void searchWithNonMatchingCriteria_ReturnsEmptyResults() throws Exception {
             mockMvc.perform(get(baseUrl + "/search")
@@ -185,7 +185,7 @@ public class StudentTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns sorted search results when sort parameter provided")
         void returnsSortedSearchResultsWhenSortParameterProvided() throws Exception {
             mockMvc.perform(get(baseUrl + "/search")
@@ -199,7 +199,7 @@ public class StudentTests extends BaseIntegrationTest {
     @DisplayName("GET /students/leaderboard - Classroom leaderboard")
     class ClassroomLeaderboard {
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns leaderboard for teacher with default parameters")
         void returnsLeaderboardWithDefaults() throws Exception {
             mockMvc.perform(get(baseUrl + "/leaderboard")
@@ -211,7 +211,7 @@ public class StudentTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns 404 when teacher does not exist")
         void returns404WhenTeacherDoesNotExist() throws Exception {
             mockMvc.perform(get(baseUrl + "/leaderboard")
@@ -222,7 +222,7 @@ public class StudentTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns sorted classroom leaderboard results when sort parameter provided")
         void returnsSortedClassroomLeaderboardResultsWhenSortParameterProvided() throws Exception {
             mockMvc.perform(get(baseUrl + "/leaderboard")
@@ -239,7 +239,7 @@ public class StudentTests extends BaseIntegrationTest {
     @DisplayName("GET /students/{id} - Get student by ID")
     class GetStudentsById {
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns student when ID exists")
         void returnsStudent_whenIdExists() throws Exception {
             mockMvc.perform(get(baseUrl + "/{id}", "1"))
@@ -252,7 +252,7 @@ public class StudentTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns 404 when ID does not exist")
         void returns404_whenIDDoesNotExist() throws Exception {
             mockMvc.perform(get(baseUrl + "/{id}", "9999"))
@@ -266,7 +266,7 @@ public class StudentTests extends BaseIntegrationTest {
     @DisplayName("GET /students/token/{token} - Get student by token")
     class GetStudentsByToken {
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns student when token exists")
         void returnsStudent_whenTokenExists() throws Exception {
             Optional<Student> student = studentDAO.findAll(PageRequest.of(0, 1))
@@ -281,7 +281,7 @@ public class StudentTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns 404 when token does not exist")
         void returns404_whenTokenDoesNotExist() throws Exception {
             mockMvc.perform(get(baseUrl + "/token/{token}", "non-existent-token"))
@@ -495,7 +495,7 @@ public class StudentTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "STAFF"})
         @DisplayName("returns 403 when user is not ADMIN")
         void created403_whenUserIsNotAdmin() throws Exception {
             String uniqueEmail = "unique-student-" + System.currentTimeMillis() + "@okcps.org";
@@ -681,7 +681,7 @@ public class StudentTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"TEACHER", "STUDENT"})
+        @WithMockUser(roles = {"TEACHER", "STUDENT", "STAFF"})
         @DisplayName("returns 403 when non-admin tries to update student")
         void returns403_whenNonAdminTriesToUpdate() throws Exception {
             Optional<Student> student = studentDAO.findAll(PageRequest.of(0, 1))
@@ -734,7 +734,7 @@ public class StudentTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"TEACHER", "STUDENT"})
+        @WithMockUser(roles = {"TEACHER", "STUDENT", "STAFF"})
         @DisplayName("returns 403 when non-admin tries to delete student")
         void returns403_whenNonAdminTriesToDelete() throws Exception {
                 mockMvc.perform(delete(baseUrl + "/{id}", 1L)
