@@ -41,7 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *
  * @see TestDataInitializer
  * @see BaseIntegrationTest
- * @version 2.0
+ * @version 2.1
  * @author Dylan Mercer
  */
 @DisplayName("Brag Log Integration Tests")
@@ -74,7 +74,7 @@ public class BragLogTests extends BaseIntegrationTest {
     @DisplayName("GET /api/brags - Retrieve brag logs")
     class GetAllBragLogs {
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns paginated brag logs with default parameters")
         void returnsPaginatedBragLogsWithDefaults() throws Exception {
             mockMvc.perform(get(baseUrl))
@@ -85,7 +85,7 @@ public class BragLogTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns sorted results when sort parameter provided")
         void returnsSortedBragLogs() throws Exception {
             mockMvc.perform(get(baseUrl)
@@ -95,7 +95,7 @@ public class BragLogTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns empty page when no brag logs exist")
         void returnsEmptyPageWhenNoBragLogsExist() throws Exception {
             mockMvc.perform(get(baseUrl)
@@ -109,7 +109,7 @@ public class BragLogTests extends BaseIntegrationTest {
     @DisplayName("GET /api/brags/search - Search brag logs")
     class SearchBragLogs {
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("no criteria returns all brag logs")
         void noCriteriaReturnsAllBragLogs() throws Exception {
             mockMvc.perform(get(baseUrl + "/search"))
@@ -118,7 +118,7 @@ public class BragLogTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by student name returns matching brag logs")
         void searchByStudentName_ReturnsMatchingBragLogs() throws Exception {
             String searchTerm = "S";
@@ -130,7 +130,7 @@ public class BragLogTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by teacher name returns matching brag logs")
         void searchByTeacherName_ReturnsMatchingBragLogs() throws Exception {
             String searchTerm = "T";
@@ -142,7 +142,7 @@ public class BragLogTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by grade returns matching brag logs")
         void searchByGrade_ReturnsMatchingBragLogs() throws Exception {
             String grade = GradeLevel.FIRST.name();
@@ -154,7 +154,7 @@ public class BragLogTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by points generated range returns matching brag logs")
         void searchByPointsGeneratedRange_ReturnsMatchingBragLogs() throws Exception {
             Integer minPoints = 3;
@@ -168,7 +168,7 @@ public class BragLogTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by timestamp date range returns matching brag logs")
         void searchByTimestampDateRange_ReturnsMatchingBragLogs() throws Exception {
             String startDate = LocalDateTime.now().minusDays(3).toString();
@@ -182,7 +182,7 @@ public class BragLogTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by student ID returns matching brag logs")
         void searchByStudentId_ReturnsMatchingBragLogs() throws Exception {
             Long studentId = 1L;
@@ -194,7 +194,7 @@ public class BragLogTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by teacher ID returns matching brag logs")
         void searchByTeacherId_ReturnsMatchingBragLogs() throws Exception {
             Long teacherId = 1L;
@@ -206,7 +206,7 @@ public class BragLogTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by notes returns matching brag logs")
         void searchByNotes_ReturnsMatchingBragLogs() throws Exception {
             String searchTerm = "Test brag log";
@@ -218,7 +218,7 @@ public class BragLogTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by submitter name returns matching brag logs")
         void searchBySubmitterName_ReturnsMatchingBragLogs() throws Exception {
             String searchTerm = "Admin";
@@ -230,7 +230,7 @@ public class BragLogTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by submitter user ID returns matching brag logs")
         void searchBySubmitterUserId_ReturnsMatchingBragLogs() throws Exception {
             Optional<User> adminUser = userDAO.findByRole(Role.ADMIN, PageRequest.of(0, 1))
@@ -246,7 +246,7 @@ public class BragLogTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("with non-matching criteria returns empty results")
         void searchWithNonMatchingCriteria_ReturnsEmptyResults() throws Exception {
             mockMvc.perform(get(baseUrl + "/search")
@@ -256,7 +256,7 @@ public class BragLogTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("with combined criteria returns matching brag logs")
         void searchWithCombinedCriteria_ReturnsMatchingBragLogs() throws Exception {
             Optional<User> adminUser = userDAO.findByRole(Role.ADMIN, PageRequest.of(0, 1))
@@ -298,7 +298,7 @@ public class BragLogTests extends BaseIntegrationTest {
     @DisplayName("GET /api/brags/{id} - Get brag log by ID")
     class GetBragLogById {
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns brag log when ID exists")
         void returnsBragLog_whenIdExists() throws Exception {
             Optional<BragLog> bragLog = bragLogDAO.findAll(PageRequest.of(0, 1))
@@ -323,7 +323,7 @@ public class BragLogTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns 404 when ID does not exist")
         void returns404_whenIdDoesNotExist() throws Exception {
             mockMvc.perform(get(baseUrl + "/{id}", "9999"))
@@ -551,7 +551,7 @@ public class BragLogTests extends BaseIntegrationTest {
     @DisplayName("PUT /api/brags/{id} - Update brag log")
     class UpdateBragLog {
         @Test
-        @WithMockUser(roles = {"ADMIN", "TEACHER"})
+        @WithMockUser(roles = {"ADMIN", "TEACHER", "STAFF"})
         @DisplayName("updates brag log with valid data")
         void updatesBragLog_withValidData() throws Exception {
             Optional<BragLog> bragLog = bragLogDAO.findAll(PageRequest.of(0, 1))
@@ -585,7 +585,7 @@ public class BragLogTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"ADMIN", "TEACHER"})
+        @WithMockUser(roles = {"ADMIN", "TEACHER", "STAFF"})
         @DisplayName("updates submitter name only when other fields unchanged")
         void updatesSubmitterName_onlyWhenOtherFieldsUnchanged() throws Exception {
             Optional<BragLog> bragLog = bragLogDAO.findAll(PageRequest.of(0, 1))
@@ -607,7 +607,7 @@ public class BragLogTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"ADMIN", "TEACHER"})
+        @WithMockUser(roles = {"ADMIN", "TEACHER", "STAFF"})
         @DisplayName("returns 400 when updated submitter name is null")
         void returns400_whenUpdatedSubmitterNameIsNull() throws Exception {
             Optional<Student> student = studentDAO.findAll(PageRequest.of(0, 1))
@@ -631,7 +631,7 @@ public class BragLogTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"ADMIN", "TEACHER"})
+        @WithMockUser(roles = {"ADMIN", "TEACHER", "STAFF"})
         @DisplayName("returns 400 when updated submitter name is blank")
         void returns400_whenUpdatedSubmitterNameIsBlank() throws Exception {
             Optional<BragLog> bragLog = bragLogDAO.findAll(PageRequest.of(0, 1))
@@ -654,7 +654,7 @@ public class BragLogTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"ADMIN", "TEACHER"})
+        @WithMockUser(roles = {"ADMIN", "TEACHER", "STAFF"})
         @DisplayName("returns 400 when updated submitter name has no space")
         void returns400_whenUpdatedSubmitterNameHasNoSpace() throws Exception {
             Optional<BragLog> bragLog = bragLogDAO.findAll(PageRequest.of(0, 1))
@@ -675,7 +675,7 @@ public class BragLogTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"ADMIN", "TEACHER"})
+        @WithMockUser(roles = {"ADMIN", "TEACHER", "STAFF"})
         @DisplayName("returns 400 when updated submitter name matches a STUDENT user")
         void returns400_whenUpdatedSubmitterNameMatchesStudent() throws Exception {
             Optional<BragLog> bragLog = bragLogDAO.findAll(PageRequest.of(0, 1))
@@ -699,7 +699,7 @@ public class BragLogTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"ADMIN", "TEACHER"})
+        @WithMockUser(roles = {"ADMIN", "TEACHER", "STAFF"})
         @DisplayName("returns 404 when updating non existent brag log")
         void returns404_whenUpdatingNonExistentBragLog() throws Exception {
             Optional<Student> student = studentDAO.findAll(PageRequest.of(1, 1))
@@ -720,7 +720,7 @@ public class BragLogTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"ADMIN", "TEACHER"})
+        @WithMockUser(roles = {"ADMIN", "TEACHER", "STAFF"})
         @DisplayName("returns 400 with missing student")
         void returns400_withMissingStudent() throws Exception {
             Optional<BragLog> bragLog = bragLogDAO.findAll(PageRequest.of(0, 1))
@@ -742,7 +742,7 @@ public class BragLogTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"ADMIN", "TEACHER"})
+        @WithMockUser(roles = {"ADMIN", "TEACHER", "STAFF"})
         @DisplayName("returns 404 with invalid student")
         void returns404_withInvalidStudent() throws Exception {
             Optional<BragLog> bragLog = bragLogDAO.findAll(PageRequest.of(0, 1))
@@ -763,7 +763,7 @@ public class BragLogTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"ADMIN", "TEACHER"})
+        @WithMockUser(roles = {"ADMIN", "TEACHER", "STAFF"})
         @DisplayName("returns 400 with missing behavior IDs")
         void returns400_withMissingBehaviorIds() throws Exception {
             Optional<BragLog> bragLog = bragLogDAO.findAll(PageRequest.of(0, 1))
@@ -786,7 +786,7 @@ public class BragLogTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"ADMIN", "TEACHER"})
+        @WithMockUser(roles = {"ADMIN", "TEACHER", "STAFF"})
         @DisplayName("returns 400 with invalid behavior IDs")
         void returns400_withInvalidBehaviorIds() throws Exception {
             Optional<BragLog> bragLog = bragLogDAO.findAll(PageRequest.of(0, 1))
@@ -832,7 +832,7 @@ public class BragLogTests extends BaseIntegrationTest {
     @DisplayName("DELETE /api/brags/{id} - Delete brag log")
     class DeleteBragLog {
         @Test
-        @WithMockUser(roles = {"ADMIN", "TEACHER"})
+        @WithMockUser(roles = {"ADMIN", "TEACHER", "STAFF"})
         @DisplayName("deletes brag log and returns 204")
         void deletesBragLog_andReturns204() throws Exception {
             Optional<BragLog> bragLog = bragLogDAO.findAll(PageRequest.of(0, 1))
@@ -845,7 +845,7 @@ public class BragLogTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"ADMIN", "TEACHER"})
+        @WithMockUser(roles = {"ADMIN", "TEACHER", "STAFF"})
         @DisplayName("returns 404 when deleting non existent brag log")
         void returns404_whenDeletingNonExistentBragLog() throws Exception {
             mockMvc.perform(delete(baseUrl + "/{id}", 9999L)

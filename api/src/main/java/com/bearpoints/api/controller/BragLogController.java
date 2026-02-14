@@ -28,18 +28,18 @@ import java.time.LocalDateTime;
  *     <li>GET /api/brags/search - Search brag logs (any authenticated user)</li>
  *     <li>GET /api/brags/{id} - Retrieve brag log by ID (any authenticated user)</li>
  *     <li>POST /api/brags - Create new brag log (any unauthenticated user)</li>
- *     <li>PUT /api/brags/{id} - Update existing brag log (ADMIN and TEACHER only)</li>
- *     <li>DELETE /api/brags/{id} - Delete existing brag log (ADMIN and TEACHER only)</li>
+ *     <li>PUT /api/brags/{id} - Update existing brag log (ADMIN, STAFF, and TEACHER only)</li>
+ *     <li>DELETE /api/brags/{id} - Delete existing brag log (ADMIN, STAFF, and TEACHER only)</li>
  * </ul>
  *
  * <p>Security:
  * <ul>
  *     <li>POST endpoint - Any unauthenticated user</li>
  *     <li>GET endpoints - Any authenticated user</li>
- *     <li>PUT, DELETE endpoints - ADMIN or TEACHER role required</li>
+ *     <li>PUT, DELETE endpoints - ADMIN, TEACHER, or STAFF role required</li>
  * </ul>
  *
- * @version 2.2
+ * @version 2.3
  * @author Dylan Mercer
  */
 @Slf4j
@@ -183,7 +183,7 @@ public class BragLogController {
      * @return Updated brag log details
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STAFF')")
     public ResponseEntity<BragLogDTO> updateBragLog(
             @PathVariable Long id,
             @Valid @RequestBody BragLogDTO bragLogDTO
@@ -202,7 +202,7 @@ public class BragLogController {
      * @return No content response
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STAFF')")
     public ResponseEntity<Void> deleteBragLog(@PathVariable Long id) {
         log.debug("Deleting brag log with ID: {}", id);
         bragLogService.deleteBragLog(id);
