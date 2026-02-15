@@ -7,6 +7,7 @@ import com.bearpoints.api.dao.BragLogDAO;
 import com.bearpoints.api.dao.StudentDAO;
 import com.bearpoints.api.dao.UserDAO;
 import com.bearpoints.api.entity.*;
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -17,6 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -41,7 +43,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *
  * @see TestDataInitializer
  * @see BaseIntegrationTest
- * @version 2.1
+ * @version 2.2
  * @author Dylan Mercer
  */
 @DisplayName("Brag Log Integration Tests")
@@ -169,6 +171,30 @@ public class BragLogTests extends BaseIntegrationTest {
 
         @Test
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
+        @DisplayName("by points generated min points only returns matching brag logs")
+        void searchByMinPointsGenerated_ReturnsMatchingBragLogs() throws Exception {
+            Integer minPoints = 3;
+            mockMvc.perform(get(baseUrl + "/search")
+                            .param("minPoints", String.valueOf(minPoints)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content[*].pointsGenerated",
+                            everyItem(allOf(greaterThanOrEqualTo(minPoints)))));
+        }
+
+        @Test
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
+        @DisplayName("by points generated max points only returns matching brag logs")
+        void searchByMaxPointsGenerated_ReturnsMatchingBragLogs() throws Exception {
+            Integer maxPoints = 10;
+            mockMvc.perform(get(baseUrl + "/search")
+                            .param("maxPoints", String.valueOf(maxPoints)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content[*].pointsGenerated",
+                            everyItem(allOf(lessThanOrEqualTo(maxPoints)))));
+        }
+
+        @Test
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by timestamp date range returns matching brag logs")
         void searchByTimestampDateRange_ReturnsMatchingBragLogs() throws Exception {
             String startDate = LocalDateTime.now().minusDays(3).toString();
@@ -179,6 +205,30 @@ public class BragLogTests extends BaseIntegrationTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[*].timestamp",
                             everyItem(allOf(greaterThanOrEqualTo(startDate), lessThanOrEqualTo(endDate)))));
+        }
+
+        @Test
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
+        @DisplayName("by timestamp start date only returns matching brag logs")
+        void searchByTimestampStartDate_ReturnsMatchingBragLogs() throws Exception {
+            String startDate = LocalDateTime.now().minusDays(3).toString();
+            mockMvc.perform(get(baseUrl + "/search")
+                            .param("startDate", startDate))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content[*].timestamp",
+                            everyItem(allOf(greaterThanOrEqualTo(startDate)))));
+        }
+
+        @Test
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
+        @DisplayName("by timestamp end date only returns matching brag logs")
+        void searchByTimestampEndDate_ReturnsMatchingBragLogs() throws Exception {
+            String endDate = LocalDateTime.now().toString();
+            mockMvc.perform(get(baseUrl + "/search")
+                            .param("endDate", endDate))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content[*].timestamp",
+                            everyItem(allOf(lessThanOrEqualTo(endDate)))));
         }
 
         @Test
@@ -227,6 +277,19 @@ public class BragLogTests extends BaseIntegrationTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[*].submitterName",
                             everyItem(containsStringIgnoringCase(searchTerm))));
+        }
+
+        @Test
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
+        @DisplayName("by empty submitter name returns all brag logs")
+        void searchByEmptySubmitterName_ReturnsAllBragLogs() throws Exception {
+            String searchTerm = "";
+            mockMvc.perform(get(baseUrl + "/search")
+                            .param("submitterName", searchTerm))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").isArray())
+                    .andExpect(jsonPath("$.number").value(0))
+                    .andExpect(jsonPath("$.size").value(20));
         }
 
         @Test
@@ -346,7 +409,8 @@ public class BragLogTests extends BaseIntegrationTest {
                     .stream().findFirst();
             if (student.isPresent() && behaviorType.isPresent()) {
                 Set<Long> behaviorIds = Set.of(behaviorType.get().getId());
-                String createJson = buildBragLogJson(student.get().getId(), behaviorIds, VALID_SUBMITTER_NAME);
+                String notes = "Notes";
+                String createJson = buildBragLogJson(student.get().getId(), behaviorIds, VALID_SUBMITTER_NAME, notes);
                 mockMvc.perform(post(baseUrl)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(createJson)
@@ -370,6 +434,113 @@ public class BragLogTests extends BaseIntegrationTest {
 
         @Test
         @WithMockUser
+        @DisplayName("creates brag log with null notes")
+        void createBragLog_withNullNotes() throws Exception {
+            Optional<Student> student = studentDAO.findAll(PageRequest.of(0, 1))
+                    .stream().findFirst();
+            Optional<BehaviorType> behaviorType = behaviorTypeDAO.findAll(PageRequest.of(0, 1))
+                    .stream().findFirst();
+            if (student.isPresent() && behaviorType.isPresent()) {
+                Set<Long> behaviorIds = Set.of(behaviorType.get().getId());
+                String createJson = buildBragLogJson(student.get().getId(), behaviorIds, VALID_SUBMITTER_NAME, null);
+                mockMvc.perform(post(baseUrl)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(createJson)
+                                .with(csrf()))
+                        .andExpect(status().isCreated())
+                        .andExpect(jsonPath("$.id").exists())
+                        .andExpect(jsonPath("$.studentId").value(student.get().getId()))
+                        .andExpect(jsonPath("$.studentName").exists())
+                        .andExpect(jsonPath("$.behaviorIds[0]").value(behaviorType.get().getId()))
+                        .andExpect(jsonPath("$.behaviors").exists())
+                        .andExpect(jsonPath("$.timestamp").exists())
+                        .andExpect(jsonPath("$.pointsGenerated").exists())
+                        .andExpect(jsonPath("$.timestamp").exists())
+                        .andExpect(jsonPath("$.teacherName").exists())
+                        .andExpect(jsonPath("$.teacherId").value(student.get().getTeacher().getId()))
+                        .andExpect(jsonPath("$.grade").value(student.get().getTeacher().getGrade().name()))
+                        .andExpect(jsonPath("$.submitterName").value(VALID_SUBMITTER_NAME))
+                        .andExpect(jsonPath("$.submitterUserId").doesNotExist());
+            }
+        }
+
+        @Test
+        @WithMockUser
+        @DisplayName("creates brag log and links to existing ADMIN user when submitter name matches")
+        void createBragLog_withAdminSubmitter_linksUser() throws Exception {
+            Optional<User> adminUser = userDAO.findByRole(Role.ADMIN, PageRequest.of(0, 1))
+                    .stream().findFirst();
+            if (adminUser.isPresent()) {
+                String adminFullName = adminUser.get().getFirstName() + " " + adminUser.get().getLastName();
+                Optional<Student> student = studentDAO.findAll(PageRequest.of(0, 1))
+                        .stream().findFirst();
+                Optional<BehaviorType> behaviorType = behaviorTypeDAO.findAll(PageRequest.of(0, 1))
+                        .stream().findFirst();
+                if (student.isPresent() && behaviorType.isPresent()) {
+                    Set<Long> behaviorIds = Set.of(behaviorType.get().getId());
+                    String createJson = buildBragLogJson(student.get().getId(), behaviorIds, adminFullName, null);
+                    mockMvc.perform(post(baseUrl)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(createJson)
+                                    .with(csrf()))
+                            .andExpect(status().isCreated())
+                            .andExpect(jsonPath("$.submitterUserId").value(adminUser.get().getId()));
+                }
+            }
+        }
+
+        @Test
+        @WithMockUser
+        @DisplayName("creates brag log and links to existing STAFF user when submitter name matches")
+        void createBragLog_withStaffSubmitter_linksUser() throws Exception {
+            Optional<User> staffUser = userDAO.findByRole(Role.STAFF, PageRequest.of(0, 1))
+                    .stream().findFirst();
+            if (staffUser.isPresent()) {
+                String staffFullName = staffUser.get().getFirstName() + " " + staffUser.get().getLastName();
+                Optional<Student> student = studentDAO.findAll(PageRequest.of(0, 1))
+                        .stream().findFirst();
+                Optional<BehaviorType> behaviorType = behaviorTypeDAO.findAll(PageRequest.of(0, 1))
+                        .stream().findFirst();
+                if (student.isPresent() && behaviorType.isPresent()) {
+                    Set<Long> behaviorIds = Set.of(behaviorType.get().getId());
+                    String createJson = buildBragLogJson(student.get().getId(), behaviorIds, staffFullName, null);
+                    mockMvc.perform(post(baseUrl)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(createJson)
+                                    .with(csrf()))
+                            .andExpect(status().isCreated())
+                            .andExpect(jsonPath("$.submitterUserId").value(staffUser.get().getId()));
+                }
+            }
+        }
+
+        @Test
+        @WithMockUser
+        @DisplayName("creates brag log and links to existing TEACHER user when submitter name matches")
+        void createBragLog_withTeacherSubmitter_linksUser() throws Exception {
+            Optional<User> teacherUser = userDAO.findByRole(Role.TEACHER, PageRequest.of(0, 1))
+                    .stream().findFirst();
+            if (teacherUser.isPresent()) {
+                String teacherFullName = teacherUser.get().getFirstName() + " " + teacherUser.get().getLastName();
+                Optional<Student> student = studentDAO.findAll(PageRequest.of(0, 1))
+                        .stream().findFirst();
+                Optional<BehaviorType> behaviorType = behaviorTypeDAO.findAll(PageRequest.of(0, 1))
+                        .stream().findFirst();
+                if (student.isPresent() && behaviorType.isPresent()) {
+                    Set<Long> behaviorIds = Set.of(behaviorType.get().getId());
+                    String createJson = buildBragLogJson(student.get().getId(), behaviorIds, teacherFullName, null);
+                    mockMvc.perform(post(baseUrl)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(createJson)
+                                    .with(csrf()))
+                            .andExpect(status().isCreated())
+                            .andExpect(jsonPath("$.submitterUserId").value(teacherUser.get().getId()));
+                }
+            }
+        }
+
+        @Test
+        @WithMockUser
         @DisplayName("returns 400 when submitter name is null")
         void returns400_whenSubmitterNameIsNull() throws Exception {
             Optional<Student> student = studentDAO.findAll(PageRequest.of(0, 1))
@@ -378,7 +549,8 @@ public class BragLogTests extends BaseIntegrationTest {
                     .stream().findFirst();
             if (student.isPresent() && behaviorType.isPresent()) {
                 Set<Long> behaviorIds = Set.of(behaviorType.get().getId());
-                String createJson = buildBragLogJson(student.get().getId(), behaviorIds, null);
+                String notes = "Notes";
+                String createJson = buildBragLogJson(student.get().getId(), behaviorIds, null, notes);
                 mockMvc.perform(post(baseUrl)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(createJson)
@@ -402,7 +574,8 @@ public class BragLogTests extends BaseIntegrationTest {
                     .stream().findFirst();
             if (student.isPresent() && behaviorType.isPresent()) {
                 Set<Long> behaviorIds = Set.of(behaviorType.get().getId());
-                String createJson = buildBragLogJson(student.get().getId(), behaviorIds, "");
+                String notes = "Notes";
+                String createJson = buildBragLogJson(student.get().getId(), behaviorIds, "", notes);
                 mockMvc.perform(post(baseUrl)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(createJson)
@@ -426,7 +599,8 @@ public class BragLogTests extends BaseIntegrationTest {
                     .stream().findFirst();
             if (student.isPresent() && behaviorType.isPresent()) {
                 Set<Long> behaviorIds = Set.of(behaviorType.get().getId());
-                String createJson = buildBragLogJson(student.get().getId(), behaviorIds, "SingleWord");
+                String notes = "Notes";
+                String createJson = buildBragLogJson(student.get().getId(), behaviorIds, "SingleWord", notes);
                 mockMvc.perform(post(baseUrl)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(createJson)
@@ -450,7 +624,8 @@ public class BragLogTests extends BaseIntegrationTest {
                 User studentUser = student.get().getUser();
                 String studentFullName = studentUser.getFirstName() + " " + studentUser.getLastName();
                 Set<Long> behaviorIds = Set.of(behaviorType.get().getId());
-                String createJson = buildBragLogJson(student.get().getId(), behaviorIds, studentFullName);
+                String notes = "Notes";
+                String createJson = buildBragLogJson(student.get().getId(), behaviorIds, studentFullName, notes);
                 mockMvc.perform(post(baseUrl)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(createJson)
@@ -470,7 +645,8 @@ public class BragLogTests extends BaseIntegrationTest {
                     .stream().findFirst();
             if (behaviorType.isPresent()) {
                 Set<Long> behaviorIds = Set.of(behaviorType.get().getId());
-                String createJson = buildBragLogJson(9999L, behaviorIds, VALID_SUBMITTER_NAME);
+                String notes = "Notes";
+                String createJson = buildBragLogJson(9999L, behaviorIds, VALID_SUBMITTER_NAME, notes);
                 mockMvc.perform(post(baseUrl)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(createJson)
@@ -490,7 +666,8 @@ public class BragLogTests extends BaseIntegrationTest {
                     .stream().findFirst();
             if (behaviorType.isPresent()) {
                 Set<Long> behaviorIds = Set.of(behaviorType.get().getId());
-                String createJson = buildBragLogJson(null, behaviorIds, VALID_SUBMITTER_NAME);
+                String notes = "Notes";
+                String createJson = buildBragLogJson(null, behaviorIds, VALID_SUBMITTER_NAME, notes);
                 mockMvc.perform(post(baseUrl)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(createJson)
@@ -512,7 +689,8 @@ public class BragLogTests extends BaseIntegrationTest {
                         .stream().findFirst();
                 if (student.isPresent()) {
                     Set<Long> behaviorIds = Set.of();
-                    String createJson = buildBragLogJson(student.get().getId(), behaviorIds, VALID_SUBMITTER_NAME);
+                    String notes = "Notes";
+                    String createJson = buildBragLogJson(student.get().getId(), behaviorIds, VALID_SUBMITTER_NAME, notes);
                     mockMvc.perform(post(baseUrl)
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(createJson)
@@ -534,7 +712,8 @@ public class BragLogTests extends BaseIntegrationTest {
                     .stream().findFirst();
             if (student.isPresent()) {
                 Set<Long> behaviorIds = Set.of(9999L);
-                String createJson = buildBragLogJson(student.get().getId(), behaviorIds, VALID_SUBMITTER_NAME);
+                String notes = "Notes";
+                String createJson = buildBragLogJson(student.get().getId(), behaviorIds, VALID_SUBMITTER_NAME, notes);
                 mockMvc.perform(post(baseUrl)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(createJson)
@@ -563,7 +742,8 @@ public class BragLogTests extends BaseIntegrationTest {
             if (bragLog.isPresent() && student.isPresent() && behaviorType.isPresent()) {
                 Set<Long> behaviorIds = Set.of(behaviorType.get().getId());
                 String newSubmitterName = "Updated Tester";
-                String updateJson = buildBragLogJson(student.get().getId(), behaviorIds, newSubmitterName);
+                String notes = bragLog.get().getNotes();
+                String updateJson = buildBragLogJson(student.get().getId(), behaviorIds, newSubmitterName, notes);
                 mockMvc.perform(put(baseUrl + "/{id}", bragLog.get().getId())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updateJson)
@@ -585,24 +765,199 @@ public class BragLogTests extends BaseIntegrationTest {
         }
 
         @Test
+        @Transactional
         @WithMockUser(roles = {"ADMIN", "TEACHER", "STAFF"})
-        @DisplayName("updates submitter name only when other fields unchanged")
-        void updatesSubmitterName_onlyWhenOtherFieldsUnchanged() throws Exception {
+        @DisplayName("updates student only when other fields unchanged")
+        void updatesStudent_onlyWhenOtherFieldsUnchanged() throws Exception {
+            Optional<BragLog> bragLog = bragLogDAO.findAll(PageRequest.of(0, 1))
+                    .stream().findFirst();
+            Optional<Student> student = studentDAO.findAll(PageRequest.of(1, 1))
+                    .stream().findFirst();
+            if (bragLog.isPresent() && student.isPresent()) {
+                Set<Long> behaviorIds = bragLog.get().getBehaviors().stream()
+                        .map(BehaviorType::getId).collect(Collectors.toSet());
+                String submitterName = bragLog.get().getSubmitterName();
+                String notes = bragLog.get().getNotes();
+                String updateJson = buildBragLogJson(student.get().getId(), behaviorIds, submitterName, notes);
+                Integer[] expectedIds = behaviorIds.stream()
+                                .map(Long::intValue).toArray(Integer[]::new);
+                mockMvc.perform(put(baseUrl + "/{id}", bragLog.get().getId())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(updateJson)
+                                .with(csrf()))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.id").value(bragLog.get().getId()))
+                        .andExpect(jsonPath("$.studentId").value(student.get().getId()))
+                        .andExpect(jsonPath("$.studentName").exists())
+                        .andExpect(jsonPath("$.behaviorIds").value(containsInAnyOrder(expectedIds)))
+                        .andExpect(jsonPath("$.behaviors").exists())
+                        .andExpect(jsonPath("$.timestamp").exists())
+                        .andExpect(jsonPath("$.pointsGenerated").exists())
+                        .andExpect(jsonPath("$.timestamp").exists())
+                        .andExpect(jsonPath("$.teacherName").exists())
+                        .andExpect(jsonPath("$.teacherId").value(student.get().getTeacher().getId()))
+                        .andExpect(jsonPath("$.grade").value(student.get().getTeacher().getGrade().name()))
+                        .andExpect(jsonPath("$.submitterName").value(submitterName));
+            }
+        }
+
+        @Test
+        @WithMockUser(roles = {"ADMIN", "TEACHER", "STAFF"})
+        @DisplayName("updates behaviors only when other fields unchanged")
+        void updatesBehaviors_onlyWhenOtherFieldsUnchanged() throws Exception {
             Optional<BragLog> bragLog = bragLogDAO.findAll(PageRequest.of(0, 1))
                     .stream().findFirst();
             Optional<BehaviorType> behaviorType = behaviorTypeDAO.findAll(PageRequest.of(1, 1))
                     .stream().findFirst();
             if (bragLog.isPresent() && behaviorType.isPresent()) {
                 Long studentId = bragLog.get().getStudent().getId();
-                Long behaviorId = behaviorType.get().getId();
+                Set<Long> behaviorIds = Set.of(behaviorType.get().getId());
+                String submitterName = bragLog.get().getSubmitterName();
+                String notes = bragLog.get().getNotes();
+                String updateJson = buildBragLogJson(studentId, behaviorIds, submitterName, notes);
+                Integer[] expectedIds = behaviorIds.stream()
+                        .map(Long::intValue).toArray(Integer[]::new);
+                mockMvc.perform(put(baseUrl + "/{id}", bragLog.get().getId())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(updateJson)
+                                .with(csrf()))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.id").value(bragLog.get().getId()))
+                        .andExpect(jsonPath("$.studentId").value(studentId))
+                        .andExpect(jsonPath("$.studentName").exists())
+                        .andExpect(jsonPath("$.behaviorIds").value(containsInAnyOrder(expectedIds)))
+                        .andExpect(jsonPath("$.behaviors").exists())
+                        .andExpect(jsonPath("$.timestamp").exists())
+                        .andExpect(jsonPath("$.pointsGenerated").exists())
+                        .andExpect(jsonPath("$.timestamp").exists())
+                        .andExpect(jsonPath("$.teacherName").exists())
+                        .andExpect(jsonPath("$.teacherId").value(bragLog.get().getTeacher().getId()))
+                        .andExpect(jsonPath("$.grade").value(bragLog.get().getTeacher().getGrade().name()))
+                        .andExpect(jsonPath("$.submitterName").value(submitterName));
+            }
+        }
+
+        @Test
+        @Transactional
+        @WithMockUser(roles = {"ADMIN", "TEACHER", "STAFF"})
+        @DisplayName("updates notes only when other fields unchanged")
+        void updatesNotes_onlyWhenOtherFieldsUnchanged() throws Exception {
+            Optional<BragLog> bragLog = bragLogDAO.findAll(PageRequest.of(0, 1))
+                    .stream().findFirst();
+            if (bragLog.isPresent()) {
+                Long studentId = bragLog.get().getStudent().getId();
+                Set<Long> behaviorIds = bragLog.get().getBehaviors().stream()
+                        .map(BehaviorType::getId).collect(Collectors.toSet());
+                String newSubmitterName = bragLog.get().getSubmitterName();
+                String notes = "Updated notes";
+                String updateJson = buildBragLogJson(studentId, behaviorIds, newSubmitterName, notes);
+                mockMvc.perform(put(baseUrl + "/{id}", bragLog.get().getId())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(updateJson)
+                                .with(csrf()))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.submitterName").value(newSubmitterName));
+            }
+        }
+
+        @Test
+        @Transactional
+        @WithMockUser(roles = {"ADMIN", "TEACHER", "STAFF"})
+        @DisplayName("updates submitter name only when other fields unchanged")
+        void updatesSubmitterName_onlyWhenOtherFieldsUnchanged() throws Exception {
+            Optional<BragLog> bragLog = bragLogDAO.findAll(PageRequest.of(0, 1))
+                    .stream().findFirst();
+            if (bragLog.isPresent()) {
+                Long studentId = bragLog.get().getStudent().getId();
+                Set<Long> behaviorIds = bragLog.get().getBehaviors().stream()
+                        .map(BehaviorType::getId).collect(Collectors.toSet());
                 String newSubmitterName = "OnlyName Changed";
-                String updateJson = buildBragLogJson(studentId, Set.of(behaviorId), newSubmitterName);
+                String notes = bragLog.get().getNotes();
+                String updateJson = buildBragLogJson(studentId, behaviorIds, newSubmitterName, notes);
                 mockMvc.perform(put(baseUrl + "/{id}", bragLog.get().getId())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(updateJson)
                             .with(csrf()))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.submitterName").value(newSubmitterName));
+            }
+        }
+
+        @Test
+        @Transactional
+        @WithMockUser(roles = {"ADMIN", "TEACHER", "STAFF"})
+        @DisplayName("updates submitter name to existing ADMIN user and links user")
+        void updatesSubmitterNameToExistingAdminUserAndLinksUser() throws Exception {
+            Optional<BragLog> bragLog = bragLogDAO.findAll(PageRequest.of(0, 1))
+                    .stream().findFirst();
+            Optional<User> adminUser = userDAO.findByRole(Role.ADMIN, PageRequest.of(0, 1))
+                    .stream().findFirst();
+            if (bragLog.isPresent() && adminUser.isPresent()) {
+                Long studentId = bragLog.get().getStudent().getId();
+                Set<Long> behaviorIds = bragLog.get().getBehaviors().stream()
+                        .map(BehaviorType::getId).collect(Collectors.toSet());
+                String adminFullName = adminUser.get().getFirstName() + " " + adminUser.get().getLastName();
+                String notes = bragLog.get().getNotes();
+                String updateJson = buildBragLogJson(studentId, behaviorIds, adminFullName, notes);
+                mockMvc.perform(put(baseUrl + "/{id}", bragLog.get().getId())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(updateJson)
+                                .with(csrf()))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.submitterName").value(adminFullName))
+                        .andExpect(jsonPath("$.submitterUserId").value(adminUser.get().getId()));
+            }
+        }
+
+        @Test
+        @Transactional
+        @WithMockUser(roles = {"ADMIN", "TEACHER", "STAFF"})
+        @DisplayName("updates submitter name to existing STAFF user and links user")
+        void updatesSubmitterNameToExistingStaffUserAndLinksUser() throws Exception {
+            Optional<BragLog> bragLog = bragLogDAO.findAll(PageRequest.of(0, 1))
+                    .stream().findFirst();
+            Optional<User> staffUser = userDAO.findByRole(Role.STAFF, PageRequest.of(0, 1))
+                    .stream().findFirst();
+            if (bragLog.isPresent() && staffUser.isPresent()) {
+                Long studentId = bragLog.get().getStudent().getId();
+                Set<Long> behaviorIds = bragLog.get().getBehaviors().stream()
+                        .map(BehaviorType::getId).collect(Collectors.toSet());
+                String staffFullName = staffUser.get().getFirstName() + " " + staffUser.get().getLastName();
+                String notes = bragLog.get().getNotes();
+                String updateJson = buildBragLogJson(studentId, behaviorIds, staffFullName, notes);
+                mockMvc.perform(put(baseUrl + "/{id}", bragLog.get().getId())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(updateJson)
+                                .with(csrf()))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.submitterName").value(staffFullName))
+                        .andExpect(jsonPath("$.submitterUserId").value(staffUser.get().getId()));
+            }
+        }
+
+        @Test
+        @Transactional
+        @WithMockUser(roles = {"ADMIN", "TEACHER", "STAFF"})
+        @DisplayName("updates submitter name to existing TEACHER user and links user")
+        void updatesSubmitterNameToExistingTeacherUserAndLinksUser() throws Exception {
+            Optional<BragLog> bragLog = bragLogDAO.findAll(PageRequest.of(0, 1))
+                    .stream().findFirst();
+            Optional<User> teacherUser = userDAO.findByRole(Role.TEACHER, PageRequest.of(0, 1))
+                    .stream().findFirst();
+            if (bragLog.isPresent() && teacherUser.isPresent()) {
+                Long studentId = bragLog.get().getStudent().getId();
+                Set<Long> behaviorIds = bragLog.get().getBehaviors().stream()
+                        .map(BehaviorType::getId).collect(Collectors.toSet());
+                String teacherFullName = teacherUser.get().getFirstName() + " " + teacherUser.get().getLastName();
+                String notes = bragLog.get().getNotes();
+                String updateJson = buildBragLogJson(studentId, behaviorIds, teacherFullName, notes);
+                mockMvc.perform(put(baseUrl + "/{id}", bragLog.get().getId())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(updateJson)
+                                .with(csrf()))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.submitterName").value(teacherFullName))
+                        .andExpect(jsonPath("$.submitterUserId").value(teacherUser.get().getId()));
             }
         }
 
@@ -616,7 +971,8 @@ public class BragLogTests extends BaseIntegrationTest {
                     .stream().findFirst();
             if (student.isPresent() && behaviorType.isPresent()) {
                 Set<Long> behaviorIds = Set.of(behaviorType.get().getId());
-                String updateJson = buildBragLogJson(student.get().getId(), behaviorIds, null);
+                String notes = "notes";
+                String updateJson = buildBragLogJson(student.get().getId(), behaviorIds, null, notes);
                 mockMvc.perform(post(baseUrl)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updateJson)
@@ -640,7 +996,8 @@ public class BragLogTests extends BaseIntegrationTest {
                     .stream().findFirst();
             if (bragLog.isPresent() && behaviorType.isPresent()) {
                 Set<Long> behaviorIds = Set.of(behaviorType.get().getId());
-                String updateJson = buildBragLogJson(bragLog.get().getStudent().getId(), behaviorIds, "");
+                String notes = bragLog.get().getNotes();
+                String updateJson = buildBragLogJson(bragLog.get().getStudent().getId(), behaviorIds, "", notes);
                 mockMvc.perform(put(baseUrl + "/{id}", bragLog.get().getId())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updateJson)
@@ -663,7 +1020,8 @@ public class BragLogTests extends BaseIntegrationTest {
                     .stream().findFirst();
             if (bragLog.isPresent() && behaviorType.isPresent()) {
                 Set<Long> behaviorIds = Set.of(behaviorType.get().getId());
-                String updateJson = buildBragLogJson(bragLog.get().getStudent().getId(), behaviorIds, "SingleWord");
+                String notes = bragLog.get().getNotes();
+                String updateJson = buildBragLogJson(bragLog.get().getStudent().getId(), behaviorIds, "SingleWord", notes);
                 mockMvc.perform(put(baseUrl + "/{id}", bragLog.get().getId())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updateJson)
@@ -687,7 +1045,8 @@ public class BragLogTests extends BaseIntegrationTest {
             if (bragLog.isPresent() && behaviorType.isPresent() && studentUser.isPresent()) {
                 String studentFullName = studentUser.get().getFirstName() + " " + studentUser.get().getLastName();
                 Set<Long> behaviorIds = Set.of(behaviorType.get().getId());
-                String updateJson = buildBragLogJson(bragLog.get().getStudent().getId(), behaviorIds, studentFullName);
+                String notes = bragLog.get().getNotes();
+                String updateJson = buildBragLogJson(bragLog.get().getStudent().getId(), behaviorIds, studentFullName, notes);
                 mockMvc.perform(put(baseUrl + "/{id}", bragLog.get().getId())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updateJson)
@@ -708,7 +1067,8 @@ public class BragLogTests extends BaseIntegrationTest {
                     .stream().findFirst();
             if (student.isPresent() && behaviorType.isPresent()) {
                 Set<Long> behaviorIds = Set.of(behaviorType.get().getId());
-                String updateJson = buildBragLogJson(student.get().getId(), behaviorIds, VALID_SUBMITTER_NAME);
+                String notes = "notes";
+                String updateJson = buildBragLogJson(student.get().getId(), behaviorIds, VALID_SUBMITTER_NAME, notes);
                 mockMvc.perform(put(baseUrl + "/{id}", 9999L)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updateJson)
@@ -729,7 +1089,8 @@ public class BragLogTests extends BaseIntegrationTest {
                     .stream().findFirst();
             if (bragLog.isPresent() && behaviorType.isPresent()) {
                 Set<Long> behaviorIds = Set.of(behaviorType.get().getId());
-                String updateJson = buildBragLogJson(null, behaviorIds, VALID_SUBMITTER_NAME);
+                String notes = bragLog.get().getNotes();
+                String updateJson = buildBragLogJson(null, behaviorIds, VALID_SUBMITTER_NAME, notes);
                 mockMvc.perform(put(baseUrl + "/{id}", bragLog.get().getId())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updateJson)
@@ -751,7 +1112,8 @@ public class BragLogTests extends BaseIntegrationTest {
                     .stream().findFirst();
             if (bragLog.isPresent() && behaviorType.isPresent()) {
                 Set<Long> behaviorIds = Set.of(behaviorType.get().getId());
-                String updateJson = buildBragLogJson(9999L, behaviorIds, VALID_SUBMITTER_NAME);
+                String notes = bragLog.get().getNotes();
+                String updateJson = buildBragLogJson(9999L, behaviorIds, VALID_SUBMITTER_NAME, notes);
                 mockMvc.perform(put(baseUrl + "/{id}", bragLog.get().getId())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updateJson)
@@ -772,7 +1134,8 @@ public class BragLogTests extends BaseIntegrationTest {
                     .stream().findFirst();
             if (bragLog.isPresent() && student.isPresent()) {
                 Set<Long> behaviorIds = Set.of();
-                String updateJson = buildBragLogJson(student.get().getId(), behaviorIds, VALID_SUBMITTER_NAME);
+                String notes = bragLog.get().getNotes();
+                String updateJson = buildBragLogJson(student.get().getId(), behaviorIds, VALID_SUBMITTER_NAME, notes);
                 mockMvc.perform(put(baseUrl + "/{id}", bragLog.get().getId())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updateJson)
@@ -795,7 +1158,8 @@ public class BragLogTests extends BaseIntegrationTest {
                     .stream().findFirst();
             if (bragLog.isPresent() && student.isPresent()) {
                 Set<Long> behaviorIds = Set.of(9999L);
-                String updateJson = buildBragLogJson(student.get().getId(), behaviorIds, VALID_SUBMITTER_NAME);
+                String notes = bragLog.get().getNotes();
+                String updateJson = buildBragLogJson(student.get().getId(), behaviorIds, VALID_SUBMITTER_NAME, notes);
                 mockMvc.perform(put(baseUrl + "/{id}", bragLog.get().getId())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updateJson)
@@ -818,7 +1182,8 @@ public class BragLogTests extends BaseIntegrationTest {
                     .stream().findFirst();
             if (bragLog.isPresent() && student.isPresent() && behaviorType.isPresent()) {
                 Set<Long> behaviorIds = Set.of(behaviorType.get().getId());
-                String updateJson = buildBragLogJson(student.get().getId(), behaviorIds, VALID_SUBMITTER_NAME);
+                String notes = bragLog.get().getNotes();
+                String updateJson = buildBragLogJson(student.get().getId(), behaviorIds, VALID_SUBMITTER_NAME, notes);
                 mockMvc.perform(put(baseUrl + "/{id}", bragLog.get().getId())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updateJson)
@@ -869,14 +1234,16 @@ public class BragLogTests extends BaseIntegrationTest {
         }
     }
 
-    private String buildBragLogJson(Long studentId, Set<Long> behaviorIds, String submitterName) {
+    private String buildBragLogJson(Long studentId, Set<Long> behaviorIds, String submitterName, String notes) {
         String submitterNameJson = submitterName == null ? "null" : "\"" + submitterName + "\"";
+        String notesJson = notes == null ? "null" : "\"" + notes + "\"";
         return """
                 {
                     "studentId": %s,
                     "behaviorIds": %s,
-                    "submitterName": %s
+                    "submitterName": %s,
+                    "notes": %s
                 }
-                """.formatted(studentId, behaviorIds, submitterNameJson);
+                """.formatted(studentId, behaviorIds, submitterNameJson, notesJson);
     }
 }
