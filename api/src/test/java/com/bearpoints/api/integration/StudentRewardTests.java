@@ -2,12 +2,8 @@ package com.bearpoints.api.integration;
 
 import com.bearpoints.api.config.TestDataInitializer;
 import com.bearpoints.api.controller.StudentRewardController;
-import com.bearpoints.api.dao.RewardItemDAO;
-import com.bearpoints.api.dao.StudentDAO;
-import com.bearpoints.api.dao.StudentRewardDAO;
-import com.bearpoints.api.entity.RewardItem;
-import com.bearpoints.api.entity.Student;
-import com.bearpoints.api.entity.StudentReward;
+import com.bearpoints.api.dao.*;
+import com.bearpoints.api.entity.*;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -44,7 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *
  * @see TestDataInitializer
  * @see BaseIntegrationTest
- * @version 1.1
+ * @version 1.2
  * @author Dylan Mercer
  */
 @DisplayName("Student Reward Integration Tests")
@@ -60,6 +56,12 @@ public class StudentRewardTests extends BaseIntegrationTest {
 
     @Autowired
     private StudentRewardDAO studentRewardDAO;
+
+    @Autowired
+    private UserDAO userDAO;
+
+    @Autowired
+    private TeacherDAO teacherDAO;
 
     private static String baseUrl;
 
@@ -131,6 +133,28 @@ public class StudentRewardTests extends BaseIntegrationTest {
 
         @Test
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
+        @DisplayName("empty student name is ignored and returns all")
+        void emptyStudentNameIsIgnored() throws Exception {
+            mockMvc.perform(get(baseUrl + "/search")
+                        .param("studentName", ""))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").isArray())
+                    .andExpect(jsonPath("$.totalElements").value(greaterThan(0)));
+        }
+
+        @Test
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
+        @DisplayName("blank student name is ignored and returns all")
+        void blankStudentNameIsIgnored() throws Exception {
+            mockMvc.perform(get(baseUrl + "/search")
+                            .param("studentName", "     "))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").isArray())
+                    .andExpect(jsonPath("$.totalElements").value(greaterThan(0)));
+        }
+
+        @Test
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by student ID returns matching student rewards")
         void byStudentIdCriteriaReturnsMatchingStudentRewards() throws Exception {
             Long studentId = 1L;
@@ -149,8 +173,20 @@ public class StudentRewardTests extends BaseIntegrationTest {
             mockMvc.perform(get(baseUrl + "/search")
                             .param("studentName", searchTerm))
                     .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").isArray())
                     .andExpect(jsonPath("$.content[*].rewardItem.name",
                             everyItem(containsStringIgnoringCase(searchTerm))));
+        }
+
+        @Test
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
+        @DisplayName("empty item name is ignored and returns all student rewards")
+        void emptyItemNameCriteriaIgnoredAndReturnsAllStudentRewards() throws Exception {
+            mockMvc.perform(get(baseUrl + "/search")
+                            .param("studentName", ""))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").isArray())
+                    .andExpect(jsonPath("$.totalElements").value(greaterThan(0)));
         }
 
         @Test
@@ -183,8 +219,34 @@ public class StudentRewardTests extends BaseIntegrationTest {
 
         @Test
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
-        @DisplayName("by redeemed at date range returns matching student rewards")
-        void byRedeemedAtDateRangeCriteriaReturnsMatchingStudentRewards() throws Exception {
+        @DisplayName("by min points used returns matching student rewards")
+        void byMinPointsUsedCriteriaReturnsMatchingStudentRewards() throws Exception {
+            Integer minPointsUsed = 10;
+            mockMvc.perform(get(baseUrl + "/search")
+                            .param("minPointsUsed", String.valueOf(minPointsUsed)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").isArray())
+                    .andExpect(jsonPath("$.content[*].rewardItem.pointCost",
+                            everyItem(greaterThanOrEqualTo(minPointsUsed))));
+        }
+
+        @Test
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
+        @DisplayName("by max points used returns matching student rewards")
+        void byMaxPointsUsedCriteriaReturnsMatchingStudentRewards() throws Exception {
+            Integer maxPointsUsed = 10;
+            mockMvc.perform(get(baseUrl + "/search")
+                            .param("maxPointsUsed", String.valueOf(maxPointsUsed)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").isArray())
+                    .andExpect(jsonPath("$.content[*].rewardItem.pointCost",
+                            everyItem(lessThanOrEqualTo(maxPointsUsed))));
+        }
+
+        @Test
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
+        @DisplayName("by redeemed during date range returns matching student rewards")
+        void byRedeemedDuringDateRangeCriteriaReturnsMatchingStudentRewards() throws Exception {
             LocalDateTime startDate = LocalDateTime.now().minusDays(3);
             LocalDateTime endDate = LocalDateTime.now();
             mockMvc.perform(get(baseUrl + "/search")
@@ -193,6 +255,30 @@ public class StudentRewardTests extends BaseIntegrationTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[*].redeemedAt",
                             everyItem(greaterThanOrEqualTo(startDate))))
+                    .andExpect(jsonPath("$.content[*].redeemedAt",
+                            everyItem(lessThanOrEqualTo(endDate))));
+        }
+
+        @Test
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
+        @DisplayName("by redeemed after start date only returns matching student rewards")
+        void byRedeemedAfterStartDateCriteriaReturnsMatchingStudentRewards() throws Exception {
+            LocalDateTime startDate = LocalDateTime.now().minusDays(3);
+            mockMvc.perform(get(baseUrl + "/search")
+                            .param("startDate", String.valueOf(startDate)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content[*].redeemedAt",
+                            everyItem(greaterThanOrEqualTo(startDate))));
+        }
+
+        @Test
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
+        @DisplayName("by redeemed before end date only returns matching student rewards")
+        void byRedeemedBeforeEndDateCriteriaReturnsMatchingStudentRewards() throws Exception {
+            LocalDateTime endDate = LocalDateTime.now();
+            mockMvc.perform(get(baseUrl + "/search")
+                            .param("endDate", String.valueOf(endDate)))
+                    .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[*].redeemedAt",
                             everyItem(lessThanOrEqualTo(endDate))));
         }
@@ -308,12 +394,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
                 String studentName = student.get().getUser().getFirstName() + " " + student.get().getUser().getLastName();
                 Long itemId = rewardItem.get().getId();
                 String itemName = rewardItem.get().getName();
-                String createJSON = """
-                        {
-                            "studentId": %s,
-                            "itemId": %s
-                        }
-                        """.formatted(studentId, itemId);
+                String createJSON = buildStudentRewardJson(studentId, itemId);
                 mockMvc.perform(post(baseUrl)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(createJSON)
@@ -331,6 +412,66 @@ public class StudentRewardTests extends BaseIntegrationTest {
 
         @Test
         @WithMockUser(roles = "ADMIN")
+        @DisplayName("returns 400 when student has insufficient points")
+        void returns400WithInsufficientPoints() throws Exception {
+            Teacher teacher = new Teacher();
+            teacher.setGrade(GradeLevel.FIRST);
+            teacher.setUser(createMinimalUser("teacher@okcps.org", "Some", "Teacher", Role.TEACHER));
+            Teacher savedTeacher = teacherDAO.save(teacher);
+            Student student = new Student();
+            student.setPoints(5);
+            student.setUser(createMinimalUser("lowpoints@okcps.org", "Low", "Points", Role.STUDENT));
+            student.generateToken();
+            student.setTeacher(savedTeacher);
+            Student savedStudent = studentDAO.save(student);
+            RewardItem item = new RewardItem();
+            item.setName("Expensive Item");
+            item.setPointCost(10);
+            item.setStock(100);
+            RewardItem savedItem = rewardItemDAO.save(item);
+            String createJSON = buildStudentRewardJson(savedStudent.getId(), savedItem.getId());
+            mockMvc.perform(post(baseUrl)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(createJSON)
+                            .with(csrf()))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.message")
+                            .value("Insufficient points to redeem this reward"))
+                    .andExpect(jsonPath("$.timestamp").exists());
+        }
+
+        @Test
+        @WithMockUser(roles = "ADMIN")
+        @DisplayName("returns 400 when reward item has insufficient stock")
+        void returns400WithInsufficientStock() throws Exception {
+            Teacher teacher = new Teacher();
+            teacher.setGrade(GradeLevel.FIRST);
+            teacher.setUser(createMinimalUser("other-teacher@okcps.org", "Some", "Teacher", Role.TEACHER));
+            Teacher savedTeacher = teacherDAO.save(teacher);
+            Student student = new Student();
+            student.setPoints(100);
+            student.setUser(createMinimalUser("enoughpoints@okcps.org", "Enough", "Points", Role.STUDENT));
+            student.generateToken();
+            student.setTeacher(savedTeacher);
+            Student savedStudent = studentDAO.save(student);
+            RewardItem item = new RewardItem();
+            item.setName("Out of Stock Item");
+            item.setPointCost(5);
+            item.setStock(0);
+            RewardItem savedItem = rewardItemDAO.save(item);
+            String createJSON = buildStudentRewardJson(savedStudent.getId(), savedItem.getId());
+            mockMvc.perform(post(baseUrl)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(createJSON)
+                            .with(csrf()))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.message")
+                            .value("Insufficient stock to redeem this reward"))
+                    .andExpect(jsonPath("$.timestamp").exists());
+        }
+
+        @Test
+        @WithMockUser(roles = "ADMIN")
         @DisplayName("returns 404 with invalid student")
         void returns404WithInvalidStudent() throws Exception {
             Optional<RewardItem> rewardItem = rewardItemDAO.findAll(PageRequest.of(0, 1))
@@ -338,12 +479,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
             if (rewardItem.isPresent()) {
                 Long studentId = 9999L;
                 Long itemId = rewardItem.get().getId();
-                String createJSON = """
-                        {
-                            "studentId": %s,
-                            "itemId": %s
-                        }
-                        """.formatted(studentId, itemId);
+                String createJSON = buildStudentRewardJson(studentId, itemId);
                 mockMvc.perform(post(baseUrl)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(createJSON)
@@ -364,12 +500,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
             if (student.isPresent()) {
                 Long studentId = student.get().getId();
                 Long itemId = 9999L;
-                String createJSON = """
-                        {
-                            "studentId": %s,
-                            "itemId": %s
-                        }
-                        """.formatted(studentId, itemId);
+                String createJSON = buildStudentRewardJson(studentId, itemId);
                 mockMvc.perform(post(baseUrl)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(createJSON)
@@ -389,12 +520,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
                     .stream().findFirst();
             if (rewardItem.isPresent()) {
                 Long itemId = rewardItem.get().getId();
-                String createJSON = """
-                        {
-                            "studentId": "",
-                            "itemId": %s
-                        }
-                        """.formatted(itemId);
+                String createJSON = buildStudentRewardJson(null, itemId);
                 mockMvc.perform(post(baseUrl)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(createJSON)
@@ -416,12 +542,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
                     .stream().findFirst();
             if (student.isPresent()) {
                 Long studentId = student.get().getId();
-                String createJSON = """
-                        {
-                            "studentId": %s,
-                            "itemId": ""
-                        }
-                        """.formatted(studentId);
+                String createJSON = buildStudentRewardJson(studentId, null);
                 mockMvc.perform(post(baseUrl)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(createJSON)
@@ -446,12 +567,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
             if (student.isPresent() && rewardItem.isPresent()) {
                 Long studentId = student.get().getId();
                 Long itemId = rewardItem.get().getId();
-                String createJSON = """
-                        {
-                            "studentId": %s,
-                            "itemId": %s
-                        }
-                        """.formatted(studentId, itemId);
+                String createJSON = buildStudentRewardJson(studentId, itemId);
                 mockMvc.perform(post(baseUrl)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(createJSON)
@@ -481,12 +597,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
                 Long itemId = rewardItem.get().getId();
                 String itemName = rewardItem.get().getName();
                 Integer pointsUsed = rewardItem.get().getPointCost();
-                String updateJSON = """
-                        {
-                            "studentId": %s,
-                            "itemId": %s
-                        }
-                        """.formatted(studentId, itemId);
+                String updateJSON = buildStudentRewardJson(studentId, itemId);
                 mockMvc.perform(put(baseUrl + "/{id}", studentRewardId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updateJSON)
@@ -516,12 +627,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
                 Long itemId = studentReward.get().getRewardItem().getId();
                 String itemName = studentReward.get().getRewardItem().getName();
                 Integer pointsUsed = studentReward.get().getRewardItem().getPointCost();
-                String updateJSON = """
-                        {
-                            "studentId": %s,
-                            "itemId": %s
-                        }
-                        """.formatted(studentId, itemId);
+                String updateJSON = buildStudentRewardJson(studentId, itemId);
                 mockMvc.perform(put(baseUrl + "/{id}", studentRewardId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updateJSON)
@@ -539,6 +645,149 @@ public class StudentRewardTests extends BaseIntegrationTest {
 
         @Test
         @WithMockUser(roles = "ADMIN")
+        @DisplayName("updates a student reward with only student changed")
+        void updatesStudentRewardWithOnlyStudentChanged() throws Exception {
+            Optional<StudentReward> studentReward = studentRewardDAO.findAll(PageRequest.of(0, 1))
+                    .stream().findFirst();
+            Optional<Student> student = studentDAO.findAll(PageRequest.of(0, 1))
+                    .stream().findFirst();
+            if (studentReward.isPresent() && student.isPresent()) {
+                Long studentId = student.get().getId();
+                Long studentRewardId = studentReward.get().getId();
+                String studentName = student.get().getUser().getFirstName() + " " +
+                        student.get().getUser().getLastName();
+                Long itemId = studentReward.get().getRewardItem().getId();
+                String itemName = studentReward.get().getRewardItem().getName();
+                Integer pointsUsed = studentReward.get().getRewardItem().getPointCost();
+                String updateJSON = buildStudentRewardJson(studentId, itemId);
+                mockMvc.perform(put(baseUrl + "/{id}", studentRewardId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(updateJSON)
+                                .with(csrf()))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.id").value(studentRewardId))
+                        .andExpect(jsonPath("$.studentId").value(studentId))
+                        .andExpect(jsonPath("$.studentName").value(studentName))
+                        .andExpect(jsonPath("$.itemId").value(itemId))
+                        .andExpect(jsonPath("$.itemName").value(itemName))
+                        .andExpect(jsonPath("$.timestamp").exists())
+                        .andExpect(jsonPath("$.pointsUsed").value(pointsUsed));
+            }
+        }
+
+        @Test
+        @WithMockUser(roles = "ADMIN")
+        @DisplayName("updates a student reward with only reward item changed")
+        void updatesStudentRewardWithOnlyRewardItemChanged() throws Exception {
+            Optional<StudentReward> studentReward = studentRewardDAO.findAll(PageRequest.of(0, 1))
+                    .stream().findFirst();
+            Optional<RewardItem> rewardItem = rewardItemDAO.findAll(PageRequest.of(0, 1))
+                    .stream().findFirst();
+            if (studentReward.isPresent() && rewardItem.isPresent()) {
+                Long studentId = studentReward.get().getStudent().getId();
+                Long studentRewardId = studentReward.get().getId();
+                String studentName = studentReward.get().getStudent().getUser().getFirstName() + " " +
+                        studentReward.get().getStudent().getUser().getLastName();
+                Long itemId = rewardItem.get().getId();
+                String itemName = rewardItem.get().getName();
+                Integer pointsUsed = rewardItem.get().getPointCost();
+                String updateJSON = buildStudentRewardJson(studentId, itemId);
+                mockMvc.perform(put(baseUrl + "/{id}", studentRewardId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(updateJSON)
+                                .with(csrf()))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.id").value(studentRewardId))
+                        .andExpect(jsonPath("$.studentId").value(studentId))
+                        .andExpect(jsonPath("$.studentName").value(studentName))
+                        .andExpect(jsonPath("$.itemId").value(itemId))
+                        .andExpect(jsonPath("$.itemName").value(itemName))
+                        .andExpect(jsonPath("$.timestamp").exists())
+                        .andExpect(jsonPath("$.pointsUsed").value(pointsUsed));
+            }
+        }
+
+        @Test
+        @WithMockUser(roles = "ADMIN")
+        @DisplayName("returns 400 when updating to a student with insufficient points")
+        void returns400WithInsufficientPointsWhenChangingStudent() throws Exception {
+            Teacher teacher = new Teacher();
+            teacher.setGrade(GradeLevel.FIRST);
+            teacher.setUser(createMinimalUser("teacher@okcps.org", "Some", "Teacher", Role.TEACHER));
+            Teacher savedTeacher = teacherDAO.save(teacher);
+            Student originalStudent = new Student();
+            originalStudent.setPoints(100);
+            originalStudent.setUser(createMinimalUser("original@okcps.org", "Original", "Student", Role.STUDENT));
+            originalStudent.generateToken();
+            originalStudent.setTeacher(savedTeacher);
+            Student savedOriginalStudent = studentDAO.save(originalStudent);
+            RewardItem item = new RewardItem();
+            item.setName("Test Item");
+            item.setPointCost(30);
+            item.setStock(5);
+            RewardItem savedItem = rewardItemDAO.save(item);
+            StudentReward reward = new StudentReward();
+            reward.setStudent(savedOriginalStudent);
+            reward.setRewardItem(savedItem);
+            StudentReward savedReward = studentRewardDAO.save(reward);
+            Student newStudent = new Student();
+            newStudent.setPoints(10);
+            newStudent.setUser(createMinimalUser("new@okcps.org", "New", "Student", Role.STUDENT));
+            newStudent.generateToken();
+            newStudent.setTeacher(savedTeacher);
+            Student savedNewStudent = studentDAO.save(newStudent);
+            String updateJSON = buildStudentRewardJson(savedNewStudent.getId(), savedItem.getId());
+            mockMvc.perform(put(baseUrl + "/{id}", savedReward.getId())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(updateJSON)
+                            .with(csrf()))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.message")
+                            .value("Insufficient points to redeem this reward"))
+                    .andExpect(jsonPath("$.timestamp").exists());
+        }
+
+        @Test
+        @WithMockUser(roles = "ADMIN")
+        @DisplayName("returns 400 when updating to an item with insufficient stock")
+        void returns400WithInsufficientStockWhenChangingItem() throws Exception {
+            Teacher teacher = new Teacher();
+            teacher.setGrade(GradeLevel.FIRST);
+            teacher.setUser(createMinimalUser("other-teacher@okcps.org", "Some", "Teacher", Role.TEACHER));
+            Teacher savedTeacher = teacherDAO.save(teacher);
+            Student student = new Student();
+            student.setPoints(100);
+            student.setUser(createMinimalUser("student@okcps.org", "Some", "Student", Role.STUDENT));
+            student.generateToken();
+            student.setTeacher(savedTeacher);
+            Student savedStudent = studentDAO.save(student);
+            RewardItem originalItem = new RewardItem();
+            originalItem.setName("Original Item");
+            originalItem.setPointCost(20);
+            originalItem.setStock(5);
+            RewardItem savedOriginalItem = rewardItemDAO.save(originalItem);
+            StudentReward reward = new StudentReward();
+            reward.setStudent(savedStudent);
+            reward.setRewardItem(savedOriginalItem);
+            StudentReward savedReward = studentRewardDAO.save(reward);
+            RewardItem newItem = new RewardItem();
+            newItem.setName("Out of Stock Item");
+            newItem.setPointCost(15);
+            newItem.setStock(0);
+            RewardItem savedNewItem = rewardItemDAO.save(newItem);
+            String updateJSON = buildStudentRewardJson(savedStudent.getId(), savedNewItem.getId());
+            mockMvc.perform(put(baseUrl + "/{id}", savedReward.getId())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(updateJSON)
+                            .with(csrf()))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.message")
+                            .value("Insufficient stock to redeem this reward"))
+                    .andExpect(jsonPath("$.timestamp").exists());
+        }
+
+        @Test
+        @WithMockUser(roles = "ADMIN")
         @DisplayName("returns 404 with invalid student")
         void returns404WithInvalidStudent() throws Exception {
             Optional<StudentReward> studentReward = studentRewardDAO.findAll(PageRequest.of(0, 1))
@@ -547,12 +796,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
                 Long studentId = 9999L;
                 Long studentRewardId = studentReward.get().getId();
                 Long itemId = studentReward.get().getRewardItem().getId();
-                String updateJSON = """
-                        {
-                            "studentId": %s,
-                            "itemId": %s
-                        }
-                        """.formatted(studentId, itemId);
+                String updateJSON = buildStudentRewardJson(studentId, itemId);
                 mockMvc.perform(put(baseUrl + "/{id}", studentRewardId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updateJSON)
@@ -574,12 +818,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
                 Long studentId = studentReward.get().getStudent().getId();
                 Long studentRewardId = studentReward.get().getId();
                 Long itemId = 9999L;
-                String updateJSON = """
-                        {
-                            "studentId": %s,
-                            "itemId": %s
-                        }
-                        """.formatted(studentId, itemId);
+                String updateJSON = buildStudentRewardJson(studentId, itemId);
                 mockMvc.perform(put(baseUrl + "/{id}", studentRewardId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updateJSON)
@@ -600,12 +839,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
             if (studentReward.isPresent()) {
                 Long studentRewardId = studentReward.get().getId();
                 Long itemId = studentReward.get().getRewardItem().getId();
-                String updateJSON = """
-                        {
-                            "studentId": "",
-                            "itemId": %s
-                        }
-                        """.formatted(itemId);
+                String updateJSON = buildStudentRewardJson(null, itemId);
                 mockMvc.perform(put(baseUrl + "/{id}", studentRewardId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updateJSON)
@@ -628,12 +862,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
             if (studentReward.isPresent()) {
                 Long studentId = studentReward.get().getStudent().getId();
                 Long studentRewardId = studentReward.get().getId();
-                String updateJSON = """
-                        {
-                            "studentId": %s,
-                            "itemId": ""
-                        }
-                        """.formatted(studentId);
+                String updateJSON = buildStudentRewardJson(studentId, null);
                 mockMvc.perform(put(baseUrl + "/{id}", studentRewardId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updateJSON)
@@ -661,12 +890,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
                 Long studentId = student.get().getId();
                 Long studentRewardId = studentReward.get().getId();
                 Long itemId = rewardItem.get().getId();
-                String updateJSON = """
-                        {
-                            "studentId": %s,
-                            "itemId": %s
-                        }
-                        """.formatted(studentId, itemId);
+                String updateJSON = buildStudentRewardJson(studentId, itemId);
                 mockMvc.perform(put(baseUrl + "/{id}", studentRewardId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updateJSON)
@@ -716,5 +940,23 @@ public class StudentRewardTests extends BaseIntegrationTest {
                         .andExpect(status().isForbidden());
             }
         }
+    }
+
+    private String buildStudentRewardJson(Long studentId, Long itemId) {
+        return """
+               {
+                    "studentId": %s,
+                    "itemId": %s
+               }
+               """.formatted(studentId, itemId);
+    }
+
+    private User createMinimalUser(String email, String firstName, String lastName, Role role) {
+        User user = new User();
+        user.setEmail(email);
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
+        user.setRole(role);
+        return userDAO.save(user);
     }
 }
