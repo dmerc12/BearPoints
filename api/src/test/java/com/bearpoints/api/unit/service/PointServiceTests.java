@@ -1,0 +1,139 @@
+package com.bearpoints.api.unit.service;
+
+import com.bearpoints.api.dao.StudentDAO;
+import com.bearpoints.api.entity.Student;
+import com.bearpoints.api.exception.InsufficientResourcesException;
+import com.bearpoints.api.exception.ResourceNotFoundException;
+import com.bearpoints.api.service.impl.PointServiceImpl;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+/**
+ * Unit tests for {@link PointServiceImpl}.
+ * <p>Verifies point management functionality including addition and subtraction operations
+ * with proper validation and exception handling.
+ *
+ * <p>Test scenarios cover:
+ * <ul>
+ *     <li>Successful point addition and subtraction</li>
+ *     <li>Validation of non-negative point amounts</li>
+ *     <li>Insufficient points handling</li>
+ *     <li>Student not found scenarios</li>
+ * </ul>
+ *
+ * @see PointServiceImpl
+ * @version 1.0
+ * @author Dylan Mercer
+ */
+@ExtendWith(MockitoExtension.class)
+@DisplayName("PointService Unit Tests")
+public class PointServiceTests {
+    @Mock
+    private StudentDAO studentDAO;
+
+    @InjectMocks
+    private PointServiceImpl pointService;
+
+    private Student student;
+    private final Long studentId = 1L;
+
+    @BeforeEach
+    void setUp() {
+        student = new Student();
+        student.setId(studentId);
+        student.setPoints(100);
+    }
+
+    @Nested
+    @DisplayName("When adding points")
+    class AddPoints {
+        @Test
+        @DisplayName("should add points successfully")
+        void addPointsSuccessfully() {
+            when(studentDAO.findById(studentId)).thenReturn(Optional.of(student));
+            pointService.addPoints(studentId, 50);
+            assertEquals(150, student.getPoints());
+            verify(studentDAO).save(student);
+        }
+
+        @Test
+        @DisplayName("should throw exception when points negative")
+        void addPointsNegative() {
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () -> pointService.addPoints(studentId, -5)
+            );
+            verify(studentDAO, never()).findById(any());
+        }
+
+        @Test
+        @DisplayName("should throw exception when student not found")
+        void addPointsStudentNotFound() {
+            when(studentDAO.findById(studentId)).thenReturn(Optional.empty());
+            assertThrows(
+                    ResourceNotFoundException.class,
+                    () -> pointService.addPoints(studentId, 10)
+            );
+            verify(studentDAO, never()).save(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("When subtracting points")
+    class SubtractPoints {
+        @Test
+        @DisplayName("should subtract points successfully")
+        void subtractPointsSuccessfully() {
+            when(studentDAO.findById(studentId)).thenReturn(Optional.of(student));
+            pointService.subtractPoints(studentId, 30);
+            assertEquals(70, student.getPoints());
+            verify(studentDAO).save(student);
+        }
+
+        @Test
+        @DisplayName("should throw exception when points negative")
+        void subtractPointsNegative() {
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () -> pointService.subtractPoints(studentId, -5)
+            );
+            verify(studentDAO, never()).findById(any());
+        }
+
+        @Test
+        @DisplayName("should throw exception when student not found")
+        void subtractPointsStudentNotFound() {
+            when(studentDAO.findById(studentId)).thenReturn(Optional.empty());
+            assertThrows(
+                    ResourceNotFoundException.class,
+                    () -> pointService.subtractPoints(studentId, 10)
+            );
+            verify(studentDAO, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("should throw exception when insufficient points")
+        void subtractPointsInsufficient() {
+            when(studentDAO.findById(studentId)).thenReturn(Optional.of(student));
+            assertThrows(
+                    InsufficientResourcesException.class,
+                    () -> pointService.subtractPoints(studentId, 150)
+            );
+            assertEquals(100, student.getPoints());
+            verify(studentDAO, never()).save(any());
+        }
+    }
+}
