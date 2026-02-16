@@ -17,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Optional;
 
 import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
@@ -111,6 +112,42 @@ public class StockServiceTests {
             when(rewardItemDAO.findById(itemId)).thenReturn(Optional.empty());
             assertThrows(ResourceNotFoundException.class, () -> stockService.incrementStock(itemId));
             verify(rewardItemDAO, never()).save(any(RewardItem.class));
+        }
+    }
+
+    @Nested
+    @DisplayName("When checking sufficient stock")
+    class HasSufficientStock {
+        @Test
+        @DisplayName("should not throw when item has enough stock")
+        void hasSufficientStock() {
+            when(rewardItemDAO.findById(itemId)).thenReturn(Optional.of(item));
+            assertDoesNotThrow(() -> stockService.hasSufficientStock(itemId));
+            verify(rewardItemDAO).findById(itemId);
+            verify(rewardItemDAO, never()).save(any(RewardItem.class));
+        }
+
+        @Test
+        @DisplayName("should throw when item does not have enough stock")
+        void hasSufficientStockInsufficient() {
+            item.setStock(0);
+            when(rewardItemDAO.findById(itemId)).thenReturn(Optional.of(item));
+            assertThrows(
+                    InsufficientResourcesException.class,
+                    () -> stockService.hasSufficientStock(itemId)
+            );
+            verify(rewardItemDAO).findById(itemId);
+        }
+
+        @Test
+        @DisplayName("should throw when item not found")
+        void hasSufficientStockItemNotFound() {
+            when(rewardItemDAO.findById(itemId)).thenReturn(Optional.empty());
+            assertThrows(
+                    ResourceNotFoundException.class,
+                    () -> stockService.hasSufficientStock(itemId)
+            );
+            verify(rewardItemDAO).findById(itemId);
         }
     }
 }

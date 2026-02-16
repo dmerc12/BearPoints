@@ -13,11 +13,12 @@ import com.bearpoints.api.service.impl.StockServiceImpl;
  * <ul>
  *     <li>Decrement stock with availability checks</li>
  *     <li>Increment stock (e.g., for reversals or restocking)</li>
+ *     <li>Check if an item has sufficient stock without modifying (throws if not)</li>
  *     <li>All operations are transactional and throw specific exceptions</li>
  * </ul>
  *
  * @see StockServiceImpl
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 public interface StockService {
@@ -39,4 +40,14 @@ public interface StockService {
      * @throws ResourceNotFoundException if item not found
      */
     void incrementStock(Long itemId);
+
+    /**
+     * Checks whether a reward item has at least one unit in stock.
+     * <p>Does not modify any data. Useful for pre-validation before performing to decrement.
+     *
+     * @param itemId ID of the reward item
+     * @throws ResourceNotFoundException if item not found
+     * @throws InsufficientResourcesException if stock is 0
+     */
+    void hasSufficientStock(Long itemId);
 }

@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
  * All operations validate input and throw appropriate exceptions.
  *
  * @see StockService
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */@Slf4j
 @Service
@@ -30,11 +30,8 @@ public class StockServiceImpl implements StockService {
      */
     @Override
     public void decrementStock(Long itemId) {
-        RewardItem item = rewardItemDAO.findById(itemId)
-                .orElseThrow(() -> new ResourceNotFoundException("Reward item not found with ID: " + itemId));
-        if (item.getStock() < 1) {
-            throw new InsufficientResourcesException("Insufficient stock for item: " + item.getName());
-        }
+        RewardItem item = getRewardItemById(itemId);
+        checkSufficientStock(item.getStock(), item.getName());
         item.setStock(item.getStock() - 1);
         rewardItemDAO.save(item);
         log.debug("Decremented stock for item ID: {}, new stock: {}", itemId, item.getStock());
@@ -45,10 +42,30 @@ public class StockServiceImpl implements StockService {
      */
     @Override
     public void incrementStock(Long itemId) {
-        RewardItem item = rewardItemDAO.findById(itemId)
-                .orElseThrow(() -> new ResourceNotFoundException("Reward item not found with ID: " + itemId));
+        RewardItem item = getRewardItemById(itemId);
         item.setStock(item.getStock() + 1);
         rewardItemDAO.save(item);
         log.debug("Incremented stock for item ID: {}, new stock: {}", itemId, item.getStock());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void hasSufficientStock(Long itemId) {
+        RewardItem item = getRewardItemById(itemId);
+        checkSufficientStock(item.getStock(), item.getName());
+        log.debug("Item {} has sufficient stock ({} >= 1)", itemId, item.getStock());
+    }
+
+    private RewardItem getRewardItemById(Long itemId) {
+        return rewardItemDAO.findById(itemId)
+                .orElseThrow(() -> new ResourceNotFoundException("Reward item not found with ID: " + itemId));
+    }
+
+    private void checkSufficientStock(int stock, String itemName) {
+        if (stock < 1) {
+            throw new InsufficientResourcesException("Insufficient stock for item: " + itemName);
+        }
     }
 }
