@@ -10,13 +10,13 @@ import com.bearpoints.api.entity.*;
 import com.bearpoints.api.exception.InsufficientResourcesException;
 import com.bearpoints.api.exception.ResourceNotFoundException;
 import com.bearpoints.api.service.PointService;
+import com.bearpoints.api.service.StockService;
 import com.bearpoints.api.service.impl.StudentRewardServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -41,7 +41,7 @@ import static org.mockito.Mockito.*;
  * search with criteria.
  *
  * @see StudentRewardServiceImpl
- * @version 1.1
+ * @version 1.2
  * @author Dylan Mercer
  */
 @ExtendWith(MockitoExtension.class)
@@ -57,6 +57,9 @@ public class StudentRewardServiceTests {
 
     @Mock
     private PointService pointService;
+
+    @Mock
+    private StockService stockService;
 
     @InjectMocks
     private StudentRewardServiceImpl studentRewardService;
@@ -170,7 +173,6 @@ public class StudentRewardServiceTests {
         void shouldCreateNewStudentRewardSuccessfully() {
             StudentRewardDTO createDTO = new StudentRewardDTO(null, student.getId(), item.getId(),
                     null, null, null, null);
-            int originalStock = item.getStock();
             when(studentDAO.findById(student.getId())).thenReturn(Optional.of(student));
             when(rewardItemDAO.findById(item.getId())).thenReturn(Optional.of(item));
             when(studentRewardDAO.save(any(StudentReward.class))).thenReturn(studentReward);
@@ -180,9 +182,7 @@ public class StudentRewardServiceTests {
             verify(studentDAO).findById(student.getId());
             verify(rewardItemDAO).findById(item.getId());
             verify(pointService).subtractPoints(eq(student.getId()), eq(item.getPointCost()));
-            ArgumentCaptor<RewardItem> itemCaptor = ArgumentCaptor.forClass(RewardItem.class);
-            verify(rewardItemDAO, times(1)).save(itemCaptor.capture());
-            assertEquals(originalStock - 1, itemCaptor.getValue().getStock());
+            verify(stockService).decrementStock(eq(item.getId()));
             verify(studentRewardDAO).save(any(StudentReward.class));
         }
 
@@ -201,7 +201,7 @@ public class StudentRewardServiceTests {
             verify(studentDAO).findById(student.getId());
             verify(rewardItemDAO).findById(item.getId());
             verify(pointService).subtractPoints(eq(student.getId()), eq(item.getPointCost()));
-            verify(rewardItemDAO, never()).save(any(RewardItem.class));
+            verify(stockService, never()).decrementStock(anyLong());
             verify(studentRewardDAO, never()).save(any(StudentReward.class));
         }
 
@@ -218,7 +218,7 @@ public class StudentRewardServiceTests {
             verify(studentDAO).findById(student.getId());
             verify(rewardItemDAO).findById(item.getId());
             verify(pointService, never()).subtractPoints(anyLong(), anyInt());
-            verify(rewardItemDAO, never()).save(any(RewardItem.class));
+            verify(stockService, never()).decrementStock(anyLong());
             verify(studentRewardDAO, never()).save(any(StudentReward.class));
         }
 
@@ -234,7 +234,7 @@ public class StudentRewardServiceTests {
             verify(studentDAO).findById(studentId);
             verify(rewardItemDAO, never()).findById(anyLong());
             verify(pointService, never()).subtractPoints(anyLong(), anyInt());
-            verify(studentRewardDAO, never()).save(any(StudentReward.class));
+            verify(stockService, never()).decrementStock(anyLong());
         }
 
         @Test
@@ -250,6 +250,7 @@ public class StudentRewardServiceTests {
             verify(studentDAO).findById(student.getId());
             verify(rewardItemDAO).findById(itemId);
             verify(pointService, never()).subtractPoints(anyLong(), anyInt());
+            verify(stockService, never()).decrementStock(anyLong());
             verify(studentRewardDAO, never()).save(any(StudentReward.class));
         }
     }
@@ -274,7 +275,8 @@ public class StudentRewardServiceTests {
             verify(studentDAO).findById(otherStudent.getId());
             verify(pointService).addPoints(eq(student.getId()), eq(item.getPointCost()));
             verify(pointService).subtractPoints(eq(otherStudent.getId()), eq(item.getPointCost()));
-            verify(rewardItemDAO, times(2)).save(item);
+            verify(stockService).incrementStock(eq(item.getId()));
+            verify(stockService).decrementStock(eq(item.getId()));
             verify(studentRewardDAO).save(any(StudentReward.class));
         }
 
@@ -296,8 +298,8 @@ public class StudentRewardServiceTests {
             verify(rewardItemDAO).findById(otherItem.getId());
             verify(pointService).addPoints(eq(student.getId()), eq(item.getPointCost()));
             verify(pointService).subtractPoints(eq(student.getId()), eq(otherItem.getPointCost()));
-            verify(rewardItemDAO, times(1)).save(item);
-            verify(rewardItemDAO, times(1)).save(otherItem);
+            verify(stockService).incrementStock(eq(item.getId()));
+            verify(stockService).decrementStock(eq(otherItem.getId()));
             verify(studentRewardDAO).save(any(StudentReward.class));
         }
 
@@ -323,8 +325,8 @@ public class StudentRewardServiceTests {
             verify(rewardItemDAO).findById(otherItem.getId());
             verify(pointService).addPoints(eq(student.getId()), eq(item.getPointCost()));
             verify(pointService).subtractPoints(eq(otherStudent.getId()), eq(otherItem.getPointCost()));
-            verify(rewardItemDAO, times(1)).save(item);
-            verify(rewardItemDAO, times(1)).save(otherItem);
+            verify(stockService).incrementStock(eq(item.getId()));
+            verify(stockService).decrementStock(eq(otherItem.getId()));
             verify(studentRewardDAO).save(any(StudentReward.class));
         }
 
@@ -341,7 +343,9 @@ public class StudentRewardServiceTests {
             verify(studentDAO, never()).findById(anyLong());
             verify(rewardItemDAO, never()).findById(anyLong());
             verify(pointService, never()).addPoints(anyLong(), anyInt());
-            verify(rewardItemDAO, never()).save(any(RewardItem.class));
+            verify(pointService, never()).subtractPoints(anyLong(), anyInt());
+            verify(stockService, never()).incrementStock(anyLong());
+            verify(stockService, never()).decrementStock(anyLong());
             verify(studentRewardDAO, never()).save(any(StudentReward.class));
         }
 
@@ -364,8 +368,8 @@ public class StudentRewardServiceTests {
             verify(rewardItemDAO, never()).findById(anyLong());
             verify(pointService).addPoints(eq(student.getId()), eq(item.getPointCost()));
             verify(pointService).subtractPoints(eq(otherStudent.getId()), eq(item.getPointCost()));
-            verify(rewardItemDAO).save(item);
-            verifyNoMoreInteractions(rewardItemDAO);
+            verify(stockService).incrementStock(eq(item.getId()));
+            verify(stockService, never()).decrementStock(anyLong());
             verify(studentRewardDAO, never()).save(any(StudentReward.class));
         }
 
@@ -384,9 +388,9 @@ public class StudentRewardServiceTests {
             verify(studentRewardDAO).findById(studentRewardId);
             verify(rewardItemDAO).findById(otherItem.getId());
             verify(pointService).addPoints(eq(student.getId()), eq(item.getPointCost()));
-            verify(rewardItemDAO).save(item);
+            verify(stockService).incrementStock(eq(item.getId()));
             verify(pointService, never()).subtractPoints(eq(student.getId()), eq(otherItem.getPointCost()));
-            verify(rewardItemDAO, never()).save(otherItem);
+            verify(stockService, never()).decrementStock(anyLong());
             verify(studentRewardDAO, never()).save(any(StudentReward.class));
         }
 
@@ -405,6 +409,7 @@ public class StudentRewardServiceTests {
             verify(studentDAO).findById(otherStudentId);
             verify(rewardItemDAO, never()).findById(anyLong());
             verify(pointService, never()).addPoints(anyLong(), anyInt());
+            verify(stockService, never()).decrementStock(anyLong());
             verify(studentRewardDAO, never()).save(any(StudentReward.class));
         }
 
@@ -423,6 +428,7 @@ public class StudentRewardServiceTests {
             verify(studentDAO, never()).findById(anyLong());
             verify(rewardItemDAO).findById(otherItemId);
             verify(pointService, never()).addPoints(anyLong(), anyInt());
+            verify(stockService, never()).decrementStock(anyLong());
             verify(studentRewardDAO, never()).save(any(StudentReward.class));
         }
 
@@ -438,6 +444,8 @@ public class StudentRewardServiceTests {
             verify(studentRewardDAO).findById(studentRewardId);
             verify(studentDAO, never()).findById(anyLong());
             verify(rewardItemDAO, never()).findById(anyLong());
+            verify(pointService, never()).addPoints(anyLong(), anyInt());
+            verify(stockService, never()).decrementStock(anyLong());
             verify(studentRewardDAO, never()).save(any(StudentReward.class));
         }
     }
@@ -449,15 +457,12 @@ public class StudentRewardServiceTests {
         @DisplayName("Should delete student reward successfully and reverse transaction")
         void shouldDeleteStudentRewardSuccessfullyAndReverseTransaction() {
             Long studentRewardId = studentReward.getId();
-            int originalStock = item.getStock();
             when(studentRewardDAO.findById(studentRewardId)).thenReturn(Optional.of(studentReward));
             doNothing().when(studentRewardDAO).delete(studentReward);
             studentRewardService.deleteStudentReward(studentRewardId);
             verify(studentRewardDAO).findById(studentRewardId);
             verify(pointService).addPoints(eq(student.getId()), eq(item.getPointCost()));
-            ArgumentCaptor<RewardItem> itemCaptor = ArgumentCaptor.forClass(RewardItem.class);
-            verify(rewardItemDAO, times(1)).save(itemCaptor.capture());
-            assertEquals(originalStock + 1, itemCaptor.getValue().getStock());
+            verify(stockService).incrementStock(eq(item.getId()));
             verify(studentRewardDAO).delete(studentReward);
         }
 
@@ -469,9 +474,8 @@ public class StudentRewardServiceTests {
             assertThrows(ResourceNotFoundException.class,
                     () -> studentRewardService.deleteStudentReward(studentRewardId));
             verify(studentRewardDAO).findById(studentRewardId);
-            verify(studentDAO, never()).save(any(Student.class));
-            verify(rewardItemDAO, never()).save(any(RewardItem.class));
             verify(pointService, never()).addPoints(anyLong(), anyInt());
+            verify(stockService, never()).incrementStock(anyLong());
             verify(studentRewardDAO, never()).delete(any(StudentReward.class));
         }
     }

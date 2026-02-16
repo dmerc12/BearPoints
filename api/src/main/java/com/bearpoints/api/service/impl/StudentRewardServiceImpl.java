@@ -12,6 +12,7 @@ import com.bearpoints.api.entity.StudentReward;
 import com.bearpoints.api.exception.InsufficientResourcesException;
 import com.bearpoints.api.exception.ResourceNotFoundException;
 import com.bearpoints.api.service.PointService;
+import com.bearpoints.api.service.StockService;
 import com.bearpoints.api.service.StudentRewardService;
 import com.bearpoints.api.specification.StudentRewardSpecification;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
  * Implementation of {@link StudentRewardService} for student reward management.
  *
  * @see StudentRewardService
- * @version 1.1
+ * @version 1.2
  * @author Dylan Mercer
  */
 @Slf4j
@@ -35,13 +36,15 @@ public class StudentRewardServiceImpl implements StudentRewardService {
     private final StudentDAO studentDAO;
     private final RewardItemDAO rewardItemDAO;
     private final PointService pointService;
+    private final StockService stockService;
 
-    public StudentRewardServiceImpl(StudentRewardDAO studentRewardDAO, StudentDAO studentDAO,
-                                    RewardItemDAO rewardItemDAO, PointService pointService) {
+    public StudentRewardServiceImpl(StudentRewardDAO studentRewardDAO, StudentDAO studentDAO, RewardItemDAO rewardItemDAO,
+                                    PointService pointService, StockService stockService) {
         this.studentRewardDAO = studentRewardDAO;
         this.studentDAO = studentDAO;
         this.rewardItemDAO = rewardItemDAO;
         this.pointService = pointService;
+        this.stockService = stockService;
     }
 
     /**
@@ -100,8 +103,7 @@ public class StudentRewardServiceImpl implements StudentRewardService {
             throw new InsufficientResourcesException("Insufficient stock to redeem this reward");
         }
         pointService.subtractPoints(student.getId(), rewardItem.getPointCost());
-        rewardItem.setStock(rewardItem.getStock() - 1);
-        rewardItemDAO.save(rewardItem);
+        stockService.decrementStock(rewardItem.getId());
         StudentReward studentReward = new StudentReward();
         studentReward.setStudent(student);
         studentReward.setRewardItem(rewardItem);
@@ -137,15 +139,13 @@ public class StudentRewardServiceImpl implements StudentRewardService {
                 : originalItem;
         // Reverse original transaction
         pointService.addPoints(originalStudent.getId(), originalItem.getPointCost());
-        originalItem.setStock(originalItem.getStock() + 1);
-        rewardItemDAO.save(originalItem);
+        stockService.incrementStock(originalItem.getId());
         // Apply new transaction
         if (newItem.getStock() < 1) {
             throw new InsufficientResourcesException("Insufficient stock to redeem this reward");
         }
         pointService.subtractPoints(newStudent.getId(), newItem.getPointCost());
-        newItem.setStock(newItem.getStock() - 1);
-        rewardItemDAO.save(newItem);
+        stockService.decrementStock(newItem.getId());
         existingStudentReward.setStudent(newStudent);
         existingStudentReward.setRewardItem(newItem);
         StudentReward updatedStudentReward = studentRewardDAO.save(existingStudentReward);
@@ -164,8 +164,7 @@ public class StudentRewardServiceImpl implements StudentRewardService {
                 .orElseThrow(() -> new ResourceNotFoundException("Student reward not found with ID: " + id));
         // Reverse transaction
         pointService.addPoints(studentReward.getStudent().getId(), studentReward.getRewardItem().getPointCost());
-        studentReward.getRewardItem().setStock(studentReward.getRewardItem().getStock() + 1);
-        rewardItemDAO.save(studentReward.getRewardItem());
+        stockService.incrementStock(studentReward.getRewardItem().getId());
         // Perform delete
         studentRewardDAO.delete(studentReward);
         log.info("Successfully deleted student reward with ID: {}", id);
