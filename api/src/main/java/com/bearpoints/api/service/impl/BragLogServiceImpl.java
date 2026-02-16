@@ -10,6 +10,7 @@ import com.bearpoints.api.dto.BragLogDTO;
 import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.entity.*;
 import com.bearpoints.api.service.BragLogService;
+import com.bearpoints.api.service.PointService;
 import com.bearpoints.api.specification.BragLogSpecification;
 import com.bearpoints.api.specification.UserSpecification;
 import lombok.extern.slf4j.Slf4j;
@@ -22,12 +23,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Implementation of {@link BragLogService} for brag log management.
  *
  * @see BragLogService
- * @version 3.1
+ * @version 3.2
  * @author Dylan Mercer
  */
 @Slf4j
@@ -37,12 +39,15 @@ public class BragLogServiceImpl implements BragLogService {
     private final StudentDAO studentDAO;
     private final BehaviorTypeDAO behaviorTypeDAO;
     private final UserDAO userDAO;
+    private final PointService pointService;
 
-    public BragLogServiceImpl(BragLogDAO bragLogDAO, StudentDAO studentDAO, BehaviorTypeDAO behaviorTypeDAO, UserDAO userDAO) {
+    public BragLogServiceImpl(BragLogDAO bragLogDAO, StudentDAO studentDAO, BehaviorTypeDAO behaviorTypeDAO,
+                              UserDAO userDAO, PointService pointService) {
         this.bragLogDAO = bragLogDAO;
         this.studentDAO = studentDAO;
         this.behaviorTypeDAO = behaviorTypeDAO;
         this.userDAO = userDAO;
+        this.pointService = pointService;
     }
 
     /**
@@ -110,8 +115,7 @@ public class BragLogServiceImpl implements BragLogService {
         resolveAndSetSubmitterUser(bragLog, submitterName);
         bragLog.setDefaultsBeforePersist();
         BragLog savedBragLog = bragLogDAO.save(bragLog);
-        student.setPoints(student.getPoints() + savedBragLog.getPointsGenerated());
-        studentDAO.save(student);
+        pointService.addPoints(student.getId(), savedBragLog.getPointsGenerated());
         log.debug("Added {} points to student ID: {}", savedBragLog.getPointsGenerated(), student.getId());
         log.info("Successfully created a brag log with ID: {}", savedBragLog.getId());
         return new BragLogDTO(savedBragLog);
@@ -129,10 +133,12 @@ public class BragLogServiceImpl implements BragLogService {
         Student oldStudent = existingBragLog.getStudent();
         int oldPoints = existingBragLog.getPointsGenerated();
         Long newStudentId = bragLogDTO.getStudentId();
+        Set<Long> existingBehaviorIds = existingBragLog.getBehaviors().stream()
+                .map(BehaviorType::getId)
+                .collect(Collectors.toSet());
         Set<Long> newBehaviorIds = bragLogDTO.getBehaviorIds();
         boolean studentChanged = !existingBragLog.getStudent().getId().equals(newStudentId);
-        boolean behaviorsChanged = !existingBragLog.getBehaviors().stream()
-                .mapToLong(BehaviorType::getId).allMatch(newBehaviorIds::contains);
+        boolean behaviorsChanged = !existingBehaviorIds.equals(newBehaviorIds);
         Student newStudent = null;
         if (studentChanged) {
             newStudent = studentDAO.findById(newStudentId)
@@ -165,18 +171,16 @@ public class BragLogServiceImpl implements BragLogService {
         int pointDifference = newPoints - oldPoints;
         if (studentChanged) {
             // Remove points from old student
-            oldStudent.setPoints(oldStudent.getPoints() - oldPoints);
-            studentDAO.save(oldStudent);
-            log.debug("Removed {} points from old student ID: {}", oldPoints, oldStudent.getId());
+            pointService.subtractPoints(oldStudent.getId(), oldPoints);
             // Add points to new student
-            newStudent.setPoints(newStudent.getPoints() + newPoints);
-            studentDAO.save(newStudent);
-            log.debug("Added {} points to new student ID: {}", newPoints, newStudent.getId());
+            pointService.addPoints(newStudent.getId(), newPoints);
         } else if (pointDifference != 0) {
-            oldStudent.setPoints(oldStudent.getPoints() + pointDifference);
-            studentDAO.save(oldStudent);
-            log.debug("Adjusted student ID {} points by {} (new total: {})",
-                    oldStudent.getId(), pointDifference, oldStudent.getPoints());
+            if (pointDifference > 0) {
+                pointService.addPoints(oldStudent.getId(), pointDifference);
+            } else {
+                int positivePoints = Math.abs(pointDifference);
+                pointService.subtractPoints(oldStudent.getId(), positivePoints);
+            }
         }
         log.info("Successfully updated brag log with ID: {}", updatedBragLog.getId());
         return new BragLogDTO(updatedBragLog);
@@ -191,10 +195,7 @@ public class BragLogServiceImpl implements BragLogService {
         log.debug("Deleting brag log with ID: {}", id);
         BragLog bragLog = bragLogDAO.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Brag log not found with ID: " + id));
-        Student student = bragLog.getStudent();
-        student.setPoints(student.getPoints() - bragLog.getPointsGenerated());
-        studentDAO.save(student);
-        log.debug("Removed {} points from student ID: {}", bragLog.getPointsGenerated(), student.getId());
+        pointService.subtractPoints(bragLog.getStudent().getId(), bragLog.getPointsGenerated());
         bragLogDAO.delete(bragLog);
         log.info("Successfully deleted brag log with ID: {}", id);
     }

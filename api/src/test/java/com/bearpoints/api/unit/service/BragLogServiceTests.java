@@ -9,6 +9,7 @@ import com.bearpoints.api.dto.BragLogDTO;
 import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.entity.*;
 import com.bearpoints.api.exception.ResourceNotFoundException;
+import com.bearpoints.api.service.PointService;
 import com.bearpoints.api.service.impl.BragLogServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -37,7 +38,7 @@ import static org.mockito.Mockito.*;
  *
  * @see BragLogServiceImpl
  *
- * @version 3.1
+ * @version 3.2
  * @author Dylan Mercer
  */
 @ExtendWith(MockitoExtension.class)
@@ -53,6 +54,9 @@ public class BragLogServiceTests {
 
     @Mock
     private UserDAO userDAO;
+
+    @Mock
+    private PointService pointService;
 
     @InjectMocks
     private BragLogServiceImpl bragLogService;
@@ -203,8 +207,7 @@ public class BragLogServiceTests {
             assertEquals(bragLog.getId(), result.getId());
             assertEquals(validSubmitterName, result.getSubmitterName());
             assertNull(result.getSubmitterUserId());
-            verify(studentDAO).save(argThat((Student s) ->
-                    s.getPoints() == 100 + savedBragLog.getPointsGenerated()));
+            verify(pointService).addPoints(eq(student.getId()), eq(savedBragLog.getPointsGenerated()));
             verify(studentDAO).findById(student.getId());
             verify(behaviorTypeDAO, times(2)).findById(anyLong());
             verify(userDAO).findOne(any(Specification.class));
@@ -230,8 +233,7 @@ public class BragLogServiceTests {
             when(bragLogDAO.save(any(BragLog.class))).thenReturn(savedBragLog);
             BragLogDTO result = bragLogService.createBragLog(createDTO);
             assertNotNull(result);
-            verify(studentDAO).save(argThat((Student s) ->
-                    s.getPoints() == 100 + savedBragLog.getPointsGenerated()));
+            verify(pointService).addPoints(eq(student.getId()), eq(savedBragLog.getPointsGenerated()));
             assertEquals(bragLog.getId(), result.getId());
             assertEquals(submitterName, result.getSubmitterName());
             assertEquals(adminUser.getId(), result.getSubmitterUserId());
@@ -260,8 +262,7 @@ public class BragLogServiceTests {
             when(bragLogDAO.save(any(BragLog.class))).thenReturn(savedBragLog);
             BragLogDTO result = bragLogService.createBragLog(createDTO);
             assertNotNull(result);
-            verify(studentDAO).save(argThat((Student s) ->
-                    s.getPoints() == 100 + savedBragLog.getPointsGenerated()));
+            verify(pointService).addPoints(eq(student.getId()), eq(savedBragLog.getPointsGenerated()));
             assertEquals(bragLog.getId(), result.getId());
             assertEquals(submitterName, result.getSubmitterName());
             assertEquals(teacherUser.getId(), result.getSubmitterUserId());
@@ -290,8 +291,7 @@ public class BragLogServiceTests {
             when(bragLogDAO.save(any(BragLog.class))).thenReturn(savedBragLog);
             BragLogDTO result = bragLogService.createBragLog(createDTO);
             assertNotNull(result);
-            verify(studentDAO).save(argThat((Student s) ->
-                    s.getPoints() == 100 + savedBragLog.getPointsGenerated()));
+            verify(pointService).addPoints(eq(student.getId()), eq(savedBragLog.getPointsGenerated()));
             assertEquals(bragLog.getId(), result.getId());
             assertEquals(submitterName, result.getSubmitterName());
             assertEquals(staffUser.getId(), result.getSubmitterUserId());
@@ -322,7 +322,7 @@ public class BragLogServiceTests {
             verify(behaviorTypeDAO, times(2)).findById(anyLong());
             verify(userDAO).findOne(any(Specification.class));
             verify(bragLogDAO, never()).save(any(BragLog.class));
-            verify(studentDAO, never()).save(any(Student.class));
+            verify(pointService, never()).addPoints(anyLong(), anyInt());
         }
 
         @Test
@@ -344,7 +344,7 @@ public class BragLogServiceTests {
             verify(behaviorTypeDAO, times(2)).findById(anyLong());
             verify(userDAO, never()).findOne(any(Specification.class));
             verify(bragLogDAO, never()).save(any(BragLog.class));
-            verify(studentDAO, never()).save(any(Student.class));
+            verify(pointService, never()).addPoints(anyLong(), anyInt());
         }
 
         @Test
@@ -366,7 +366,7 @@ public class BragLogServiceTests {
             verify(behaviorTypeDAO, times(2)).findById(anyLong());
             verify(userDAO, never()).findOne(any(Specification.class));
             verify(bragLogDAO, never()).save(any(BragLog.class));
-            verify(studentDAO, never()).save(any(Student.class));
+            verify(pointService, never()).addPoints(anyLong(), anyInt());
         }
 
         @Test
@@ -388,7 +388,7 @@ public class BragLogServiceTests {
             verify(behaviorTypeDAO, times(2)).findById(anyLong());
             verify(userDAO, never()).findOne(any(Specification.class));
             verify(bragLogDAO, never()).save(any(BragLog.class));
-            verify(studentDAO, never()).save(any(Student.class));
+            verify(pointService, never()).addPoints(anyLong(), anyInt());
         }
 
         @Test
@@ -406,7 +406,7 @@ public class BragLogServiceTests {
             verify(behaviorTypeDAO, never()).findById(anyLong());
             verify(userDAO, never()).findOne(any(Specification.class));
             verify(bragLogDAO, never()).save(any(BragLog.class));
-            verify(studentDAO, never()).save(any(Student.class));
+            verify(pointService, never()).addPoints(anyLong(), anyInt());
         }
 
         @Test
@@ -425,7 +425,7 @@ public class BragLogServiceTests {
             verify(behaviorTypeDAO).findById(behaviorTypeId);
             verify(userDAO, never()).findOne(any(Specification.class));
             verify(bragLogDAO, never()).save(any(BragLog.class));
-            verify(studentDAO, never()).save(any(Student.class));
+            verify(pointService, never()).addPoints(anyLong(), anyInt());
         }
     }
 
@@ -439,6 +439,9 @@ public class BragLogServiceTests {
             Long bragLogId = bragLog.getId();
             String updatedNotes = "Updated notes";
             Set<Long> updatedBehaviorIds = Set.of(behaviorType1.getId());
+            int oldPoints = bragLog.getPointsGenerated();
+            int newPoints = behaviorType1.getPointValue();
+            int pointDifference = Math.abs(newPoints - oldPoints);
             BragLogDTO updateDTO = new BragLogDTO(bragLogId, student.getId(), teacher.getId(),
                     updatedBehaviorIds, updatedNotes, "John Doe", null, null,
                     null, null, null, null);
@@ -451,13 +454,11 @@ public class BragLogServiceTests {
             });
             BragLogDTO result = bragLogService.updateBragLog(bragLogId, updateDTO);
             assertNotNull(result);
-            verify(studentDAO).save(argThat((Student s) ->
-                    s.getPoints() == 95));
+            verify(pointService).subtractPoints(eq(student.getId()), eq(pointDifference));
             verify(bragLogDAO).findById(bragLogId);
             verify(studentDAO, never()).findById(anyLong());
             verify(behaviorTypeDAO).findById(behaviorType1.getId());
             verify(bragLogDAO).save(any(BragLog.class));
-
         }
 
         @Test
@@ -475,12 +476,42 @@ public class BragLogServiceTests {
             when(bragLogDAO.save(any(BragLog.class))).thenReturn(bragLog);
             BragLogDTO result = bragLogService.updateBragLog(bragLogId, updateDTO);
             assertNotNull(result);
-            verify(studentDAO).save(argThat((Student s) -> s.getId().equals(student.getId()) && s.getPoints() == 93));
-            verify(studentDAO).save(argThat((Student s) -> s.getId().equals(newStudent.getId()) && s.getPoints() == 57));
+            verify(pointService).subtractPoints(eq(student.getId()), eq(bragLog.getPointsGenerated()));
+            verify(pointService).addPoints(eq(newStudent.getId()), eq(bragLog.getPointsGenerated()));
             verify(bragLogDAO).findById(bragLogId);
             verify(studentDAO).findById(newStudent.getId());
             verify(behaviorTypeDAO, never()).findById(anyLong());
             verify(bragLogDAO).save(any(BragLog.class));
+        }
+
+        @Test
+        @DisplayName("Should update brag log and add points when points increase")
+        void shouldUpdateBragLogAndAddPointsWhenPointsIncrease() {
+            Long bragLogId = bragLog.getId();
+            BehaviorType behaviorType3 = createValidBehaviorType(3L, "Excellent", 10);
+            Set<Long> updatedBehaviorIds = Set.of(behaviorType1.getId(), behaviorType2.getId(), behaviorType3.getId());
+            int oldPoints = bragLog.getPointsGenerated();
+            int newPoints = behaviorType1.getPointValue() + behaviorType2.getPointValue() + behaviorType3.getPointValue();
+            int expected = newPoints - oldPoints;
+            BragLogDTO updateDTO = new BragLogDTO(bragLogId, student.getId(), teacher.getId(), updatedBehaviorIds,
+                    bragLog.getNotes(), "John Doe", null, null, null,
+                    null, null, null);
+            when(bragLogDAO.findById(bragLogId)).thenReturn(Optional.of(bragLog));
+            when(behaviorTypeDAO.findById(behaviorType1.getId())).thenReturn(Optional.of(behaviorType1));
+            when(behaviorTypeDAO.findById(behaviorType2.getId())).thenReturn(Optional.of(behaviorType2));
+            when(behaviorTypeDAO.findById(behaviorType3.getId())).thenReturn(Optional.of(behaviorType3));
+            when(bragLogDAO.save(any(BragLog.class))).thenAnswer(invocation -> {
+                BragLog log = invocation.getArgument(0);
+                log.setDefaultsBeforePersist();
+                return log;
+            });
+            BragLogDTO result = bragLogService.updateBragLog(bragLogId, updateDTO);
+            assertNotNull(result);
+            verify(pointService).addPoints(eq(student.getId()), eq(expected));
+            verify(bragLogDAO).findById(bragLogId);
+            verify(behaviorTypeDAO, times(3)).findById(anyLong());
+            verify(bragLogDAO).save(any(BragLog.class));
+            verify(pointService, never()).subtractPoints(anyLong(), anyInt());
         }
 
         @Test
@@ -498,7 +529,8 @@ public class BragLogServiceTests {
             verify(studentDAO, never()).findById(anyLong());
             verify(behaviorTypeDAO, never()).findById(anyLong());
             verify(bragLogDAO).save(any(BragLog.class));
-            verify(studentDAO, never()).save(any(Student.class));
+            verify(pointService, never()).addPoints(anyLong(), anyInt());
+            verify(pointService, never()).subtractPoints(anyLong(), anyInt());
         }
 
         @Test
@@ -519,7 +551,8 @@ public class BragLogServiceTests {
                     log.getSubmitterUser() != null &&
                     log.getSubmitterUser().getId().equals(adminUser.getId())
             ));
-            verify(studentDAO, never()).save(any(Student.class));
+            verify(pointService, never()).addPoints(anyLong(), anyInt());
+            verify(pointService, never()).subtractPoints(anyLong(), anyInt());
         }
 
         @Test
@@ -540,7 +573,8 @@ public class BragLogServiceTests {
                             log.getSubmitterUser() != null &&
                             log.getSubmitterUser().getId().equals(staffUser.getId())
             ));
-            verify(studentDAO, never()).save(any(Student.class));
+            verify(pointService, never()).addPoints(anyLong(), anyInt());
+            verify(pointService, never()).subtractPoints(anyLong(), anyInt());
         }
 
         @Test
@@ -561,7 +595,8 @@ public class BragLogServiceTests {
                     log.getSubmitterUser() != null &&
                     log.getSubmitterUser().getId().equals(teacherUser.getId())
             ));
-            verify(studentDAO, never()).save(any(Student.class));
+            verify(pointService, never()).addPoints(anyLong(), anyInt());
+            verify(pointService, never()).subtractPoints(anyLong(), anyInt());
         }
 
         @Test
@@ -581,7 +616,8 @@ public class BragLogServiceTests {
                     log.getSubmitterName().equals(newName) &&
                     log.getSubmitterUser() == null
             ));
-            verify(studentDAO, never()).save(any(Student.class));
+            verify(pointService, never()).addPoints(anyLong(), anyInt());
+            verify(pointService, never()).subtractPoints(anyLong(), anyInt());
         }
 
         @Test
@@ -602,7 +638,8 @@ public class BragLogServiceTests {
             verify(bragLogDAO).findById(bragLogId);
             verify(userDAO).findOne(any(Specification.class));
             verify(bragLogDAO, never()).save(any(BragLog.class));
-            verify(studentDAO, never()).save(any(Student.class));
+            verify(pointService, never()).addPoints(anyLong(), anyInt());
+            verify(pointService, never()).subtractPoints(anyLong(), anyInt());
         }
 
         @Test
@@ -622,7 +659,8 @@ public class BragLogServiceTests {
             verify(bragLogDAO).findById(bragLogId);
             verify(userDAO, never()).findOne(any(Specification.class));
             verify(bragLogDAO, never()).save(any(BragLog.class));
-            verify(studentDAO, never()).save(any(Student.class));
+            verify(pointService, never()).addPoints(anyLong(), anyInt());
+            verify(pointService, never()).subtractPoints(anyLong(), anyInt());
         }
 
         @Test
@@ -641,7 +679,8 @@ public class BragLogServiceTests {
             verify(bragLogDAO).findById(bragLogId);
             verify(userDAO, never()).findOne(any(Specification.class));
             verify(bragLogDAO, never()).save(any(BragLog.class));
-            verify(studentDAO, never()).save(any(Student.class));
+            verify(pointService, never()).addPoints(anyLong(), anyInt());
+            verify(pointService, never()).subtractPoints(anyLong(), anyInt());
         }
 
         @Test
@@ -660,7 +699,8 @@ public class BragLogServiceTests {
             verify(bragLogDAO).findById(bragLogId);
             verify(userDAO, never()).findOne(any(Specification.class));
             verify(bragLogDAO, never()).save(any(BragLog.class));
-            verify(studentDAO, never()).save(any(Student.class));
+            verify(pointService, never()).addPoints(anyLong(), anyInt());
+            verify(pointService, never()).subtractPoints(anyLong(), anyInt());
         }
 
         @Test
@@ -675,7 +715,8 @@ public class BragLogServiceTests {
             bragLogService.updateBragLog(bragLogId, updateDTO);
             verify(userDAO, never()).findOne(any(Specification.class));
             verify(bragLogDAO).save(any(BragLog.class));
-            verify(studentDAO, never()).save(any(Student.class));
+            verify(pointService, never()).addPoints(anyLong(), anyInt());
+            verify(pointService, never()).subtractPoints(anyLong(), anyInt());
         }
 
         @Test
@@ -693,7 +734,8 @@ public class BragLogServiceTests {
             verify(bragLogDAO).findById(bragLogId);
             verify(studentDAO, never()).findById(anyLong());
             verify(behaviorTypeDAO, never()).findById(anyLong());
-            verify(studentDAO, never()).save(any(Student.class));
+            verify(pointService, never()).addPoints(anyLong(), anyInt());
+            verify(pointService, never()).subtractPoints(anyLong(), anyInt());
         }
     }
 
@@ -707,7 +749,7 @@ public class BragLogServiceTests {
             when(bragLogDAO.findById(bragLogId)).thenReturn(Optional.of(bragLog));
             doNothing().when(bragLogDAO).delete(bragLog);
             bragLogService.deleteBragLog(bragLogId);
-            verify(studentDAO).save(argThat((Student s) -> s.getPoints() == 93));
+            verify(pointService).subtractPoints(eq(student.getId()), eq(bragLog.getPointsGenerated()));
             verify(bragLogDAO).findById(bragLogId);
             verify(bragLogDAO).delete(bragLog);
         }
@@ -721,7 +763,7 @@ public class BragLogServiceTests {
                     () -> bragLogService.deleteBragLog(bragLogId));
             verify(bragLogDAO).findById(bragLogId);
             verify(bragLogDAO, never()).delete(any(BragLog.class));
-            verify(studentDAO, never()).delete(any(Student.class));
+            verify(pointService, never()).subtractPoints(anyLong(), anyInt());
         }
     }
 
