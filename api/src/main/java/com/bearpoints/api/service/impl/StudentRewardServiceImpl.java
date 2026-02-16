@@ -9,7 +9,6 @@ import com.bearpoints.api.dto.StudentRewardDTO;
 import com.bearpoints.api.entity.RewardItem;
 import com.bearpoints.api.entity.Student;
 import com.bearpoints.api.entity.StudentReward;
-import com.bearpoints.api.exception.InsufficientResourcesException;
 import com.bearpoints.api.exception.ResourceNotFoundException;
 import com.bearpoints.api.service.PointService;
 import com.bearpoints.api.service.StockService;
@@ -26,7 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
  * Implementation of {@link StudentRewardService} for student reward management.
  *
  * @see StudentRewardService
- * @version 1.2
+ * @version 1.3
  * @author Dylan Mercer
  */
 @Slf4j
@@ -99,9 +98,8 @@ public class StudentRewardServiceImpl implements StudentRewardService {
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with ID: " + studentRewardDTO.getStudentId()));
         RewardItem rewardItem = rewardItemDAO.findById(studentRewardDTO.getItemId())
                 .orElseThrow(() -> new ResourceNotFoundException("Reward item not found with ID: " + studentRewardDTO.getItemId()));
-        if (rewardItem.getStock() < 1) {
-            throw new InsufficientResourcesException("Insufficient stock to redeem this reward");
-        }
+        pointService.hasSufficientPoints(student.getId(), rewardItem.getPointCost());
+        stockService.hasSufficientStock(rewardItem.getId());
         pointService.subtractPoints(student.getId(), rewardItem.getPointCost());
         stockService.decrementStock(rewardItem.getId());
         StudentReward studentReward = new StudentReward();
@@ -141,9 +139,8 @@ public class StudentRewardServiceImpl implements StudentRewardService {
         pointService.addPoints(originalStudent.getId(), originalItem.getPointCost());
         stockService.incrementStock(originalItem.getId());
         // Apply new transaction
-        if (newItem.getStock() < 1) {
-            throw new InsufficientResourcesException("Insufficient stock to redeem this reward");
-        }
+        pointService.hasSufficientPoints(newStudent.getId(), newItem.getPointCost());
+        stockService.hasSufficientStock(newItem.getId());
         pointService.subtractPoints(newStudent.getId(), newItem.getPointCost());
         stockService.decrementStock(newItem.getId());
         existingStudentReward.setStudent(newStudent);
