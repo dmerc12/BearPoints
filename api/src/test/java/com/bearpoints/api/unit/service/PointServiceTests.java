@@ -16,26 +16,17 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for {@link PointServiceImpl}.
- * <p>Verifies point management functionality including addition and subtraction operations
- * with proper validation and exception handling.
- *
- * <p>Test scenarios cover:
- * <ul>
- *     <li>Successful point addition and subtraction</li>
- *     <li>Validation of non-negative point amounts</li>
- *     <li>Insufficient points handling</li>
- *     <li>Student not found scenarios</li>
- * </ul>
+ * <p>Verifies point management functionality including addition, subtraction,
+ * and point checks with proper validation and exception handling.
  *
  * @see PointServiceImpl
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @ExtendWith(MockitoExtension.class)
@@ -134,6 +125,52 @@ public class PointServiceTests {
             );
             assertEquals(100, student.getPoints());
             verify(studentDAO, never()).save(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("When checking sufficient points")
+    class HasSufficientPoints {
+        @Test
+        @DisplayName("should not throw when student has enough points")
+        void hasSufficientPoints() {
+            when(studentDAO.findById(studentId)).thenReturn(Optional.of(student));
+            assertDoesNotThrow(() -> pointService.hasSufficientPoints(studentId, 50));
+            assertDoesNotThrow(() -> pointService.hasSufficientPoints(studentId, 100));
+            verify(studentDAO, times(2)).findById(studentId);
+            verify(studentDAO, never()).save(any(Student.class));
+        }
+
+        @Test
+        @DisplayName("should throw when student does not have enough points")
+        void hasSufficientPointsInsufficient() {
+            when(studentDAO.findById(studentId)).thenReturn(Optional.of(student));
+            assertThrows(
+                    InsufficientResourcesException.class,
+                    () -> pointService.hasSufficientPoints(studentId, 150)
+            );
+            verify(studentDAO).findById(studentId);
+        }
+
+        @Test
+        @DisplayName("should throw when required points is negative")
+        void hasSufficientPointsNegativeRequiredPoints() {
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () -> pointService.hasSufficientPoints(studentId, -1)
+            );
+            verify(studentDAO, never()).findById(anyLong());
+        }
+
+        @Test
+        @DisplayName("should throw when student not found")
+        void hasSufficientPointsStudentNotFound() {
+            when(studentDAO.findById(studentId)).thenReturn(Optional.empty());
+            assertThrows(
+                    ResourceNotFoundException.class,
+                    () -> pointService.hasSufficientPoints(studentId, 150)
+            );
+            verify(studentDAO).findById(studentId);
         }
     }
 }

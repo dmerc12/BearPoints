@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
  * All operations validate input and throw appropriate exceptions.
  *
  * @see PointService
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @Slf4j
@@ -31,11 +31,8 @@ public class PointServiceImpl implements PointService {
      */
     @Override
     public void addPoints(Long studentId, int points) {
-        if (points < 0) {
-            throw new IllegalArgumentException("Points to add must be non-negative");
-        }
-        Student student = studentDAO.findById(studentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Student not found with ID: " + studentId));
+        checkPointsPositive(points);
+        Student student = getStudentFromId(studentId);
         int newPoints = student.getPoints() + points;
         student.setPoints(newPoints);
         studentDAO.save(student);
@@ -47,17 +44,40 @@ public class PointServiceImpl implements PointService {
      */
     @Override
     public void subtractPoints(Long studentId, int points) {
-        if (points < 0) {
-            throw new IllegalArgumentException("Points to subtract must be non-negative");
-        }
-        Student student = studentDAO.findById(studentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Student not found with ID: " + studentId));
+        checkPointsPositive(points);
+        Student student = getStudentFromId(studentId);
+        checkSufficientPoints(student.getId(), student.getPoints(), points);
         int newPoints = student.getPoints() - points;
-        if (newPoints < 0) {
-            throw new InsufficientResourcesException("Insufficient points to subtract " + points + " from student " + studentId);
-        }
         student.setPoints(newPoints);
         studentDAO.save(student);
         log.debug("Subtracted {} points to student ID: {}, new total: {}", points, studentId, newPoints);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void hasSufficientPoints(Long studentId, int requiredPoints) {
+        checkPointsPositive(requiredPoints);
+        Student student = getStudentFromId(studentId);
+        checkSufficientPoints(student.getId(), student.getPoints(), requiredPoints);
+        log.debug("Student {} has sufficient points ({} >= {})", studentId, student.getPoints(), requiredPoints);
+    }
+
+    private Student getStudentFromId(Long studentId) {
+        return studentDAO.findById(studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found with ID: " + studentId));
+    }
+
+    private void checkPointsPositive(int points) {
+        if (points < 0) {
+            throw new IllegalArgumentException("Points must be non-negative");
+        }
+    }
+
+    private void checkSufficientPoints(Long studentId, int studentPoints, int requiredPoints) {
+        if (studentPoints < requiredPoints) {
+            throw new InsufficientResourcesException("Insufficient points to redeem " + requiredPoints + " from student " + studentId);
+        }
     }
 }

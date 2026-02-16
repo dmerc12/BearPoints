@@ -13,11 +13,12 @@ import com.bearpoints.api.service.impl.PointServiceImpl;
  * <ul>
  *     <li>Add points to a student's balance</li>
  *     <li>Subtract points with balance validation</li>
+ *     <li>Check if a student has sufficient points without modifying (throws if not)</li>
  *     <li>All operations are transactional and throw specific exceptions</li>
  * </ul>
  *
  * @see PointServiceImpl
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 public interface PointService {
@@ -41,4 +42,16 @@ public interface PointService {
      * @throws IllegalArgumentException if points parameter is negative
      */
     void subtractPoints(Long studentId, int points);
+
+    /**
+     * Checks whether a student has at least the required number of points
+     * <p>Does not modify any data. Useful for pre-validation before performing a mutation.
+     *
+     * @param studentId ID of the student
+     * @param requiredPoints points needed (must be non-negative)
+     * @throws ResourceNotFoundException if student not found
+     * @throws InsufficientResourcesException if student does not have enough points
+     * @throws IllegalArgumentException if requiredPoints is negative
+     */
+    void hasSufficientPoints(Long studentId, int requiredPoints);
 }
