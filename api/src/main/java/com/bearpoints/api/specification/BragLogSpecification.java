@@ -5,7 +5,7 @@ import com.bearpoints.api.entity.BragLog;
 import com.bearpoints.api.entity.Student;
 import com.bearpoints.api.entity.Teacher;
 import com.bearpoints.api.entity.User;
-import jakarta.persistence.criteria.Expression;
+import com.bearpoints.api.utility.SpecificationUtils;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
@@ -46,46 +46,30 @@ public class BragLogSpecification {
             if (criteria.getStudentName() != null || criteria.getStudentId() != null) {
                 Join<BragLog, Student> studentJoin = root.join("student");
                 // Student name filter
-                if (criteria.getStudentName() != null && !criteria.getStudentName().trim().isEmpty()) {
+                if (SpecificationUtils.isNotBlank(criteria.getStudentName())) {
                     Join<Student, User> userStudentJoin = studentJoin.join("user");
-                    Expression<String> studentFullName = criteriaBuilder.concat(
-                            criteriaBuilder.concat(userStudentJoin.get("firstName"), " "),
-                            userStudentJoin.get("lastName")
-                    );
-                    predicates.add(criteriaBuilder.like(
-                            criteriaBuilder.lower(studentFullName),
-                            "%" + criteria.getStudentName().toLowerCase() + "%"
-                    ));
+                    predicates.add(SpecificationUtils
+                            .fullNameLikeIgnoreCase(userStudentJoin, criteria.getStudentName(), criteriaBuilder));
                 }
                 // Student ID filter
                 if (criteria.getStudentId() != null) {
-                    predicates.add(criteriaBuilder.equal(
-                            studentJoin.get("id"),
-                            criteria.getStudentId()
-                    ));
+                    predicates.add(SpecificationUtils
+                            .equal(studentJoin.get("id"), criteria.getStudentId(), criteriaBuilder));
                 }
             }
             // Teacher name or ID filter
             if (criteria.getTeacherName() != null || criteria.getTeacherId() != null) {
                 Join<BragLog, Teacher> teacherJoin = root.join("teacher");
                 // Teacher name filter
-                if (criteria.getTeacherName() != null && !criteria.getTeacherName().trim().isEmpty()) {
+                if (SpecificationUtils.isNotBlank(criteria.getTeacherName())) {
                     Join<Teacher, User> userTeacherJoin = teacherJoin.join("user");
-                    Expression<String> teacherFullName = criteriaBuilder.concat(
-                            criteriaBuilder.concat(userTeacherJoin.get("firstName"), " "),
-                            userTeacherJoin.get("lastName")
-                    );
-                    predicates.add(criteriaBuilder.like(
-                            criteriaBuilder.lower(teacherFullName),
-                            "%" + criteria.getTeacherName().toLowerCase() + "%"
-                    ));
+                    predicates.add(SpecificationUtils
+                            .fullNameLikeIgnoreCase(userTeacherJoin, criteria.getTeacherName(), criteriaBuilder));
                 }
                 // Teacher ID filter
                 if (criteria.getTeacherId() != null) {
-                    predicates.add(criteriaBuilder.equal(
-                            teacherJoin.get("id"),
-                            criteria.getTeacherId()
-                    ));
+                    predicates.add(SpecificationUtils
+                            .equal(teacherJoin.get("id"), criteria.getTeacherId(), criteriaBuilder));
                 }
             }
 
@@ -98,17 +82,13 @@ public class BragLogSpecification {
             }
             // Min points filter
             if (criteria.getMinPoints() != null) {
-                predicates.add(criteriaBuilder.greaterThanOrEqualTo(
-                        root.get("pointsGenerated"),
-                        criteria.getMinPoints()
-                ));
+                predicates.add(SpecificationUtils
+                        .greaterThanOrEqualTo(root.get("pointsGenerated"), criteria.getMinPoints(), criteriaBuilder));
             }
             // Max points filter
             if (criteria.getMaxPoints() != null) {
-                predicates.add(criteriaBuilder.lessThanOrEqualTo(
-                        root.get("pointsGenerated"),
-                        criteria.getMaxPoints()
-                ));
+                predicates.add(SpecificationUtils
+                        .lessThanOrEqualTo(root.get("pointsGenerated"), criteria.getMaxPoints(), criteriaBuilder));
             }
             // Start date filter
             if (criteria.getStartDate() != null) {
@@ -125,26 +105,20 @@ public class BragLogSpecification {
                 ));
             }
             // Notes filter
-            if (criteria.getNotes() != null && !criteria.getNotes().trim().isEmpty()) {
-                predicates.add(criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("notes")),
-                        "%" + criteria.getNotes().toLowerCase() + "%"
-                ));
+            if (SpecificationUtils.isNotBlank(criteria.getNotes())) {
+                predicates.add(SpecificationUtils
+                        .likeIgnoreCase(root.get("notes"), criteria.getNotes(), criteriaBuilder));
             }
             // Submitter name filter
-            if (criteria.getSubmitterName() != null && !criteria.getSubmitterName().trim().isEmpty()) {
-                predicates.add(criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("submitterName")),
-                        "%" + criteria.getSubmitterName().toLowerCase() + "%"
-                ));
+            if (SpecificationUtils.isNotBlank(criteria.getSubmitterName())) {
+                predicates.add(SpecificationUtils
+                        .likeIgnoreCase(root.get("submitterName"), criteria.getSubmitterName(), criteriaBuilder));
             }
             // Submitter user ID filter
             if (criteria.getSubmitterUserId() != null) {
                 Join<BragLog, User> submitterUserJoin = root.join("submitterUser", JoinType.LEFT);
-                predicates.add(criteriaBuilder.equal(
-                        submitterUserJoin.get("id"),
-                        criteria.getSubmitterUserId()
-                ));
+                predicates.add(SpecificationUtils
+                        .equal(submitterUserJoin.get("id"), criteria.getSubmitterUserId(), criteriaBuilder));
             }
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
