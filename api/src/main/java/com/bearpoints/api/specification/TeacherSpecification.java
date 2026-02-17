@@ -22,7 +22,7 @@ import java.util.List;
  *
  * @see TeacherSearchCriteria
  * @see Specification
- * @version 1.3
+ * @version 1.4
  * @author Dylan Mercer
  */
 @Component
@@ -48,9 +48,7 @@ public class TeacherSpecification {
                     criteriaBuilder
             );
             // Grade filter
-            if (criteria.getGrade() != null) {
-                predicates.add(SpecificationUtils.equal(root.get("grade"), criteria.getGrade(), criteriaBuilder));
-            }
+            SpecificationUtils.addGradeFilter(root.get("grade"), criteria.getGrade(), predicates, criteriaBuilder);
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
     }
