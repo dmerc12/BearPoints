@@ -5,7 +5,7 @@ import com.bearpoints.api.entity.RewardItem;
 import com.bearpoints.api.entity.Student;
 import com.bearpoints.api.entity.StudentReward;
 import com.bearpoints.api.entity.User;
-import jakarta.persistence.criteria.Expression;
+import com.bearpoints.api.utility.SpecificationUtils;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
@@ -25,7 +25,7 @@ import java.util.List;
  *
  * @see StudentRewardSearchCriteria
  * @see Specification
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @Component
@@ -45,23 +45,15 @@ public class StudentRewardSpecification {
             if (criteria.getStudentName() != null || criteria.getStudentId() != null) {
                 Join<StudentReward, Student> studentJoin = root.join("student");
                 // Student name filter
-                if (criteria.getStudentName() != null && !criteria.getStudentName().trim().isEmpty()) {
+                if (SpecificationUtils.isNotBlank(criteria.getStudentName())) {
                     Join<Student, User> userStudentJoin = studentJoin.join("user");
-                    Expression<String> studentFullName = criteriaBuilder.concat(
-                            criteriaBuilder.concat(userStudentJoin.get("firstName"), " "),
-                            userStudentJoin.get("lastName")
-                    );
-                    predicates.add(criteriaBuilder.like(
-                            criteriaBuilder.lower(studentFullName),
-                            "%" + criteria.getStudentName().toLowerCase() + "%"
-                    ));
+                    predicates.add(SpecificationUtils
+                            .fullNameLikeIgnoreCase(userStudentJoin, criteria.getStudentName(), criteriaBuilder));
                 }
                 // Student ID filter
                 if (criteria.getStudentId() != null) {
-                    predicates.add(criteriaBuilder.equal(
-                            studentJoin.get("id"),
-                            criteria.getStudentId()
-                    ));
+                    predicates.add(SpecificationUtils
+                            .equal(studentJoin.get("id"), criteria.getStudentId(), criteriaBuilder));
                 }
             }
             // Item name or ID filter
@@ -69,32 +61,24 @@ public class StudentRewardSpecification {
                     criteria.getMinPointsUsed() != null || criteria.getMaxPointsUsed() != null) {
                 Join<StudentReward, RewardItem> itemJoin = root.join("rewardItem");
                 // Item name filter
-                if (criteria.getItemName() != null && !criteria.getItemName().trim().isEmpty()) {
-                    predicates.add(criteriaBuilder.like(
-                            criteriaBuilder.lower(itemJoin.get("name")),
-                            "%" + criteria.getItemName().toLowerCase() + "%"
-                    ));
+                if (SpecificationUtils.isNotBlank(criteria.getItemName())) {
+                    predicates.add(SpecificationUtils
+                            .likeIgnoreCase(itemJoin.get("name"), criteria.getItemName(), criteriaBuilder));
                 }
                 // Item ID filter
                 if (criteria.getItemId() != null) {
-                    predicates.add(criteriaBuilder.equal(
-                            itemJoin.get("id"),
-                            criteria.getItemId()
-                    ));
+                    predicates.add(SpecificationUtils
+                            .equal(itemJoin.get("id"), criteria.getItemId(), criteriaBuilder));
                 }
                 // Min points used filter
                 if (criteria.getMinPointsUsed() != null) {
-                    predicates.add(criteriaBuilder.greaterThanOrEqualTo(
-                            itemJoin.get("pointCost"),
-                            criteria.getMinPointsUsed()
-                    ));
+                    predicates.add(SpecificationUtils
+                            .greaterThanOrEqualTo(itemJoin.get("pointCost"), criteria.getMinPointsUsed(), criteriaBuilder));
                 }
                 // Max points used filter
                 if (criteria.getMaxPointsUsed() != null) {
-                    predicates.add(criteriaBuilder.lessThanOrEqualTo(
-                            itemJoin.get("pointCost"),
-                            criteria.getMaxPointsUsed()
-                    ));
+                    predicates.add(SpecificationUtils
+                            .lessThanOrEqualTo(itemJoin.get("pointCost"), criteria.getMaxPointsUsed(), criteriaBuilder));
                 }
             }
             // Start date filter
