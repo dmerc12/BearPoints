@@ -2,6 +2,7 @@ package com.bearpoints.api.specification;
 
 import com.bearpoints.api.criteria.RewardItemSearchCriteria;
 import com.bearpoints.api.entity.RewardItem;
+import com.bearpoints.api.utility.SpecificationUtils;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
@@ -20,7 +21,7 @@ import java.util.List;
  *
  * @see RewardItemSearchCriteria
  * @see Specification
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @Component
@@ -37,37 +38,27 @@ public class RewardItemSpecification {
         return (root, _, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
             // Name filter
-            if (criteria.getName() != null && !criteria.getName().trim().isEmpty()) {
-                predicates.add(criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("name")),
-                        "%" + criteria.getName().toLowerCase() + "%"
-                ));
+            if (SpecificationUtils.isNotBlank(criteria.getName())) {
+                predicates.add(SpecificationUtils
+                        .likeIgnoreCase(root.get("name"), criteria.getName(), criteriaBuilder));
             }
             // Point cost range filters
             if (criteria.getMinPointCost() != null) {
-                predicates.add(criteriaBuilder.greaterThanOrEqualTo(
-                        root.get("pointCost"),
-                        criteria.getMinPointCost()
-                ));
+                predicates.add(SpecificationUtils
+                        .greaterThanOrEqualTo(root.get("pointCost"), criteria.getMinPointCost(), criteriaBuilder));
             }
             if (criteria.getMaxPointCost() != null) {
-                predicates.add(criteriaBuilder.lessThanOrEqualTo(
-                        root.get("pointCost"),
-                        criteria.getMaxPointCost()
-                ));
+                predicates.add(SpecificationUtils
+                        .lessThanOrEqualTo(root.get("pointCost"), criteria.getMaxPointCost(), criteriaBuilder));
             }
             // Stock range filter
             if (criteria.getMinStock() != null) {
-                predicates.add(criteriaBuilder.greaterThanOrEqualTo(
-                        root.get("stock"),
-                        criteria.getMinStock()
-                ));
+                predicates.add(SpecificationUtils
+                        .greaterThanOrEqualTo(root.get("stock"), criteria.getMinStock(), criteriaBuilder));
             }
             if (criteria.getMaxStock() != null) {
-                predicates.add(criteriaBuilder.lessThanOrEqualTo(
-                        root.get("stock"),
-                        criteria.getMaxStock()
-                ));
+                predicates.add(SpecificationUtils
+                        .lessThanOrEqualTo(root.get("stock"), criteria.getMaxStock(), criteriaBuilder));
             }
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
