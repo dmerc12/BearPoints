@@ -8,7 +8,7 @@ import jakarta.persistence.criteria.*;
  * <p>Provides methods to reduce code duplication across specific classes.
  * All methods are static and stateless.
  *
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 public class SpecificationUtils {
@@ -59,7 +59,7 @@ public class SpecificationUtils {
      * @return a {@link Predicate} equivalent to {@code path >= value}
      */
     public static Predicate greaterThanOrEqualTo(Path<? extends Number> path, Number value, CriteriaBuilder cb) {
-        return cb.ge(path.as(Number.class), value);
+        return cb.ge(path, value);
     }
 
     /**
@@ -72,7 +72,7 @@ public class SpecificationUtils {
      * @return a {@link Predicate} equivalent to {@code path <= value}
      */
     public static Predicate lessThanOrEqualTo(Path<? extends Number> path, Number value, CriteriaBuilder cb) {
-        return cb.le(path.as(Number.class), value);
+        return cb.le(path, value);
     }
 
     /**

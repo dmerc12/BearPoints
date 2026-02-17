@@ -19,7 +19,7 @@ import static org.mockito.Mockito.*;
  * Verifies that each utility method correctly delegates to the {@link CriteriaBuilder}
  * with the expected arguments.
  *
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @ExtendWith(MockitoExtension.class)
@@ -33,9 +33,6 @@ public class SpecificationUtilsTests {
 
     @Mock
     private Path<Integer> intPath;
-
-    @Mock
-    private Path<Number> numberPath;
 
     @Mock
     private Join<Object, User> userJoin;
@@ -137,12 +134,10 @@ public class SpecificationUtilsTests {
         @DisplayName("Should call path.as(Number.class) and cb.greaterThanOrEqualTo")
         void shouldCreateGreaterThanOrEqualToPredicate() {
             Number value = 10;
-            when(intPath.as(Number.class)).thenReturn(numberPath);
-            when(cb.ge(numberPath, value)).thenReturn(mockPredicate);
+            when(cb.ge(intPath, value)).thenReturn(mockPredicate);
             Predicate result = SpecificationUtils.greaterThanOrEqualTo(intPath, value, cb);
             assertSame(mockPredicate, result);
-            verify(intPath).as(Number.class);
-            verify(cb).ge(numberPath, value);
+            verify(cb).ge(intPath, value);
         }
     }
 
@@ -153,12 +148,10 @@ public class SpecificationUtilsTests {
         @DisplayName("Should call path.as(Number.class) and cb.lessThanOrEqualTo")
         void shouldCreateLessThanOrEqualToPredicate() {
             Number value = 20;
-            when(intPath.as(Number.class)).thenReturn(numberPath);
-            when(cb.le(numberPath, value)).thenReturn(mockPredicate);
+            when(cb.le(intPath, value)).thenReturn(mockPredicate);
             Predicate result = SpecificationUtils.lessThanOrEqualTo(intPath, value, cb);
             assertSame(mockPredicate, result);
-            verify(intPath).as(Number.class);
-            verify(cb).le(numberPath, value);
+            verify(cb).le(intPath, value);
         }
     }
 
