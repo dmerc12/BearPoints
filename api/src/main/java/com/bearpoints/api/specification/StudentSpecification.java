@@ -3,6 +3,7 @@ package com.bearpoints.api.specification;
 import com.bearpoints.api.criteria.StudentSearchCriteria;
 import com.bearpoints.api.entity.Role;
 import com.bearpoints.api.entity.Student;
+import com.bearpoints.api.utility.SpecificationUtils;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
@@ -21,7 +22,7 @@ import java.util.List;
  *
  * @see StudentSearchCriteria
  * @see Specification
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @Component
@@ -39,51 +40,29 @@ public class StudentSpecification {
             List<Predicate> predicates = new ArrayList<>();
             predicates.add(criteriaBuilder.equal(root.get("user").get("role"), Role.STUDENT));
             // Email filter
-            if (isValidSearchString(criteria.getEmail())) {
-                predicates.add(criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("user").get("email")),
-                        "%" + criteria.getEmail().toLowerCase() + "%"
-                ));
+            if (SpecificationUtils.isNotBlank(criteria.getEmail())) {
+                predicates.add(SpecificationUtils.likeIgnoreCase(root.get("user").get("email"), criteria.getEmail(), criteriaBuilder));
             }
             // First name filter
-            if (isValidSearchString(criteria.getFirstName())) {
-                predicates.add(criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("user").get("firstName")),
-                        "%" + criteria.getFirstName().toLowerCase() + "%"
-                ));
+            if (SpecificationUtils.isNotBlank(criteria.getFirstName())) {
+                predicates.add(SpecificationUtils.likeIgnoreCase(root.get("user").get("firstName"), criteria.getFirstName(), criteriaBuilder));
             }
             // Last name filter
-            if (isValidSearchString(criteria.getLastName())) {
-                predicates.add(criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("user").get("lastName")),
-                        "%" + criteria.getLastName().toLowerCase() + "%"
-                ));
+            if (SpecificationUtils.isNotBlank(criteria.getLastName())) {
+                predicates.add(SpecificationUtils.likeIgnoreCase(root.get("user").get("lastName"), criteria.getLastName(), criteriaBuilder));
             }
             // Teacher filter
             if (criteria.getTeacherId() != null) {
-                predicates.add(criteriaBuilder.equal(
-                        root.get("teacher").get("id"),
-                        criteria.getTeacherId()
-                ));
+                predicates.add(SpecificationUtils.equal(root.get("teacher").get("id"), criteria.getTeacherId(), criteriaBuilder));
             }
             // Points range filters
             if (criteria.getMinPoints() != null) {
-                predicates.add(criteriaBuilder.greaterThanOrEqualTo(
-                        root.get("points"),
-                        criteria.getMinPoints()
-                ));
+                predicates.add(SpecificationUtils.greaterThanOrEqualTo(root.get("points"), criteria.getMinPoints(), criteriaBuilder));
             }
             if (criteria.getMaxPoints() != null) {
-                predicates.add(criteriaBuilder.lessThanOrEqualTo(
-                        root.get("points"),
-                        criteria.getMaxPoints()
-                ));
+                predicates.add(SpecificationUtils.lessThanOrEqualTo(root.get("points"), criteria.getMaxPoints(), criteriaBuilder));
             }
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
-    }
-
-    private static boolean isValidSearchString(String value) {
-        return value != null && !value.trim().isEmpty();
     }
 }
