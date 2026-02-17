@@ -272,34 +272,4 @@ public class UserSpecificationTests {
             assertEquals("j.doe@okcps.org", results.getFirst().getEmail());
         }
     }
-
-    @Nested
-    @DisplayName("When using isValidSearchString")
-    class WhenUsingValidSearchString {
-        @Test
-        @DisplayName("Should return true for non-null, non-empty string")
-        void shouldReturnTrueForNonNullNonEmptyString() {
-            assertTrue(UserSpecification.isValidSearchString("test"));
-            assertTrue(UserSpecification.isValidSearchString(" a "));
-        }
-
-        @Test
-        @DisplayName("Should return false for null string")
-        void shouldReturnFalseForNullString() {
-            assertFalse(UserSpecification.isValidSearchString(null));
-        }
-
-        @Test
-        @DisplayName("Should return false for empty string")
-        void shouldReturnFalseForEmptyString() {
-            assertFalse(UserSpecification.isValidSearchString(""));
-        }
-
-        @Test
-        @DisplayName("Should return false for whitespace-only string")
-        void shouldReturnFalseForWhitespaceOnlyString() {
-            assertFalse(UserSpecification.isValidSearchString(" "));
-            assertFalse(UserSpecification.isValidSearchString("\t\n"));
-        }
-    }
 }

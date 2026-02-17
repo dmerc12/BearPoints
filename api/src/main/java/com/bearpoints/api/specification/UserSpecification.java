@@ -2,6 +2,7 @@ package com.bearpoints.api.specification;
 
 import com.bearpoints.api.criteria.UserSearchCriteria;
 import com.bearpoints.api.entity.User;
+import com.bearpoints.api.utility.SpecificationUtils;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
@@ -20,7 +21,7 @@ import java.util.List;
  *
  * @see UserSearchCriteria
  * @see Specification
- * @version 2.0
+ * @version 2.1
  * @author Dylan Mercer
  */
 @Component
@@ -37,31 +38,19 @@ public class UserSpecification {
             List<Predicate> predicates = new ArrayList<>();
             // Role filter
             if (criteria.getRole() != null) {
-                predicates.add(criteriaBuilder.equal(
-                        root.get("role"),
-                        criteria.getRole()
-                ));
+                predicates.add(SpecificationUtils.equal(root.get("role"), criteria.getRole(), criteriaBuilder));
             }
             // Email filter
-            if (isValidSearchString(criteria.getEmail())) {
-                predicates.add(criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("email")),
-                        "%" + criteria.getEmail().toLowerCase() + "%"
-                ));
+            if (SpecificationUtils.isNotBlank(criteria.getEmail())) {
+                predicates.add(SpecificationUtils.likeIgnoreCase(root.get("email"), criteria.getEmail(), criteriaBuilder));
             }
             // First name filter
-            if (isValidSearchString(criteria.getFirstName())) {
-                predicates.add(criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("firstName")),
-                        "%" + criteria.getFirstName().toLowerCase() + "%"
-                ));
+            if (SpecificationUtils.isNotBlank(criteria.getFirstName())) {
+                predicates.add(SpecificationUtils.likeIgnoreCase(root.get("firstName"), criteria.getFirstName(), criteriaBuilder));
             }
             // Last name filter
-            if (isValidSearchString(criteria.getLastName())) {
-                predicates.add(criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("lastName")),
-                        "%" + criteria.getLastName().toLowerCase() + "%"
-                ));
+            if (SpecificationUtils.isNotBlank(criteria.getLastName())) {
+                predicates.add(SpecificationUtils.likeIgnoreCase(root.get("lastName"), criteria.getLastName(), criteriaBuilder));
             }
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
@@ -86,15 +75,5 @@ public class UserSpecification {
                         lastName.toLowerCase()
                 )
         );
-    }
-
-    /**
-     * Validates if a search string is non-null and non-empty.
-     *
-     * @param value The search string to validate
-     * @return true if the string is valid for search, false otherwise
-     */
-    public static boolean isValidSearchString(String value) {
-        return value != null && !value.trim().isEmpty();
     }
 }
