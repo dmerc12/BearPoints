@@ -24,7 +24,7 @@ import java.util.List;
  *
  * @see StudentRewardSearchCriteria
  * @see Specification
- * @version 1.2
+ * @version 1.3
  * @author Dylan Mercer
  */
 @Component
@@ -78,17 +78,13 @@ public class StudentRewardSpecification {
             }
             // Start date filter
             if (criteria.getStartDate() != null) {
-                predicates.add(criteriaBuilder.greaterThanOrEqualTo(
-                        root.get("redeemedAt"),
-                        criteria.getStartDate()
-                ));
+                predicates.add(SpecificationUtils
+                        .greaterThanOrEqualTo(root.get("redeemedAt"), criteria.getStartDate(), criteriaBuilder));
             }
             // End date filter
             if (criteria.getEndDate() != null) {
-                predicates.add(criteriaBuilder.lessThanOrEqualTo(
-                        root.get("redeemedAt"),
-                        criteria.getEndDate()
-                ));
+                predicates.add(SpecificationUtils
+                        .lessThanOrEqualTo(root.get("redeemedAt"), criteria.getEndDate(), criteriaBuilder));
             }
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
