@@ -22,7 +22,7 @@ import java.util.List;
  *
  * @see StudentSearchCriteria
  * @see Specification
- * @version 1.1
+ * @version 1.2
  * @author Dylan Mercer
  */
 @Component
@@ -39,18 +39,15 @@ public class StudentSpecification {
         return (root, _, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
             predicates.add(criteriaBuilder.equal(root.get("user").get("role"), Role.STUDENT));
-            // Email filter
-            if (SpecificationUtils.isNotBlank(criteria.getEmail())) {
-                predicates.add(SpecificationUtils.likeIgnoreCase(root.get("user").get("email"), criteria.getEmail(), criteriaBuilder));
-            }
-            // First name filter
-            if (SpecificationUtils.isNotBlank(criteria.getFirstName())) {
-                predicates.add(SpecificationUtils.likeIgnoreCase(root.get("user").get("firstName"), criteria.getFirstName(), criteriaBuilder));
-            }
-            // Last name filter
-            if (SpecificationUtils.isNotBlank(criteria.getLastName())) {
-                predicates.add(SpecificationUtils.likeIgnoreCase(root.get("user").get("lastName"), criteria.getLastName(), criteriaBuilder));
-            }
+            // User text filters (email, first name, last name)
+            SpecificationUtils.addUserTextFilters(
+                    root.get("user"),
+                    criteria.getEmail(),
+                    criteria.getFirstName(),
+                    criteria.getLastName(),
+                    predicates,
+                    criteriaBuilder
+            );
             // Teacher filter
             if (criteria.getTeacherId() != null) {
                 predicates.add(SpecificationUtils.equal(root.get("teacher").get("id"), criteria.getTeacherId(), criteriaBuilder));
