@@ -2,6 +2,7 @@ package com.bearpoints.api.specification;
 
 import com.bearpoints.api.criteria.BehaviorTypeSearchCriteria;
 import com.bearpoints.api.entity.BehaviorType;
+import com.bearpoints.api.utility.SpecificationUtils;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
@@ -20,7 +21,7 @@ import java.util.List;
  *
  * @see BehaviorTypeSearchCriteria
  * @see Specification
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @Component
@@ -37,31 +38,23 @@ public class BehaviorTypeSpecification {
         return (root, _, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
             // Name filter
-            if (criteria.getName() != null && !criteria.getName().trim().isEmpty()) {
-                predicates.add(criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("name")),
-                        "%" + criteria.getName().toLowerCase() + "%"
-                ));
+            if (SpecificationUtils.isNotBlank(criteria.getName())) {
+                predicates.add(SpecificationUtils
+                        .likeIgnoreCase(root.get("name"), criteria.getName(), criteriaBuilder));
             }
             // Active filter
             if (criteria.getActive() != null) {
-                predicates.add(criteriaBuilder.equal(
-                        root.get("active"),
-                        criteria.getActive()
-                ));
+                predicates.add(SpecificationUtils
+                        .equal(root.get("active"), criteria.getActive(), criteriaBuilder));
             }
             // Point value range filters
             if (criteria.getMinPointValue() != null) {
-                predicates.add(criteriaBuilder.greaterThanOrEqualTo(
-                        root.get("pointValue"),
-                        criteria.getMinPointValue()
-                ));
+                predicates.add(SpecificationUtils
+                        .greaterThanOrEqualTo(root.get("pointValue"), criteria.getMinPointValue(), criteriaBuilder));
             }
             if (criteria.getMaxPointValue() != null) {
-                predicates.add(criteriaBuilder.lessThanOrEqualTo(
-                        root.get("pointValue"),
-                        criteria.getMaxPointValue()
-                ));
+                predicates.add(SpecificationUtils
+                        .lessThanOrEqualTo(root.get("pointValue"), criteria.getMaxPointValue(), criteriaBuilder));
             }
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
