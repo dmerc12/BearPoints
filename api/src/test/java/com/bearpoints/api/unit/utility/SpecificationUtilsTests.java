@@ -1,5 +1,7 @@
 package com.bearpoints.api.unit.utility;
 
+import com.bearpoints.api.entity.Student;
+import com.bearpoints.api.entity.Teacher;
 import com.bearpoints.api.entity.User;
 import com.bearpoints.api.utility.SpecificationUtils;
 import jakarta.persistence.criteria.*;
@@ -11,6 +13,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -19,7 +24,7 @@ import static org.mockito.Mockito.*;
  * Verifies that each utility method correctly delegates to the {@link CriteriaBuilder}
  * with the expected arguments.
  *
- * @version 1.1
+ * @version 1.2
  * @author Dylan Mercer
  */
 @ExtendWith(MockitoExtension.class)
@@ -54,6 +59,21 @@ public class SpecificationUtilsTests {
 
     @Mock
     private Predicate mockPredicate;
+
+    @Mock
+    private Path<Object> userPath;
+
+    @Mock
+    private Join<Object, Student> studentJoin;
+
+    @Mock
+    private Join<Object, Teacher> teacherJoin;
+
+    @Mock
+    private Join<Student, User> studentUserJoin;
+
+    @Mock
+    private Join<Teacher, User> teacherUserJoin;
 
     @Nested
     @DisplayName("isNotBlank method")
@@ -191,6 +211,217 @@ public class SpecificationUtilsTests {
             when(cb.like(lowerExpr, expectedPattern)).thenReturn(mockPredicate);
             SpecificationUtils.fullNameLikeIgnoreCase(userJoin, mixedCase, cb);
             verify(cb).like(lowerExpr, expectedPattern);
+        }
+    }
+
+    @Nested
+    @DisplayName("addUserTextFilters method")
+    class AddUserTextFiltersTests {
+        private List<Predicate> predicates;
+
+        @BeforeEach
+        void setUp() {
+            predicates = new ArrayList<>();
+            lenient().doReturn(stringPath).when(userPath).get("email");
+            lenient().doReturn(stringPath).when(userPath).get("firstName");
+            lenient().doReturn(stringPath).when(userPath).get("lastName");
+            lenient().when(cb.lower(stringPath)).thenReturn(lowerExpr);
+            lenient().when(cb.like(eq(lowerExpr), anyString())).thenReturn(mockPredicate);
+        }
+
+        @Test
+        @DisplayName("Should not add any predicates when all values are null/blank")
+        void shouldNotAddPredicatesWhenAllBlank() {
+            SpecificationUtils.addUserTextFilters(userPath, null, "", "  ", predicates, cb);
+            assertTrue(predicates.isEmpty());
+            verifyNoInteractions(cb);
+        }
+
+        @Test
+        @DisplayName("Should add email predicate when email is provided")
+        void shouldAddEmailPredicate() {
+            String email = "test@example.com";
+            SpecificationUtils.addUserTextFilters(userPath, email, null, null, predicates, cb);
+            assertEquals(1, predicates.size());
+            assertSame(mockPredicate, predicates.getFirst());
+            verify(userPath).get("email");
+            verify(cb).lower(stringPath);
+            verify(cb).like(lowerExpr, "%" + email.toLowerCase() + "%");
+        }
+
+        @Test
+        @DisplayName("Should add first name predicate when first name is provided")
+        void shouldAddFirstNamePredicate() {
+            String firstName = "John";
+            SpecificationUtils.addUserTextFilters(userPath, " ", firstName, null, predicates, cb);
+            assertEquals(1, predicates.size());
+            assertSame(mockPredicate, predicates.getFirst());
+            verify(userPath).get("firstName");
+            verify(cb).lower(stringPath);
+            verify(cb).like(lowerExpr, "%" + firstName.toLowerCase() + "%");
+        }
+
+        @Test
+        @DisplayName("Should add last name predicate when last name is provided")
+        void shouldAddLastNamePredicate() {
+            String lastName = "Doe";
+            SpecificationUtils.addUserTextFilters(userPath, null, null, lastName, predicates, cb);
+            assertEquals(1, predicates.size());
+            assertSame(mockPredicate, predicates.getFirst());
+            verify(userPath).get("lastName");
+            verify(cb).lower(stringPath);
+            verify(cb).like(lowerExpr, "%" + lastName.toLowerCase() + "%");
+        }
+
+        @Test
+        @DisplayName("Should add all three predicate when all are provided")
+        void shouldAddAllPredicate() {
+            String email = "test@example.com";
+            String firstName = "John";
+            String lastName = "Doe";
+            SpecificationUtils.addUserTextFilters(userPath, email, firstName, lastName, predicates, cb);
+            assertEquals(3, predicates.size());
+            verify(userPath).get("email");
+            verify(userPath).get("firstName");
+            verify(userPath).get("lastName");
+            verify(cb, times(3)).lower(stringPath);
+            verify(cb, times(3)).like(eq(lowerExpr), anyString());
+        }
+    }
+
+    @Nested
+    @DisplayName("addStudentNameIdFilters method")
+    class AddStudentNameIdFiltersTests {
+        private List<Predicate> predicates;
+
+        @BeforeEach
+        void setUp() {
+            predicates = new ArrayList<>();
+            lenient().doReturn(studentUserJoin).when(studentJoin).join("user");
+            lenient().doReturn(firstNamePath).when(studentUserJoin).get("firstName");
+            lenient().doReturn(lastNamePath).when(studentUserJoin).get("lastName");
+            lenient().when(cb.concat(firstNamePath, " ")).thenReturn(concatStep1);
+            lenient().when(cb.concat(concatStep1, lastNamePath)).thenReturn(concatStep2);
+            lenient().when(cb.lower(concatStep2)).thenReturn(lowerExpr);
+            lenient().when(cb.like(eq(lowerExpr), anyString())).thenReturn(mockPredicate);
+            lenient().doReturn(intPath).when(studentJoin).get("id");
+            lenient().when(cb.equal(eq(intPath), anyLong())).thenReturn(mockPredicate);
+        }
+
+        @Test
+        @DisplayName("Should not add any predicates when both values are null/blank")
+        void shouldNotAddPredicatesWhenBothNull() {
+            SpecificationUtils.addStudentNameIdFilters(studentJoin, null, null, predicates, cb);
+            assertTrue(predicates.isEmpty());
+            verifyNoInteractions(cb);
+        }
+
+        @Test
+        @DisplayName("Should add student name predicate when studentName is provided")
+        void shouldAddStudentNamePredicate() {
+            String studentName = "John Doe";
+            SpecificationUtils.addStudentNameIdFilters(studentJoin, studentName, null, predicates, cb);
+            assertEquals(1, predicates.size());
+            assertSame(mockPredicate, predicates.getFirst());
+            verify(studentJoin).join("user");
+            verify(studentUserJoin).get("firstName");
+            verify(studentUserJoin).get("lastName");
+            verify(cb).concat(firstNamePath, " ");
+            verify(cb).concat(concatStep1, lastNamePath);
+            verify(cb).lower(concatStep2);
+            verify(cb).like(lowerExpr, "%" + studentName.toLowerCase() + "%");
+        }
+
+        @Test
+        @DisplayName("Should add student ID predicate when studentId is provided")
+        void shouldAddStudentIdPredicate() {
+            Long studentId = 123L;
+            SpecificationUtils.addStudentNameIdFilters(studentJoin, null, studentId, predicates, cb);
+            assertEquals(1, predicates.size());
+            assertSame(mockPredicate, predicates.getFirst());
+            verify(studentJoin).get("id");
+            verify(cb).equal(intPath, studentId);
+        }
+
+        @Test
+        @DisplayName("Should add both predicates when both are provided")
+        void shouldAddBothPredicates() {
+            String studentName = "John Doe";
+            Long studentId = 123L;
+            SpecificationUtils.addStudentNameIdFilters(studentJoin, studentName, studentId, predicates, cb);
+            assertEquals(2, predicates.size());
+            verify(studentJoin).join("user");
+            verify(studentJoin).get("id");
+            verify(cb).like(lowerExpr, "%" + studentName.toLowerCase() + "%");
+            verify(cb).equal(intPath, studentId);
+        }
+    }
+
+    @Nested
+    @DisplayName("addTeacherNameIdFilters method")
+    class AddTeacherNameIdFiltersTests {
+        private List<Predicate> predicates;
+
+        @BeforeEach
+        void setUp() {
+            predicates = new ArrayList<>();
+            lenient().doReturn(teacherUserJoin).when(teacherJoin).join("user");
+            lenient().doReturn(firstNamePath).when(teacherUserJoin).get("firstName");
+            lenient().doReturn(lastNamePath).when(teacherUserJoin).get("lastName");
+            lenient().when(cb.concat(firstNamePath, " ")).thenReturn(concatStep1);
+            lenient().when(cb.concat(concatStep1, lastNamePath)).thenReturn(concatStep2);
+            lenient().when(cb.lower(concatStep2)).thenReturn(lowerExpr);
+            lenient().when(cb.like(eq(lowerExpr), anyString())).thenReturn(mockPredicate);
+            lenient().doReturn(intPath).when(teacherJoin).get("id");
+            lenient().when(cb.equal(eq(intPath), anyLong())).thenReturn(mockPredicate);
+        }
+
+        @Test
+        @DisplayName("Should not add any predicates when both values are null/blank")
+        void shouldNotAddPredicatesWhenBothNull() {
+            SpecificationUtils.addTeacherNameIdFilters(teacherJoin, null, null, predicates, cb);
+            assertTrue(predicates.isEmpty());
+            verifyNoInteractions(cb);
+        }
+
+        @Test
+        @DisplayName("Should add teacher name predicate when teacherName is provided")
+        void shouldAddTeacherNamePredicate() {
+            String teacherName = "Jane Smith";
+            SpecificationUtils.addTeacherNameIdFilters(teacherJoin, teacherName, null, predicates, cb);
+            assertEquals(1, predicates.size());
+            assertSame(mockPredicate, predicates.getFirst());
+            verify(teacherJoin).join("user");
+            verify(teacherUserJoin).get("firstName");
+            verify(teacherUserJoin).get("lastName");
+            verify(cb).concat(firstNamePath, " ");
+            verify(cb).concat(concatStep1, lastNamePath);
+            verify(cb).lower(concatStep2);
+            verify(cb).like(lowerExpr, "%" + teacherName.toLowerCase() + "%");
+        }
+
+        @Test
+        @DisplayName("Should add teacher ID predicate when teacherId is provided")
+        void shouldAddTeacherIdPredicate() {
+            Long teacherId = 456L;
+            SpecificationUtils.addTeacherNameIdFilters(teacherJoin, null, teacherId, predicates, cb);
+            assertEquals(1, predicates.size());
+            assertSame(mockPredicate, predicates.getFirst());
+            verify(teacherJoin).get("id");
+            verify(cb).equal(intPath, teacherId);
+        }
+
+        @Test
+        @DisplayName("Should add both predicates when both are provided")
+        void shouldAddBothPredicates() {
+            String teacherName = "Jane Smith";
+            Long teacherId = 456L;
+            SpecificationUtils.addTeacherNameIdFilters(teacherJoin, teacherName, teacherId, predicates, cb);
+            assertEquals(2, predicates.size());
+            verify(teacherJoin).join("user");
+            verify(teacherJoin).get("id");
+            verify(cb).like(lowerExpr, "%" + teacherName.toLowerCase() + "%");
+            verify(cb).equal(intPath, teacherId);
         }
     }
 }

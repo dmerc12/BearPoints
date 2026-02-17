@@ -1,14 +1,18 @@
 package com.bearpoints.api.utility;
 
+import com.bearpoints.api.entity.Student;
+import com.bearpoints.api.entity.Teacher;
 import com.bearpoints.api.entity.User;
 import jakarta.persistence.criteria.*;
+
+import java.util.List;
 
 /**
  * Utility class for building common JPA criteria predicates.
  * <p>Provides methods to reduce code duplication across specific classes.
  * All methods are static and stateless.
  *
- * @version 1.1
+ * @version 1.2
  * @author Dylan Mercer
  */
 public class SpecificationUtils {
@@ -90,5 +94,61 @@ public class SpecificationUtils {
                 userJoin.get("lastName")
         );
         return cb.like(cb.lower(fullNameExpr), "%" + fullName.toLowerCase() + "%");
+    }
+
+    /**
+     * Adds case-insensitive LIKE predicates for email, first name, and last name
+     * if the corresponding values are not blank.
+     *
+     * @param userPath the path to the User entity (e.g., {@code root.get("user")})
+     * @param email the email search term
+     * @param firstName the first name search term
+     * @param lastName the last name search term
+     * @param predicates the list to add predicates to
+     * @param criteriaBuilder the {@link CriteriaBuilder}
+     */
+    public static void addUserTextFilters(Path<?> userPath, String email, String firstName, String lastName,
+                                          List<Predicate> predicates, CriteriaBuilder criteriaBuilder) {
+        if (isNotBlank(email)) {
+            predicates.add(likeIgnoreCase(userPath.get("email"), email, criteriaBuilder));
+        }
+        if (isNotBlank(firstName)) {
+            predicates.add(likeIgnoreCase(userPath.get("firstName"), firstName, criteriaBuilder));
+        }
+        if (isNotBlank(lastName)) {
+            predicates.add(likeIgnoreCase(userPath.get("lastName"), lastName, criteriaBuilder));
+        }
+    }
+
+    /**
+     * Adds student full-name case-insensitive LIKE and student ID equality predicates
+     * if the corresponding values are provided.
+     *
+     * @param studentJoin the join to the Student entity
+     * @param studentName the student name search term
+     * @param studentId the student ID to match exactly
+     * @param predicates the list to add predicates to
+     * @param criteriaBuilder the {@link CriteriaBuilder}
+     */
+    public static void addStudentNameIdFilters(Join<?, Student> studentJoin, String studentName, Long studentId,
+                                               List<Predicate> predicates, CriteriaBuilder criteriaBuilder) {
+        if (isNotBlank(studentName)) {
+            Join<Student, User> userJoin = studentJoin.join("user");
+            predicates.add(fullNameLikeIgnoreCase(userJoin, studentName, criteriaBuilder));
+        }
+        if (studentId != null) {
+            predicates.add(equal(studentJoin.get("id"), studentId, criteriaBuilder));
+        }
+    }
+
+    public static void addTeacherNameIdFilters(Join<?, Teacher> teacherJoin, String teacherName, Long teacherId,
+                                               List<Predicate> predicates, CriteriaBuilder criteriaBuilder) {
+        if (isNotBlank(teacherName)) {
+            Join<Teacher, User> userJoin = teacherJoin.join("user");
+            predicates.add(fullNameLikeIgnoreCase(userJoin, teacherName, criteriaBuilder));
+        }
+        if (teacherId != null) {
+            predicates.add(equal(teacherJoin.get("id"), teacherId, criteriaBuilder));
+        }
     }
 }
