@@ -4,7 +4,6 @@ import com.bearpoints.api.criteria.StudentRewardSearchCriteria;
 import com.bearpoints.api.entity.RewardItem;
 import com.bearpoints.api.entity.Student;
 import com.bearpoints.api.entity.StudentReward;
-import com.bearpoints.api.entity.User;
 import com.bearpoints.api.utility.SpecificationUtils;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
@@ -25,7 +24,7 @@ import java.util.List;
  *
  * @see StudentRewardSearchCriteria
  * @see Specification
- * @version 1.1
+ * @version 1.2
  * @author Dylan Mercer
  */
 @Component
@@ -44,17 +43,13 @@ public class StudentRewardSpecification {
             // Student name or ID filter
             if (criteria.getStudentName() != null || criteria.getStudentId() != null) {
                 Join<StudentReward, Student> studentJoin = root.join("student");
-                // Student name filter
-                if (SpecificationUtils.isNotBlank(criteria.getStudentName())) {
-                    Join<Student, User> userStudentJoin = studentJoin.join("user");
-                    predicates.add(SpecificationUtils
-                            .fullNameLikeIgnoreCase(userStudentJoin, criteria.getStudentName(), criteriaBuilder));
-                }
-                // Student ID filter
-                if (criteria.getStudentId() != null) {
-                    predicates.add(SpecificationUtils
-                            .equal(studentJoin.get("id"), criteria.getStudentId(), criteriaBuilder));
-                }
+                SpecificationUtils.addStudentNameIdFilters(
+                        studentJoin,
+                        criteria.getStudentName(),
+                        criteria.getStudentId(),
+                        predicates,
+                        criteriaBuilder
+                );
             }
             // Item name or ID filter
             if (criteria.getItemName() != null || criteria.getItemId() != null ||
