@@ -1,5 +1,6 @@
 package com.bearpoints.api.utility;
 
+import com.bearpoints.api.entity.GradeLevel;
 import com.bearpoints.api.entity.Student;
 import com.bearpoints.api.entity.Teacher;
 import com.bearpoints.api.entity.User;
@@ -54,29 +55,41 @@ public class SpecificationUtils {
     }
 
     /**
-     * Creates a {@code >=} predicate for a numeric field.
-     * The path is converted to a {@link Number} expression to allow a generic {@link Number} value.
+     * Creates a {@code >=} predicate for any {@link Comparable} field (numbers, dates, etc.).
      *
-     * @param path the path to the numeric field (e.g., {@code root.get("points")})
+     * @param path the path to the field (e.g., {@code root.get("points")} or {@code root.get("timestamp")})
      * @param value the lower bound (inclusive)
      * @param cb the {@link CriteriaBuilder}
      * @return a {@link Predicate} equivalent to {@code path >= value}
      */
-    public static Predicate greaterThanOrEqualTo(Path<? extends Number> path, Number value, CriteriaBuilder cb) {
-        return cb.ge(path, value);
+    public static <Y extends Comparable<? super Y>> Predicate greaterThanOrEqualTo(Path<Y> path, Y value, CriteriaBuilder cb) {
+        return cb.greaterThanOrEqualTo(path, value);
     }
 
     /**
-     * Creates a {@code <=} predicate for a numeric field.
-     * The path is converted to a {@link Number} expression to allow a generic {@link Number} value.
+     * Creates a {@code <=} predicate for any {@link Comparable} field (numbers, dates, etc.).
      *
-     * @param path the path to the numeric field (e.g., {@code root.get("points")})
+     * @param path the path to the field (e.g., {@code root.get("points")} or {@code root.get("timestamp")})
      * @param value the upper bound (inclusive)
      * @param cb the {@link CriteriaBuilder}
      * @return a {@link Predicate} equivalent to {@code path <= value}
      */
-    public static Predicate lessThanOrEqualTo(Path<? extends Number> path, Number value, CriteriaBuilder cb) {
-        return cb.le(path, value);
+    public static <Y extends Comparable<? super Y>> Predicate lessThanOrEqualTo(Path<Y> path, Y value, CriteriaBuilder cb) {
+        return cb.lessThanOrEqualTo(path, value);
+    }
+
+    /**
+     * Adds a grade equality filter if the grade is non-null.
+     *
+     * @param gradePath the path to the grade field (e.g., {@code root.get("grade")}
+     * @param grade the grade value to match
+     * @param predicates the list to add the predicates to
+     * @param cb the {@link CriteriaBuilder}
+     */
+    public static void addGradeFilter(Path<GradeLevel> gradePath, GradeLevel grade, List<Predicate> predicates, CriteriaBuilder cb) {
+        if (grade != null) {
+            predicates.add(equal(gradePath, grade, cb));
+        }
     }
 
     /**

@@ -1,5 +1,6 @@
 package com.bearpoints.api.unit.utility;
 
+import com.bearpoints.api.entity.GradeLevel;
 import com.bearpoints.api.entity.Student;
 import com.bearpoints.api.entity.Teacher;
 import com.bearpoints.api.entity.User;
@@ -64,6 +65,9 @@ public class SpecificationUtilsTests {
     private Path<Object> userPath;
 
     @Mock
+    private Path<GradeLevel> gradePath;
+
+    @Mock
     private Join<Object, Student> studentJoin;
 
     @Mock
@@ -74,6 +78,8 @@ public class SpecificationUtilsTests {
 
     @Mock
     private Join<Teacher, User> teacherUserJoin;
+
+    private List<Predicate> predicates;
 
     @Nested
     @DisplayName("isNotBlank method")
@@ -151,13 +157,13 @@ public class SpecificationUtilsTests {
     @DisplayName("greaterThanOrEqualTo method")
     class GreaterThanOrEqualToTests {
         @Test
-        @DisplayName("Should call path.as(Number.class) and cb.greaterThanOrEqualTo")
+        @DisplayName("Should call cb.greaterThanOrEqualTo with path and value")
         void shouldCreateGreaterThanOrEqualToPredicate() {
-            Number value = 10;
-            when(cb.ge(intPath, value)).thenReturn(mockPredicate);
+            Integer value = 10;
+            when(cb.greaterThanOrEqualTo(intPath, value)).thenReturn(mockPredicate);
             Predicate result = SpecificationUtils.greaterThanOrEqualTo(intPath, value, cb);
             assertSame(mockPredicate, result);
-            verify(cb).ge(intPath, value);
+            verify(cb).greaterThanOrEqualTo(intPath, value);
         }
     }
 
@@ -165,13 +171,13 @@ public class SpecificationUtilsTests {
     @DisplayName("lessThanOrEqualTo method")
     class LessThanOrEqualToTests {
         @Test
-        @DisplayName("Should call path.as(Number.class) and cb.lessThanOrEqualTo")
+        @DisplayName("Should call cb.lessThanOrEqualTo with path and value")
         void shouldCreateLessThanOrEqualToPredicate() {
-            Number value = 20;
-            when(cb.le(intPath, value)).thenReturn(mockPredicate);
+            Integer value = 20;
+            when(cb.lessThanOrEqualTo(intPath, value)).thenReturn(mockPredicate);
             Predicate result = SpecificationUtils.lessThanOrEqualTo(intPath, value, cb);
             assertSame(mockPredicate, result);
-            verify(cb).le(intPath, value);
+            verify(cb).lessThanOrEqualTo(intPath, value);
         }
     }
 
@@ -217,8 +223,6 @@ public class SpecificationUtilsTests {
     @Nested
     @DisplayName("addUserTextFilters method")
     class AddUserTextFiltersTests {
-        private List<Predicate> predicates;
-
         @BeforeEach
         void setUp() {
             predicates = new ArrayList<>();
@@ -292,8 +296,6 @@ public class SpecificationUtilsTests {
     @Nested
     @DisplayName("addStudentNameIdFilters method")
     class AddStudentNameIdFiltersTests {
-        private List<Predicate> predicates;
-
         @BeforeEach
         void setUp() {
             predicates = new ArrayList<>();
@@ -360,8 +362,6 @@ public class SpecificationUtilsTests {
     @Nested
     @DisplayName("addTeacherNameIdFilters method")
     class AddTeacherNameIdFiltersTests {
-        private List<Predicate> predicates;
-
         @BeforeEach
         void setUp() {
             predicates = new ArrayList<>();
@@ -422,6 +422,34 @@ public class SpecificationUtilsTests {
             verify(teacherJoin).get("id");
             verify(cb).like(lowerExpr, "%" + teacherName.toLowerCase() + "%");
             verify(cb).equal(intPath, teacherId);
+        }
+    }
+
+    @Nested
+    @DisplayName("addGradeFilter method")
+    class AddGradeFilterTests {
+        @BeforeEach
+        void setUp() {
+            predicates = new ArrayList<>();
+        }
+
+        @Test
+        @DisplayName("Should not add any predicate when grade is null")
+        void shouldNotAddPredicateWhenGradeNull() {
+            SpecificationUtils.addGradeFilter(gradePath, null, predicates, cb);
+            assertTrue(predicates.isEmpty());
+            verifyNoInteractions(cb);
+        }
+
+        @Test
+        @DisplayName("Should add grade equality predicate when grade is provided")
+        void shouldAddGradePredicate() {
+            GradeLevel grade = GradeLevel.FIRST;
+            when(cb.equal(gradePath, grade)).thenReturn(mockPredicate);
+            SpecificationUtils.addGradeFilter(gradePath, grade, predicates, cb);
+            assertEquals(1, predicates.size());
+            assertSame(mockPredicate, predicates.getFirst());
+            verify(cb).equal(gradePath, grade);
         }
     }
 }
