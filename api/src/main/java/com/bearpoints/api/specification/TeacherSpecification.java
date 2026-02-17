@@ -3,6 +3,7 @@ package com.bearpoints.api.specification;
 import com.bearpoints.api.criteria.TeacherSearchCriteria;
 import com.bearpoints.api.entity.Role;
 import com.bearpoints.api.entity.Teacher;
+import com.bearpoints.api.utility.SpecificationUtils;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
@@ -21,7 +22,7 @@ import java.util.List;
  *
  * @see TeacherSearchCriteria
  * @see Specification
- * @version 1.0
+ * @version 1.2
  * @author Dylan Mercer
  */
 @Component
@@ -38,38 +39,22 @@ public class TeacherSpecification {
             List<Predicate> predicates = new ArrayList<>();
             predicates.add(criteriaBuilder.equal(root.get("user").get("role"), Role.TEACHER));
             // Email filter
-            if (isValidSearchString(criteria.getEmail())) {
-                predicates.add(criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("user").get("email")),
-                        "%" + criteria.getEmail().toLowerCase() + "%"
-                ));
+            if (SpecificationUtils.isNotBlank(criteria.getEmail())) {
+                predicates.add(SpecificationUtils.likeIgnoreCase(root.get("user").get("email"), criteria.getEmail(), criteriaBuilder));
             }
             // First name filter
-            if (isValidSearchString(criteria.getFirstName())) {
-                predicates.add(criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("user").get("firstName")),
-                        "%" + criteria.getFirstName().toLowerCase() + "%"
-                ));
+            if (SpecificationUtils.isNotBlank(criteria.getFirstName())) {
+                predicates.add(SpecificationUtils.likeIgnoreCase(root.get("user").get("firstName"), criteria.getFirstName(), criteriaBuilder));
             }
             // Last name filter
-            if (isValidSearchString(criteria.getLastName())) {
-                predicates.add(criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("user").get("lastName")),
-                        "%" + criteria.getLastName().toLowerCase() + "%"
-                ));
+            if (SpecificationUtils.isNotBlank(criteria.getLastName())) {
+                predicates.add(SpecificationUtils.likeIgnoreCase(root.get("user").get("lastName"), criteria.getLastName(), criteriaBuilder));
             }
             // Grade filter
             if (criteria.getGrade() != null) {
-                predicates.add(criteriaBuilder.equal(
-                        root.get("grade"),
-                        criteria.getGrade()
-                ));
+                predicates.add(SpecificationUtils.equal(root.get("grade"), criteria.getGrade(), criteriaBuilder));
             }
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
-    }
-
-    private static boolean isValidSearchString(String value) {
-        return value != null && !value.trim().isEmpty();
     }
 }
