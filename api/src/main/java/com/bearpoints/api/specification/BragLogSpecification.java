@@ -26,7 +26,7 @@ import java.util.List;
  *
  * @see BragLogSearchCriteria
  * @see Specification
- * @version 1.1
+ * @version 1.2
  * @author Dylan Mercer
  */
 @Component
@@ -45,32 +45,24 @@ public class BragLogSpecification {
             // Student name or ID filter
             if (criteria.getStudentName() != null || criteria.getStudentId() != null) {
                 Join<BragLog, Student> studentJoin = root.join("student");
-                // Student name filter
-                if (SpecificationUtils.isNotBlank(criteria.getStudentName())) {
-                    Join<Student, User> userStudentJoin = studentJoin.join("user");
-                    predicates.add(SpecificationUtils
-                            .fullNameLikeIgnoreCase(userStudentJoin, criteria.getStudentName(), criteriaBuilder));
-                }
-                // Student ID filter
-                if (criteria.getStudentId() != null) {
-                    predicates.add(SpecificationUtils
-                            .equal(studentJoin.get("id"), criteria.getStudentId(), criteriaBuilder));
-                }
+                SpecificationUtils.addStudentNameIdFilters(
+                        studentJoin,
+                        criteria.getStudentName(),
+                        criteria.getStudentId(),
+                        predicates,
+                        criteriaBuilder
+                );
             }
             // Teacher name or ID filter
             if (criteria.getTeacherName() != null || criteria.getTeacherId() != null) {
                 Join<BragLog, Teacher> teacherJoin = root.join("teacher");
-                // Teacher name filter
-                if (SpecificationUtils.isNotBlank(criteria.getTeacherName())) {
-                    Join<Teacher, User> userTeacherJoin = teacherJoin.join("user");
-                    predicates.add(SpecificationUtils
-                            .fullNameLikeIgnoreCase(userTeacherJoin, criteria.getTeacherName(), criteriaBuilder));
-                }
-                // Teacher ID filter
-                if (criteria.getTeacherId() != null) {
-                    predicates.add(SpecificationUtils
-                            .equal(teacherJoin.get("id"), criteria.getTeacherId(), criteriaBuilder));
-                }
+                SpecificationUtils.addTeacherNameIdFilters(
+                        teacherJoin,
+                        criteria.getTeacherName(),
+                        criteria.getTeacherId(),
+                        predicates,
+                        criteriaBuilder
+                );
             }
 
             // Grade level filter
