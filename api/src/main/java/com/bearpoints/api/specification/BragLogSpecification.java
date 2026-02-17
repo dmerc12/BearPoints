@@ -26,7 +26,7 @@ import java.util.List;
  *
  * @see BragLogSearchCriteria
  * @see Specification
- * @version 1.2
+ * @version 1.3
  * @author Dylan Mercer
  */
 @Component
@@ -64,14 +64,8 @@ public class BragLogSpecification {
                         criteriaBuilder
                 );
             }
-
             // Grade level filter
-            if (criteria.getGrade() != null) {
-                predicates.add(criteriaBuilder.equal(
-                        root.get("grade"),
-                        criteria.getGrade()
-                ));
-            }
+            SpecificationUtils.addGradeFilter(root.get("grade"), criteria.getGrade(), predicates, criteriaBuilder);
             // Min points filter
             if (criteria.getMinPoints() != null) {
                 predicates.add(SpecificationUtils
@@ -84,17 +78,13 @@ public class BragLogSpecification {
             }
             // Start date filter
             if (criteria.getStartDate() != null) {
-                predicates.add(criteriaBuilder.greaterThanOrEqualTo(
-                        root.get("timestamp"),
-                        criteria.getStartDate()
-                ));
+                predicates.add(SpecificationUtils
+                        .greaterThanOrEqualTo(root.get("timestamp"), criteria.getStartDate(), criteriaBuilder));
             }
             // End date filter
             if (criteria.getEndDate() != null) {
-                predicates.add(criteriaBuilder.lessThanOrEqualTo(
-                        root.get("timestamp"),
-                        criteria.getEndDate()
-                ));
+                predicates.add(SpecificationUtils
+                        .lessThanOrEqualTo(root.get("timestamp"), criteria.getEndDate(), criteriaBuilder));
             }
             // Notes filter
             if (SpecificationUtils.isNotBlank(criteria.getNotes())) {
