@@ -89,6 +89,8 @@ public class TeacherServiceImpl implements TeacherService {
         teacher.setUser(savedUser);
         teacher.setGrade(teacherDTO.getGrade());
         Teacher savedTeacher = teacherDAO.save(teacher);
+        savedUser.setTeacher(savedTeacher);
+        userDAO.save(savedUser);
         log.info("Successfully created teacher with ID: {}", savedTeacher.getId());
         return new TeacherDTO(savedTeacher);
     }

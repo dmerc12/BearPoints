@@ -239,6 +239,7 @@ public class TeacherServiceTests {
             savedUser.setLastName("Teacher");
             savedUser.setRole(role);
             Teacher savedTeacher = createTeacher(1L, 1L, email, "New", "Teacher", role, gradeLevel);
+            savedUser.setTeacher(savedTeacher);
             when(userDAO.save(any(User.class))).thenReturn(savedUser);
             when(teacherDAO.save(any(Teacher.class))).thenReturn(savedTeacher);
             TeacherDTO result = teacherService.createTeacher(teacherDTO);
@@ -247,8 +248,9 @@ public class TeacherServiceTests {
             assertEquals(email, result.getUser().getEmail());
             assertEquals(gradeLevel, result.getGrade());
             assertEquals(role, result.getUser().getRole());
+            assertEquals(result.getId(), savedUser.getTeacher().getId());
             verify(teacherDAO).findByUserEmail(email);
-            verify(userDAO).save(any(User.class));
+            verify(userDAO, times(2)).save(any(User.class));
             verify(teacherDAO).save(any(Teacher.class));
         }
 
@@ -293,11 +295,12 @@ public class TeacherServiceTests {
             savedUser.setFirstName("New");
             savedUser.setLastName("Teacher");
             savedUser.setRole(role);
+            savedUser.setTeacher(savedTeacher);
             when(userDAO.save(any(User.class))).thenReturn(savedUser);
             when(teacherDAO.save(any(Teacher.class))).thenReturn(savedTeacher);
             TeacherDTO result = teacherService.createTeacher(teacherDTO);
             assertEquals(Role.TEACHER, result.getUser().getRole());
-            verify(userDAO).save(any(User.class));
+            verify(userDAO, times(2)).save(any(User.class));
             verify(teacherDAO).save(argThat(teacher -> teacher.getUser().getRole() == Role.TEACHER));
         }
     }
