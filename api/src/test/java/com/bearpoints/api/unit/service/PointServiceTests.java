@@ -32,6 +32,10 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("PointService Unit Tests")
 public class PointServiceTests {
+    String INSUFFICIENT_POINTS_EXCEPTION_MESSAGE = "Insufficient points to redeem this reward";
+    String STUDENT_NOT_FOUND_EXCEPTION_MESSAGE = "Student not found with ID: ";
+    String POINTS_NEGATIVE_EXCEPTION_MESSAGE = "Points must be non-negative";
+
     @Mock
     private StudentDAO studentDAO;
 
@@ -63,10 +67,11 @@ public class PointServiceTests {
         @Test
         @DisplayName("should throw exception when points negative")
         void addPointsNegative() {
-            assertThrows(
+            IllegalArgumentException ex = assertThrows(
                     IllegalArgumentException.class,
                     () -> pointService.addPoints(studentId, -5)
             );
+            assertEquals(ex.getMessage(), POINTS_NEGATIVE_EXCEPTION_MESSAGE);
             verify(studentDAO, never()).findById(any());
         }
 
@@ -74,10 +79,11 @@ public class PointServiceTests {
         @DisplayName("should throw exception when student not found")
         void addPointsStudentNotFound() {
             when(studentDAO.findById(studentId)).thenReturn(Optional.empty());
-            assertThrows(
+            ResourceNotFoundException ex = assertThrows(
                     ResourceNotFoundException.class,
                     () -> pointService.addPoints(studentId, 10)
             );
+            assertTrue(ex.getMessage().contains(STUDENT_NOT_FOUND_EXCEPTION_MESSAGE));
             verify(studentDAO, never()).save(any());
         }
     }
@@ -97,10 +103,11 @@ public class PointServiceTests {
         @Test
         @DisplayName("should throw exception when points negative")
         void subtractPointsNegative() {
-            assertThrows(
+            IllegalArgumentException ex = assertThrows(
                     IllegalArgumentException.class,
                     () -> pointService.subtractPoints(studentId, -5)
             );
+            assertEquals(ex.getMessage(), POINTS_NEGATIVE_EXCEPTION_MESSAGE);
             verify(studentDAO, never()).findById(any());
         }
 
@@ -108,10 +115,11 @@ public class PointServiceTests {
         @DisplayName("should throw exception when student not found")
         void subtractPointsStudentNotFound() {
             when(studentDAO.findById(studentId)).thenReturn(Optional.empty());
-            assertThrows(
+            ResourceNotFoundException ex = assertThrows(
                     ResourceNotFoundException.class,
                     () -> pointService.subtractPoints(studentId, 10)
             );
+            assertTrue(ex.getMessage().contains(STUDENT_NOT_FOUND_EXCEPTION_MESSAGE));
             verify(studentDAO, never()).save(any());
         }
 
@@ -119,10 +127,11 @@ public class PointServiceTests {
         @DisplayName("should throw exception when insufficient points")
         void subtractPointsInsufficient() {
             when(studentDAO.findById(studentId)).thenReturn(Optional.of(student));
-            assertThrows(
+            InsufficientResourcesException ex = assertThrows(
                     InsufficientResourcesException.class,
                     () -> pointService.subtractPoints(studentId, 150)
             );
+            assertEquals(ex.getMessage(), INSUFFICIENT_POINTS_EXCEPTION_MESSAGE);
             assertEquals(100, student.getPoints());
             verify(studentDAO, never()).save(any());
         }
@@ -145,20 +154,22 @@ public class PointServiceTests {
         @DisplayName("should throw when student does not have enough points")
         void hasSufficientPointsInsufficient() {
             when(studentDAO.findById(studentId)).thenReturn(Optional.of(student));
-            assertThrows(
+            InsufficientResourcesException ex = assertThrows(
                     InsufficientResourcesException.class,
                     () -> pointService.hasSufficientPoints(studentId, 150)
             );
+            assertEquals(ex.getMessage(), INSUFFICIENT_POINTS_EXCEPTION_MESSAGE);
             verify(studentDAO).findById(studentId);
         }
 
         @Test
         @DisplayName("should throw when required points is negative")
         void hasSufficientPointsNegativeRequiredPoints() {
-            assertThrows(
+            IllegalArgumentException ex = assertThrows(
                     IllegalArgumentException.class,
                     () -> pointService.hasSufficientPoints(studentId, -1)
             );
+            assertEquals(ex.getMessage(), POINTS_NEGATIVE_EXCEPTION_MESSAGE);
             verify(studentDAO, never()).findById(anyLong());
         }
 
@@ -166,10 +177,11 @@ public class PointServiceTests {
         @DisplayName("should throw when student not found")
         void hasSufficientPointsStudentNotFound() {
             when(studentDAO.findById(studentId)).thenReturn(Optional.empty());
-            assertThrows(
+            ResourceNotFoundException ex = assertThrows(
                     ResourceNotFoundException.class,
                     () -> pointService.hasSufficientPoints(studentId, 150)
             );
+            assertTrue(ex.getMessage().contains(STUDENT_NOT_FOUND_EXCEPTION_MESSAGE));
             verify(studentDAO).findById(studentId);
         }
     }

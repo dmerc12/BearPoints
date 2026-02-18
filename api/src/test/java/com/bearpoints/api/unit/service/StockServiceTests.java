@@ -17,8 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Optional;
 
 import static org.junit.Assert.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /**
@@ -40,6 +39,9 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("StockService Unit Tests")
 public class StockServiceTests {
+    String INSUFFICIENT_STOCK_EXCEPTION_MESSAGE = "Insufficient stock to redeem this reward";
+    String ITEM_NOT_FOUND_EXCEPTION_MESSAGE = "Reward item not found with ID: ";
+
     @Mock
     private RewardItemDAO rewardItemDAO;
 
@@ -74,10 +76,11 @@ public class StockServiceTests {
         void decrementStockInsufficient() {
             item.setStock(0);
             when(rewardItemDAO.findById(itemId)).thenReturn(Optional.of(item));
-            assertThrows(
+            InsufficientResourcesException ex = assertThrows(
                     InsufficientResourcesException.class,
                     () -> stockService.decrementStock(itemId)
             );
+            assertEquals(ex.getMessage(), INSUFFICIENT_STOCK_EXCEPTION_MESSAGE);
             assertEquals(0, item.getStock());
             verify(rewardItemDAO, never()).save(any(RewardItem.class));
         }
@@ -86,10 +89,11 @@ public class StockServiceTests {
         @DisplayName("should throw exception when item not found")
         void decrementStockItemNotFound() {
             when(rewardItemDAO.findById(itemId)).thenReturn(Optional.empty());
-            assertThrows(
+            ResourceNotFoundException ex = assertThrows(
                     ResourceNotFoundException.class,
                     () -> stockService.decrementStock(itemId)
             );
+            assertTrue(ex.getMessage().contains(ITEM_NOT_FOUND_EXCEPTION_MESSAGE));
             verify(rewardItemDAO, never()).save(any(RewardItem.class));
         }
     }
@@ -110,7 +114,11 @@ public class StockServiceTests {
         @DisplayName("should throw exception when item not found")
         void incrementStockItemNotFound() {
             when(rewardItemDAO.findById(itemId)).thenReturn(Optional.empty());
-            assertThrows(ResourceNotFoundException.class, () -> stockService.incrementStock(itemId));
+            ResourceNotFoundException ex = assertThrows(
+                    ResourceNotFoundException.class,
+                    () -> stockService.incrementStock(itemId)
+            );
+            assertTrue(ex.getMessage().contains(ITEM_NOT_FOUND_EXCEPTION_MESSAGE));
             verify(rewardItemDAO, never()).save(any(RewardItem.class));
         }
     }
@@ -132,10 +140,11 @@ public class StockServiceTests {
         void hasSufficientStockInsufficient() {
             item.setStock(0);
             when(rewardItemDAO.findById(itemId)).thenReturn(Optional.of(item));
-            assertThrows(
+            InsufficientResourcesException ex = assertThrows(
                     InsufficientResourcesException.class,
                     () -> stockService.hasSufficientStock(itemId)
             );
+            assertEquals(ex.getMessage(), INSUFFICIENT_STOCK_EXCEPTION_MESSAGE);
             verify(rewardItemDAO).findById(itemId);
         }
 
@@ -143,10 +152,11 @@ public class StockServiceTests {
         @DisplayName("should throw when item not found")
         void hasSufficientStockItemNotFound() {
             when(rewardItemDAO.findById(itemId)).thenReturn(Optional.empty());
-            assertThrows(
+            ResourceNotFoundException ex = assertThrows(
                     ResourceNotFoundException.class,
                     () -> stockService.hasSufficientStock(itemId)
             );
+            assertTrue(ex.getMessage().contains(ITEM_NOT_FOUND_EXCEPTION_MESSAGE));
             verify(rewardItemDAO).findById(itemId);
         }
     }

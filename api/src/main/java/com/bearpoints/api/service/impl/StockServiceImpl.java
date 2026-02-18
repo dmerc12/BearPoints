@@ -31,7 +31,7 @@ public class StockServiceImpl implements StockService {
     @Override
     public void decrementStock(Long itemId) {
         RewardItem item = getRewardItemById(itemId);
-        checkSufficientStock(item.getStock(), item.getName());
+        checkSufficientStock(item.getStock());
         item.setStock(item.getStock() - 1);
         rewardItemDAO.save(item);
         log.debug("Decremented stock for item ID: {}, new stock: {}", itemId, item.getStock());
@@ -54,7 +54,7 @@ public class StockServiceImpl implements StockService {
     @Override
     public void hasSufficientStock(Long itemId) {
         RewardItem item = getRewardItemById(itemId);
-        checkSufficientStock(item.getStock(), item.getName());
+        checkSufficientStock(item.getStock());
         log.debug("Item {} has sufficient stock ({} >= 1)", itemId, item.getStock());
     }
 
@@ -63,9 +63,9 @@ public class StockServiceImpl implements StockService {
                 .orElseThrow(() -> new ResourceNotFoundException("Reward item not found with ID: " + itemId));
     }
 
-    private void checkSufficientStock(int stock, String itemName) {
+    private void checkSufficientStock(int stock) {
         if (stock < 1) {
-            throw new InsufficientResourcesException("Insufficient stock for item: " + itemName);
+            throw new InsufficientResourcesException("Insufficient stock to redeem this reward");
         }
     }
 }

@@ -46,7 +46,7 @@ public class PointServiceImpl implements PointService {
     public void subtractPoints(Long studentId, int points) {
         checkPointsPositive(points);
         Student student = getStudentFromId(studentId);
-        checkSufficientPoints(student.getId(), student.getPoints(), points);
+        checkSufficientPoints(student.getPoints(), points);
         int newPoints = student.getPoints() - points;
         student.setPoints(newPoints);
         studentDAO.save(student);
@@ -60,7 +60,7 @@ public class PointServiceImpl implements PointService {
     public void hasSufficientPoints(Long studentId, int requiredPoints) {
         checkPointsPositive(requiredPoints);
         Student student = getStudentFromId(studentId);
-        checkSufficientPoints(student.getId(), student.getPoints(), requiredPoints);
+        checkSufficientPoints(student.getPoints(), requiredPoints);
         log.debug("Student {} has sufficient points ({} >= {})", studentId, student.getPoints(), requiredPoints);
     }
 
@@ -75,9 +75,9 @@ public class PointServiceImpl implements PointService {
         }
     }
 
-    private void checkSufficientPoints(Long studentId, int studentPoints, int requiredPoints) {
+    private void checkSufficientPoints(int studentPoints, int requiredPoints) {
         if (studentPoints < requiredPoints) {
-            throw new InsufficientResourcesException("Insufficient points to redeem " + requiredPoints + " from student " + studentId);
+            throw new InsufficientResourcesException("Insufficient points to redeem this reward");
         }
     }
 }
