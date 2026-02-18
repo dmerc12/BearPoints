@@ -141,6 +141,30 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
 
         @Test
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
+        @DisplayName("by min point value returns matching behavior types")
+        void searchByMinPointValue_ReturnsMatchingBehaviorTypes() throws Exception {
+            Integer minPointValue = 2;
+            mockMvc.perform(get(baseUrl + "/search")
+                            .param("minPointValue", String.valueOf(minPointValue)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content[*].pointValue",
+                            everyItem(greaterThanOrEqualTo(minPointValue))));
+        }
+
+        @Test
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
+        @DisplayName("by max point value returns matching behavior types")
+        void searchByMaxPointValue_ReturnsMatchingBehaviorTypes() throws Exception {
+            Integer maxPointValue = 5;
+            mockMvc.perform(get(baseUrl + "/search")
+                            .param("maxPointValue", String.valueOf(maxPointValue)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content[*].pointValue",
+                            everyItem(lessThanOrEqualTo(maxPointValue))));
+        }
+
+        @Test
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("with combined criteria returns matching behavior types")
         void searchWithCombinedCriteria_ReturnsMatchingBehaviorTypes() throws Exception {
             String searchTerm = "B";
