@@ -162,6 +162,28 @@ public class StudentTests extends BaseIntegrationTest {
 
         @Test
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
+        @DisplayName("by min points returns matching students")
+        void searchByMinPoints_ReturnsMatchingStudents() throws Exception {
+            mockMvc.perform(get(baseUrl + "/search")
+                            .param("minPoints", "0"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content[*].points",
+                            everyItem(greaterThanOrEqualTo(0))));
+        }
+
+        @Test
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
+        @DisplayName("by max points returns matching students")
+        void searchByMaxPoints_ReturnsMatchingStudents() throws Exception {
+            mockMvc.perform(get(baseUrl + "/search")
+                            .param("maxPoints", "1000"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content[*].points",
+                            everyItem(lessThanOrEqualTo(1000))));
+        }
+
+        @Test
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("with combined criteria returns matching students")
         void searchWithCombinedCriteria_ReturnsMatchingStudents() throws Exception {
             mockMvc.perform(get(baseUrl + "/search")
