@@ -282,6 +282,7 @@ public class StudentServiceTests {
             Student savedStudent = createStudent(1L, 0);
             savedStudent.setUser(savedUser);
             savedStudent.setTeacher(teacher);
+            savedUser.setStudent(savedStudent);
             when(studentDAO.findByUserEmail(studentDTO.getUser().getEmail())).thenReturn(Optional.empty());
             when(teacherDAO.findById(1L)).thenReturn(Optional.of(teacher));
             when(userDAO.save(any(User.class))).thenReturn(savedUser);
@@ -291,11 +292,11 @@ public class StudentServiceTests {
             assertEquals(1L, result.getId());
             assertEquals(studentDTO.getUser().getEmail(), result.getUser().getEmail());
             assertEquals(Role.STUDENT, result.getUser().getRole());
+            assertEquals(result.getId(), savedUser.getStudent().getId());
             verify(studentDAO).findByUserEmail(studentDTO.getUser().getEmail());
             verify(teacherDAO).findById(teacher.getId());
-            verify(userDAO).save(any(User.class));
+            verify(userDAO, times(2)).save(any(User.class));
             verify(studentDAO).save(any(Student.class));
-
         }
 
         @Test

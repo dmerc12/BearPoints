@@ -108,6 +108,8 @@ public class StudentServiceImpl implements StudentService {
         student.setTeacher(teacher);
         student.generateToken();
         Student savedStudent = studentDAO.save(student);
+        savedUser.setStudent(savedStudent);
+        userDAO.save(savedUser);
         log.info("Successfully created student with ID: {}", savedStudent.getId());
         return new StudentDTO(savedStudent);
     }
