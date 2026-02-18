@@ -134,6 +134,30 @@ public class RewardItemTests extends BaseIntegrationTest {
 
         @Test
         @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
+        @DisplayName("by min point cost criteria returns matching reward items")
+        void byMinPointCostCriteriaReturnsMatchingRewardItems() throws Exception {
+            Integer minPointCost = 2;
+            mockMvc.perform(get(baseUrl + "/search")
+                            .param("minPointCost", String.valueOf(minPointCost)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content[*].pointCost",
+                            everyItem(greaterThanOrEqualTo(minPointCost))));
+        }
+
+        @Test
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
+        @DisplayName("by max point cost criteria returns matching reward items")
+        void byMaxPointCostCriteriaReturnsMatchingRewardItems() throws Exception {
+            Integer maxPointCost = 50;
+            mockMvc.perform(get(baseUrl + "/search")
+                            .param("maxPointCost", String.valueOf(maxPointCost)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content[*].pointCost",
+                            everyItem(lessThanOrEqualTo(maxPointCost))));
+        }
+
+        @Test
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by stock range criteria returns matching reward items")
         void byStockRangeCriteriaReturnsMatchingRewardItems() throws Exception {
             Integer minStock = 1;
@@ -144,6 +168,30 @@ public class RewardItemTests extends BaseIntegrationTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[*].stock",
                             everyItem(allOf(greaterThanOrEqualTo(minStock), lessThanOrEqualTo(maxStock)))));
+        }
+
+        @Test
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
+        @DisplayName("by min stock criteria returns matching reward items")
+        void byMinStockCriteriaReturnsMatchingRewardItems() throws Exception {
+            Integer minStock = 1;
+            mockMvc.perform(get(baseUrl + "/search")
+                            .param("minStock", String.valueOf(minStock)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content[*].stock",
+                            everyItem(greaterThanOrEqualTo(minStock))));
+        }
+
+        @Test
+        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
+        @DisplayName("by max stock criteria returns matching reward items")
+        void byMaxStockCriteriaReturnsMatchingRewardItems() throws Exception {
+            Integer maxStock = 500;
+            mockMvc.perform(get(baseUrl + "/search")
+                            .param("maxStock", String.valueOf(maxStock)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content[*].stock",
+                            everyItem(lessThanOrEqualTo(maxStock))));
         }
 
         @Test
