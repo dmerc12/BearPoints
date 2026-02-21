@@ -11,6 +11,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -64,7 +65,7 @@ import java.util.stream.Collectors;
  * </ul>
  *
  * @see CommandLineRunner
- * @version 2.2
+ * @version 2.3
  * @author Dylan Mercer
  */
 @Component
@@ -273,7 +274,9 @@ public class TestDataInitializer implements CommandLineRunner {
         bragLog.setBehaviors(behaviors);
         bragLog.setPointsGenerated(pointsGenerated);
         bragLog.setNotes(notes);
-        bragLog.setSubmitterName("John Doe");
+        bragLog.setTimestamp(LocalDateTime.now());
+        bragLog.setSubmitterName(teacher.getUser().getFirstName() + " " + teacher.getUser().getLastName());
+        bragLog.setSubmitterUser(teacher.getUser());
         BragLog brag = bragLogDAO.save(bragLog);
         log.info("Created test brag log: {}", brag);
     }

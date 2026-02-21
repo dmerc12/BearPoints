@@ -53,7 +53,7 @@ import java.util.stream.Collectors;
  * </ul>
  *
  * @see GoogleSheetsSyncService
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @Service
@@ -195,10 +195,13 @@ public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
     }
 
     private void syncBragLogs() throws IOException {
+        List<BragLog> unsynced = bragLogRepository.findBySyncedToSheetsFalse();
+        logger.info("Found {} unsynced BragLogs", unsynced.size());
         syncEntity(
                 "BragLogs",
                 bragLogRepository::findBySyncedToSheetsFalse,
                 bragLog -> {
+                    logger.debug("Converting BragLog {} to row", bragLog.getId());
                     String behaviors = bragLog.getBehaviors().stream()
                             .map(BehaviorType::getName)
                             .collect(Collectors.joining(", "));
@@ -208,6 +211,8 @@ public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
                             bragLog.getTeacher().getId().toString(),
                             behaviors,
                             String.valueOf(bragLog.getPointsGenerated()),
+                            bragLog.getSubmitterName(),
+                            bragLog.getSubmitterUser().getId().toString(),
                             bragLog.getNotes(),
                             formatDateTime(bragLog.getTimestamp())
                     );
@@ -403,7 +408,7 @@ public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
 
     private Optional<BragLog> parseBragLogFromRow(List<Object> row) {
         try {
-            if (row.size() < 7) return Optional.empty();
+            if (row.size() < 9) return Optional.empty();
             BragLog bragLog = new BragLog();
             bragLog.setId(Long.parseLong(row.getFirst().toString()));
             Long studentId = Long.parseLong(row.get(1).toString());
@@ -422,8 +427,13 @@ public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
                     .collect(Collectors.toSet());
             bragLog.setBehaviors(behaviors);
             bragLog.setPointsGenerated(Integer.parseInt(row.get(4).toString()));
-            bragLog.setNotes(row.get(5).toString());
-            bragLog.setTimestamp(LocalDateTime.parse(row.get(6).toString(), DATE_FORMATTER));
+            bragLog.setSubmitterName(row.get(5).toString());
+            Long submitterUserId = Long.parseLong(row.get(6).toString());
+            User submitter = userRepository.findById(submitterUserId).orElseThrow(() ->
+                    new EntityNotFoundException("User not found: " + studentId));
+            bragLog.setSubmitterUser(submitter);
+            bragLog.setNotes(row.get(7).toString());
+            bragLog.setTimestamp(LocalDateTime.parse(row.get(8).toString(), DATE_FORMATTER));
             return Optional.of(bragLog);
         } catch (Exception e) {
             logger.error("Error parsing BragLog from row: {}", row, e);
@@ -559,7 +569,9 @@ public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
             int rowCount = googleSheetsService.getRowCount(sheetName);
             int operations = rowCount * 2;
             int dailyQuota = 50000;
-            return operations < (dailyQuota * 0.8);
+            boolean result =  operations < (dailyQuota * 0.8);
+            logger.debug("Quota check for {}: rowCount: {}, operations={}, within quota={}", sheetName, rowCount, operations, result);
+            return result;
         } catch (IOException e) {
             logger.error("Failed to get row count for {}: {}", sheetName, e.getMessage());
             return false;

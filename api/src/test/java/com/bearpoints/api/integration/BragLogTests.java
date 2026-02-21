@@ -43,7 +43,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *
  * @see TestDataInitializer
  * @see BaseIntegrationTest
- * @version 2.2
+ * @version 2.3
  * @author Dylan Mercer
  */
 @DisplayName("Brag Log Integration Tests")
@@ -367,21 +367,26 @@ public class BragLogTests extends BaseIntegrationTest {
             Optional<BragLog> bragLog = bragLogDAO.findAll(PageRequest.of(0, 1))
                             .stream().findFirst();
             if (bragLog.isPresent()) {
-                mockMvc.perform(get(baseUrl + "/{id}", bragLog.get().getId()))
+                BragLog bl = bragLog.get();
+                String studentName = bl.getStudent().getUser().getFirstName() + " "
+                        + bl.getStudent().getUser().getLastName();
+                String teacherName = bl.getTeacher().getUser().getFirstName() + " "
+                        + bl.getTeacher().getUser().getLastName();
+                mockMvc.perform(get(baseUrl + "/{id}", bl.getId()))
                         .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.id").value(bragLog.get().getId()))
-                        .andExpect(jsonPath("$.studentName").exists())
-                        .andExpect(jsonPath("$.teacherName").exists())
-                        .andExpect(jsonPath("$.studentId").exists())
-                        .andExpect(jsonPath("$.teacherId").exists())
-                        .andExpect(jsonPath("$.grade").exists())
+                        .andExpect(jsonPath("$.id").value(bl.getId()))
+                        .andExpect(jsonPath("$.studentName").value(studentName))
+                        .andExpect(jsonPath("$.teacherName").value(teacherName))
+                        .andExpect(jsonPath("$.studentId").value(bl.getStudent().getId()))
+                        .andExpect(jsonPath("$.teacherId").value(bl.getTeacher().getId()))
+                        .andExpect(jsonPath("$.grade").value(bl.getGrade().name()))
                         .andExpect(jsonPath("$.behaviorIds").exists())
                         .andExpect(jsonPath("$.behaviors").exists())
-                        .andExpect(jsonPath("$.pointsGenerated").exists())
-                        .andExpect(jsonPath("$.timestamp").exists())
-                        .andExpect(jsonPath("$.notes").exists())
-                        .andExpect(jsonPath("$.submitterName").exists())
-                        .andExpect(jsonPath("$.submitterUserId").value(nullValue()));
+                        .andExpect(jsonPath("$.pointsGenerated").value(bl.getPointsGenerated()))
+                        .andExpect(jsonPath("$.timestamp").value(bl.getTimestamp().toString()))
+                        .andExpect(jsonPath("$.notes").value(bl.getNotes()))
+                        .andExpect(jsonPath("$.submitterName").value(bl.getSubmitterName()))
+                        .andExpect(jsonPath("$.submitterUserId").value(bragLog.get().getSubmitterUser().getId()));
             }
         }
 

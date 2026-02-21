@@ -55,7 +55,7 @@ import static org.mockito.Mockito.*;
  * </ul>
  *
  * @see TestDataInitializer
- * @version 2.1
+ * @version 2.2
  * @author Dylan Mercer
  */
 @ExtendWith(MockitoExtension.class)
@@ -504,7 +504,21 @@ public class TestDataInitializerTests {
             user.setId(1L);
             if (user.getStudent() != null) {
                 user.getStudent().setId(1L);
-                user.getStudent().setTeacher(new Teacher());
+                Teacher teacher = new Teacher();
+                teacher.setId(1L);
+                User teacherUser = new User();
+                teacherUser.setId(2L);
+                teacherUser.setFirstName("Test");
+                teacherUser.setLastName("Teacher");
+                teacher.setUser(teacherUser);
+                teacherUser.setTeacher(teacher);
+                user.getStudent().setTeacher(teacher);
+            }
+            if (user.getTeacher() != null) {
+                user.getTeacher().setId(1L);
+                if (user.getTeacher().getUser() == null) {
+                    user.getTeacher().setUser(user);
+                }
             }
             return user;
         });
@@ -614,7 +628,15 @@ public class TestDataInitializerTests {
             user.setId(1L);
             if (user.getStudent() != null) {
                 user.getStudent().setId(1L);
-                user.getStudent().setTeacher(new Teacher());
+                Teacher teacher = new Teacher();
+                teacher.setId(1L);
+                User teacherUser = new User();
+                teacherUser.setId(2L);
+                teacherUser.setFirstName("Test");
+                teacherUser.setLastName("Teacher");
+                teacher.setUser(teacherUser);
+                teacherUser.setTeacher(teacher);
+                user.getStudent().setTeacher(teacher);
             }
             return user;
         });

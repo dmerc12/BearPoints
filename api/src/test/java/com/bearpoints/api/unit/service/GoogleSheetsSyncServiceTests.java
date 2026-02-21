@@ -45,7 +45,7 @@ import static org.mockito.Mockito.*;
  *
  * @see GoogleSheetsSyncService
  * @see GoogleSheetsSyncServiceImpl
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @ExtendWith(MockitoExtension.class)
@@ -124,7 +124,10 @@ public class GoogleSheetsSyncServiceTests {
             when(studentDAO.findBySyncedToSheetsFalse()).thenReturn(List.of(student));
             BehaviorType behaviorType = createTestBehaviorType("Test Behavior Type", 35);
             when(behaviorTypeDAO.findBySyncedToSheetsFalse()).thenReturn(List.of(behaviorType));
+            User submitterUser = createTestUser(4L, "submitter@okcps.org", Role.STAFF);
             BragLog bragLog = createTestBragLog(student, teacher, Set.of(behaviorType));
+            bragLog.setSubmitterUser(submitterUser);
+            bragLog.setSubmitterName(submitterUser.getFirstName() + " " + submitterUser.getLastName());
             when(bragLogDAO.findBySyncedToSheetsFalse()).thenReturn(List.of(bragLog));
             RewardItem rewardItem = createTestRewardItem("Test Reward", 20, 6);
             when(rewardItemDAO.findBySyncedToSheetsFalse()).thenReturn(List.of(rewardItem));
@@ -364,17 +367,21 @@ public class GoogleSheetsSyncServiceTests {
             Teacher teacher = createTestTeacher(1L, teacherUser);
             User studentUser = createTestUser(3L, "student@example.com", Role.STUDENT);
             Student student = createTestStudent(100, teacher, studentUser);
+            User submitterUser = createTestUser(5L, "submitter@okcps.org", Role.STAFF);
             BehaviorType behavior = createTestBehaviorType("Helping", 5);
             when(studentDAO.findById(1L)).thenReturn(Optional.of(student));
             when(teacherDAO.findById(1L)).thenReturn(Optional.of(teacher));
             when(behaviorTypeDAO.findByName("Helping")).thenReturn(Optional.of(behavior));
+            when(userDAO.findById(5L)).thenReturn(Optional.of(submitterUser));
             String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-            List<Object> row = Arrays.asList("1", "1", "1", "Helping", "5", "Helped a classmate", timestamp);
+            List<Object> row = Arrays.asList("1", "1", "1", "Helping", "5", "Submitter Name", "5", "Helped a classmate", timestamp);
             Optional<BragLog> bragLog = ReflectionTestUtils.invokeMethod(syncService, "parseBragLogFromRow", row);
             assertNotNull(bragLog);
             assertTrue(bragLog.isPresent());
             assertEquals(student,  bragLog.get().getStudent());
             assertEquals(teacher,  bragLog.get().getTeacher());
+            assertEquals("Submitter Name", bragLog.get().getSubmitterName());
+            assertEquals(submitterUser, bragLog.get().getSubmitterUser());
             assertEquals(1, bragLog.get().getBehaviors().size());
             assertEquals(5, bragLog.get().getPointsGenerated());
             assertEquals("Helped a classmate", bragLog.get().getNotes());
@@ -647,11 +654,47 @@ public class GoogleSheetsSyncServiceTests {
         @Test
         @DisplayName("Handles missing student in brag log parsing")
         public void handlesMissingStudentInBragLogParsing() {
-            List<Object> row = Arrays.asList("1", "1", "1", "", "", "", "");
-            when(studentDAO.findById(1L)).thenReturn(Optional.empty());
+            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            List<Object> row = Arrays.asList("1", "999", "1", "Helping", "5", "Submitter Name", "5", "Helped a classmate", timestamp);
+            when(studentDAO.findById(999L)).thenReturn(Optional.empty());
             Optional<BragLog> bragLog = ReflectionTestUtils.invokeMethod(syncService, "parseBragLogFromRow", row);
             assertNotNull(bragLog);
             assertTrue(bragLog.isEmpty());
+            verify(studentDAO).findById(999L);
+            verify(teacherDAO, never()).findById(anyLong());
+            verify(userDAO, never()).findById(anyLong());
+        }
+
+        /**
+         * Validate handling of missing submitter user references in brag log rows.
+         * <p>Asserts:
+         * <ul>
+         *     <li>Empty Optional is returned when referenced submitter user doesn't exist</li>
+         *     <li>Submitter user association failures prevet entity creation</li>
+         *     <li>Graceful handling of broken relationships</li>
+         * </ul>
+         */
+        @Test
+        @DisplayName("Handles missing submitter user in brag log parsing")
+        public void handlesMissingSubmitterUserInBragLogParsing() {
+            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            List<Object> row = Arrays.asList("1", "1", "1", "Helping", "5", "Submitter Name", "999", "Helped a classmate", timestamp);
+            Student student = new Student();
+            student.setId(1L);
+            when(studentDAO.findById(1L)).thenReturn(Optional.of(student));
+            Teacher teacher = new Teacher();
+            teacher.setId(1L);
+            when(teacherDAO.findById(1L)).thenReturn(Optional.of(teacher));
+            BehaviorType behavior = createTestBehaviorType("Helping", 5);
+            when(behaviorTypeDAO.findByName("Helping")).thenReturn(Optional.of(behavior));
+            when(userDAO.findById(999L)).thenReturn(Optional.empty());
+            Optional<BragLog> bragLog = ReflectionTestUtils.invokeMethod(syncService, "parseBragLogFromRow", row);
+            assertNotNull(bragLog);
+            assertTrue(bragLog.isEmpty());
+            verify(studentDAO).findById(eq(1L));
+            verify(teacherDAO).findById(eq(1L));
+            verify(behaviorTypeDAO).findByName("Helping");
+            verify(userDAO).findById(eq(999L));
         }
 
         /**
@@ -667,7 +710,7 @@ public class GoogleSheetsSyncServiceTests {
         @DisplayName("Handles missing teacher in brag log parsing")
         public void handlesMissingTeacherInBragLogParsing() {
             String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-            List<Object> row = Arrays.asList("1", "1", "1", "Helping", "5", "Helped a classmate", timestamp);
+            List<Object> row = Arrays.asList("1", "1", "1", "Helping", "5", "Submitter Name", "2", "Helped a classmate", timestamp);
             when(studentDAO.findById(1L)).thenReturn(Optional.of(new Student()));
             when(teacherDAO.findById(1L)).thenReturn(Optional.empty());
             Optional<BragLog> bragLog = ReflectionTestUtils.invokeMethod(syncService, "parseBragLogFromRow", row);
