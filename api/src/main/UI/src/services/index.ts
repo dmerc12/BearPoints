@@ -3,10 +3,6 @@ export {
     type BragLogDTO, type RewardItemDTO, type StudentRewardDTO, type LeaderboardEntryDTO
 } from './types';
 export {
-    type PersonFormData, type TeacherFormData, type StudentFormData, type BehaviorTypeFormData, type BragLogFormData,
-    type PublicBragLogFormData
-} from './formDataTypes';
-export {
     api, fetchResource, fetchPaginated, withHealthAwareRetry, ensureBackendHealthy, checkHealth,
     getUsersByRole, getCurrentUser, createUser, updateUser, deleteUser,
     getTeachers, createTeacher, updateTeacher, deleteTeacher,
