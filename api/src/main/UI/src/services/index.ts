@@ -1,8 +1,6 @@
 export {
-    type CacheResponse, Timeframe, Role, GradeLevel, type UserDTO, type PaginatedUsers, type Student,
-    type PaginatedStudents, type Teacher, type PaginatedTeachers, type BehaviorTypeDTO, type PaginatedBehaviorTypes,
-    type BragLogDTO, type PaginatedBragLogs, type RewardItem, type PaginatedRewardItems, type StudentRewardDTO,
-    type PaginatedStudentRewards, type BragLogRequest, type PaginatedLeaderboardEntries, type LeaderboardEntry
+    Timeframe, Role, GradeLevel, type UserDTO, type StudentDTO, type TeacherDTO, type BehaviorTypeDTO,
+    type BragLogDTO, type RewardItemDTO, type StudentRewardDTO, type LeaderboardEntryDTO
 } from './types';
 export {
     type PersonFormData, type TeacherFormData, type StudentFormData, type BehaviorTypeFormData, type BragLogFormData,

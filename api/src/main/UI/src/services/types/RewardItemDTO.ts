@@ -1,5 +1,5 @@
-export interface RewardItem {
-    id: number;
+export interface RewardItemDTO {
+    id?: number | null;
     name: string;
     pointCost: number;
     stock: number;

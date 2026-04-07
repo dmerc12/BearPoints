@@ -1,22 +1,17 @@
-export { type CacheResponse } from './CacheResponse';
-export { Timeframe } from './Timeframe';
+// Enums
 export { GradeLevel } from './GradeLevel';
+export { Timeframe } from './Timeframe';
 export { Role } from './Role';
+
+// DTOs
 export { type UserDTO } from './UserDTO';
-export { type PaginatedUsers } from './PaginatedUsers';
-export { type Student } from './Student';
-export { type PaginatedStudents } from './PaginatedStudents';
-export { type Teacher } from './Teacher';
-export { type PaginatedTeachers } from './PaginatedTeachers';
-export { type BehaviorTypeDTO } from './BehaviorTypeDTO.ts';
-export { type PaginatedBehaviorTypes } from './PaginatedBehaviorTypes';
-export { type BragLogDTO } from './BragLogDTO.ts';
-export { type PaginatedBragLogs } from './PaginatedBragLogs';
-export { type RewardItem } from './RewardItem';
-export { type PaginatedRewardItems } from './PaginatedRewardItems';
-export { type StudentRewardDTO } from './StudentRewardDTO.ts';
-export { type PaginatedStudentRewards } from './PaginatedStudentRewards';
-export { type BragLogRequest } from './BragLogRequest';
-export { type LeaderboardEntry } from './LeaderboardEntry';
-export { type PaginatedLeaderboardEntries } from './PaginatedLeaderboardEntries';
-export { type Person } from './Person';
+export { type TeacherDTO } from './TeacherDTO';
+export { type StudentDTO } from './StudentDTO';
+export { type BehaviorTypeDTO } from './BehaviorTypeDTO';
+export { type RewardItemDTO } from './RewardItemDTO';
+export { type BragLogDTO } from './BragLogDTO';
+export { type StudentRewardDTO } from './StudentRewardDTO';
+export { type PersonDTO } from './PersonDTO';
+export { type LeaderboardEntryDTO } from './LeaderboardEntryDTO';
+export { type PagedResponseDTO } from './PagedResponseDTO';
+export { type ErrorResponseDTO } from './ErrorResponseDTO';
