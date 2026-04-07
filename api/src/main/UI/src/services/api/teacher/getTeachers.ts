@@ -1,10 +1,12 @@
-import { PaginatedTeachers, fetchPaginated } from '../../index';
+import { withHealthAwareRetry } from '../withHealthAwareRetry';
+import { PagedResponseDTO, TeacherDTO } from '../../types';
+import { api } from '../api';
 
-export const getTeachers = async (page = 0, size = 100,
-                                  sortQuery?: string, signal?: AbortSignal): Promise<PaginatedTeachers> => {
-    let url = `api/teachers?projection=teacherProjection&page=${page}&size=${size}`;
-    if (sortQuery) {
-        url += `&${sortQuery}`;
-    }
-    return await fetchPaginated<PaginatedTeachers>(url,'teachers', signal);
+export const getTeachers = async (page = 0, size = 20,
+                                  sort?: string, signal?: AbortSignal): Promise<PagedResponseDTO<TeacherDTO>> => {
+    let url = `api/teachers?page=${page}&size=${size}`;
+    if (sort) url += `&sort=${sort}`;
+    return withHealthAwareRetry(() =>
+        api.get<PagedResponseDTO<TeacherDTO>>(url, { signal })
+            .then(r => r.data));
 };
