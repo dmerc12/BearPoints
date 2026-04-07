@@ -1,6 +1,8 @@
-import { UserDTO, withHealthAwareRetry, api } from '../../index';
+import { withHealthAwareRetry } from '../withHealthAwareRetry';
+import { UserDTO } from '../../types';
+import { api } from '../api';
 
-export const createUser = async (userData: Partial<UserDTO>, signal?: AbortSignal): Promise<UserDTO> => {
-    return await withHealthAwareRetry(() =>
-        api.post<UserDTO>(`api/users`, userData, { signal }).then(r => r.data));
+export const createUser = async (userData: UserDTO, signal?: AbortSignal): Promise<UserDTO> => {
+    return withHealthAwareRetry(() => api.post<UserDTO>(`api/users`, userData, { signal })
+        .then(r => r.data));
 };
