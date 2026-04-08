@@ -1,6 +1,10 @@
-import { Student, withHealthAwareRetry, api } from '../../index';
+import { withHealthAwareRetry } from '../withHealthAwareRetry';
+import { StudentDTO } from '../../types';
+import { api } from '../api';
 
-export const createStudent = async (studentData: Partial<Student>, signal?: AbortSignal): Promise<Student> => {
-    return await withHealthAwareRetry(() =>
-        api.post<Student>(`api/students`, studentData, { signal }).then(r => r.data));
+export const createStudent = async (studentData: StudentDTO, signal?: AbortSignal)
+    : Promise<StudentDTO> => {
+    return withHealthAwareRetry(() =>
+        api.post<StudentDTO>(`api/students`, studentData, { signal })
+            .then(r => r.data));
 };

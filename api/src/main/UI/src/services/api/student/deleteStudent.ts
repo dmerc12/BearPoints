@@ -1,6 +1,7 @@
-import { withHealthAwareRetry, api } from '../../index';
+import { withHealthAwareRetry } from '../withHealthAwareRetry';
+import { api } from '../api';
 
 export const deleteStudent = async (id: number, signal?: AbortSignal): Promise<void> => {
-    return await withHealthAwareRetry(() =>
+    return withHealthAwareRetry(() =>
         api.delete(`api/students/${id}`, { signal }));
 };
