@@ -1,6 +1,10 @@
-import { BehaviorTypeDTO, withHealthAwareRetry, api } from '../../index';
+import { withHealthAwareRetry } from '../withHealthAwareRetry';
+import { BehaviorTypeDTO } from '../../types';
+import { api } from '../api';
 
-export const createBehaviorType = async (behaviorData: Partial<BehaviorTypeDTO>, signal?: AbortSignal): Promise<BehaviorTypeDTO> => {
-    return await withHealthAwareRetry(() =>
-        api.post<BehaviorTypeDTO>(`api/behavior-types`, behaviorData, { signal }).then(r => r.data));
+export const createBehaviorType = async (behaviorData: BehaviorTypeDTO,
+                                         signal?: AbortSignal): Promise<BehaviorTypeDTO> => {
+    return withHealthAwareRetry(() =>
+        api.post<BehaviorTypeDTO>(`api/behaviors`, behaviorData, { signal })
+            .then(r => r.data));
 };
