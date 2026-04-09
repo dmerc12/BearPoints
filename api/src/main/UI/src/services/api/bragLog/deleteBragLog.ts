@@ -1,6 +1,8 @@
-import { withHealthAwareRetry, api } from '../index';
+import { withHealthAwareRetry } from '../withHealthAwareRetry';
+import { api } from '../api';
 
-export const deleteBragLog = async (id: number, signal?: AbortSignal): Promise<void> => {
-    return await withHealthAwareRetry(() =>
-        api.delete(`api/brag-logs/${id}`, { signal }));
+export const deleteBragLog = async (id: number, signal?: AbortSignal)
+    : Promise<void> => {
+    return withHealthAwareRetry(() =>
+        api.delete(`api/brags/${id}`, { signal }));
 };
