@@ -2,6 +2,7 @@ package com.bearpoints.api.dao.impl;
 
 import com.bearpoints.api.dao.LeaderboardDAO;
 import com.bearpoints.api.dto.LeaderboardEntryDTO;
+import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.dto.PersonDTO;
 import com.bearpoints.api.entity.GradeLevel;
 import jakarta.persistence.EntityManager;
@@ -35,7 +36,7 @@ import java.util.stream.Collectors;
  * </ul>
  *
  * @see LeaderboardDAO
- * @version 1.1
+ * @version 1.2
  * @author Dylan Mercer
  */
 @Repository
@@ -44,7 +45,7 @@ public class LeaderboardDAOImpl implements LeaderboardDAO {
     private EntityManager entityManager;
 
     @Override
-    public Page<LeaderboardEntryDTO> findRankedLeaderboard(
+    public PagedResponseDTO<LeaderboardEntryDTO> findRankedLeaderboard(
             LocalDateTime startDate, Long teacherId, GradeLevel grade,
             Pageable pageable) {
         String jpql = """
@@ -93,7 +94,8 @@ public class LeaderboardDAOImpl implements LeaderboardDAO {
                     return new LeaderboardEntryDTO(rank, student, teacher, storedGrade, points);
                 }).collect(Collectors.toList());
         Long total = getTotalCount(startDate, teacherId, grade);
-        return new PageImpl<>(content, pageable, total);
+        Page<LeaderboardEntryDTO> page = new PageImpl<>(content, pageable, total);
+        return PagedResponseDTO.of(page);
     }
 
     private Long getTotalCount(LocalDateTime startDate, Long teacherId, GradeLevel grade) {

@@ -1,12 +1,13 @@
 package com.bearpoints.api.controller;
 
 import com.bearpoints.api.dto.LeaderboardEntryDTO;
+import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.entity.GradeLevel;
 import com.bearpoints.api.entity.Timeframe;
 import com.bearpoints.api.service.LeaderboardService;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
  *
  * <p>Features:
  * <ul>
- *     <li>Requires STUDENT, TEACHER, or ADMIN role</li>
+ *     <li>Requires STUDENT, TEACHER, STAFF, or ADMIN role</li>
  *     <li>Supports timeframe filtering (WEEK, MONTH, SEMESTER, YEAR)</li>
  *     <li>Supports teacher and grade filtering</li>
  *     <li>Default timeframe is WEEK</li>
@@ -31,7 +32,7 @@ import org.springframework.web.bind.annotation.*;
  *
  * @see LeaderboardService
  * @see Timeframe
- * @version 3.2
+ * @version 3.3
  * @author Dylan Mercer
  */
 @CrossOrigin
@@ -62,11 +63,11 @@ public class LeaderboardController {
      * GET /api/leaderboard?timeframe=WEEK&grade=SECOND&page=0&size-15
      */
     @GetMapping
-    public Page<LeaderboardEntryDTO> getLeaderboard(
+    public ResponseEntity<PagedResponseDTO<LeaderboardEntryDTO>> getLeaderboard(
             @RequestParam(defaultValue = "WEEK") Timeframe timeframe,
             @RequestParam(required = false) Long teacherId,
             @RequestParam(required = false) GradeLevel grade,
             @PageableDefault(size = 20) Pageable pageable) {
-        return leaderboardService.getLeaderboard(timeframe, teacherId, grade, pageable);
+        return ResponseEntity.ok(leaderboardService.getLeaderboard(timeframe, teacherId, grade, pageable));
     }
 }

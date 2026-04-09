@@ -2,6 +2,7 @@ package com.bearpoints.api.unit.controller;
 
 import com.bearpoints.api.controller.LeaderboardController;
 import com.bearpoints.api.dto.LeaderboardEntryDTO;
+import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.dto.PersonDTO;
 import com.bearpoints.api.entity.GradeLevel;
 import com.bearpoints.api.entity.Timeframe;
@@ -18,6 +19,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 
 import java.util.Arrays;
 import java.util.List;
@@ -47,7 +49,7 @@ import static org.mockito.Mockito.when;
  *
  * @see LeaderboardController
  * @since 1.0
- * @version 2.1
+ * @version 2.2
  * @author Dylan Mercer
  */
 @ExtendWith(MockitoExtension.class)
@@ -111,16 +113,20 @@ public class LeaderboardControllerTests {
         void getLeaderboard_DefaultTimeframe_ReturnsLeaderboard() {
             Pageable pageable = PageRequest.of(0, 20);
             Page<LeaderboardEntryDTO> expectedPage = new PageImpl<>(sampleLeaderboard, pageable, sampleLeaderboard.size());
+            PagedResponseDTO<LeaderboardEntryDTO> expectedResponse = PagedResponseDTO.of(expectedPage);
             when(leaderboardService.getLeaderboard(eq(Timeframe.WEEK), eq(null), eq(null), any(Pageable.class)))
-                    .thenReturn(expectedPage);
-            Page<LeaderboardEntryDTO> response = leaderboardController.getLeaderboard(Timeframe.WEEK, null, null, pageable);
+                    .thenReturn(expectedResponse);
+            ResponseEntity<PagedResponseDTO<LeaderboardEntryDTO>> response =
+                    leaderboardController.getLeaderboard(Timeframe.WEEK, null, null, pageable);
             assertNotNull(response);
-            assertEquals(3, response.getContent().size());
-            assertEquals(150, response.getContent().getFirst().getPoints());
-            assertEquals("Student", response.getContent().getFirst().getStudent().getFirstName());
-            assertEquals("One", response.getContent().getFirst().getStudent().getLastName());
-            assertEquals("Teacher", response.getContent().getFirst().getTeacher().getFirstName());
-            assertEquals("A", response.getContent().getFirst().getTeacher().getLastName());
+            assertEquals(200, response.getStatusCode().value());
+            assertNotNull(response.getBody());
+            assertEquals(3, response.getBody().getContent().size());
+            assertEquals(150, response.getBody().getContent().getFirst().getPoints());
+            assertEquals("Student", response.getBody().getContent().getFirst().getStudent().getFirstName());
+            assertEquals("One", response.getBody().getContent().getFirst().getStudent().getLastName());
+            assertEquals("Teacher", response.getBody().getContent().getFirst().getTeacher().getFirstName());
+            assertEquals("A", response.getBody().getContent().getFirst().getTeacher().getLastName());
         }
 
         /**
@@ -133,12 +139,16 @@ public class LeaderboardControllerTests {
         void getLeaderboard_TeacherFilter_ReturnsLeaderboard() {
             Pageable pageable = PageRequest.of(0, 20);
             Page<LeaderboardEntryDTO> expectedPage = new PageImpl<>(sampleLeaderboard, pageable, sampleLeaderboard.size());
+            PagedResponseDTO<LeaderboardEntryDTO> expectedResponse = PagedResponseDTO.of(expectedPage);
             Long teacherId = 1L;
             when(leaderboardService.getLeaderboard(eq(Timeframe.WEEK), eq(teacherId), eq(null), any(Pageable.class)))
-                    .thenReturn(expectedPage);
-            Page<LeaderboardEntryDTO> response = leaderboardController.getLeaderboard(Timeframe.WEEK, teacherId, null, pageable);
+                    .thenReturn(expectedResponse);
+            ResponseEntity<PagedResponseDTO<LeaderboardEntryDTO>> response =
+                    leaderboardController.getLeaderboard(Timeframe.WEEK, teacherId, null, pageable);
             assertNotNull(response);
-            assertEquals(3, response.getContent().size());
+            assertEquals(200, response.getStatusCode().value());
+            assertNotNull(response.getBody());
+            assertEquals(3, response.getBody().getContent().size());
             verify(leaderboardService).getLeaderboard(Timeframe.WEEK, teacherId, null, pageable);
         }
 
@@ -152,12 +162,16 @@ public class LeaderboardControllerTests {
         void getLeaderboard_GradeFilter_ReturnsLeaderboard() {
             Pageable pageable = PageRequest.of(0, 20);
             Page<LeaderboardEntryDTO> expectedPage = new PageImpl<>(sampleLeaderboard, pageable, sampleLeaderboard.size());
+            PagedResponseDTO<LeaderboardEntryDTO> expectedResponse = PagedResponseDTO.of(expectedPage);
             GradeLevel grade = GradeLevel.SECOND;
             when(leaderboardService.getLeaderboard(eq(Timeframe.WEEK), eq(null), eq(grade), any(Pageable.class)))
-                    .thenReturn(expectedPage);
-            Page<LeaderboardEntryDTO> response = leaderboardController.getLeaderboard(Timeframe.WEEK, null, grade, pageable);
+                    .thenReturn(expectedResponse);
+            ResponseEntity<PagedResponseDTO<LeaderboardEntryDTO>> response =
+                    leaderboardController.getLeaderboard(Timeframe.WEEK, null, grade, pageable);
             assertNotNull(response);
-            assertEquals(3, response.getContent().size());
+            assertEquals(200, response.getStatusCode().value());
+            assertNotNull(response.getBody());
+            assertEquals(3, response.getBody().getContent().size());
             verify(leaderboardService).getLeaderboard(Timeframe.WEEK, null, grade, pageable);
         }
 
@@ -172,10 +186,15 @@ public class LeaderboardControllerTests {
             Pageable pageable = PageRequest.of(0, 20);
             for (Timeframe timeframe : Timeframe.values()) {
                 Page<LeaderboardEntryDTO> expectedPage = new PageImpl<>(sampleLeaderboard, pageable, sampleLeaderboard.size());
-                when(leaderboardService.getLeaderboard(eq(timeframe), eq(null), eq(null), any(Pageable.class))).thenReturn(expectedPage);
-                Page<LeaderboardEntryDTO> response = leaderboardController.getLeaderboard(timeframe, null, null, pageable);
+                PagedResponseDTO<LeaderboardEntryDTO> expectedResponse = PagedResponseDTO.of(expectedPage);
+                when(leaderboardService.getLeaderboard(eq(timeframe), eq(null), eq(null), any(Pageable.class)))
+                        .thenReturn(expectedResponse);
+                ResponseEntity<PagedResponseDTO<LeaderboardEntryDTO>> response =
+                        leaderboardController.getLeaderboard(timeframe, null, null, pageable);
                 assertNotNull(response);
-                assertEquals(3, response.getContent().size());
+                assertEquals(200, response.getStatusCode().value());
+                assertNotNull(response.getBody());
+                assertEquals(3, response.getBody().getContent().size());
             }
         }
     }
@@ -201,11 +220,16 @@ public class LeaderboardControllerTests {
         void getLeaderboard_NoData_ReturnsEmptyList() {
             Pageable pageable = PageRequest.of(0, 20);
             Page<LeaderboardEntryDTO> emptyPage = new PageImpl<>(List.of(), pageable, 0);
-            when(leaderboardService.getLeaderboard(Timeframe.WEEK, null, null, pageable)).thenReturn(emptyPage);
-            Page<LeaderboardEntryDTO> response = leaderboardController.getLeaderboard(Timeframe.WEEK, null, null, pageable);
+            PagedResponseDTO<LeaderboardEntryDTO> expectedResponse = PagedResponseDTO.of(emptyPage);
+            when(leaderboardService.getLeaderboard(Timeframe.WEEK, null, null, pageable))
+                    .thenReturn(expectedResponse);
+            ResponseEntity<PagedResponseDTO<LeaderboardEntryDTO>> response =
+                    leaderboardController.getLeaderboard(Timeframe.WEEK, null, null, pageable);
             assertNotNull(response);
-            assertTrue(response.getContent().isEmpty());
-            assertEquals(0, response.getTotalElements());
+            assertEquals(200, response.getStatusCode().value());
+            assertNotNull(response.getBody());
+            assertTrue(response.getBody().getContent().isEmpty());
+            assertEquals(0, response.getBody().getTotalElements());
         }
 
         /**
@@ -231,15 +255,20 @@ public class LeaderboardControllerTests {
                 Pageable pageable = PageRequest.of(1, 1);
                 List<LeaderboardEntryDTO> secondPageContent = List.of(sampleLeaderboard.get(1));
                 Page<LeaderboardEntryDTO> expectedPage = new PageImpl<>(secondPageContent, pageable, sampleLeaderboard.size());
-                when(leaderboardService.getLeaderboard(eq(Timeframe.WEEK), eq(null), eq(null), eq(pageable))).thenReturn(expectedPage);
-                Page<LeaderboardEntryDTO> response = leaderboardController.getLeaderboard(Timeframe.WEEK, null, null, pageable);
+                PagedResponseDTO<LeaderboardEntryDTO> expectedResponse = PagedResponseDTO.of(expectedPage);
+                when(leaderboardService.getLeaderboard(eq(Timeframe.WEEK), eq(null), eq(null), eq(pageable)))
+                        .thenReturn(expectedResponse);
+                ResponseEntity<PagedResponseDTO<LeaderboardEntryDTO>> response =
+                        leaderboardController.getLeaderboard(Timeframe.WEEK, null, null, pageable);
                 assertNotNull(response);
-                assertEquals(1, response.getContent().size());
-                assertEquals(2L, response.getContent().getFirst().getStudent().getId());
-                assertEquals(1, response.getNumber());
-                assertEquals(1, response.getSize());
-                assertEquals(3, response.getTotalElements());
-                assertEquals(3, response.getTotalPages());
+                assertEquals(200, response.getStatusCode().value());
+                assertNotNull(response.getBody());
+                assertEquals(1, response.getBody().getContent().size());
+                assertEquals(2L, response.getBody().getContent().getFirst().getStudent().getId());
+                assertEquals(1, response.getBody().getNumber());
+                assertEquals(1, response.getBody().getSize());
+                assertEquals(3, response.getBody().getTotalElements());
+                assertEquals(3, response.getBody().getTotalPages());
             }
         }
     }
