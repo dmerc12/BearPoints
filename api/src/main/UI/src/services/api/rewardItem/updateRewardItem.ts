@@ -1,6 +1,10 @@
-import { RewardItem, withHealthAwareRetry, api } from '../../index';
+import { withHealthAwareRetry } from '../withHealthAwareRetry';
+import { RewardItemDTO } from '../../types';
+import { api } from '../api';
 
-export const updateRewardItem = async (id: number, rewardItemData: Partial<RewardItem>, signal?: AbortSignal): Promise<RewardItem> => {
-    return await withHealthAwareRetry(() =>
-        api.patch<RewardItem>(`api/reward-items/${id}`, rewardItemData, { signal }).then(r => r.data));
+export const updateRewardItem = async (id: number, rewardItemData: RewardItemDTO,
+                                       signal?: AbortSignal): Promise<RewardItemDTO> => {
+    return withHealthAwareRetry(() =>
+        api.put<RewardItemDTO>(`api/items/${id}`, rewardItemData, { signal })
+            .then(r => r.data));
 };
