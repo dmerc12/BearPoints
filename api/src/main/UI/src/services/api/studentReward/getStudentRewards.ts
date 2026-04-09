@@ -1,10 +1,12 @@
-import { PaginatedStudentRewards, fetchPaginated } from '../../index';
+import { PagedResponseDTO, StudentRewardDTO } from '../../types';
+import { withHealthAwareRetry } from '../withHealthAwareRetry';
+import { api } from '../api';
 
-export const getStudentRewards = async (page = 0, size = 100,
-                                        sortQuery?: string, signal?: AbortSignal): Promise<PaginatedStudentRewards> => {
-    let url = `api/student-rewards?projection=studentRewardProjection&page=${page}&size=${size}`;
-    if (sortQuery) {
-        url += `&sort=${sortQuery}`;
-    }
-    return await fetchPaginated<PaginatedStudentRewards>(url,'studentRewards', signal);
+export const getStudentRewards = async (page = 0, size = 20, sort?: string,
+                                        signal?: AbortSignal): Promise<PagedResponseDTO<StudentRewardDTO>> => {
+    let url = `api/rewards?page=${page}&size=${size}`;
+    if (sort) url += `&sort=${sort}`;
+    return withHealthAwareRetry(() =>
+        api.get<PagedResponseDTO<StudentRewardDTO>>(url, { signal })
+            .then(r => r.data));
 };

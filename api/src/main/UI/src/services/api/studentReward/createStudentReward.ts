@@ -1,6 +1,10 @@
-import { StudentRewardDTO, withHealthAwareRetry, api } from '../../index';
+import { withHealthAwareRetry } from '../withHealthAwareRetry';
+import { StudentRewardDTO } from '../../types';
+import { api } from '../api';
 
-export const createStudentReward = async (studentRewardData: Partial<StudentRewardDTO>, signal?: AbortSignal): Promise<StudentRewardDTO> => {
-    return await withHealthAwareRetry(() =>
-        api.post<StudentRewardDTO>(`api/student-rewards`, studentRewardData, { signal }).then(r => r.data));
+export const createStudentReward = async (studentRewardData: StudentRewardDTO,
+                                          signal?: AbortSignal): Promise<StudentRewardDTO> => {
+    return withHealthAwareRetry(() =>
+        api.post<StudentRewardDTO>(`api/rewards`, studentRewardData, { signal })
+            .then(r => r.data));
 };
