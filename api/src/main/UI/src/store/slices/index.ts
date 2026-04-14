@@ -1,9 +1,10 @@
 export {
-    fetchCurrentUser, modifyUser, clearUser
+    fetchCurrentUser, clearCurrentUser
 } from './userSlice';
 export {
-    fetchAdmins, addAdmin, modifyAdmin, removeAdmin, resetAdmins, clearAdminsError
-} from './adminsSlice';
+    fetchUsers, searchUsersInList, fetchUserById, addUser, modifyUser, removeUser, resetUsers, clearUsersError,
+    clearSelectedUser
+} from './usersSlice.ts';
 export {
     fetchTeachers, addTeacher, modifyTeacher, removeTeacher, resetTeachers, clearTeachersError
 } from './teachersSlice';

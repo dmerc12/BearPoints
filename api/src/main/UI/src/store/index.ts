@@ -6,13 +6,13 @@ import bragLogsReducer from './slices/bragLogsSlice';
 import teachersReducer from './slices/teachersSlice';
 import studentsReducer from './slices/studentsSlice';
 import { configureStore } from '@reduxjs/toolkit';
-import adminsReducer from './slices/adminsSlice';
+import usersReducer from './slices/usersSlice';
 import userReducer from './slices/userSlice';
 
 export const store = configureStore({
     reducer: {
         user: userReducer,
-        admins: adminsReducer,
+        users: usersReducer,
         teachers: teachersReducer,
         students: studentsReducer,
         behaviorTypes: behaviorTypesReducer,
@@ -30,8 +30,9 @@ export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 export { useAppDispatch, useAppSelector } from './hooks';
 export {
-    fetchCurrentUser, modifyUser, clearUser,
-    fetchAdmins, addAdmin, modifyAdmin, removeAdmin, resetAdmins, clearAdminsError,
+    fetchCurrentUser, clearCurrentUser,
+    fetchUsers, searchUsersInList, fetchUserById, addUser, modifyUser, removeUser,
+    resetUsers, clearUsersError, clearSelectedUser,
     fetchTeachers, addTeacher, modifyTeacher, removeTeacher, resetTeachers, clearTeachersError,
     fetchStudents, addStudent, modifyStudent, removeStudent, resetStudents, clearStudentsError,
     fetchBehaviorTypes, addBehaviorType, modifyBehaviorType, removeBehaviorType, resetBehaviorTypes, clearBehaviorTypesError,

@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
-import { getCurrentUser, updateUser, UserDTO } from '../../services';
+import { getCurrentUser, UserDTO } from '../../services';
 import { RootState } from '../index';
 
 interface UserState {
@@ -31,18 +31,11 @@ export const fetchCurrentUser = createAsyncThunk(
     }
 );
 
-export const modifyUser = createAsyncThunk(
-    'user/modifyUser',
-    async ({ id, userData }: { id: number, userData: Partial<UserDTO>}, { signal }) => {
-        return await updateUser(id, userData, signal);
-    }
-);
-
 const userSlice = createSlice({
     name: 'user',
     initialState,
     reducers: {
-        clearUser: (state) => {
+        clearCurrentUser: (state) => {
             state.data = null;
             state.loading = false;
             state.error = null;
@@ -66,25 +59,9 @@ const userSlice = createSlice({
                 if (action.error.name !== 'AbortError') {
                     state.error = action.error.message || 'Failed to fetch user';
                 }
-            })
-            .addCase(modifyUser.pending, (state) => {
-                state.loading = true;
-                state.error = null;
-            })
-            .addCase(modifyUser.fulfilled, (state, action: PayloadAction<UserDTO>) => {
-                state.loading = false;
-                state.data = action.payload;
-                state.error = null;
-                state.lastFetched = Date.now();
-            })
-            .addCase(modifyUser.rejected, (state, action) => {
-                state.loading = false;
-                if (action.error.name !== 'AbortError') {
-                    state.error = action.error.message || 'Failed to update user';
-                }
             });
     }
 });
 
-export const { clearUser } = userSlice.actions;
+export const { clearCurrentUser } = userSlice.actions;
 export default userSlice.reducer;
