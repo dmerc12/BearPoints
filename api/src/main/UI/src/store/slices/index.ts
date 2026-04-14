@@ -2,11 +2,12 @@ export {
     fetchCurrentUser, clearCurrentUser
 } from './userSlice';
 export {
-    fetchUsers, searchUsersInList, fetchUserById, addUser, modifyUser, removeUser, resetUsers, clearUsersError,
-    clearSelectedUser
+    fetchUsers, searchUsersInList, fetchUserById, addUser, modifyUser, removeUser,
+    resetUsers, clearUsersError, clearSelectedUser
 } from './usersSlice.ts';
 export {
-    fetchTeachers, addTeacher, modifyTeacher, removeTeacher, resetTeachers, clearTeachersError
+    fetchTeachers, searchTeachersInList, fetchTeacherById, addTeacher, modifyTeacher, removeTeacher,
+    resetTeachers, clearTeachersError, clearSelectedTeacher
 } from './teachersSlice';
 export {
     fetchStudents, addStudent, modifyStudent, removeStudent, resetStudents, clearStudentsError
