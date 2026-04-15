@@ -10,7 +10,8 @@ export {
     resetTeachers, clearTeachersError, clearSelectedTeacher
 } from './teachersSlice';
 export {
-    fetchStudents, addStudent, modifyStudent, removeStudent, resetStudents, clearStudentsError
+    fetchStudents, searchStudentsInList, fetchClassroomLeaderboard, fetchStudentById, fetchStudentByToken,
+    addStudent, modifyStudent, removeStudent, resetStudents, clearStudentsError, clearSelectedStudent
 } from './studentsSlice';
 export {
     fetchBehaviorTypes, addBehaviorType, modifyBehaviorType, removeBehaviorType, resetBehaviorTypes,
