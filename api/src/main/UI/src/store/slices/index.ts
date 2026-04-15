@@ -14,8 +14,8 @@ export {
     addStudent, modifyStudent, removeStudent, resetStudents, clearStudentsError, clearSelectedStudent
 } from './studentsSlice';
 export {
-    fetchBehaviorTypes, addBehaviorType, modifyBehaviorType, removeBehaviorType, resetBehaviorTypes,
-    clearBehaviorTypesError
+    fetchBehaviorTypes, searchBehaviorTypesInList, fetchBehaviorTypeById, addBehaviorType, modifyBehaviorType,
+    removeBehaviorType, resetBehaviorTypes, clearBehaviorTypesError, clearSelectedBehaviorType
 } from './behaviorTypesSlice';
 export {
     fetchBragLogs, addBragLog, addPublicBragLog, modifyBragLog, removeBragLog, resetBragLogs, clearBragLogsError
