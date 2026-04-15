@@ -25,8 +25,8 @@ export {
     removeRewardItem, resetRewardItems, clearRewardItemsError, clearSelectedRewardItem
 } from './rewardItemsSlice';
 export {
-    fetchStudentRewards, addStudentReward, modifyStudentReward, removeStudentReward, resetStudentRewards,
-    clearStudentRewardsError
+    fetchStudentRewards, searchStudentRewardsInList, fetchStudentRewardById, addStudentReward, modifyStudentReward,
+    removeStudentReward, resetStudentRewards, clearStudentRewardsError, clearSelectedStudentReward
 } from './studentRewardsSlice';
 export {
     fetchLeaderboard, setTimeframe, resetLeaderboard, clearLeaderboardError, clearTimeframeCache, clearSortCache
