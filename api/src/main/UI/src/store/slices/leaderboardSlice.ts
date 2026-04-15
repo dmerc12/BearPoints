@@ -1,9 +1,9 @@
-import { getLeaderboard, LeaderboardEntry, Timeframe, CacheResponse } from '../../services';
+import { getLeaderboard, LeaderboardEntryDTO, Timeframe, PagedResponseDTO } from '../../services';
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../index';
 
 interface LeaderboardState {
-    data: LeaderboardEntry[];
+    data: LeaderboardEntryDTO[];
     loading: boolean;
     error: string | null;
     currentTimeframe: Timeframe;
@@ -13,7 +13,7 @@ interface LeaderboardState {
     }
     lastFetched: number | null;
     cachedEntries: Record<Timeframe, Record<string, {
-        data: LeaderboardEntry[];
+        data: LeaderboardEntryDTO[];
         pagination: { totalPages: number; totalElements: number };
         lastFetched: number | null;
     }>>;
@@ -41,7 +41,7 @@ const CACHE_DURATION = 5 * 60 * 1000;
 
 export const fetchLeaderboard = createAsyncThunk(
     'leaderboard/fetchLeaderboard',
-    async (params: { timeframe: Timeframe, page?: number, size?: number, sort?: string, force?: boolean},
+    async (params: { timeframe: Timeframe, page?: number, size?: number, sort?: string, force?: boolean },
            { getState, signal }) => {
         const state = getState() as RootState;
         const { timeframe, page = 0, size = 20, sort, force = false } = params;
@@ -49,15 +49,16 @@ export const fetchLeaderboard = createAsyncThunk(
         const cachedTimeframe = state.leaderboard.cachedEntries[timeframe];
         const cachedData = cachedTimeframe ? cachedTimeframe[cacheKey] : null;
         const lastFetched = cachedData?.lastFetched;
-        const isCacheValid = lastFetched && (Date.now() - lastFetched) < CACHE_DURATION;
+        const isCacheValid = lastFetched &&
+            (Date.now() - lastFetched) < CACHE_DURATION;
         if (isCacheValid && !force) {
             return {
-                data: cachedData.data,
+                content: cachedData.data,
                 totalPages: cachedData.pagination.totalPages,
                 totalElements: cachedData.pagination.totalElements
-            } as CacheResponse<LeaderboardEntry>;
+            } as PagedResponseDTO<LeaderboardEntryDTO>;
         }
-        return await getLeaderboard(timeframe, page, size, sort, signal);
+        return await getLeaderboard(timeframe, undefined, undefined, page, size, sort, signal);
     }
 );
 
@@ -93,19 +94,11 @@ const leaderboardSlice = createSlice({
             })
             .addCase(fetchLeaderboard.fulfilled, (state, action) => {
                     state.loading = false;
-                    if ('leaderboardEntries' in action.payload) {
-                        state.data = action.payload.leaderboardEntries;
-                        state.pagination = {
-                            totalPages: action.payload.totalPages,
-                            totalElements: action.payload.totalLeaderboardEntries
-                        };
-                    } else {
-                        state.data = action.payload.data;
-                        state.pagination = {
-                            totalPages: action.payload.totalPages,
-                            totalElements: action.payload.totalElements
-                        };
-                    }
+                    state.data = action.payload.content;
+                    state.pagination = {
+                        totalPages: action.payload.totalPages,
+                        totalElements: action.payload.totalElements,
+                    };
                     const timeframe = action.meta.arg.timeframe;
                     const sort = action.meta.arg.sort;
                     const cacheKey = sort || 'default';
