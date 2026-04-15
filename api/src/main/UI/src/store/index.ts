@@ -40,7 +40,8 @@ export {
     fetchBehaviorTypes, searchBehaviorTypesInList, fetchBehaviorTypeById, addBehaviorType, modifyBehaviorType,
     removeBehaviorType, resetBehaviorTypes, clearBehaviorTypesError, clearSelectedBehaviorType,
     fetchBragLogs, addBragLog, addPublicBragLog, modifyBragLog, removeBragLog, resetBragLogs, clearBragLogsError,
-    fetchRewardItems, addRewardItem, modifyRewardItem, removeRewardItem, resetRewardItems, clearRewardItemsError,
+    fetchRewardItems, searchRewardItemsInList, fetchRewardItemById, addRewardItem, modifyRewardItem,
+    removeRewardItem, resetRewardItems, clearRewardItemsError, clearSelectedRewardItem,
     fetchStudentRewards, addStudentReward, modifyStudentReward, removeStudentReward, resetStudentRewards, clearStudentRewardsError,
     fetchLeaderboard, setTimeframe, resetLeaderboard, clearTimeframeCache, clearSortCache, clearLeaderboardError
 } from './slices';

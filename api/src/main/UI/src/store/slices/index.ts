@@ -21,7 +21,8 @@ export {
     fetchBragLogs, addBragLog, addPublicBragLog, modifyBragLog, removeBragLog, resetBragLogs, clearBragLogsError
 } from './bragLogsSlice';
 export {
-    fetchRewardItems, addRewardItem, modifyRewardItem, removeRewardItem, resetRewardItems, clearRewardItemsError
+    fetchRewardItems, searchRewardItemsInList, fetchRewardItemById, addRewardItem, modifyRewardItem,
+    removeRewardItem, resetRewardItems, clearRewardItemsError, clearSelectedRewardItem
 } from './rewardItemsSlice';
 export {
     fetchStudentRewards, addStudentReward, modifyStudentReward, removeStudentReward, resetStudentRewards,
