@@ -1,6 +1,6 @@
 import { ValidationRule } from '../../hooks';
 
-export const personValidationRules: ValidationRule[] = [
+export const userValidationRules: ValidationRule[] = [
     {
         field: 'firstName',
         validator: (value) => {
