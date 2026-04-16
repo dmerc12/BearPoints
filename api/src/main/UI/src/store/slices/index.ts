@@ -18,7 +18,8 @@ export {
     removeBehaviorType, resetBehaviorTypes, clearBehaviorTypesError, clearSelectedBehaviorType
 } from './behaviorTypesSlice';
 export {
-    fetchBragLogs, addBragLog, addPublicBragLog, modifyBragLog, removeBragLog, resetBragLogs, clearBragLogsError
+    fetchBragLogs, searchBragLogsInList, fetchBragLogById, addBragLog, modifyBragLog, removeBragLog,
+    resetBragLogs, clearBragLogsError, clearSelectedBragLog
 } from './bragLogsSlice';
 export {
     fetchRewardItems, searchRewardItemsInList, fetchRewardItemById, addRewardItem, modifyRewardItem,
