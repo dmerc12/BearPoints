@@ -1,4 +1,4 @@
-import { Teacher, Student } from '../../services';
+import { TeacherDTO, StudentDTO } from '../../services';
 import { memoize } from 'lodash';
 
 interface NameSource {
@@ -6,7 +6,7 @@ interface NameSource {
     lastName: string;
 }
 
-const getNameSource = (source: Teacher | Student | NameSource): NameSource => {
+const getNameSource = (source: TeacherDTO | StudentDTO | NameSource): NameSource => {
     if ('user' in source) {
         if (!source.user) {
             return { firstName: '', lastName: '' };
@@ -19,13 +19,13 @@ const getNameSource = (source: Teacher | Student | NameSource): NameSource => {
     return source;
 };
 
-const resolver = (source: Teacher | Student | NameSource) => {
+const resolver = (source: TeacherDTO | StudentDTO | NameSource) => {
     if ('id' in source) return source.id;
     const names = getNameSource(source);
     return `${names.firstName || ''}-${names.lastName || ''}`;
 };
 
-export const formatName = memoize((source: Teacher | Student | NameSource) => {
+export const formatName = memoize((source: TeacherDTO | StudentDTO | NameSource) => {
     const { firstName, lastName } = getNameSource(source);
     if (!firstName && !lastName) return '';
     if (!firstName) return lastName || '';
@@ -33,7 +33,7 @@ export const formatName = memoize((source: Teacher | Student | NameSource) => {
     return `${firstName?.[0] || ''}. ${lastName}`;
 }, resolver);
 
-export const fullName = memoize((source: Teacher | Student | NameSource) => {
+export const fullName = memoize((source: TeacherDTO | StudentDTO | NameSource) => {
     const { firstName, lastName } = getNameSource(source);
     return `${firstName} ${lastName}`;
 }, resolver);
