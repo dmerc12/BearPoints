@@ -1,6 +1,6 @@
 export {
-    personValidationRules, teacherValidationRules, studentValidationRules, behaviorTypeValidationRules,
-    bragLogValidationRules
+    userValidationRules, teacherValidationRules, studentValidationRules, behaviorTypeValidationRules,
+    bragLogValidationRules, rewardItemValidationRules
 } from './validationRules';
 export {
     formatName, fullName, clearNameCaches, formatRole, formatGrade, formatBehaviorTypeStatus,
