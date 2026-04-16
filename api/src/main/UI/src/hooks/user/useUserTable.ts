@@ -1,51 +1,75 @@
-import { fetchAdmins, RootState, useAppDispatch, useAppSelector } from '../../store';
+import { searchUsersInList, RootState, useAppDispatch, useAppSelector } from '../../store';
 import { useCallback, useEffect, useMemo } from 'react';
 import { fullName, formatRole } from '../../utils';
 import { UserDTO, Role } from '../../services';
 import { useTable } from '../index';
 
-export interface UseAdminTableProps {
+export interface UseUserTableProps {
     itemsPerPage?: number;
 }
 
-export function useAdminTable({ itemsPerPage = 10 }: UseAdminTableProps) {
+export function useUserTable({ itemsPerPage = 10 }: UseUserTableProps) {
     const dispatch = useAppDispatch();
     const currentUser = useAppSelector(state => state.user.data);
     const isAdmin = useMemo(() => currentUser?.role === Role.ADMIN, [currentUser]);
 
-    const initialFilters = { nameSearch: '', emailSearch: '' };
+    const initialFilters = { nameSearch: '', emailSearch: '', roleFilter: '' };
 
     const columnsBuilder = useCallback(() => [
         {
             key: 'name',
             header: 'Name',
-            render: (admin: UserDTO) => fullName(admin),
+            render: (user: UserDTO) => fullName(user),
             sortable: true,
         },
         {
             key: 'email',
             header: 'Email',
-            render: (admin: UserDTO) => admin.email,
+            render: (user: UserDTO) => user.email,
             sortable: true,
         },
         {
             key: 'role',
             header: 'Role',
-            render: (admin: UserDTO) => formatRole(admin.role),
+            render: (user: UserDTO) => formatRole(user.role),
             sortable: true,
         },
     ], []);
 
-    const fetchAction = useCallback(({ page, size, sort, force }
-                                     : { page: number; size: number; sort?: string; force?: boolean }) => {
-        dispatch(fetchAdmins({ page, size, sort, force: force || false }) as never);
+    const fetchAction = useCallback((params: {
+        page: number,
+        size: number,
+        sort?: string,
+        force?: boolean,
+        firstName?: string;
+        lastName?: string;
+        email?: string;
+        role?: Role;
+    }) => {
+        dispatch(searchUsersInList(params) as never);
     }, [dispatch]);
 
+    const getFetchParams = useCallback((
+        filters: typeof initialFilters,
+        page: number,
+        size: number,
+        sort?: string
+    ) => {
+        return {
+           page, size, sort,
+           firstName: filters.nameSearch || undefined,
+           lastName: filters.nameSearch || undefined,
+           email: filters.emailSearch || undefined,
+           role: filters.roleFilter ? (filters.roleFilter as Role) : undefined,
+        };
+    }, []);
+
     const table = useTable<UserDTO, typeof initialFilters>({
-        selector: (state: RootState) => state.admins,
+        selector: (state: RootState) => state.users,
         initialFilters,
         columnsBuilder,
         fetchAction,
+        getFetchParams,
         itemsPerPage,
         mode: 'crud' as const,
     });
@@ -80,13 +104,22 @@ export function useAdminTable({ itemsPerPage = 10 }: UseAdminTableProps) {
             label: 'Search by email',
             placeholder: 'Search by email...',
         },
+        {
+            key: 'roleFilter',
+            type: 'select' as const,
+            label: 'Role',
+            options: [
+                { value: 'ADMIN', label: 'Admin' },
+                { value: 'STAFF', label: 'Staff' },
+            ],
+        },
     ];
 
     const headerConfig = useMemo(() => ({
-        title: 'Administrators',
-        itemName: 'administrators',
+        title: 'Users',
+        itemName: 'users',
         showCreateButton: isAdmin,
-        createButtonText: 'Create Administrator',
+        createButtonText: 'Create User',
         additionalElements: null,
     }), [isAdmin]);
 
