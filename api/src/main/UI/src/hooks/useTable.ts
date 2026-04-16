@@ -1,5 +1,5 @@
-import { RootState, useAppDispatch, useAppSelector } from '../store';
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import { RootState, useAppDispatch, useAppSelector } from '../store';
 
 export interface SortingConfig {
     propertyName: string;
@@ -39,18 +39,31 @@ export interface UseTableOptions<T, F extends TableFilters> {
         page: number;
         size: number;
         sort?: string;
-        force?: boolean
+        force?: boolean;
+        [key: string]: unknown;
     }) => unknown;
     itemsPerPage?: number;
     columnsBuilder?: (helpers: TableHelpers<T>) => TableColumn<T>[];
     defaultColumns?: TableColumn<T>[];
     getServerSortField?: (clientField: string) => string;
+    getFetchParams?: (
+        filters: F,
+        page: number,
+        size: number,
+        sort?: string
+    ) => {
+        page: number;
+        size: number;
+        sort?: string;
+        force?: boolean;
+        [key: string]: unknown;
+    };
 }
 
 export function useTable<T, F extends TableFilters>(props: UseTableOptions<T, F>) {
     const {
-        selector, initialFilters, mode = 'read-only', fetchAction,
-        itemsPerPage = 10, columnsBuilder, defaultColumns = [], getServerSortField
+        selector, initialFilters, mode = 'read-only', fetchAction, itemsPerPage = 10,
+        columnsBuilder, defaultColumns = [], getServerSortField, getFetchParams
     } = props;
 
     const dispatch = useAppDispatch();
@@ -64,11 +77,12 @@ export function useTable<T, F extends TableFilters>(props: UseTableOptions<T, F>
     const [editingItem, setEditingItem] = useState<T | null>(null);
     const [deletingItem, setDeletingItem] = useState<T | null>(null);
 
-    const getSortField = useCallback((clientField: string): string => {
-        if (getServerSortField) {
-            return getServerSortField(clientField);
-        }
-        return clientField;
+    const getSortField = useCallback(
+        (clientField: string): string => {
+            if (getServerSortField) {
+                return getServerSortField(clientField);
+            }
+            return clientField;
     }, [getServerSortField]);
 
     const sortParam = useMemo(() => {
@@ -79,16 +93,25 @@ export function useTable<T, F extends TableFilters>(props: UseTableOptions<T, F>
         }).join('&');
     }, [sortConfig, getSortField]);
 
+    // Build fetch params using getFetchParams if provided, otherwise basic pagination
+    const buildFetchParams = useCallback(() => {
+        const baseParams = {
+            page: currentPage - 1,
+            size: itemsPerPage,
+            sort: sortParam,
+        };
+        if (getFetchParams) {
+            return getFetchParams(filters, currentPage - 1, itemsPerPage, sortParam);
+        }
+        return baseParams;
+    }, [currentPage, itemsPerPage, sortParam, getFetchParams, filters])
+
     // Fetch data on mount
     useEffect(() => {
-        if (fetchAction) {
-            dispatch(fetchAction({
-                page: currentPage - 1,
-                size: itemsPerPage,
-                sort: sortParam
-            }) as never);
-        }
-    }, [dispatch, fetchAction, currentPage, itemsPerPage, sortParam]);
+        if (!fetchAction) return;
+        const params = buildFetchParams();
+        dispatch(fetchAction(params) as never);
+    }, [dispatch, fetchAction, currentPage, itemsPerPage, sortParam, filters, buildFetchParams]);
 
     const helpers = useMemo(() => ({
         handleEditItem: mode === 'crud' ? (item: T) => setEditingItem(item) : undefined,
@@ -176,14 +199,10 @@ export function useTable<T, F extends TableFilters>(props: UseTableOptions<T, F>
 
     const retryFetch = useCallback(() => {
         if (fetchAction) {
-            dispatch(fetchAction({
-                page: currentPage - 1,
-                size: itemsPerPage,
-                sort: sortParam,
-                force: true
-            }) as never);
+            const params = buildFetchParams();
+            dispatch(fetchAction({ ...params, force: true }) as never);
         }
-    }, [dispatch, fetchAction, currentPage, itemsPerPage, sortParam]);
+    }, [dispatch, fetchAction, buildFetchParams]);
 
     const handleSuccess = useCallback(() => {
         if (mode === 'crud') {
