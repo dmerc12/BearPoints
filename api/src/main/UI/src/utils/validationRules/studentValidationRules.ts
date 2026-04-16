@@ -1,8 +1,8 @@
-import { personValidationRules } from './index';
+import { userValidationRules } from './userValidationRules';
 import { ValidationRule } from '../../hooks';
 
 export const studentValidationRules: ValidationRule[] = [
-    ...personValidationRules,
+    ...userValidationRules,
     {
         field: 'teacherId',
         validator: (value) => {
