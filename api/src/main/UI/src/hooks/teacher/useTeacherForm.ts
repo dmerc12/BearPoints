@@ -1,5 +1,5 @@
-import { Teacher, Role, TeacherFormData } from '../../services';
 import { teacherValidationRules } from '../../utils';
+import { TeacherDTO, Role } from '../../services';
 import { useAppSelector } from '../../store';
 import { useForm } from '../index';
 import { useEffect } from 'react';
@@ -7,7 +7,7 @@ import { useEffect } from 'react';
 export interface UseTeacherFormProps {
     show: boolean;
     isEdit?: boolean;
-    teacher?: Teacher | null;
+    teacher?: TeacherDTO | null;
 }
 
 export function useTeacherForm ({ show, isEdit = false, teacher }: UseTeacherFormProps) {
@@ -16,17 +16,22 @@ export function useTeacherForm ({ show, isEdit = false, teacher }: UseTeacherFor
     const currentUser = useAppSelector(
         state => state.user.data);
 
-    const initialData: TeacherFormData = {
+    const initialData = {
         firstName: '',
         lastName: '',
         email: '',
-        grade: null
+        grade: null as string | null,
     };
 
     const form = useForm({ initialData, validationRules: teacherValidationRules });
 
     const isAdmin = currentUser?.role === Role.ADMIN;
-    const isTeacher = currentUser?.role === Role.TEACHER;
+
+    useEffect(() => {
+        if (show && !isEdit) {
+            form.resetForm();
+        }
+    }, [show, isEdit, form]);
 
     useEffect(() => {
         if (show && isEdit && teacher) {
@@ -40,9 +45,18 @@ export function useTeacherForm ({ show, isEdit = false, teacher }: UseTeacherFor
     }, [show, isEdit, teacher, form]);
 
     return {
-        formData: form.formData, setFormData: form.setFormData, formErrors: form.formErrors,
-        setFormErrors: form.setFormErrors, currentUser, isAdmin, isTeacher, error, loading,
-        handleInputChange: form.handleInputChange, handleSelectChange: form.handleSelectChange,
-        handleCheckboxChange: form.handleCheckboxChange, validateForm: form.validateForm, resetForm: form.resetForm
+        formData: form.formData,
+        setFormData: form.setFormData,
+        formErrors: form.formErrors,
+        setFormErrors: form.setFormErrors,
+        currentUser,
+        isAdmin, 
+        error,
+        loading,
+        handleInputChange: form.handleInputChange,
+        handleSelectChange: form.handleSelectChange,
+        handleCheckboxChange: form.handleCheckboxChange,
+        validateForm: form.validateForm,
+        resetForm: form.resetForm
     };
-};
+}

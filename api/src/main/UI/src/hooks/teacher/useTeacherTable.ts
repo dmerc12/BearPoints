@@ -1,7 +1,7 @@
-import { fetchTeachers, RootState, useAppSelector, useAppDispatch } from '../../store';
+import { searchTeachersInList, RootState, useAppSelector, useAppDispatch } from '../../store';
 import { fullName, formatGrade, sortGrades } from '../../utils';
+import { TeacherDTO, Role, GradeLevel } from '../../services';
 import { useCallback, useEffect, useMemo } from 'react';
-import { Teacher, Role } from '../../services';
 import { useTable } from '../index';
 
 export interface UseTeacherTableProps {
@@ -14,38 +14,59 @@ export function useTeacherTable({ itemsPerPage = 10 }: UseTeacherTableProps) {
     const currentUser = useAppSelector(state => state.user.data);
 
     const isAdmin = useMemo(() => currentUser?.role === Role.ADMIN, [currentUser]);
-    const isTeacher = useMemo(() => currentUser?.role === Role.TEACHER, [currentUser]);
-    const canManageTeacher = useCallback((teacher: Teacher) => {
-        return isAdmin || (isTeacher && teacher.user.id === currentUser?.id);
-    }, [isAdmin, isTeacher, currentUser]);
 
-    const initialFilters = { nameSearch: '', gradeFilter: '' };
+    const initialFilters = { nameSearch: '', emailSearch: '', gradeFilter: '' };
 
     const columnsBuilder = useCallback(() => [
         {
             key: 'name',
             header: 'Name',
-            render: (teacher: Teacher) => fullName(teacher.user),
+            render: (teacher: TeacherDTO) => fullName(teacher.user),
             sortable: true,
         },
         {
             key: 'grade',
             header: 'Grade',
-            render: (teacher: Teacher) => formatGrade(teacher.grade),
+            render: (teacher: TeacherDTO) => formatGrade(teacher.grade),
             sortable: true,
         },
         {
             key: 'email',
             header: 'Email',
-            render: (teacher: Teacher) => teacher.user.email,
+            render: (teacher: TeacherDTO) => teacher.user.email,
             sortable: true,
         },
     ], []);
 
-    const fetchAction = useCallback(({ page, size, sort, force }
-                                     : { page: number; size: number; sort?: string; force?: boolean }) => {
-        dispatch(fetchTeachers({ page, size, sort, force: force || false }) as never);
+    const fetchAction = useCallback((params: {
+        page: number;
+        size: number;
+        sort?: string
+        force?: boolean;
+        firstName?: string;
+        lastName?: string;
+        email?: string;
+        grade?: GradeLevel;
+    }) => {
+        dispatch(searchTeachersInList(params) as never);
     }, [dispatch]);
+
+    const getFetchParams = useCallback((
+        filters: typeof initialFilters,
+        page: number,
+        size: number,
+        sort?: string
+    ) => {
+        return {
+            page,
+            size,
+            sort,
+            firstName: filters.nameSearch || undefined,
+            lastName: filters.nameSearch || undefined,
+            email: filters.emailSearch || undefined,
+            grade: filters.gradeFilter ? (filters.gradeFilter as GradeLevel) : undefined,
+        };
+    }, []);
 
     const gradeOptions = useMemo(() => {
         const teacherGrades = teachers.map(teacher => teacher.grade);
@@ -58,8 +79,14 @@ export function useTeacherTable({ itemsPerPage = 10 }: UseTeacherTableProps) {
         {
             key: 'nameSearch',
             type: 'text' as const,
-            label: 'Search Teachers',
+            label: 'Search by name',
             placeholder: 'Search by name...',
+        },
+        {
+            key: 'emailSearch',
+            type: 'text' as const,
+            label: 'Search by email',
+            placeholder: 'Search by email...',
         },
         {
             key: 'gradeFilter',
@@ -77,11 +104,12 @@ export function useTeacherTable({ itemsPerPage = 10 }: UseTeacherTableProps) {
         additionalElements: null,
     }), [isAdmin]);
 
-    const table = useTable<Teacher, typeof initialFilters>({
+    const table = useTable<TeacherDTO, typeof initialFilters>({
         selector: (state: RootState) => state.teachers,
-        fetchAction,
         initialFilters,
         columnsBuilder,
+        fetchAction,
+        getFetchParams,
         itemsPerPage,
         mode: 'crud' as const,
     });
@@ -94,14 +122,14 @@ export function useTeacherTable({ itemsPerPage = 10 }: UseTeacherTableProps) {
 
     const crudTable = table as typeof table & {
         showCreateModal: boolean;
-        editingItem: Teacher | null;
-        deletingItem: Teacher | null;
+        editingItem: TeacherDTO | null;
+        deletingItem: TeacherDTO | null;
         handleCreateItem: () => void;
-        handleEditItem: (item: Teacher) => void;
-        handleDeleteItem: (item: Teacher) => void;
+        handleEditItem: (item: TeacherDTO) => void;
+        handleDeleteItem: (item: TeacherDTO) => void;
         handleCloseModals: () => void;
         handleSuccess: () => void;
     }
 
-    return { ...crudTable, filtersConfig, headerConfig, isAdmin, canManageTeacher };
+    return { ...crudTable, filtersConfig, headerConfig, isAdmin };
 }
