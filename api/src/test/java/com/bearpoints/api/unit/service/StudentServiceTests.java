@@ -36,7 +36,7 @@ import static org.mockito.Mockito.*;
  * search with criteria, and classroom leaderboards.
  *
  * @see StudentServiceImpl
- * @version 1.1
+ * @version 1.2
  * @author Dylan Mercer
  */
 @DisplayName("StudentService Tests")
@@ -272,7 +272,7 @@ public class StudentServiceTests {
         void shouldCreateNewStudentSuccessfully() {
             StudentDTO studentDTO = new StudentDTO(
                     null,
-                    new UserDTO(null, "new.student@okcps.org", "New", "Student", "STUDENT"),
+                    new UserDTO(null, "new.student@okcps.org", "New", "Student", "STUDENT", null, null),
                     0,
                     null,
                     new TeacherDTO(1L, null, "THIRD")
@@ -304,7 +304,7 @@ public class StudentServiceTests {
         void shouldThrowDuplicateResourceExceptionWhenEmailAlreadyExists() {
             StudentDTO studentDTO = new StudentDTO(
                     null,
-                    new UserDTO(null, "existing@okcps.org", "New", "Student", "STUDENT"),
+                    new UserDTO(null, "existing@okcps.org", "New", "Student", "STUDENT", null, null),
                     0,
                     null,
                     new TeacherDTO(1L, null, "FIRST")
@@ -325,7 +325,7 @@ public class StudentServiceTests {
         void shouldThrowResourceNotFoundExceptionWhenTeacherNotFound() {
             StudentDTO studentDTO = new StudentDTO(
                     null,
-                    new UserDTO(null, "new@okcps.org", "New", "Student", "STUDENT"),
+                    new UserDTO(null, "new@okcps.org", "New", "Student", "STUDENT", null, null),
                     0,
                     null,
                     new TeacherDTO(999L, null, "THIRD")
@@ -349,7 +349,7 @@ public class StudentServiceTests {
             Student existingStudent = createStudent(studentId, 100);
             StudentDTO updateDTO = new StudentDTO(
                     studentId,
-                    new UserDTO(existingStudent.getUser().getId(), "updated@okcps.org", "Updated", "Student", "STUDENT"),
+                    new UserDTO(existingStudent.getUser().getId(), "updated@okcps.org", "Updated", "Student", "STUDENT", null, studentId),
                     150,
                     existingStudent.getToken(),
                     new TeacherDTO(2L, null, "THIRD")
@@ -386,7 +386,7 @@ public class StudentServiceTests {
             String sameEmail = existingStudent.getUser().getEmail();
             StudentDTO updateDTO = new StudentDTO(
                     studentId,
-                    new UserDTO(existingStudent.getUser().getId(), sameEmail, "Updated", "Student", "STUDENT"),
+                    new UserDTO(existingStudent.getUser().getId(), sameEmail, "Updated", "Student", "STUDENT", null, studentId),
                     150,
                     existingStudent.getToken(),
                     new TeacherDTO(1L, null, "FIRST")
@@ -419,7 +419,7 @@ public class StudentServiceTests {
             Student existingStudent = createStudent(studentId, 100);
             StudentDTO updateDTO = new StudentDTO(
                     studentId,
-                    new UserDTO(1L, existingEmail, "Updated", "Student", "STUDENT"),
+                    new UserDTO(1L, existingEmail, "Updated", "Student", "STUDENT", null, studentId),
                     150,
                     existingStudent.getToken(),
                     new TeacherDTO(1L, null, "FIRST")
@@ -443,7 +443,7 @@ public class StudentServiceTests {
             Long studentId = 999L;
             StudentDTO updateDTO = new StudentDTO(
                     studentId,
-                    new UserDTO(1L, "updated@okcps.org", "Updated", "Student", "STUDENT"),
+                    new UserDTO(1L, "updated@okcps.org", "Updated", "Student", "STUDENT", null, studentId),
                     150,
                     "token",
                     new TeacherDTO(1L, null, "FIRST")
@@ -462,7 +462,7 @@ public class StudentServiceTests {
             Student existingStudent = createStudent(studentId, 100);
             StudentDTO updateDTO = new StudentDTO(
                     studentId,
-                    new UserDTO(1L, existingStudent.getUser().getEmail(), "Updated", "Student", "STUDENT"),
+                    new UserDTO(1L, existingStudent.getUser().getEmail(), "Updated", "Student", "STUDENT", null, studentId),
                     150,
                     existingStudent.getToken(),
                     new TeacherDTO(999L, null, "FIRST")
@@ -483,7 +483,7 @@ public class StudentServiceTests {
             String newEmail = "newemail@okcps.org";
             StudentDTO updateDTO = new StudentDTO(
                     studentId,
-                    new UserDTO(existingStudent.getUser().getId(), newEmail, "Updated", "Student", "STUDENT"),
+                    new UserDTO(existingStudent.getUser().getId(), newEmail, "Updated", "Student", "STUDENT", null, studentId),
                     150,
                     existingStudent.getToken(),
                     new TeacherDTO(1L, null, "FIRST")

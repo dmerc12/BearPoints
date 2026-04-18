@@ -26,7 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *
  * @see CurrentUserController
  * @see BaseIntegrationTest
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @DisplayName("Current User Integration Tests")
@@ -46,7 +46,7 @@ public class CurrentUserTests extends BaseIntegrationTest {
     private void performGetCurrentUserWithUser(User user) throws Exception {
         FirebaseUserDetails principal = new FirebaseUserDetails(user);
         UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
-        mockMvc.perform(get("/api/users/me")
+        var resultActions = mockMvc.perform(get("/api/users/me")
                     .with(SecurityMockMvcRequestPostProcessors.authentication(auth)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(user.getId()))
@@ -54,6 +54,16 @@ public class CurrentUserTests extends BaseIntegrationTest {
                 .andExpect(jsonPath("$.firstName").value(user.getFirstName()))
                 .andExpect(jsonPath("$.lastName").value(user.getLastName()))
                 .andExpect(jsonPath("$.role").value(user.getRole().name()));
+        if (user.getRole() == Role.TEACHER) {
+            resultActions.andExpect(jsonPath("$.teacherId").value(user.getTeacher().getId()))
+                    .andExpect(jsonPath("$.studentId").doesNotExist());
+        } else if (user.getRole() == Role.STUDENT) {
+            resultActions.andExpect(jsonPath("$.studentId").value(user.getStudent().getId()))
+                    .andExpect(jsonPath("$.teacherId").doesNotExist());
+        } else {
+            resultActions.andExpect(jsonPath("$.teacherId").doesNotExist())
+                    .andExpect(jsonPath("$.studentId").doesNotExist());
+        }
     }
 
     @Test

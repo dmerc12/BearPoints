@@ -6,4 +6,6 @@ export interface UserDTO {
     firstName: string;
     lastName: string;
     role: Role;
+    teacherId?: number | null;
+    studentId?: number | null;
 }

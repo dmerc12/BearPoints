@@ -36,7 +36,7 @@ import static org.mockito.Mockito.*;
  * <p>Verifies user management functionality including CRUD operations and search.
  *
  * @see UserServiceImpl
- * @version 2.1
+ * @version 2.2
  * @author Dylan Mercer
  */
 @DisplayName("UserService Tests")
@@ -275,7 +275,7 @@ public class UserServiceTests {
         @Test
         @DisplayName("Should throw DuplicateResourceException when email already exists")
         void shouldThrowDuplicateResourceExceptionWhenEmailAlreadyExists() {
-            UserDTO userDTO = new UserDTO(null, "existing@okcps.org", "New", "User", "ADMIN");
+            UserDTO userDTO = new UserDTO(null, "existing@okcps.org", "New", "User", "ADMIN", null, null);
             User existingUser = createUser(1L, "existing@okcps.org", "Existing", "User", Role.TEACHER);
             when(userDAO.findByEmail("existing@okcps.org")).thenReturn(Optional.of(existingUser));
             DuplicateResourceException exception = assertThrows(
@@ -290,7 +290,7 @@ public class UserServiceTests {
         @Test
         @DisplayName("Should throw IllegalArgumentException when creating user with TEACHER role")
         void shouldThrowExceptionWhenCreatingTeacher() {
-            UserDTO userDTO = new UserDTO(null, "teacher@okcps.org", "Teacher", "One", "TEACHER");
+            UserDTO userDTO = new UserDTO(null, "teacher@okcps.org", "Teacher", "One", "TEACHER", null, null);
             IllegalArgumentException ex = assertThrows(
                     IllegalArgumentException.class,
                     () -> userService.createUser(userDTO)
@@ -305,7 +305,7 @@ public class UserServiceTests {
         @Test
         @DisplayName("Should throw IllegalArgumentException when creating user with STUDENT role")
         void shouldThrowExceptionWhenCreatingStudent() {
-            UserDTO userDTO = new UserDTO(null, "student@okcps.org", "Student", "One", "STUDENT");
+            UserDTO userDTO = new UserDTO(null, "student@okcps.org", "Student", "One", "STUDENT", null, null);
             IllegalArgumentException ex = assertThrows(
                     IllegalArgumentException.class,
                     () -> userService.createUser(userDTO)
@@ -372,7 +372,7 @@ public class UserServiceTests {
         void shouldUpdateAdminToStaffSuccessfully() {
             Long userId = 1L;
             User existingUser = createUser(userId, "admin@okcps.org", "Admin", "User", Role.ADMIN);
-            UserDTO updateDTO = new UserDTO(userId, "admin@okcps.org", "Admin", "User", "STAFF");
+            UserDTO updateDTO = new UserDTO(userId, "admin@okcps.org", "Admin", "User", "STAFF", null, null);
             User updatedUser = createUser(userId, "admin@okcps.org", "Admin", "User", Role.STAFF);
             when(userDAO.findById(userId)).thenReturn(Optional.of(existingUser));
             when(userDAO.save(any(User.class))).thenReturn(updatedUser);
@@ -388,7 +388,7 @@ public class UserServiceTests {
         void shouldUpdateStaffToAdminSuccessfully() {
             Long userId = 1L;
             User existingUser = createUser(userId, "staff@okcps.org", "Staff", "User", Role.STAFF);
-            UserDTO updateDTO = new UserDTO(userId, "staff@okcps.org", "Staff", "User", "ADMIN");
+            UserDTO updateDTO = new UserDTO(userId, "staff@okcps.org", "Staff", "User", "ADMIN", null, null);
             User updatedUser = createUser(userId, "staff@okcps.org", "Staff", "User", Role.ADMIN);
             when(userDAO.findById(userId)).thenReturn(Optional.of(existingUser));
             when(userDAO.save(any(User.class))).thenReturn(updatedUser);
@@ -404,7 +404,7 @@ public class UserServiceTests {
         void shouldUpdateUserWithoutCheckingEmailWhenEmailUnchanged() {
             Long userId = 1L;
             User existingUser = createUser(userId, "same@okcps.org", "Old", "Name", Role.ADMIN);
-            UserDTO updateDTO = new UserDTO(userId, "same@okcps.org", "New", "Last-Name", "ADMIN");
+            UserDTO updateDTO = new UserDTO(userId, "same@okcps.org", "New", "Last-Name", "ADMIN", null, null);
             User updatedUser = createUser(userId, "same@okcps.org", "New", "Last-Name", Role.ADMIN);
             when(userDAO.findById(userId)).thenReturn(Optional.of(existingUser));
             when(userDAO.save(any(User.class))).thenReturn(updatedUser);
@@ -424,7 +424,7 @@ public class UserServiceTests {
             Long userId = 1L;
             String existingEmail = "existing@okcps.org";
             User existingUser = createUser(userId, "old@okcps.org", "Old", "Name", Role.ADMIN);
-            UserDTO updateDTO = new UserDTO(userId, existingEmail, "New", "Last-Name", "ADMIN");
+            UserDTO updateDTO = new UserDTO(userId, existingEmail, "New", "Last-Name", "ADMIN", null, null);
             User otherUser = createUser(2L, existingEmail, "Other", "User", Role.TEACHER);
             when(userDAO.findById(userId)).thenReturn(Optional.of(existingUser));
             when(userDAO.findByEmail(existingEmail)).thenReturn(Optional.of(otherUser));
@@ -444,7 +444,7 @@ public class UserServiceTests {
             Long userId = 1L;
             String email = "admin@okcps.org";
             User existingUser = createUser(userId, email, "Old", "Name", Role.ADMIN);
-            UserDTO updateDTO = new UserDTO(userId, email, "New", "Last-Name", "ADMIN");
+            UserDTO updateDTO = new UserDTO(userId, email, "New", "Last-Name", "ADMIN", null, null);
             User updatedUser = createUser(userId, email, "New", "Last-Name", Role.ADMIN);
             when(userDAO.findById(userId)).thenReturn(Optional.of(existingUser));
             when(userDAO.save(any(User.class))).thenReturn(updatedUser);
@@ -475,7 +475,7 @@ public class UserServiceTests {
         void shouldThrowIllegalArgumentExceptionWhenUpdatingTeacherUser() {
             Long userId = 1L;
             User existingUser = createUser(userId, "teacher@okcps.org", "Teacher", "One", Role.TEACHER);
-            UserDTO updateDTO = new UserDTO(userId, "teacher@okcps.org", "Updated", "Name", "TEACHER");
+            UserDTO updateDTO = new UserDTO(userId, "teacher@okcps.org", "Updated", "Name", "TEACHER", 1L, null);
             when(userDAO.findById(userId)).thenReturn(Optional.of(existingUser));
             IllegalArgumentException ex = assertThrows(
                     IllegalArgumentException.class,
@@ -494,7 +494,7 @@ public class UserServiceTests {
         void shouldThrowIllegalArgumentExceptionWhenUpdatingStudentUser() {
             Long userId = 1L;
             User existingUser = createUser(userId, "student@okcps.org", "Student", "One", Role.STUDENT);
-            UserDTO updateDTO = new UserDTO(userId, "student@okcps.org", "Updated", "Name", "STUDENT");
+            UserDTO updateDTO = new UserDTO(userId, "student@okcps.org", "Updated", "Name", "STUDENT", null, 1L);
             when(userDAO.findById(userId)).thenReturn(Optional.of(existingUser));
             IllegalArgumentException ex = assertThrows(
                     IllegalArgumentException.class,
@@ -513,7 +513,7 @@ public class UserServiceTests {
         void shouldThrowIllegalArgumentExceptionWhenUpdatingToTeacherRole() {
             Long userId = 1L;
             User existingUser = createUser(userId, "admin@okcps.org", "Admin", "User", Role.ADMIN);
-            UserDTO updateDTO = new UserDTO(userId, "admin@okcps.org", "Admin", "Name", "TEACHER");
+            UserDTO updateDTO = new UserDTO(userId, "admin@okcps.org", "Admin", "Name", "TEACHER", null, null);
             when(userDAO.findById(userId)).thenReturn(Optional.of(existingUser));
             IllegalArgumentException ex = assertThrows(
                     IllegalArgumentException.class,
@@ -532,7 +532,7 @@ public class UserServiceTests {
         void shouldThrowIllegalArgumentExceptionWhenUpdatingToStudentRole() {
             Long userId = 1L;
             User existingUser = createUser(userId, "admin@okcps.org", "Admin", "User", Role.ADMIN);
-            UserDTO updateDTO = new UserDTO(userId, "admin@okcps.org", "Admin", "Name", "STUDENT");
+            UserDTO updateDTO = new UserDTO(userId, "admin@okcps.org", "Admin", "Name", "STUDENT", null, null);
             when(userDAO.findById(userId)).thenReturn(Optional.of(existingUser));
             IllegalArgumentException ex = assertThrows(
                     IllegalArgumentException.class,

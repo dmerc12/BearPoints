@@ -20,14 +20,18 @@ import lombok.Getter;
  *     <li>{@code firstName} - User's first name</li>
  *     <li>{@code lastName} - User's last name</li>
  *     <li>{@code role} - User's assigned role (enum name)</li>
+ *     <li>{@code teacherId} - User's associated teacher ID</li>
+ *     <li>{@code studentId} - User's associated student ID</li>
  * </ul>
  *
- * @version 1.1
+ * @version 1.2
  * @author Dylan Mercer
  */
 @Getter
 public class UserDTO {
     private final Long id;
+    private final Long teacherId;
+    private final Long studentId;
 
     @Pattern(regexp = ".+@okcps\\.org$", message = "Email must be @okcps.org domain")
     private final String email;
@@ -49,12 +53,16 @@ public class UserDTO {
                    @JsonProperty("email") String email,
                    @JsonProperty("firstName") String firstName,
                    @JsonProperty("lastName") String lastName,
-                   @JsonProperty("role") String role) {
+                   @JsonProperty("role") String role,
+                   @JsonProperty("teacherId") Long teacherId,
+                   @JsonProperty("studentId") Long studentId) {
         this.id = id;
         this.email = email;
         this.firstName = firstName;
         this.lastName = lastName;
         this.role = validateAndConvertRole(role);
+        this.teacherId = teacherId;
+        this.studentId = studentId;
     }
 
     /**
@@ -68,6 +76,8 @@ public class UserDTO {
         this.firstName = user.getFirstName();
         this.lastName = user.getLastName();
         this.role = user.getRole();
+        this.teacherId = user.getTeacher() != null ? user.getTeacher().getId() : null;
+        this.studentId = user.getStudent() != null ? user.getStudent().getId() : null;
     }
 
     private Role validateAndConvertRole(String roleString) {

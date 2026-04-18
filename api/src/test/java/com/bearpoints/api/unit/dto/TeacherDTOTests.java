@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * <p>Note: Detailed grade level validation logic is tested in {@link GradeLevelUtilsTests}
  *
  * @see TeacherDTO
- * @version 1.1
+ * @version 1.2
  * @author Dylan Mercer
  */
 @DisplayName("TeacherDTO Tests")
@@ -46,6 +46,8 @@ public class TeacherDTOTests {
             assertEquals(teacher.getUser().getFirstName(), dto.getUser().getFirstName());
             assertEquals(teacher.getUser().getLastName(), dto.getUser().getLastName());
             assertEquals(teacher.getUser().getRole(), dto.getUser().getRole());
+            assertEquals(teacher.getId(), dto.getUser().getTeacherId());
+            assertNull(dto.getUser().getStudentId());
             assertEquals(teacher.getGrade(), dto.getGrade());
         }
 
@@ -56,6 +58,8 @@ public class TeacherDTOTests {
             TeacherDTO dto = new TeacherDTO(teacher);
             assertNull(dto.getId());
             assertNotNull(dto.getUser());
+            assertNull(dto.getUser().getTeacherId());
+            assertNull(dto.getUser().getStudentId());
             assertEquals(teacher.getGrade(), dto.getGrade());
         }
 
@@ -89,22 +93,26 @@ public class TeacherDTOTests {
         @DisplayName("Should create TeacherDTO with all fields provided")
         void shouldCreateTeacherDTOWithAllFieldsProvided() {
             Long id = 1L;
-            UserDTO user = new UserDTO(1L, "test@okcps.org", "John", "Doe", "TEACHER");
+            UserDTO user = new UserDTO(1L, "test@okcps.org", "John", "Doe", "TEACHER", id, null);
             String grade = "FIRST";
             TeacherDTO dto = new TeacherDTO(id, user, grade);
             assertThat(dto.getId()).isEqualTo(id);
             assertThat(dto.getUser()).isEqualTo(user);
+            assertThat(dto.getUser().getTeacherId()).isEqualTo(id);
+            assertThat(dto.getUser().getStudentId()).isNull();
             assertThat(dto.getGrade()).isEqualTo(GradeLevel.FIRST);
         }
 
         @Test
         @DisplayName("Should create TeacherDTO with null ID")
         void shouldCreateTeacherDTOWithNullId() {
-            UserDTO user = new UserDTO(1L, "test@okcps.org", "John", "Doe", "TEACHER");
+            UserDTO user = new UserDTO(1L, "test@okcps.org", "John", "Doe", "TEACHER", null, null);
             String grade = "SECOND";
             TeacherDTO dto = new TeacherDTO(null, user, grade);
             assertThat(dto.getId()).isNull();
             assertThat(dto.getUser()).isEqualTo(user);
+            assertThat(dto.getUser().getTeacherId()).isNull();
+            assertThat(dto.getUser().getStudentId()).isNull();
             assertThat(dto.getGrade()).isEqualTo(GradeLevel.SECOND);
         }
 
@@ -112,7 +120,7 @@ public class TeacherDTOTests {
         @DisplayName("Should create TeacherDTO with null GradeLevel")
         void shouldCreateTeacherDTOWithNullGradeLevel() {
             Long id = 1L;
-            UserDTO user = new UserDTO(1L, "test@okcps.org", "John", "Doe", "TEACHER");
+            UserDTO user = new UserDTO(1L, "test@okcps.org", "John", "Doe", "TEACHER", id, null);
             TeacherDTO dto = new TeacherDTO(id, user, null);
             assertThat(dto.getId()).isEqualTo(id);
             assertThat(dto.getUser()).isEqualTo(user);
@@ -131,7 +139,7 @@ public class TeacherDTOTests {
         @Test
         @DisplayName("Should delegate grade level validation to GradeLevelUtils")
         void shouldDelegateGradeLevelValidationToGradeLevelUtils() {
-            UserDTO user = new UserDTO(1L, "test@okcps.org", "John", "Doe", "TEACHER");
+            UserDTO user = new UserDTO(1L, "test@okcps.org", "John", "Doe", "TEACHER", null, null);
             TeacherDTO dto1 = new TeacherDTO(1L, user, "pre-k");
             assertThat(dto1.getGrade()).isEqualTo(GradeLevel.PRE_K);
             TeacherDTO dto2 = new TeacherDTO(2L, user, "  first ");
@@ -143,7 +151,7 @@ public class TeacherDTOTests {
         @Test
         @DisplayName("Should propagate grade level validation exceptions from GradeLevelUtils")
         void shouldPropagateGradeLevelValidationExceptions() {
-            UserDTO user = new UserDTO(1L, "test@okcps.org", "John", "Doe", "TEACHER");
+            UserDTO user = new UserDTO(1L, "test@okcps.org", "John", "Doe", "TEACHER", null, null);
             String invalidGrade = "INVALID_GRADE";
             IllegalArgumentException exception = assertThrows(
                     IllegalArgumentException.class,
@@ -159,8 +167,8 @@ public class TeacherDTOTests {
         @Test
         @DisplayName("Two TeacherDTOs with same field values should have equal field values")
         void twoTeacherDTOsWithSameFieldValuesShouldHaveEqualFieldValues() {
-            UserDTO user1 = new UserDTO(1L, "test@okcps.org", "John", "Doe", "TEACHER");
-            UserDTO user2 = new UserDTO(1L, "test@okcps.org", "John", "Doe", "TEACHER");
+            UserDTO user1 = new UserDTO(1L, "test@okcps.org", "John", "Doe", "TEACHER", 1L, null);
+            UserDTO user2 = new UserDTO(1L, "test@okcps.org", "John", "Doe", "TEACHER", 1L, null);
             TeacherDTO dto1 = new TeacherDTO(1L, user1, "FIRST");
             TeacherDTO dto2 = new TeacherDTO(1L, user2, "FIRST");
             assertThat(dto1.getId()).isEqualTo(dto2.getId());
@@ -169,6 +177,8 @@ public class TeacherDTOTests {
             assertThat(dto1.getUser().getFirstName()).isEqualTo(dto2.getUser().getFirstName());
             assertThat(dto1.getUser().getLastName()).isEqualTo(dto2.getUser().getLastName());
             assertThat(dto1.getUser().getRole()).isEqualTo(dto2.getUser().getRole());
+            assertThat(dto1.getUser().getTeacherId()).isEqualTo(dto2.getUser().getTeacherId());
+            assertThat(dto1.getUser().getStudentId()).isEqualTo(dto2.getUser().getStudentId());
             assertThat(dto1.getGrade()).isEqualTo(dto2.getGrade());
         }
 
@@ -179,7 +189,7 @@ public class TeacherDTOTests {
             TeacherDTO fromEntity = new TeacherDTO(teacher);
             UserDTO userDTO = new UserDTO(teacher.getUser().getId(), teacher.getUser().getEmail(),
                     teacher.getUser().getFirstName(), teacher.getUser().getLastName(),
-                    teacher.getUser().getRole().name());
+                    teacher.getUser().getRole().name(), teacher.getId(), null);
             TeacherDTO fromJSON = new TeacherDTO(teacher.getId(), userDTO, teacher.getGrade().name());
             assertThat(fromEntity.getId()).isEqualTo(fromJSON.getId());
             assertThat(fromEntity.getUser().getId()).isEqualTo(fromJSON.getUser().getId());
@@ -187,6 +197,8 @@ public class TeacherDTOTests {
             assertThat(fromEntity.getUser().getFirstName()).isEqualTo(fromJSON.getUser().getFirstName());
             assertThat(fromEntity.getUser().getLastName()).isEqualTo(fromJSON.getUser().getLastName());
             assertThat(fromEntity.getUser().getRole()).isEqualTo(fromJSON.getUser().getRole());
+            assertThat(fromEntity.getUser().getTeacherId()).isEqualTo(fromJSON.getUser().getTeacherId());
+            assertThat(fromEntity.getUser().getStudentId()).isEqualTo(fromJSON.getUser().getStudentId());
             assertThat(fromEntity.getGrade()).isEqualTo(fromJSON.getGrade());
         }
     }
@@ -210,7 +222,7 @@ public class TeacherDTOTests {
         @Test
         @DisplayName("Should handle all GradeLevel enum values")
         void shouldHandleAllGradeLevelEnumValues() {
-            UserDTO user = new UserDTO(1L, "test@okcps.org", "John", "Doe", "TEACHER");
+            UserDTO user = new UserDTO(1L, "test@okcps.org", "John", "Doe", "TEACHER", 1L, null);
             for (GradeLevel gradeLevel : GradeLevel.values()) {
                 TeacherDTO dto = new TeacherDTO(1L, user, gradeLevel.name());
                 assertThat(dto.getGrade()).isEqualTo(gradeLevel);
@@ -228,6 +240,7 @@ public class TeacherDTOTests {
         user.setLastName("Doe");
         user.setRole(Role.TEACHER);
         teacher.setUser(user);
+        user.setTeacher(teacher);
         teacher.setGrade(gradeLevel);
         return teacher;
     }

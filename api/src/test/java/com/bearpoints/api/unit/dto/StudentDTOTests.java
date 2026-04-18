@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * </ul>
  *
  * @see StudentDTO
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @DisplayName("StudentDTO Tests")
@@ -60,6 +60,8 @@ public class StudentDTOTests {
             assertEquals(student.getUser().getFirstName(), dto.getUser().getFirstName());
             assertEquals(student.getUser().getLastName(), dto.getUser().getLastName());
             assertEquals(student.getUser().getRole(), dto.getUser().getRole());
+            assertEquals(student.getId(), dto.getUser().getStudentId());
+            assertNull(dto.getUser().getTeacherId());
             assertNotNull(dto.getTeacher());
             assertEquals(student.getTeacher().getId(), dto.getTeacher().getId());
             assertEquals(student.getTeacher().getGrade(), dto.getTeacher().getGrade());
@@ -74,6 +76,8 @@ public class StudentDTOTests {
             assertEquals(student.getPoints(), dto.getPoints());
             assertEquals(student.getToken(), dto.getToken());
             assertNotNull(dto.getUser());
+            assertNull(dto.getUser().getStudentId());
+            assertNull(dto.getUser().getTeacherId());
             assertNotNull(dto.getTeacher());
         }
 
@@ -110,6 +114,8 @@ public class StudentDTOTests {
             assertEquals(student.getPoints(), dto.getPoints());
             assertEquals(student.getToken(), dto.getToken());
             assertNotNull(dto.getUser());
+            assertEquals(student.getId(), dto.getUser().getStudentId());
+            assertNull(dto.getUser().getTeacherId());
             assertNull(dto.getTeacher());
         }
 
@@ -151,15 +157,17 @@ public class StudentDTOTests {
         @DisplayName("Should create StudentDTO with all fields provided")
         void shouldCreateStudentDTOWithAllFieldsProvided() {
             Long id = 1L;
-            UserDTO user = new UserDTO(1L, "student@okcps.org", "John", "Doe", "STUDENT");
+            UserDTO user = new UserDTO(id, "student@okcps.org", "John", "Doe", "STUDENT", null, id);
             Integer points = 150;
             String token = "json-token-123";
-            TeacherDTO teacher = new TeacherDTO(1L,
-                    new UserDTO(2L, "teacher@okcps.org", "Jane", "Smith", "TEACHER"),
+            TeacherDTO teacher = new TeacherDTO(id,
+                    new UserDTO(2L, "teacher@okcps.org", "Jane", "Smith", "TEACHER", id, null),
                     "FIRST");
             StudentDTO dto = new StudentDTO(id, user, points, token, teacher);
             assertThat(dto.getId()).isEqualTo(id);
             assertThat(dto.getUser()).isEqualTo(user);
+            assertThat(dto.getUser().getStudentId()).isEqualTo(user.getId());
+            assertThat(dto.getUser().getTeacherId()).isNull();
             assertThat(dto.getPoints()).isEqualTo(points);
             assertThat(dto.getToken()).isEqualTo(token);
             assertThat(dto.getTeacher()).isEqualTo(teacher);
@@ -168,15 +176,17 @@ public class StudentDTOTests {
         @Test
         @DisplayName("Should create StudentDTO with null ID")
         void shouldCreateStudentDTOWithNullId() {
-            UserDTO user = new UserDTO(1L, "student@okcps.org", "John", "Doe", "STUDENT");
+            UserDTO user = new UserDTO(1L, "student@okcps.org", "John", "Doe", "STUDENT", null, null);
             Integer points = 150;
             String token = "json-token-123";
             TeacherDTO teacher = new TeacherDTO(1L,
-                    new UserDTO(2L, "teacher@okcps.org", "Jane", "Smith", "TEACHER"),
+                    new UserDTO(2L, "teacher@okcps.org", "Jane", "Smith", "TEACHER", 1L, null),
                     "FIRST");
             StudentDTO dto = new StudentDTO(null, user, points, token, teacher);
             assertThat(dto.getId()).isNull();
             assertThat(dto.getUser()).isEqualTo(user);
+            assertThat(dto.getUser().getStudentId()).isNull();
+            assertThat(dto.getUser().getTeacherId()).isNull();
             assertThat(dto.getPoints()).isEqualTo(points);
             assertThat(dto.getToken()).isEqualTo(token);
             assertThat(dto.getTeacher()).isEqualTo(teacher);
@@ -189,7 +199,7 @@ public class StudentDTOTests {
             Integer points = 150;
             String token = "json-token-123";
             TeacherDTO teacher = new TeacherDTO(1L,
-                    new UserDTO(2L, "teacher@okcps.org", "Jane", "Smith", "TEACHER"),
+                    new UserDTO(2L, "teacher@okcps.org", "Jane", "Smith", "TEACHER", 1L, null),
                     "FIRST");
             StudentDTO dto = new StudentDTO(id, null, points, token, teacher);
             assertThat(dto.getId()).isEqualTo(id);
@@ -203,10 +213,10 @@ public class StudentDTOTests {
         @DisplayName("Should create StudentDTO with null points")
         void shouldCreateStudentDTOWithNullPoints() {
             Long id = 1L;
-            UserDTO user = new UserDTO(1L, "student@okcps.org", "John", "Doe", "STUDENT");
+            UserDTO user = new UserDTO(1L, "student@okcps.org", "John", "Doe", "STUDENT", null, id);
             String token = "json-token-123";
-            TeacherDTO teacher = new TeacherDTO(1L,
-                    new UserDTO(2L, "teacher@okcps.org", "Jane", "Smith", "TEACHER"),
+            TeacherDTO teacher = new TeacherDTO(id,
+                    new UserDTO(2L, "teacher@okcps.org", "Jane", "Smith", "TEACHER", id, null),
                     "FIRST");
             StudentDTO dto = new StudentDTO(id, user, null, token, teacher);
             assertThat(dto.getId()).isEqualTo(id);
@@ -220,10 +230,10 @@ public class StudentDTOTests {
         @DisplayName("Should create StudentDTO with null token")
         void shouldCreateStudentDTOWithNullToken() {
             Long id = 1L;
-            UserDTO user = new UserDTO(1L, "student@okcps.org", "John", "Doe", "STUDENT");
+            UserDTO user = new UserDTO(1L, "student@okcps.org", "John", "Doe", "STUDENT", null, id);
             Integer points = 150;
-            TeacherDTO teacher = new TeacherDTO(1L,
-                    new UserDTO(2L, "teacher@okcps.org", "Jane", "Smith", "TEACHER"),
+            TeacherDTO teacher = new TeacherDTO(id,
+                    new UserDTO(2L, "teacher@okcps.org", "Jane", "Smith", "TEACHER", id, null),
                     "FIRST");
             StudentDTO dto = new StudentDTO(id, user, points, null, teacher);
             assertThat(dto.getId()).isEqualTo(id);
@@ -237,7 +247,7 @@ public class StudentDTOTests {
         @DisplayName("Should create StudentDTO with null teacher")
         void shouldCreateStudentDTOWithNullTeacher() {
             Long id = 1L;
-            UserDTO user = new UserDTO(1L, "student@okcps.org", "John", "Doe", "STUDENT");
+            UserDTO user = new UserDTO(1L, "student@okcps.org", "John", "Doe", "STUDENT", null, id);
             Integer points = 150;
             String token = "json-token-123";
             StudentDTO dto = new StudentDTO(id, user, points, token, null);
@@ -266,9 +276,9 @@ public class StudentDTOTests {
         @Test
         @DisplayName("Should validate points cannot be negative")
         void shouldValidatePointsCannotBeNegative() {
-            UserDTO user = new UserDTO(1L, "student@okcps.org", "John", "Doe", "STUDENT");
+            UserDTO user = new UserDTO(1L, "student@okcps.org", "John", "Doe", "STUDENT", null, null);
             TeacherDTO teacher = new TeacherDTO(1L,
-                    new UserDTO(2L, "teacher@okcps.org", "Jane", "Smith", "TEACHER"),
+                    new UserDTO(2L, "teacher@okcps.org", "Jane", "Smith", "TEACHER", 1L, null),
                     "FIRST");
             StudentDTO dto = new StudentDTO(1L, user, -10, "token-negative", teacher);
             Set<ConstraintViolation<StudentDTO>> violations = validator.validate(dto);
@@ -280,9 +290,9 @@ public class StudentDTOTests {
         @Test
         @DisplayName("Should accept zero points")
         void shouldAcceptZeroPoints() {
-            UserDTO user = new UserDTO(1L, "student@okcps.org", "John", "Doe", "STUDENT");
+            UserDTO user = new UserDTO(1L, "student@okcps.org", "John", "Doe", "STUDENT", null, null);
             TeacherDTO teacher = new TeacherDTO(1L,
-                    new UserDTO(2L, "teacher@okcps.org", "Jane", "Smith", "TEACHER"),
+                    new UserDTO(2L, "teacher@okcps.org", "Jane", "Smith", "TEACHER", 1L, null),
                     "FIRST");
             StudentDTO dto = new StudentDTO(1L, user, 0, "token-zero", teacher);
             Set<ConstraintViolation<StudentDTO>> violations = validator.validate(dto);
@@ -294,9 +304,9 @@ public class StudentDTOTests {
         @Test
         @DisplayName("Should accept positive points")
         void shouldAcceptPositivePoints() {
-            UserDTO user = new UserDTO(1L, "student@okcps.org", "John", "Doe", "STUDENT");
+            UserDTO user = new UserDTO(1L, "student@okcps.org", "John", "Doe", "STUDENT", null, null);
             TeacherDTO teacher = new TeacherDTO(1L,
-                    new UserDTO(2L, "teacher@okcps.org", "Jane", "Smith", "TEACHER"),
+                    new UserDTO(2L, "teacher@okcps.org", "Jane", "Smith", "TEACHER", 1L, null),
                     "FIRST");
             StudentDTO dto = new StudentDTO(1L, user, 100, "token-positive", teacher);
             Set<ConstraintViolation<StudentDTO>> violations = validator.validate(dto);
@@ -308,9 +318,9 @@ public class StudentDTOTests {
         @Test
         @DisplayName("Should cascade validation to user field")
         void shouldCascadeValidationToUserField() {
-            UserDTO invalidUser = new UserDTO(1L, "invalid-email@gmail.com", "John", "Doe", "STUDENT");
+            UserDTO invalidUser = new UserDTO(1L, "invalid-email@gmail.com", "John", "Doe", "STUDENT", null, null);
             TeacherDTO teacher = new TeacherDTO(1L,
-                    new UserDTO(2L, "teacher@okcps.org", "Jane", "Smith", "TEACHER"),
+                    new UserDTO(2L, "teacher@okcps.org", "Jane", "Smith", "TEACHER", 1L, null),
                     "FIRST");
             StudentDTO dto = new StudentDTO(1L, invalidUser, 100, "token-cascade", teacher);
             Set<ConstraintViolation<StudentDTO>> violations = validator.validate(dto);
@@ -321,9 +331,9 @@ public class StudentDTOTests {
         @Test
         @DisplayName("Should handle null points in validation")
         void shouldHandleNullPointsInValidation() {
-            UserDTO user = new UserDTO(1L, "student@okcps.org", "John", "Doe", "STUDENT");
+            UserDTO user = new UserDTO(1L, "student@okcps.org", "John", "Doe", "STUDENT", null, null);
             TeacherDTO teacher = new TeacherDTO(1L,
-                    new UserDTO(2L, "teacher@okcps.org", "Jane", "Smith", "TEACHER"),
+                    new UserDTO(2L, "teacher@okcps.org", "Jane", "Smith", "TEACHER", 1L, null),
                     "FIRST");
             StudentDTO dto = new StudentDTO(1L, user, null, "token-null-points", teacher);
             Set<ConstraintViolation<StudentDTO>> violations = validator.validate(dto);
@@ -339,13 +349,13 @@ public class StudentDTOTests {
         @Test
         @DisplayName("Two StudentDTOs with same field values should have equal field values")
         void twoStudentDTOsWithSameFieldValuesShouldHaveEqualFieldValues() {
-            UserDTO user1 = new UserDTO(1L, "student@okcps.org", "John", "Doe", "STUDENT");
-            UserDTO user2 = new UserDTO(1L, "student@okcps.org", "John", "Doe", "STUDENT");
+            UserDTO user1 = new UserDTO(1L, "student@okcps.org", "John", "Doe", "STUDENT", null, null);
+            UserDTO user2 = new UserDTO(1L, "student@okcps.org", "John", "Doe", "STUDENT", null, null);
             TeacherDTO teacher1 = new TeacherDTO(1L,
-                    new UserDTO(2L, "teacher@okcps.org", "Jane", "Smith", "TEACHER"),
+                    new UserDTO(2L, "teacher@okcps.org", "Jane", "Smith", "TEACHER", 1L, null),
                     "FIRST");
             TeacherDTO teacher2 = new TeacherDTO(1L,
-                    new UserDTO(2L, "teacher@okcps.org", "Jane", "Smith", "TEACHER"),
+                    new UserDTO(2L, "teacher@okcps.org", "Jane", "Smith", "TEACHER", 1L, null),
                     "FIRST");
             StudentDTO dto1 = new StudentDTO(1L, user1, 100, "token-same", teacher1);
             StudentDTO dto2 = new StudentDTO(1L, user2, 100, "token-same", teacher2);
@@ -353,6 +363,8 @@ public class StudentDTOTests {
             assertThat(dto1.getPoints()).isEqualTo(dto2.getPoints());
             assertThat(dto1.getToken()).isEqualTo(dto2.getToken());
             assertThat(dto1.getUser().getId()).isEqualTo(dto2.getUser().getId());
+            assertThat(dto1.getUser().getStudentId()).isEqualTo(dto2.getUser().getStudentId());
+            assertThat(dto1.getUser().getTeacherId()).isEqualTo(dto2.getUser().getTeacherId());
             assertThat(dto1.getTeacher().getId()).isEqualTo(dto2.getTeacher().getId());
         }
 
@@ -366,6 +378,8 @@ public class StudentDTOTests {
             assertThat(fromEntity.getPoints()).isEqualTo(fromJSON.getPoints());
             assertThat(fromEntity.getToken()).isEqualTo(fromJSON.getToken());
             assertThat(fromEntity.getUser().getId()).isEqualTo(fromJSON.getUser().getId());
+            assertThat(fromEntity.getUser().getStudentId()).isEqualTo(fromJSON.getUser().getStudentId());
+            assertThat(fromEntity.getUser().getTeacherId()).isEqualTo(fromJSON.getUser().getTeacherId());
             assertThat(fromEntity.getTeacher().getId()).isEqualTo(fromJSON.getTeacher().getId());
         }
     }
@@ -422,6 +436,7 @@ public class StudentDTOTests {
         user.setLastName("Doe");
         user.setRole(Role.STUDENT);
         student.setUser(user);
+        user.setStudent(student);
         Teacher teacher = new Teacher();
         teacher.setId(id);
         User teacherUser = new User();
@@ -431,6 +446,7 @@ public class StudentDTOTests {
         teacherUser.setLastName("Smith");
         teacherUser.setRole(Role.TEACHER);
         teacher.setUser(teacherUser);
+        teacherUser.setTeacher(teacher);
         teacher.setGrade(GradeLevel.FIRST);
         student.setTeacher(teacher);
         return student;
@@ -439,11 +455,12 @@ public class StudentDTOTests {
     private StudentDTO createStudentDTOFromJSON(Student student) {
         UserDTO userDTO = new UserDTO(student.getUser().getId(), student.getUser().getEmail(),
                 student.getUser().getFirstName(), student.getUser().getLastName(),
-                student.getUser().getRole().name());
+                student.getUser().getRole().name(), null, student.getId());
         TeacherDTO teacherDTO = new TeacherDTO(student.getTeacher().getId(),
                 new UserDTO(student.getTeacher().getUser().getId(),
                         student.getTeacher().getUser().getEmail(), student.getTeacher().getUser().getFirstName(),
-                        student.getTeacher().getUser().getLastName(), student.getTeacher().getUser().getRole().name()),
+                        student.getTeacher().getUser().getLastName(), student.getTeacher().getUser().getRole().name(),
+                        student.getTeacher().getId(), null),
                 student.getTeacher().getGrade().name());
         return new StudentDTO(student.getId(), userDTO, student.getPoints(),
                 student.getToken(), teacherDTO);

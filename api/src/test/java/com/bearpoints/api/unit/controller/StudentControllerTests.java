@@ -37,7 +37,7 @@ import static org.mockito.Mockito.*;
  * </ul>
  *
  * @see StudentController
- * @version 1.1
+ * @version 1.2
  * @author Dylan Mercer
  */
 @ExtendWith(MockitoExtension.class)
@@ -50,10 +50,10 @@ public class StudentControllerTests {
     private StudentController studentController;
 
     private StudentDTO createStudentDTO(Long id, String email, String firstName, String lastName, Integer points, String token, Long teacherId) {
-        UserDTO userDTO = new UserDTO(id, email, firstName, lastName, Role.STUDENT.name());
+        UserDTO userDTO = new UserDTO(id, email, firstName, lastName, Role.STUDENT.name(), null, id);
         TeacherDTO teacherDTO = teacherId != null
                 ? new TeacherDTO(teacherId,
-                new UserDTO(teacherId, "teacher@okcps.org", "Teacher", "User", Role.TEACHER.name()),
+                new UserDTO(teacherId, "teacher@okcps.org", "Teacher", "User", Role.TEACHER.name(), teacherId, null),
                 "FIRST") : null;
         return new StudentDTO(id, userDTO, points, token, teacherDTO);
     }

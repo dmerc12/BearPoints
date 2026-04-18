@@ -38,7 +38,7 @@ import static org.mockito.Mockito.*;
  * </ul>
  *
  * @see TeacherController
- * @version 1.1
+ * @version 1.2
  * @author Dylan Mercer
  */
 @ExtendWith(MockitoExtension.class)
@@ -51,7 +51,7 @@ public class TeacherControllerTests {
     private TeacherController teacherController;
 
     private TeacherDTO createTeacherDTO(Long id, String email, String firstName, String lastName, GradeLevel grade) {
-        UserDTO userDTO = new UserDTO(id, email, firstName, lastName, "TEACHER");
+        UserDTO userDTO = new UserDTO(id, email, firstName, lastName, "TEACHER", id, null);
         return new TeacherDTO(id, userDTO, grade.name());
     }
 

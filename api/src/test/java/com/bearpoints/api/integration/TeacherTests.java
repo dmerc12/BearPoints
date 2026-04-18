@@ -41,7 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *
  * @see TestDataInitializer
  * @see BaseIntegrationTest
- * @version 1.4
+ * @version 1.5
  * @author Dylan Mercer
  */
 @DisplayName("Teacher Integration Tests")
@@ -269,6 +269,8 @@ public class TeacherTests extends BaseIntegrationTest {
                     .andExpect(jsonPath("$.user.firstName").value("New"))
                     .andExpect(jsonPath("$.user.lastName").value("Teacher"))
                     .andExpect(jsonPath("$.user.role").value("TEACHER"))
+                    .andExpect(jsonPath("$.user.teacherId").value(notNullValue()))
+                    .andExpect(jsonPath("$.user.studentId").doesNotExist())
                     .andExpect(jsonPath("$.grade").value("FIRST"));
         }
 

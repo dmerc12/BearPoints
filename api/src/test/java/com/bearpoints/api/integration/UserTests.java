@@ -37,7 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *
  * @see TestDataInitializer
  * @see BaseIntegrationTest
- * @version 3.0
+ * @version 3.1
  * @author Dylan Mercer
  */
 @DisplayName("User Integration Tests")
@@ -342,7 +342,9 @@ public class UserTests extends BaseIntegrationTest {
                     .andExpect(jsonPath("$.email").value(uniqueEmail))
                     .andExpect(jsonPath("$.firstName").value("New"))
                     .andExpect(jsonPath("$.lastName").value("Admin"))
-                    .andExpect(jsonPath("$.role").value("ADMIN"));
+                    .andExpect(jsonPath("$.role").value("ADMIN"))
+                    .andExpect(jsonPath("$.teacherId").doesNotExist())
+                    .andExpect(jsonPath("$.studentId").doesNotExist());
         }
 
         @Test
@@ -365,7 +367,9 @@ public class UserTests extends BaseIntegrationTest {
                     .andExpect(jsonPath("$.email").value(uniqueEmail))
                     .andExpect(jsonPath("$.firstName").value("New"))
                     .andExpect(jsonPath("$.lastName").value("Staff"))
-                    .andExpect(jsonPath("$.role").value("STAFF"));
+                    .andExpect(jsonPath("$.role").value("STAFF"))
+                    .andExpect(jsonPath("$.teacherId").doesNotExist())
+                    .andExpect(jsonPath("$.studentId").doesNotExist());
         }
 
         @Test

@@ -40,7 +40,7 @@ import static org.mockito.Mockito.*;
  * <p>Verifies teacher user management functionality including CRUD operations and search.
  *
  * @see TeacherServiceImpl
- * @version 1.1
+ * @version 1.2
  * @author Dylan Mercer
  */
 @DisplayName("TeacherService Tests")
@@ -228,7 +228,7 @@ public class TeacherServiceTests {
             Role role = Role.TEACHER;
             TeacherDTO teacherDTO = new TeacherDTO(
                     null,
-                    new UserDTO(null, email, "New", "Teacher", "TEACHER"),
+                    new UserDTO(null, email, "New", "Teacher", "TEACHER", null, null),
                     "FIRST"
             );
             when(teacherDAO.findByUserEmail(email)).thenReturn(Optional.empty());
@@ -260,7 +260,7 @@ public class TeacherServiceTests {
             String existingEmail = "existing@okcps.org";
             TeacherDTO teacherDTO = new TeacherDTO(
                     null,
-                    new UserDTO(null, existingEmail, "New", "Teacher", "TEACHER"),
+                    new UserDTO(null, existingEmail, "New", "Teacher", "TEACHER", null, null),
                     "FIRST"
             );
             Teacher existingTeacher = createTeacher(1L, 1L, existingEmail, "Existing", "User", Role.TEACHER, GradeLevel.FIRST);
@@ -284,7 +284,7 @@ public class TeacherServiceTests {
             GradeLevel gradeLevel = GradeLevel.FIRST;
             TeacherDTO teacherDTO = new TeacherDTO(
                     null,
-                    new UserDTO(null, newEmail, firstName, lastName, "STUDENT"),
+                    new UserDTO(null, newEmail, firstName, lastName, "STUDENT", null, null),
                     "FIRST"
             );
             when(teacherDAO.findByUserEmail(newEmail)).thenReturn(Optional.empty());
@@ -320,7 +320,7 @@ public class TeacherServiceTests {
             Teacher existingTeacher = createTeacher(teacherId, 1L, "old@okcps.org", "Old", "Name", role, GradeLevel.FIRST);
             TeacherDTO updateDTO = new TeacherDTO(
                     teacherId,
-                    new UserDTO(1L, newEmail, newFirstName, newLastName, "TEACHER"),
+                    new UserDTO(1L, newEmail, newFirstName, newLastName, "TEACHER", teacherId, null),
                     "SECOND"
             );
             when(teacherDAO.findByUserEmail(newEmail)).thenReturn(Optional.empty());
@@ -353,7 +353,7 @@ public class TeacherServiceTests {
             Teacher existingTeacher = createTeacher(teacherId, 1L, sameEmail, "Old", "Name", role, GradeLevel.FIRST);
             TeacherDTO updateDTO = new TeacherDTO(
                     teacherId,
-                    new UserDTO(1L, sameEmail, newFirstName, newLastName, "TEACHER"),
+                    new UserDTO(1L, sameEmail, newFirstName, newLastName, "TEACHER", teacherId, null),
                     "SECOND"
             );
             when(teacherDAO.findById(teacherId)).thenReturn(Optional.of(existingTeacher));
@@ -382,7 +382,7 @@ public class TeacherServiceTests {
             Teacher existingTeacher = createTeacher(teacherId, 1L, "old@okcps.org", "Old", "Name", role, GradeLevel.FIRST);
             TeacherDTO updateDTO = new TeacherDTO(
                     teacherId,
-                    new UserDTO(1L, existingEmail, "New", "Last-Name", "TEACHER"),
+                    new UserDTO(1L, existingEmail, "New", "Last-Name", "TEACHER", teacherId, null),
                     "SECOND"
             );
             Teacher otherTeacher = createTeacher(2L, 2L, existingEmail, "Other", "User", role, GradeLevel.THIRD);
@@ -410,7 +410,7 @@ public class TeacherServiceTests {
             Teacher existingTeacher = createTeacher(teacherId, 1L, sameEmail, "Old", "Name", role, GradeLevel.FIRST);
             TeacherDTO updateDTO = new TeacherDTO(
                     teacherId,
-                    new UserDTO(1L, sameEmail, newFirstName, newLastName, "TEACHER"),
+                    new UserDTO(1L, sameEmail, newFirstName, newLastName, "TEACHER", teacherId, null),
                     "SECOND"
             );
             when(teacherDAO.findById(teacherId)).thenReturn(Optional.of(existingTeacher));
@@ -442,7 +442,7 @@ public class TeacherServiceTests {
             Teacher existingTeacher = createTeacher(teacherId, 1L, "old@okcps.org", "Old", "Name", role, GradeLevel.FIRST);
             TeacherDTO updateDTO = new TeacherDTO(
                     teacherId,
-                    new UserDTO(1L, newEmail, newFirstName, newLastName, "TEACHER"),
+                    new UserDTO(1L, newEmail, newFirstName, newLastName, "TEACHER", teacherId, null),
                     "SECOND"
             );
             when(teacherDAO.findById(teacherId)).thenReturn(Optional.of(existingTeacher));
@@ -469,7 +469,7 @@ public class TeacherServiceTests {
             Long teacherId = 999L;
             TeacherDTO updateDTO = new TeacherDTO(
                     teacherId,
-                    new UserDTO(1L, "new@okcps.org", "New", "Last-Name", "TEACHER"),
+                    new UserDTO(1L, "new@okcps.org", "New", "Last-Name", "TEACHER", teacherId, null),
                     "SECOND"
             );
             when(teacherDAO.findById(teacherId)).thenReturn(Optional.empty());
