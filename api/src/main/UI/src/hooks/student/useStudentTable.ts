@@ -1,7 +1,7 @@
-import { fetchStudents, RootState, useAppDispatch, useAppSelector } from '../../store';
-import { fullName, formatGrade, formatName, sortGrades } from '../../utils';
+import { searchStudentsInList, RootState, useAppDispatch, useAppSelector } from '../../store';
+import { fullName, formatGrade, formatName } from '../../utils';
 import { useCallback, useEffect, useMemo } from 'react';
-import { Student, Role } from '../../services';
+import { StudentDTO, Role } from '../../services';
 import { useTable } from '../index';
 
 export interface UseStudentTableProps {
@@ -14,98 +14,147 @@ export function useStudentTable({ itemsPerPage = 10 }: UseStudentTableProps) {
     const { data: students } = useAppSelector(state => state.students);
 
     const isAdmin = useMemo(() => currentUser?.role === Role.ADMIN, [currentUser]);
-    const isTeacher = useMemo(() => currentUser?.role === Role.TEACHER, [currentUser]);
-    const canManageStudent = useCallback((student: Student) => {
-        return isAdmin || (isTeacher && student.teacher.id === currentUser?.teacherId);
-    }, [isAdmin, isTeacher, currentUser]);
 
-    const initialFilters = { nameSearch: '', teacherFilter: '', gradeFilter: '' };
+    const initialFilters = {
+        nameSearch: '',
+        emailSearch: '',
+        teacherId: '',
+        minPoints: '',
+        maxPoints: '',
+    };
 
     const columnsBuilder = useCallback(() => [
         {
             key: 'name',
             header: 'Name',
-            render: (student: Student) => fullName(student),
+            render: (student: StudentDTO) => fullName(student),
+            sortable: true,
+        },
+        {
+            key: 'email',
+            header: 'Email',
+            render: (student: StudentDTO) => student.user.email,
             sortable: true,
         },
         {
             key: 'grade',
             header: 'Grade',
-            render: (student: Student) => formatGrade(student.teacher.grade),
+            render: (student: StudentDTO) => formatGrade(student.teacher.grade),
             sortable: true,
         },
         {
             key: 'teacher',
             header: 'Teacher',
-            render: (student: Student) => formatName(student.teacher) || 'N/A',
+            render: (student: StudentDTO) => formatName(student.teacher) || 'N/A',
             sortable: true,
         },
         {
             key: 'points',
             header: 'Points',
-            render: (student: Student) => student.points.toString(),
+            render: (student: StudentDTO) => student.points?.toString(),
             sortable: true,
         },
     ], []);
 
-    const fetchAction = useCallback(({ page, size, sort, force }
-                                     : { page: number; size: number; sort?: string; force?: boolean })=> {
-        dispatch(fetchStudents({ page, size, sort, force: force || false }) as never);
+    const fetchAction = useCallback((params: {
+        page: number;
+        size: number;
+        sort?: string;
+        force?: boolean;
+        firstName?: string;
+        lastName?: string;
+        email?: string;
+        teacherId?: number;
+        minPoints?: number;
+        maxPoints?: number;
+    })=> {
+        dispatch(searchStudentsInList(params) as never);
     }, [dispatch]);
 
-    const teacherNames = useMemo(() => {
-        const teachers = students.map(student => student.teacher);
-        return Array.from(new Set(teachers.map(t => formatName(t))));
-    }, [students]);
-
-    const grades = useMemo(() => {
-        const teacherGrades = students.map(student => student.teacher.grade);
-        return Array.from(new Set(teacherGrades));
-    }, [students]);
+    const getFetchParams = useCallback((
+        filters: typeof initialFilters,
+        page: number,
+        size: number,
+        sort?: string
+    ) => {
+        const nameValue = filters.nameSearch || undefined;
+        const teacherId = filters.teacherId ? parseInt(filters.teacherId, 10) : undefined;
+        const minPoints = filters.minPoints ? parseInt(filters.minPoints, 10) : undefined;
+        const maxPoints = filters.maxPoints ? parseInt(filters.maxPoints, 10) : undefined;
+        return {
+            page,
+            size,
+            sort,
+            firstName: nameValue,
+            lastName: nameValue,
+            email: filters.emailSearch,
+            teacherId,
+            minPoints,
+            maxPoints,
+        }
+    }, []);
 
     const teacherOptions = useMemo(() => {
-        return teacherNames.map(teacher => ({ value: teacher, label: teacher }))
-    }, [teacherNames]);
-
-    const gradeOptions = useMemo(() => {
-        const sortedGrades = sortGrades(grades);
-        return sortedGrades.map(grade => ({ value: grade, label: formatGrade(grade) }));
-    }, [grades]);
+        const teacherMap = new Map<number, string>();
+        students.forEach(student => {
+            const teacher = student.teacher;
+            if (teacher?.id) {
+                if (!teacherMap.has(teacher.id)) {
+                    teacherMap.set(teacher.id, formatName(teacher));
+                }
+            }
+        });
+        return Array.from(teacherMap.entries()).map(([id, name]) =>
+            ({ value: id.toString(), label: name}));
+    }, [students]);
 
     const filtersConfig = [
         {
             key: 'nameSearch',
             type: 'text' as const,
-            label: 'Search Students',
-            placeholder: 'Search by name...',
+            label: 'Search by name',
+            placeholder: 'First or last name...',
         },
         {
-            key: 'teacherFilter',
+            key: 'emailSearch',
+            type: 'text' as const,
+            label: 'Search by email',
+            placeholder: 'Email address...',
+        },
+        {
+            key: 'teacherId',
             type: 'select' as const,
             label: 'Teacher',
             options: teacherOptions,
         },
         {
-            key: 'gradeFilter',
-            type: 'select' as const,
-            label: 'Grade',
-            options: gradeOptions,
+            key: 'minPoints',
+            type: 'text' as const,
+            label: 'Min points',
+            placeholder: '0',
+        },
+        {
+            key: 'maxPoints',
+            type: 'text' as const,
+            label: 'Max points',
+            placeholder: '1000',
         },
     ];
 
     const headerConfig = useMemo(() => ({
         title: 'Students',
         itemName: 'students',
-        showCreateButton: isAdmin || isTeacher,
+        showCreateButton: isAdmin,
         createButtonText: 'Create Student',
         additionalElements: null,
-    }), [isAdmin, isTeacher]);
+    }), [isAdmin]);
 
-    const table = useTable<Student, typeof initialFilters>({
+    const table = useTable<StudentDTO, typeof initialFilters>({
         selector: (state: RootState) => state.students,
-        fetchAction,
         initialFilters,
         columnsBuilder,
+        fetchAction,
+        getFetchParams,
         itemsPerPage,
         mode: 'crud' as const,
     });
@@ -118,14 +167,14 @@ export function useStudentTable({ itemsPerPage = 10 }: UseStudentTableProps) {
 
     const crudTable = table as typeof table & {
         showCreateModal: boolean;
-        editingItem: Student | null;
-        deletingItem: Student | null;
+        editingItem: StudentDTO | null;
+        deletingItem: StudentDTO | null;
         handleCreateItem: () => void;
-        handleEditItem: (item: Student) => void;
-        handleDeleteItem: (item: Student) => void;
+        handleEditItem: (item: StudentDTO) => void;
+        handleDeleteItem: (item: StudentDTO) => void;
         handleCloseModals: () => void;
         handleSuccess: () => void;
     }
 
-    return { ...crudTable, filtersConfig, headerConfig, canManageStudent };
+    return { ...crudTable, filtersConfig, headerConfig };
 }
