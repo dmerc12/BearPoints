@@ -1,5 +1,5 @@
-import { BehaviorTypeDTO, BehaviorTypeFormData } from '../../services';
 import { behaviorTypeValidationRules } from '../../utils';
+import { BehaviorTypeDTO } from '../../services';
 import { useAppSelector } from '../../store';
 import { useForm } from '../index';
 import { useEffect } from 'react';
@@ -14,7 +14,7 @@ export const useBehaviorTypeForm = ({ show, isEdit = false, behaviorType }: UseB
     const { loading, error } = useAppSelector(state => state.behaviorTypes);
     const currentUser = useAppSelector(state => state.user.data);
 
-    const initialData: BehaviorTypeFormData = {
+    const initialData = {
         name: '',
         pointValue: 1,
         active: true
@@ -24,6 +24,12 @@ export const useBehaviorTypeForm = ({ show, isEdit = false, behaviorType }: UseB
         initialData,
         validationRules: behaviorTypeValidationRules
     });
+
+    useEffect(() => {
+        if (show && !isEdit) {
+            form.resetForm();
+        }
+    }, [show, isEdit, form]);
 
     useEffect(() => {
         if (show && isEdit && behaviorType) {
@@ -36,9 +42,17 @@ export const useBehaviorTypeForm = ({ show, isEdit = false, behaviorType }: UseB
     }, [show, isEdit, behaviorType, form]);
 
     return {
-        formData: form.formData, setFormData: form.setFormData, formErrors: form.formErrors,
-        setFormErrors: form.setFormErrors, currentUser, error, loading, handleInputChange: form.handleInputChange,
-        handleSelectChange: form.handleSelectChange, handleCheckboxChange: form.handleCheckboxChange,
-        validateForm: form.validateForm, resetForm: form.resetForm
+        formData: form.formData,
+        setFormData: form.setFormData,
+        formErrors: form.formErrors,
+        setFormErrors: form.setFormErrors,
+        currentUser,
+        error,
+        loading,
+        handleInputChange: form.handleInputChange,
+        handleSelectChange: form.handleSelectChange,
+        handleCheckboxChange: form.handleCheckboxChange,
+        validateForm: form.validateForm,
+        resetForm: form.resetForm
     };
 }
