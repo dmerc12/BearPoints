@@ -1,4 +1,4 @@
-import { getLeaderboard, LeaderboardEntryDTO, Timeframe, PagedResponseDTO } from '../../services';
+import { getLeaderboard, LeaderboardEntryDTO, Timeframe, PagedResponseDTO, GradeLevel } from '../../services';
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../index';
 
@@ -41,10 +41,17 @@ const CACHE_DURATION = 5 * 60 * 1000;
 
 export const fetchLeaderboard = createAsyncThunk(
     'leaderboard/fetchLeaderboard',
-    async (params: { timeframe: Timeframe, page?: number, size?: number, sort?: string, force?: boolean },
-           { getState, signal }) => {
+    async (params: {
+        timeframe: Timeframe;
+        page?: number;
+        size?: number;
+        sort?: string;
+        force?: boolean;
+        teacherId?: number;
+        grade?: GradeLevel;
+    }, { getState, signal }) => {
         const state = getState() as RootState;
-        const { timeframe, page = 0, size = 20, sort, force = false } = params;
+        const { timeframe, page = 0, size = 20, sort, force = false, teacherId, grade } = params;
         const cacheKey = sort || 'default'
         const cachedTimeframe = state.leaderboard.cachedEntries[timeframe];
         const cachedData = cachedTimeframe ? cachedTimeframe[cacheKey] : null;
@@ -58,7 +65,15 @@ export const fetchLeaderboard = createAsyncThunk(
                 totalElements: cachedData.pagination.totalElements
             } as PagedResponseDTO<LeaderboardEntryDTO>;
         }
-        return await getLeaderboard(timeframe, undefined, undefined, page, size, sort, signal);
+        return await getLeaderboard(
+            timeframe,
+            teacherId,
+            grade,
+            page,
+            size,
+            sort,
+            signal
+        );
     }
 );
 

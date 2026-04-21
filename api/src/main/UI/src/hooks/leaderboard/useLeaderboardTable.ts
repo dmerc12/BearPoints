@@ -1,6 +1,6 @@
-import { useAppDispatch, useAppSelector, fetchLeaderboard, setTimeframe } from '../../store';
+import { useAppDispatch, useAppSelector, fetchLeaderboard, setTimeframe, fetchTeachers } from '../../store';
+import { LeaderboardEntryDTO, Timeframe, GradeLevel } from '../../services';
 import { fullName, formatGrade, formatName } from '../../utils';
-import { LeaderboardEntry, Timeframe } from '../../services';
 import { useMemo, useCallback, useEffect } from 'react';
 import { TableColumn, useTable } from '../../hooks';
 
@@ -10,10 +10,17 @@ export interface UseLeaderboardTableProps {
 
 export function useLeaderboardTable({ itemsPerPage = 20 }: UseLeaderboardTableProps) {
     const dispatch = useAppDispatch();
-    const { data, currentTimeframe } = useAppSelector(
+    const { data: teachers, loading: teachersLoading } = useAppSelector(state => state.teachers);
+    const { currentTimeframe } = useAppSelector(
         state => state.leaderboard);
 
-    const initialFilters = { teacherFilter: '', gradeFilter: '' }
+    const initialFilters = { teacherId: '', grade: '' };
+
+    useEffect(() => {
+        if (teachers.length === 0 && !teachersLoading) {
+            dispatch(fetchTeachers({ page: 0, size: 100, force: true }));
+        }
+    }, [teachers.length, teachersLoading, dispatch]);
 
     const getServerSortField = useCallback((clientField: string): string => {
         const fieldMap: Record<string, string> = {
@@ -30,94 +37,88 @@ export function useLeaderboardTable({ itemsPerPage = 20 }: UseLeaderboardTablePr
         {
             key: 'rank',
             header: 'Rank',
-            render: (entry: LeaderboardEntry) => entry.rank,
+            render: (entry: LeaderboardEntryDTO) => entry.rank,
             sortable: true,
         },
         {
             key: 'points',
             header: 'Points',
-            render: (entry: LeaderboardEntry) => entry.points,
+            render: (entry: LeaderboardEntryDTO) => entry.points,
             sortable: true,
         },
         {
             key: 'studentName',
-            header: 'Student Name',
-            render: (entry: LeaderboardEntry) => fullName(entry.student),
+            header: 'Student',
+            render: (entry: LeaderboardEntryDTO) => fullName(entry.student),
             sortable: true,
         },
         {
             key: 'teacherName',
             header: 'Teacher',
-            render: (entry: LeaderboardEntry) => formatName(entry.teacher),
+            render: (entry: LeaderboardEntryDTO) => formatName(entry.teacher),
             sortable: true,
         },
         {
             key: 'grade',
             header: 'Grade',
-            render: (entry: LeaderboardEntry) => formatGrade(entry.grade),
+            render: (entry: LeaderboardEntryDTO) => formatGrade(entry.grade),
             sortable: true,
         },
-    ] as TableColumn<LeaderboardEntry>[], []);
+    ] as TableColumn<LeaderboardEntryDTO>[], []);
 
-    const fetchAction = useCallback(({ page, size, sort, force }
-                                     : { page?: number, size?: number, sort?: string, force?: boolean }
-                                     = {}) => {
-        const pageToUse = page !== undefined ? page : 0;
-        const sizeToUse = size !== undefined ? size : itemsPerPage
+    const fetchAction = useCallback((params: {
+        page: number;
+        size: number;
+        sort?: string;
+        force?: boolean;
+        teacherId?: number;
+        grade?: GradeLevel;
+    }) => {
         dispatch(fetchLeaderboard({
             timeframe: currentTimeframe,
-            page: pageToUse,
-            size: sizeToUse,
-            sort: sort,
-            force: force || false
+            page: params.page,
+            size: params.size,
+            sort: params.sort,
+            teacherId: params.teacherId,
+            grade: params.grade,
+            force: params.force || false,
         }));
-    }, [dispatch, currentTimeframe, itemsPerPage]);
+    }, [dispatch, currentTimeframe]);
 
-    const table = useTable({
-        selector: (state) => state.leaderboard,
-        initialFilters,
-        columnsBuilder,
-        fetchAction,
-        itemsPerPage,
-        mode: 'read-only',
-        getServerSortField
-    });
-
-    useEffect(() => {
-        return () => {
-            table.resetFilters();
-            table.resetSorting();
-        };
-    }, [table]);
+    const getFetchParams = useCallback((
+        filters: typeof initialFilters,
+        page: number,
+        size: number,
+        sort?: string,
+    ) => {
+        const teacherId = filters.teacherId ? parseInt(filters.teacherId, 10) : undefined;
+        const grade = filters.grade ? (filters.grade as GradeLevel) : undefined;
+        return { page, size, sort, teacherId, grade };
+    }, []);
 
     const teacherOptions = useMemo(() => {
-        const teachers = [...new Set(data.map(e => fullName(e.teacher)))];
-        return teachers.map(teacher => ({ value: teacher, label: teacher }));
-    }, [data]);
+        return teachers.map(teacher => ({
+            value: teacher.id!.toString(),
+            label: fullName(teacher),
+        }));
+    }, [teachers]);
 
     const gradeOptions = useMemo(() => {
-        const grades = [...new Set(data.map(e => formatGrade(e.grade)))];
-        return grades.map(grade => ({ value: grade, label: grade }));
-    }, [data]);
-
-    const retry = useCallback(() => {
-        fetchAction({ force: true });
-    }, [fetchAction]);
-
-    const handleTimeframeChange = useCallback((timeframe: Timeframe) => {
-        dispatch(setTimeframe(timeframe));
-        table.setCurrentPage(1);
-    }, [dispatch, table]);
+        return Object.values(GradeLevel).map(grade => ({
+            value: grade,
+            label: formatGrade(grade),
+        }));
+    }, []);
 
     const filtersConfig = [
         {
-            key: 'teacherFilter',
+            key: 'teacherId',
             type: 'select' as const,
             label: 'Teacher',
             options: teacherOptions,
         },
         {
-            key: 'gradeFilter',
+            key: 'grade',
             type: 'select' as const,
             label: 'Grade',
             options: gradeOptions,
@@ -130,5 +131,28 @@ export function useLeaderboardTable({ itemsPerPage = 20 }: UseLeaderboardTablePr
         showCreateButton: false,
     };
 
-    return { ...table, currentTimeframe, filtersConfig, headerConfig, handleTimeframeChange, retry };
+    const table = useTable({
+        selector: (state) => state.leaderboard,
+        initialFilters,
+        columnsBuilder,
+        fetchAction,
+        getFetchParams,
+        itemsPerPage,
+        mode: 'read-only',
+        getServerSortField
+    });
+
+    useEffect(() => {
+        return () => {
+            table.resetFilters();
+            table.resetSorting();
+        };
+    }, [table]);
+
+    const handleTimeframeChange = useCallback((timeframe: Timeframe) => {
+        dispatch(setTimeframe(timeframe));
+        table.setCurrentPage(1);
+    }, [dispatch, table]);
+
+    return { ...table, currentTimeframe, filtersConfig, headerConfig, handleTimeframeChange };
 }
