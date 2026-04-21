@@ -1,7 +1,7 @@
-import { fetchBragLogs, RootState, useAppDispatch, useAppSelector } from '../../store';
-import { formatBragLogDate, fullName } from '../../utils';
+import { searchBragLogsInList, RootState, useAppDispatch, useAppSelector } from '../../store';
 import { useCallback, useEffect, useMemo } from 'react';
 import { BragLogDTO, Role } from '../../services';
+import { formatBragLogDate } from '../../utils';
 import { useTable } from '../index';
 
 export interface UseBragLogTableProps {
@@ -12,76 +12,164 @@ export function useBragLogTable({ itemsPerPage = 10 }: UseBragLogTableProps) {
     const dispatch = useAppDispatch();
     const currentUser = useAppSelector(state => state.user.data);
     const isAdmin = useMemo(() => currentUser?.role === Role.ADMIN, [currentUser]);
+    const isStaff = useMemo(() => currentUser?.role === Role.STAFF, [currentUser]);
     const isTeacher = useMemo(() => currentUser?.role === Role.TEACHER, [currentUser]);
 
-    const initialFilters = { studentFilter: '', teacherFilter: '', dateFilter: '' };
+    const initialFilters = {
+        studentName: '',
+        teacherName: '',
+        minPoints: '',
+        maxPoints: '',
+        startDate: '',
+        endDate: '',
+        submitterName: '',
+    };
 
     const columnsBuilder = useCallback(() => [
         {
             key: 'date',
             header: 'Date',
-            render: (bragLog: BragLogDTO) => formatBragLogDate(bragLog.timestamp),
+            render: (bragLog: BragLogDTO) => formatBragLogDate(bragLog.timestamp!),
             sortable: true,
         },
         {
             key: 'student',
             header: 'Student',
-            render: (bragLog: BragLogDTO) => fullName(bragLog.student),
+            render: (bragLog: BragLogDTO) => bragLog.studentName || '',
             sortable: true,
         },
         {
             key: 'teacher',
             header: 'Teacher',
-            render: (bragLog: BragLogDTO) => fullName(bragLog.teacher),
+            render: (bragLog: BragLogDTO) => bragLog.teacherName || '',
             sortable: true,
         },
         {
             key: 'behaviors',
             header: 'Behaviors',
-            render: (bragLog: BragLogDTO) => bragLog.behaviors.map(b => b.name).join(', '),
+            render: (bragLog: BragLogDTO) => bragLog.behaviors?.map(b => b.name).join(', ') || '',
+            sortable: true,
+        },
+        {
+            key: 'points',
+            header: 'Points',
+            render: (bragLog: BragLogDTO) => bragLog.pointsGenerated,
+            sortable: true,
+        },
+        {
+            key: 'submitter',
+            header: 'Submitted By',
+            render: (bragLog: BragLogDTO) => bragLog.submitterName,
             sortable: true,
         },
     ], []);
 
-    const fetchAction = useCallback(({ page, size, sort, force }
-                                     : { page: number; size: number; sort?: string; force?: boolean }) => {
-        dispatch(fetchBragLogs({ page, size, sort, force: force || false }) as never);
+    const fetchAction = useCallback((params: {
+        page: number;
+        size: number;
+        sort?: string;
+        force?: boolean;
+        studentName?: string;
+        teacherName?: string;
+        minPoints?: number;
+        maxPoints?: number;
+        startDate?: string;
+        endDate?: string;
+        submitterName?: string;
+    }) => {
+        dispatch(searchBragLogsInList(params) as never);
     }, [dispatch]);
+
+    const getFetchParams = useCallback((
+        filters: typeof initialFilters,
+        page: number,
+        size: number,
+        sort?: string
+    ) => {
+        const studentName = filters.studentName || undefined;
+        const teacherName = filters.teacherName || undefined;
+        const minPoints = filters.minPoints
+            ? parseInt(filters.minPoints, 10)
+            : undefined;
+        const maxPoints = filters.maxPoints
+            ? parseInt(filters.maxPoints, 10)
+            : undefined;
+        const startDate = filters.startDate || undefined;
+        const endDate = filters.endDate || undefined;
+        const submitterName = filters.submitterName || undefined;
+        return {
+            page,
+            size,
+            sort,
+            studentName,
+            teacherName,
+            minPoints,
+            maxPoints,
+            startDate,
+            endDate,
+            submitterName,
+        };
+    }, []);
 
     const filtersConfig = [
         {
-            key: 'studentFilter',
+            key: 'studentName',
             type: 'text' as const,
-            label: 'Search Students',
+            label: 'Student Name',
             placeholder: 'Search by student name...',
         },
         {
-            key: 'teacherFilter',
+            key: 'teacherName',
             type: 'text' as const,
-            label: 'Search Teachers',
+            label: 'Teacher Name',
             placeholder: 'Search by teacher name...',
         },
         {
-            key: 'dateFilter',
+            key: 'submitterName',
             type: 'text' as const,
-            label: 'Search by Date',
-            placeholder: 'MM/DD/YYYY',
+            label: 'Submitted By',
+            placeholder: 'Search by submitter name...',
+        },
+        {
+            key: 'minPoints',
+            type: 'text' as const,
+            label: 'Min Points',
+            placeholder: '0',
+        },
+        {
+            key: 'maxPoints',
+            type: 'text' as const,
+            label: 'Max Points',
+            placeholder: '1000',
+        },
+        {
+            key: 'startDate',
+            type: 'text' as const,
+            label: 'Start Date',
+            placeholder: 'YYYY-MM-DD',
+        },
+        {
+            key: 'endDate',
+            type: 'text' as const,
+            label: 'End Date',
+            placeholder: 'YYYY-MM-DD',
         },
     ];
 
     const headerConfig = useMemo(() => ({
         title: 'Brag Logs',
         itemName: 'brag logs',
-        showCreateButton: isAdmin || isTeacher,
+        showCreateButton: isAdmin || isStaff || isTeacher,
         createButtonText: 'Create Brag Log',
         additionalElements: null,
-    }), [isAdmin, isTeacher]);
+    }), [isAdmin, isStaff, isTeacher]);
 
     const table = useTable<BragLogDTO, typeof initialFilters>({
         selector: (state: RootState) => state.bragLogs,
-        fetchAction,
         initialFilters,
         columnsBuilder,
+        fetchAction,
+        getFetchParams,
         itemsPerPage,
         mode: 'crud' as const,
     });
@@ -103,5 +191,5 @@ export function useBragLogTable({ itemsPerPage = 10 }: UseBragLogTableProps) {
         handleSuccess: () => void;
     }
 
-    return { ...crudTable, filtersConfig, headerConfig, isAdmin, isTeacher };
+    return { ...crudTable, filtersConfig, headerConfig, isAdmin, isStaff, isTeacher };
 }
