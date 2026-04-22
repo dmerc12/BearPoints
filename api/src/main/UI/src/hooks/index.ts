@@ -1,6 +1,7 @@
 export { type TableFilters, type TableHelpers, type TableColumn, type UseTableOptions, useTable } from './useTable';
 export { type UseTeacherFormProps, type UseTeacherTableProps, useTeacherForm, useTeacherTable } from './teacher';
 export { type UseBehaviorTypeFormProps, useBehaviorTypeForm, useBehaviorTypeTable } from './behaviorType';
+export { type UseRewardItemFormProps, useRewardItemForm, useRewardItemTable } from './rewardItem';
 export { type UseUserFormProps, type UseUserTableProps, useUserForm, useUserTable } from './user';
 export { type FormData, type ValidationRule, type UseFormProps, useForm } from './useForm';
 export { type UseStudentFormProps, useStudentForm, useStudentTable } from './student';
