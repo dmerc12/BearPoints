@@ -1,4 +1,4 @@
-import { useAppDispatch, useAppSelector, fetchCurrentUser, clearUser } from '../store';
+import { useAppDispatch, useAppSelector, fetchCurrentUser, clearCurrentUser } from '../store';
 import { Spinner, Alert, Button, Container, Row, Col } from 'react-bootstrap';
 import { Navigate, useLocation } from 'react-router-dom';
 import { onAuthStateChanged, User } from 'firebase/auth';
@@ -24,13 +24,13 @@ export default function Auth ({ children }: AuthProps) {
                 if (!token.claims.email_verified && !isValidEmail) {
                     console.warn('Email not verified or is invalid:', email);
                     await auth.signOut();
-                    dispatch(clearUser());
+                    dispatch(clearCurrentUser());
                 } else {
                     dispatch(fetchCurrentUser({ force: true }));
                 }
             } else {
                 console.log('No authenticated user');
-                dispatch(clearUser());
+                dispatch(clearCurrentUser());
             }
         } catch (error) {
             console.error('Auth state change error', error);
