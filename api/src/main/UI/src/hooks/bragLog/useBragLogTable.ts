@@ -144,15 +144,15 @@ export function useBragLogTable({ itemsPerPage = 10 }: UseBragLogTableProps) {
         },
         {
             key: 'startDate',
-            type: 'text' as const,
+            type: 'date' as const,
             label: 'Start Date',
-            placeholder: 'YYYY-MM-DD',
+            placeholder: 'MMM dd, yyyy',
         },
         {
             key: 'endDate',
-            type: 'text' as const,
+            type: 'date' as const,
             label: 'End Date',
-            placeholder: 'YYYY-MM-DD',
+            placeholder: 'MMM dd, yyyy',
         },
     ];
 

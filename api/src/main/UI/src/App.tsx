@@ -10,6 +10,8 @@ import StudentsPage from './pages/StudentsPage';
 import AboutPage from './pages/AboutPage';
 import { Provider } from 'react-redux';
 import { store } from './store';
+
+import 'react-datepicker/dist/react-datepicker.css';
 import './App.css';
 
 function App() {

@@ -1,7 +1,7 @@
 import { Table, Pagination, Spinner, Alert, Container, Button, Row, Col } from 'react-bootstrap';
 import { TableColumn, TableFilters, SortingConfig } from '../hooks';
+import { TextFilter, SelectFilter, DateFilter } from './index';
 import React, { useMemo, useCallback } from 'react';
-import { TextFilter, SelectFilter } from './index';
 
 export interface FilterConfig {
     key: string;
@@ -144,6 +144,17 @@ export default function BaseTable<T>(props: BaseTableProps<T>) {
                                               onChange={(value) => updateFilter(filter.key, value)}
                                               label={filter.label}
                                               options={filter.options || []}
+                                />
+                            </Col>
+                        );
+                    } else if (filter.type === 'date') {
+                        return (
+                            <Col key={filter.key} md={4}>
+                                <DateFilter
+                                    value={filters?.[filter.key] || ''}
+                                    onChange={(value) => updateFilter(filter.key, value)}
+                                    label={filter.label}
+                                    placeholder={filter.placeholder}
                                 />
                             </Col>
                         );
