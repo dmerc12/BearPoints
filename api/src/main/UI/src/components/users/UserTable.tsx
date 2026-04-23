@@ -1,22 +1,22 @@
-import { CreateAdminModal, EditAdminModal, DeleteAdminModal, CrudTable } from '../index';
-import { useAdminTable } from '../../hooks';
+import { CreateUserModal, EditUserModal, DeleteUserModal, CrudTable } from '../index';
+import { useUserTable } from '../../hooks';
 import { UserDTO } from '../../services';
 
-export interface AdminTableProps {
+export interface UserTableProps {
     itemsPerPage?: number;
     showFilters?: boolean;
     size?: 's' | 'm' | 'l';
 }
 
-export default function AdminTable(props: AdminTableProps) {
+export default function UserTable(props: UserTableProps) {
     const { itemsPerPage = 10, showFilters = true, size = 'm' } = props;
 
     const {
         data, loading, error, filters, updateFilter, isAdmin, columns,
         showCreateModal, editingItem, deletingItem, handleCreateItem, handleEditItem, handleDeleteItem,
         handleCloseModals, retry, handleSuccess, filtersConfig, headerConfig,
-        currentPage, totalPages, setCurrentPage, totalCount
-    } = useAdminTable({ itemsPerPage });
+        currentPage, totalPages, setCurrentPage, totalCount, sortConfig, handleSort,
+    } = useUserTable({ itemsPerPage });
 
     return (
         <CrudTable<UserDTO>
@@ -34,27 +34,29 @@ export default function AdminTable(props: AdminTableProps) {
             filters={filters}
             updateFilter={updateFilter}
             size={size}
+            sortConfig={sortConfig}
+            onSort={handleSort}
             canEdit={isAdmin}
             canDelete={isAdmin}
             onEditItem={handleEditItem}
             onDeleteItem={handleDeleteItem}
             onCreateClick={handleCreateItem}
             createModal={
-                <CreateAdminModal show={showCreateModal}
+                <CreateUserModal show={showCreateModal}
                                   onCancel={handleCloseModals}
                                   onSuccess={handleSuccess}
                 />
             }
             editModal={
-                <EditAdminModal show={!!editingItem}
-                                admin={editingItem}
+                <EditUserModal show={!!editingItem}
+                                user={editingItem}
                                 onCancel={handleCloseModals}
                                 onSuccess={handleSuccess}
                 />
             }
             deleteModal={
-                <DeleteAdminModal show={!!deletingItem}
-                                admin={deletingItem}
+                <DeleteUserModal show={!!deletingItem}
+                                user={deletingItem}
                                 onCancel={handleCloseModals}
                                 onSuccess={handleSuccess}
                 />

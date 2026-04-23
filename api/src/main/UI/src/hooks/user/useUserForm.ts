@@ -1,6 +1,6 @@
 import { userValidationRules } from '../../utils';
+import { UserDTO, Role } from '../../services';
 import { useAppSelector } from '../../store';
-import { UserDTO } from '../../services';
 import { useForm } from '../index';
 import { useEffect } from 'react';
 
@@ -18,7 +18,7 @@ export const useUserForm = ({ show, isEdit = false, user }: UseUserFormProps) =>
         firstName: '',
         lastName: '',
         email: '',
-        role: undefined as UserDTO['role'] | undefined,
+        role: Role.ADMIN,
     };
 
     const form = useForm({

@@ -1,8 +1,8 @@
-import { useAppDispatch, addAdmin } from '../../store';
-import { BaseModal, AdminForm } from '../index';
-import { useAdminForm } from '../../hooks';
+import { useAppDispatch, addUser } from '../../store';
+import { BaseModal, UserForm } from '../index';
+import { UserDTO, Role } from '../../services';
+import { useUserForm } from '../../hooks';
 import { Alert } from 'react-bootstrap';
-import { Role } from '../../services';
 
 interface CreateAdminModalProps {
     show: boolean;
@@ -10,28 +10,28 @@ interface CreateAdminModalProps {
     onSuccess: () => void;
 }
 
-export function CreateAdminModal({ show, onCancel, onSuccess }: CreateAdminModalProps) {
+export function CreateUserModal({ show, onCancel, onSuccess }: CreateAdminModalProps) {
     const dispatch = useAppDispatch();
     
-    const { formData, formErrors, error, loading, handleInputChange,
-        validateForm, resetForm } = useAdminForm({ show });
+    const { formData, formErrors, error, loading, handleInputChange, handleSelectChange,
+        validateForm, resetForm } = useUserForm({ show });
     
     const handleSubmit = () => {
         if (!validateForm()) return;
-        const adminData = {
+        const userData: UserDTO = {
             firstName: formData.firstName,
             lastName: formData.lastName,
             email: formData.email,
-            role: Role.ADMIN
+            role: formData.role as Role,
         };
-        dispatch(addAdmin(adminData))
+        dispatch(addUser(userData))
             .unwrap()
             .then(() => {
                 onSuccess();
                 resetForm();
             })
             .catch((error: Error) => {
-                console.log('Failed to create admiin:', error);
+                console.log('Failed to create user:', error);
             });
     };
     
@@ -42,7 +42,7 @@ export function CreateAdminModal({ show, onCancel, onSuccess }: CreateAdminModal
     
     return (
         <BaseModal
-            title='Create Admin'
+            title='Create User'
             show={show}
             onConfirm={handleSubmit}
             onCancel={handleClose}
@@ -52,11 +52,12 @@ export function CreateAdminModal({ show, onCancel, onSuccess }: CreateAdminModal
             disableConfirm={loading}
         >
             {error && <Alert variant='danger'>{error}</Alert>}
-            <AdminForm 
+            <UserForm
                 formData={formData}
                 formErrors={formErrors}
                 loading={loading}
                 onInputChange={handleInputChange}
+                onSelectChange={handleSelectChange}
             />
         </BaseModal>
     );

@@ -1,6 +1,5 @@
+export { UserForm, CreateUserModal, EditUserModal, DeleteUserModal, type UserTableProps, UserTable } from './users';
 export { SelectFilter, TextFilter, DateFilter, NumberFilter } from './filters';
-export { AdminForm, CreateAdminModal, EditAdminModal, DeleteAdminModal,
-    type AdminTableProps, AdminTable } from './admins';
 export { TeacherForm, CreateTeacherModal, EditTeacherModal, DeleteTeacherModal, TeacherTable } from './teachers';
 export { StudentForm, CreateStudentModal, EditStudentModal, DeleteStudentModal, QRCodesPrint,
     StudentTable } from './students';

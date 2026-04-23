@@ -23,4 +23,11 @@ export const userValidationRules: ValidationRule[] = [
             return null;
         }
     },
+    {
+        field: 'role',
+        validator: (value) => {
+            if (!value) return 'Role is required';
+            return null;
+        }
+    },
 ];

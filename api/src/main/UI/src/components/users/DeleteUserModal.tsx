@@ -1,20 +1,20 @@
-import { useAppDispatch, useAppSelector, removeAdmin } from '../../store';
+import { useAppDispatch, useAppSelector, removeUser } from '../../store';
 import { formatRole, fullName } from '../../utils';
 import { Role, UserDTO } from '../../services';
 import { useEffect, useState } from 'react';
 import { Alert } from 'react-bootstrap';
 import { BaseModal } from '../index';
 
-interface DeleteAdminModalProps {
+interface DeleteUserModalProps {
     show: boolean;
-    admin: UserDTO | null;
+    user: UserDTO | null;
     onCancel: () => void;
     onSuccess: () => void;
 }
 
-export function DeleteAdminModal({ show, admin, onCancel, onSuccess }: DeleteAdminModalProps) {
+export function DeleteUserModal({ show, user, onCancel, onSuccess }: DeleteUserModalProps) {
     const dispatch = useAppDispatch();
-    const { loading, error } = useAppSelector(state => state.admins);
+    const { loading, error } = useAppSelector(state => state.users);
     const currentUser = useAppSelector(state => state.user.data);
 
     const [authError, setAuthError] = useState<string>('');
@@ -24,7 +24,7 @@ export function DeleteAdminModal({ show, admin, onCancel, onSuccess }: DeleteAdm
 
     useEffect(() => {
         if (show && !isAuthorized) {
-            setAuthError('Only administrators can delete admins');
+            setAuthError('Only administrators can delete users');
             const timer = setTimeout(() => {
                 setAuthError('');
             }, 3000);
@@ -35,14 +35,14 @@ export function DeleteAdminModal({ show, admin, onCancel, onSuccess }: DeleteAdm
     }, [show, isAuthorized]);
 
     const handleConfirmDelete = () => {
-        if (!admin || !admin.id || !isAuthorized) return;
-        dispatch(removeAdmin(admin.id))
+        if (!user || !user.id || !isAuthorized) return;
+        dispatch(removeUser(user.id))
             .unwrap()
             .then(() => {
                 onSuccess();
             })
             .catch((error: Error) => {
-                console.log('Failed to delete admin', error);
+                console.log('Failed to delete user', error);
             });
     };
 
@@ -53,7 +53,7 @@ export function DeleteAdminModal({ show, admin, onCancel, onSuccess }: DeleteAdm
 
     return (
         <BaseModal
-            title='Delete Admin'
+            title='Delete User'
             show={show}
             onConfirm={handleConfirmDelete}
             onCancel={handleClose}
@@ -65,14 +65,14 @@ export function DeleteAdminModal({ show, admin, onCancel, onSuccess }: DeleteAdm
         >
             {authError && <Alert variant='danger'>{authError}</Alert>}
             {error && <Alert variant='danger'>{error}</Alert>}
-            <p>Are you sure you want to delete {admin ? fullName(admin) : 'this admin'}?</p>
+            <p>Are you sure you want to delete {user ? fullName(user) : 'this user'}?</p>
             <p className='text-muted'>This action cannot be undone.</p>
-            {admin && (
+            {user && (
                 <div className='mt-3 p-3 bg-light rounded'>
-                    <h6>Admin Details:</h6>
-                    <p><strong>Name:</strong> {fullName(admin)}</p>
-                    <p><strong>Email:</strong> {admin.email}</p>
-                    <p><strong>Role:</strong> {formatRole(admin.role)}</p>
+                    <h6>User Details:</h6>
+                    <p><strong>Name:</strong> {fullName(user)}</p>
+                    <p><strong>Email:</strong> {user.email}</p>
+                    <p><strong>Role:</strong> {formatRole(user.role)}</p>
                 </div>
             )}
         </BaseModal>

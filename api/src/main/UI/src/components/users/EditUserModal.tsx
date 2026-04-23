@@ -1,51 +1,51 @@
-import { useAppDispatch, modifyAdmin } from '../../store';
-import { BaseModal, AdminForm } from '../index';
+import { useAppDispatch, modifyUser } from '../../store';
+import { BaseModal, UserForm } from '../index';
 import { Role, UserDTO } from '../../services';
-import { useAdminForm } from '../../hooks';
+import { useUserForm } from '../../hooks';
 import { Alert } from 'react-bootstrap';
 import { useEffect } from 'react';
 
-interface EditAdminModalProps {
+interface EditUserModalProps {
     show: boolean;
-    admin: UserDTO | null;
+    user: UserDTO | null;
     onCancel: () => void;
     onSuccess: () => void;
 }
 
-export function EditAdminModal({ show, admin, onCancel, onSuccess }: EditAdminModalProps) {
+export function EditUserModal({ show, user, onCancel, onSuccess }: EditUserModalProps) {
     const dispatch = useAppDispatch();
 
-    const { formData, formErrors, setFormErrors, error, loading,
-        handleInputChange, validateForm, resetForm } = useAdminForm({ show, isEdit: true, admin});
+    const { formData, formErrors, setFormErrors, error, loading, handleInputChange, handleSelectChange,
+        validateForm, resetForm, currentUser } = useUserForm({ show, isEdit: true, user});
 
     useEffect(() => {
-        if (show && admin && admin.role !== Role.ADMIN) {
+        if (show && currentUser?.role !== Role.ADMIN) {
             onCancel();
-            setFormErrors({ general: 'Only other administrators can edit administrators'});
+            setFormErrors({ general: 'Only administrators can edit users'});
             const timer = setTimeout(() => {
                 setFormErrors({});
             }, 3000);
             return () => clearTimeout(timer);
         }
-    }, [show, admin, onCancel, setFormErrors]);
+    }, [show, currentUser, onCancel, setFormErrors]);
 
     const handleSubmit = () => {
-        if (!validateForm() || !admin || !admin.id) return;
-        const adminData = {
-            id: admin.id,
+        if (!validateForm() || !user || !user.id) return;
+        const userData: UserDTO = {
+            id: user.id,
             firstName: formData.firstName,
             lastName: formData.lastName,
             email: formData.email,
-            role: Role.ADMIN
+            role: formData.role,
         };
-        dispatch(modifyAdmin({ id: admin.id, userData: adminData }))
+        dispatch(modifyUser({ id: user.id, userData: userData }))
             .unwrap()
             .then(() => {
                 onSuccess();
                 resetForm();
             })
             .catch((error: Error) => {
-                console.log('Failed to update admin:', error);
+                console.log('Failed to update user:', error);
             });
     };
 
@@ -56,7 +56,7 @@ export function EditAdminModal({ show, admin, onCancel, onSuccess }: EditAdminMo
 
     return (
         <BaseModal
-            title='Edit Admin'
+            title='Edit User'
             show={show}
             onConfirm={handleSubmit}
             onCancel={handleClose}
@@ -67,11 +67,12 @@ export function EditAdminModal({ show, admin, onCancel, onSuccess }: EditAdminMo
         >
             {formErrors.general && <Alert variant='danger'>{formErrors.general}</Alert>}
             {error && <Alert variant='danger'>{error}</Alert>}
-            <AdminForm
+            <UserForm
                 formData={formData}
                 formErrors={formErrors}
                 loading={loading}
                 onInputChange={handleInputChange}
+                onSelectChange={handleSelectChange}
             />
         </BaseModal>
     );

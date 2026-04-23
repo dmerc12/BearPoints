@@ -1,15 +1,18 @@
 import { Form, Row, Col } from 'react-bootstrap';
-import { PersonFormData } from '../../services';
+import { UserDTO, Role } from '../../services';
 import React from 'react';
 
-interface AdminFormProps {
-    formData: PersonFormData;
+interface UserFormProps {
+    formData: UserDTO;
     formErrors: Record<string, string>;
     loading: boolean;
     onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    onSelectChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+    isEdit?: boolean;
 }
 
-export function AdminForm({ formData, formErrors, loading, onInputChange }: AdminFormProps) {
+export function UserForm({ formData, formErrors, loading, onInputChange, onSelectChange, isEdit = false }
+                         : UserFormProps) {
     return (
         <Form>
             <Row>
@@ -61,6 +64,22 @@ export function AdminForm({ formData, formErrors, loading, onInputChange }: Admi
                 </Form.Text>
                 <Form.Control.Feedback type='invalid'>
                     {formErrors.email}
+                </Form.Control.Feedback>
+            </Form.Group>
+            <Form.Group className='mb-3'>
+                <Form.Label>Role</Form.Label>
+                <Form.Select
+                    name='role'
+                    value={formData.role}
+                    onChange={onSelectChange}
+                    isInvalid={!!formErrors.role}
+                    disabled={loading || isEdit}
+                >
+                    <option value={Role.ADMIN}>Administrator</option>
+                    <option value={Role.STAFF}>Staff</option>
+                </Form.Select>
+                <Form.Control.Feedback type='invalid'>
+                    {formErrors.role}
                 </Form.Control.Feedback>
             </Form.Group>
         </Form>
