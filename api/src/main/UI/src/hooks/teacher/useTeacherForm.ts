@@ -20,7 +20,7 @@ export function useTeacherForm ({ show, isEdit = false, teacher }: UseTeacherFor
         firstName: '',
         lastName: '',
         email: '',
-        grade: null as string | null,
+        grade: '',
     };
 
     const form = useForm({ initialData, validationRules: teacherValidationRules });

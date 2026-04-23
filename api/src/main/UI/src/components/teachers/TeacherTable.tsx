@@ -1,6 +1,6 @@
 import { CreateTeacherModal, EditTeacherModal, DeleteTeacherModal, CrudTable } from '../index';
 import { useTeacherTable } from '../../hooks';
-import { Teacher } from '../../services';
+import { TeacherDTO } from '../../services';
 
 interface TeacherTableProps {
     itemsPerPage?: number;
@@ -12,14 +12,14 @@ export default function TeacherTable(props: TeacherTableProps) {
     const { itemsPerPage = 10, showFilters = true, size = 'm' } = props;
 
     const {
-        data, loading, error, filters, updateFilter, isAdmin, canManageTeacher, columns,
+        data, loading, error, filters, updateFilter, isAdmin, columns, sortConfig, handleSort,
         showCreateModal, editingItem, deletingItem, handleCreateItem, handleEditItem, handleDeleteItem,
         handleCloseModals, retry, handleSuccess, filtersConfig, headerConfig,
         currentPage, totalPages, setCurrentPage, totalCount
     } = useTeacherTable({ itemsPerPage });
 
     return (
-        <CrudTable<Teacher>
+        <CrudTable<TeacherDTO>
             data={data}
             loading={loading}
             error={error}
@@ -34,7 +34,9 @@ export default function TeacherTable(props: TeacherTableProps) {
             filters={filters}
             updateFilter={updateFilter}
             size={size}
-            canEdit={canManageTeacher}
+            sortConfig={sortConfig}
+            onSort={handleSort}
+            canEdit={isAdmin}
             canDelete={isAdmin}
             onEditItem={handleEditItem}
             onDeleteItem={handleDeleteItem}

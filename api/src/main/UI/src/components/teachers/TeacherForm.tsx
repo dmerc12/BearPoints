@@ -1,10 +1,15 @@
-import { GradeLevel, TeacherFormData } from '../../services';
 import { Form, Row, Col } from 'react-bootstrap';
+import { GradeLevel } from '../../services';
 import { formatGrade } from '../../utils';
 import React from 'react';
 
 interface TeacherFormProps {
-    formData: TeacherFormData;
+    formData: {
+        firstName: string;
+        lastName: string;
+        email: string;
+        grade: string;
+    };
     formErrors: Record<string, string>;
     loading: boolean;
     onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;

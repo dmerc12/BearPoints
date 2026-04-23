@@ -1,13 +1,13 @@
 import { useAppDispatch, useAppSelector, removeTeacher } from '../../store';
 import { fullName, formatGrade } from '../../utils';
-import { Teacher, Role } from '../../services';
+import { TeacherDTO, Role } from '../../services';
 import { useEffect, useState } from 'react';
 import { Alert } from 'react-bootstrap';
 import { BaseModal } from '../index';
 
 interface DeleteTeacherModalProps {
     show: boolean;
-    teacher: Teacher | null;
+    teacher: TeacherDTO | null;
     onCancel: () => void;
     onSuccess: () => void;
 }
@@ -23,7 +23,7 @@ export function DeleteTeacherModal({ show, teacher, onCancel, onSuccess }: Delet
     const disableConfirm = loading || !isAuthorized;
 
     useEffect(() => {
-        if (show && !isAuthorized) {
+        if (show && !isAuthorized && teacher) {
             setAuthError('Only administrators can delete teachers');
             const timer = setTimeout(() => {
                 setAuthError('');
@@ -32,10 +32,10 @@ export function DeleteTeacherModal({ show, teacher, onCancel, onSuccess }: Delet
         } else {
             setAuthError('');
         }
-    }, [show, isAuthorized]);
+    }, [show, isAuthorized, teacher]);
 
     const handleConfirmDelete = () => {
-        if (!teacher || !isAuthorized) return;
+        if (!teacher || !isAuthorized || teacher.id === undefined || teacher.id === null) return;
         dispatch(removeTeacher(teacher.id))
             .unwrap()
             .then(() => {

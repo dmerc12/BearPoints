@@ -1,8 +1,9 @@
-import { Teacher, Role, GradeLevel } from '../../services';
+import { TeacherDTO, Role, GradeLevel } from '../../services';
 import { useAppDispatch, addTeacher } from '../../store';
 import { BaseModal, TeacherForm } from '../index';
 import { useTeacherForm } from '../../hooks';
 import { Alert } from 'react-bootstrap';
+import { useEffect } from 'react';
 
 interface CreateTeacherModalProps {
     show: boolean;
@@ -12,8 +13,19 @@ interface CreateTeacherModalProps {
 
 export function CreateTeacherModal({ show, onCancel, onSuccess }: CreateTeacherModalProps) {
     const dispatch = useAppDispatch();
-    const { formData, formErrors, error, loading, handleInputChange,
-        handleSelectChange, validateForm, resetForm } = useTeacherForm({ show });
+    const { formData, formErrors, setFormErrors, error, loading, handleInputChange, handleSelectChange,
+        validateForm, resetForm, isAdmin } = useTeacherForm({ show });
+
+    useEffect(() => {
+        if (show && !isAdmin) {
+            onCancel();
+            setFormErrors({ general: 'Only administrators can create teachers' });
+            const timer = setTimeout(() => {
+                setFormErrors({});
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [show, isAdmin, onCancel, setFormErrors]);
 
     const handleSubmit = () => {
         if (!validateForm()) return;
@@ -24,7 +36,7 @@ export function CreateTeacherModal({ show, onCancel, onSuccess }: CreateTeacherM
             email: formData.email,
             role: Role.TEACHER
         };
-        const teacherData: Partial<Teacher> = {
+        const teacherData: TeacherDTO = {
             user: userData,
             grade: formData.grade as GradeLevel
         };
