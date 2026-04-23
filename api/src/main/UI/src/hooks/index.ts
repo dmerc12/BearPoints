@@ -1,4 +1,4 @@
-export { type TableFilters, type TableHelpers, type TableColumn, type UseTableOptions, useTable } from './useTable';
+export { type SortingConfig, type TableFilters, type TableHelpers, type TableColumn, type UseTableOptions, useTable } from './useTable';
 export { type UseTeacherFormProps, type UseTeacherTableProps, useTeacherForm, useTeacherTable } from './teacher';
 export { type UseStudentRewardFormProps, useStudentRewardForm, useStudentRewardTable } from './studentReward';
 export { type UseBehaviorTypeFormProps, useBehaviorTypeForm, useBehaviorTypeTable } from './behaviorType';

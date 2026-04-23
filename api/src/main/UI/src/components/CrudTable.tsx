@@ -1,5 +1,5 @@
 import { BaseTable, ManagementButtons, FilterConfig, HeaderConfig } from './index';
-import { TableColumn, TableFilters } from '../hooks';
+import { TableColumn, TableFilters, SortingConfig } from '../hooks';
 import React, { useMemo } from 'react';
 
 export interface CrudTableProps<T> {
@@ -18,6 +18,8 @@ export interface CrudTableProps<T> {
     headerConfig?: HeaderConfig;
     filters?: TableFilters;
     updateFilter?: (key: string, value: string) => void;
+    sortConfig?: SortingConfig[];
+    onSort?: (field: string) => void;
     // CRUD-specific props
     canEdit: boolean | ((item: T) => boolean);
     canDelete: boolean | ((item: T) => boolean);
@@ -34,8 +36,8 @@ export interface CrudTableProps<T> {
 export function CrudTable<T>(props: CrudTableProps<T>) {
     const {
         data, loading, error, columns, currentPage, totalPages, totalCount, onPageChange, onRetry, size = 'm',
-        filtersConfig, headerConfig, filters, updateFilter, canEdit, canDelete, onEditItem, onDeleteItem,
-        onCreateClick, createModal, editModal, deleteModal,
+        filtersConfig, headerConfig, filters, updateFilter, sortConfig, onSort, canEdit, canDelete,
+        onEditItem, onDeleteItem, onCreateClick, createModal, editModal, deleteModal,
         actionColumnHeader = 'Actions', managementButtonsSize = 'sm'
     } = props;
 
@@ -84,6 +86,8 @@ export function CrudTable<T>(props: CrudTableProps<T>) {
                 filtersConfig={filtersConfig}
                 filters={filters}
                 updateFilter={updateFilter}
+                sortConfig={sortConfig}
+                onSort={onSort}
                 showCreateButton={headerConfig?.showCreateButton || false}
                 createButtonText={headerConfig?.createButtonText || 'Create'}
                 onCreateClick={onCreateClick}

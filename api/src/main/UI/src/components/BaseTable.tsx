@@ -1,5 +1,5 @@
 import { Table, Pagination, Spinner, Alert, Container, Button, Row, Col } from 'react-bootstrap';
-import { TableColumn, TableFilters } from '../hooks';
+import { TableColumn, TableFilters, SortingConfig } from '../hooks';
 import React, { useMemo, useCallback } from 'react';
 import { TextFilter, SelectFilter } from './index';
 
@@ -37,8 +37,7 @@ export interface BaseTableProps<T> {
     onCreateClick?: () => void;
     renderFilters?: () => React.ReactNode;
     renderHeader?: () => React.ReactNode;
-    sortField?: string;
-    sortDirection?: 'asc' | 'desc';
+    sortConfig?: SortingConfig[];
     onSort?: (field: string) => void;
     filtersConfig?: FilterConfig[];
     headerConfig?: HeaderConfig;
@@ -52,7 +51,7 @@ export default function BaseTable<T>(props: BaseTableProps<T>) {
     const {
         data, loading, error, columns, currentPage, totalPages, totalCount, onPageChange, onRetry, size = 'm',
         showCreateButton = false, createButtonText = 'Create', onCreateClick, renderFilters, renderHeader,
-        sortField, sortDirection, onSort, filtersConfig, headerConfig, filters, updateFilter, hidePagination = false,
+        sortConfig = [], onSort, filtersConfig, headerConfig, filters, updateFilter, hidePagination = false,
         emptyMessage = 'Nothing found matching the current filters'
     } = props;
 
@@ -234,6 +233,17 @@ export default function BaseTable<T>(props: BaseTableProps<T>) {
         );
     }
 
+    const getSortIndicator = (columnKey: string): string | null => {
+        const index = sortConfig.findIndex(s => s.propertyName === columnKey);
+        if (index === -1) return null;
+        const direction = sortConfig[index].sortType;
+        const arrow = direction === 'asc' ? '↑' : '↓';
+        if (sortConfig.length > 1) {
+            return `${arrow}${index + 1}`;
+        }
+        return arrow;
+    };
+
     return (
         <div className={`table-responsive ${size === 's' ? 'table-sm' : ''}`}>
             { generatedFilters || renderFilters?.() }
@@ -250,11 +260,13 @@ export default function BaseTable<T>(props: BaseTableProps<T>) {
                                 style={{ cursor: column.sortable ? 'pointer' : 'default', position: 'relative' }}
                             >
                                 {column.header}
-                                {column.sortable && sortField === column.key && (
-                                    <span className='ms-1'>
-                                        {sortDirection === 'asc' ? '↑' : '↓'}
-                                    </span>
-                                )}
+                                {column.sortable &&  (() => {
+                                    const indicator = getSortIndicator(column.key);
+                                    if (indicator) {
+                                        return <span className='ms-1'>{indicator}</span>;
+                                    }
+                                    return null;
+                                })()}
                             </th>
                         ))}
                     </tr>
