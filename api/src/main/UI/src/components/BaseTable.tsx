@@ -1,16 +1,19 @@
 import { Table, Pagination, Spinner, Alert, Container, Button, Row, Col } from 'react-bootstrap';
+import { TextFilter, SelectFilter, DateFilter, NumberFilter } from './index';
 import { TableColumn, TableFilters, SortingConfig } from '../hooks';
-import { TextFilter, SelectFilter, DateFilter } from './index';
 import React, { useMemo, useCallback } from 'react';
 
 export interface FilterConfig {
     key: string;
-    type: 'text' | 'select' | 'date';
+    type: 'text' | 'select' | 'date' | 'number';
     label: string;
     placeholder?: string;
     options?: Array<{value: string; label: string}>;
     showHelpText?: boolean;
     helpText?: string;
+    min?: number;
+    max?: number;
+    step?: number;
 }
 
 export interface HeaderConfig {
@@ -155,6 +158,20 @@ export default function BaseTable<T>(props: BaseTableProps<T>) {
                                     onChange={(value) => updateFilter(filter.key, value)}
                                     label={filter.label}
                                     placeholder={filter.placeholder}
+                                />
+                            </Col>
+                        );
+                    } else if (filter.type === 'number') {
+                        return (
+                            <Col key={filter.key} md={4}>
+                                <NumberFilter
+                                    value={filters?.[filter.key] || ''}
+                                    onChange={(value) => updateFilter(filter.key, value)}
+                                    label={filter.label}
+                                    placeholder={filter.placeholder}
+                                    min={filter.min}
+                                    max={filter.max}
+                                    step={filter.step}
                                 />
                             </Col>
                         );

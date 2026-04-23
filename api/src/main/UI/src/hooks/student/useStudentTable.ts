@@ -129,15 +129,19 @@ export function useStudentTable({ itemsPerPage = 10 }: UseStudentTableProps) {
         },
         {
             key: 'minPoints',
-            type: 'text' as const,
+            type: 'number' as const,
             label: 'Min points',
             placeholder: '0',
+            min: 0,
+            step: 1,
         },
         {
             key: 'maxPoints',
-            type: 'text' as const,
+            type: 'number' as const,
             label: 'Max points',
             placeholder: '1000',
+            min: 0,
+            step: 1,
         },
     ];
 

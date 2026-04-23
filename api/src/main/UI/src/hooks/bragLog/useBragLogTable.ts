@@ -132,15 +132,19 @@ export function useBragLogTable({ itemsPerPage = 10 }: UseBragLogTableProps) {
         },
         {
             key: 'minPoints',
-            type: 'text' as const,
+            type: 'number' as const,
             label: 'Min Points',
             placeholder: '0',
+            min: 0,
+            step: 1,
         },
         {
             key: 'maxPoints',
-            type: 'text' as const,
+            type: 'number' as const,
             label: 'Max Points',
             placeholder: '1000',
+            min: 0,
+            step: 1,
         },
         {
             key: 'startDate',

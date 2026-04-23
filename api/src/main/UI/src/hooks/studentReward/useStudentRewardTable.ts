@@ -104,15 +104,19 @@ export function useStudentRewardTable({ itemsPerPage = 10 }: UseStudentRewardTab
         },
         {
             key: 'minPointsUsed',
-            type: 'text' as const,
+            type: 'number' as const,
             label: 'Min Points Used',
             placeholder: '0',
+            min: 0,
+            step: 1,
         },
         {
             key: 'maxPointsUsed',
-            type: 'text' as const,
+            type: 'number' as const,
             label: 'Max Points Used',
             placeholder: '1000',
+            min: 0,
+            step: 1,
         },
         {
             key: 'startDate',

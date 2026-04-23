@@ -1,4 +1,4 @@
-export { SelectFilter, TextFilter, DateFilter } from './filters';
+export { SelectFilter, TextFilter, DateFilter, NumberFilter } from './filters';
 export { AdminForm, CreateAdminModal, EditAdminModal, DeleteAdminModal,
     type AdminTableProps, AdminTable } from './admins';
 export { TeacherForm, CreateTeacherModal, EditTeacherModal, DeleteTeacherModal, TeacherTable } from './teachers';
