@@ -1,19 +1,19 @@
 import { LeaderboardTimeframeSelector, BaseTable } from '../index';
 import { useLeaderboardTable } from '../../hooks';
-import { LeaderboardEntry } from '../../services';
+import { LeaderboardEntryDTO } from '../../services';
 import { Container } from 'react-bootstrap';
 
 interface LeaderboardTableProps {
     itemsPerPage?: number;
 }
 
-export default function LeaderboardTable (props: LeaderboardTableProps) {
-    const { itemsPerPage = 10 } = props;
+export default function LeaderboardTable ({ itemsPerPage = 10 }: LeaderboardTableProps) {
     const {
         data, loading, error, filters, updateFilter, columns,
         retry, currentTimeframe, handleTimeframeChange, filtersConfig, headerConfig,
-        currentPage, totalPages, setCurrentPage, totalCount
-    } = useLeaderboardTable({ itemsPerPage: itemsPerPage });
+        currentPage, totalPages, setCurrentPage, totalCount,
+        sortConfig, handleSort,
+    } = useLeaderboardTable({ itemsPerPage });
 
     const enhancedHeaderConfig = {
        ...headerConfig,
@@ -27,7 +27,7 @@ export default function LeaderboardTable (props: LeaderboardTableProps) {
 
     return (
         <Container fluid className='mt-3 pt-2 px-lg-5 mb-4'>
-            <BaseTable<LeaderboardEntry>
+            <BaseTable<LeaderboardEntryDTO>
                 data={data}
                 loading={loading}
                 error={error}
@@ -41,7 +41,8 @@ export default function LeaderboardTable (props: LeaderboardTableProps) {
                 headerConfig={enhancedHeaderConfig}
                 filters={filters}
                 updateFilter={updateFilter}
-
+                sortConfig={sortConfig}
+                onSort={handleSort}
             />
         </Container>
     );
