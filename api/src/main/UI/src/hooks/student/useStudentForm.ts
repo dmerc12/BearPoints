@@ -23,7 +23,7 @@ export const useStudentForm = ({ show, isEdit = false, student }: UseStudentForm
         firstName: '',
         lastName: '',
         email: '',
-        teacherId: '',
+        teacherId: -1,
     };
 
     const form = useForm({ initialData, validationRules: studentValidationRules });
@@ -50,7 +50,7 @@ export const useStudentForm = ({ show, isEdit = false, student }: UseStudentForm
                 firstName: student.user.firstName,
                 lastName: student.user.lastName,
                 email: student.user.email,
-                teacherId: student.teacher?.id?.toString() ?? ''
+                teacherId: student.teacher?.id ?? -1
             });
         }
     }, [show, isEdit, student, form.setFormData, form]);

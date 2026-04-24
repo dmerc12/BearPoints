@@ -1,5 +1,5 @@
 import { useAppDispatch, useAppSelector, removeStudent } from '../../store';
-import { Student, Role } from '../../services';
+import { StudentDTO, Role } from '../../services';
 import { useEffect, useState } from 'react';
 import { Alert } from 'react-bootstrap';
 import { fullName } from '../../utils';
@@ -7,7 +7,7 @@ import { BaseModal } from '../index';
 
 interface DeleteStudentModalProps {
     show: boolean;
-    student: Student | null;
+    student: StudentDTO | null;
     onCancel: () => void;
     onSuccess: () => void;
 }
@@ -20,13 +20,12 @@ export function DeleteStudentModal({ show, student, onCancel, onSuccess }: Delet
     const [authError, setAuthError] = useState<string>('');
 
     const isAdmin = currentUser?.role === Role.ADMIN;
-    const isTeacher = currentUser?.role === Role.TEACHER;
     const isAuthorized = !authError;
     const disableConfirm = loading || !isAuthorized;
 
     useEffect(() => {
-        if (show && !isAdmin && isTeacher && student && student.teacher.id !== currentUser?.teacherId) {
-            setAuthError('You can only delete students in your own class');
+        if (show && !isAdmin && student) {
+            setAuthError('Only administrators can delete students');
             const timer = setTimeout(() => {
                 setAuthError('');
             }, 3000);
@@ -34,10 +33,10 @@ export function DeleteStudentModal({ show, student, onCancel, onSuccess }: Delet
         } else {
             setAuthError('');
         }
-    }, [show, isAdmin, isTeacher, student, currentUser]);
+    }, [show, isAdmin, student]);
 
     const handleConfirmDelete = () => {
-        if (!student || authError) return;
+        if (!student || authError || student.id === undefined || student.id === null) return;
         dispatch(removeStudent(student.id))
             .unwrap()
             .then(() => {

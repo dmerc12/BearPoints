@@ -178,7 +178,8 @@ export function useStudentTable({ itemsPerPage = 10 }: UseStudentTableProps) {
         handleDeleteItem: (item: StudentDTO) => void;
         handleCloseModals: () => void;
         handleSuccess: () => void;
+        isAdmin: boolean;
     }
 
-    return { ...crudTable, filtersConfig, headerConfig };
+    return { ...crudTable, filtersConfig, headerConfig, isAdmin };
 }

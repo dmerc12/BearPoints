@@ -1,7 +1,8 @@
+import { StudentDTO, Role, TeacherDTO } from '../../services';
 import { useAppDispatch, addStudent } from '../../store';
-import { Student, Role, Teacher } from '../../services';
 import { BaseModal, StudentForm } from '../index';
 import { useStudentForm  } from '../../hooks';
+import { useEffect } from 'react';
 
 interface CreateStudentModalProps {
     show: boolean;
@@ -13,9 +14,19 @@ export function CreateStudentModal({ show, onCancel, onSuccess }: CreateStudentM
     const dispatch = useAppDispatch();
 
     const {
-        formData, formErrors, teachers, isAdmin, isTeacher, teacherDisplayValue, error, isLoading, handleInputChange,
-        handleSelectChange, validateForm, resetForm
-    } = useStudentForm({ show });
+        formData, formErrors, setFormErrors, teachers, isAdmin, error, isLoading, handleInputChange,
+        handleSelectChange, validateForm, resetForm } = useStudentForm({ show });
+
+    useEffect(() => {
+        if (show && !isAdmin) {
+            onCancel();
+            setFormErrors({ general: 'Only administrators can update students' });
+            const timer = setTimeout(() => {
+                setFormErrors({});
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [show, isAdmin, onCancel, setFormErrors]);
 
     const handleSubmit = () => {
         if (!validateForm()) return;
@@ -26,9 +37,9 @@ export function CreateStudentModal({ show, onCancel, onSuccess }: CreateStudentM
             lastName: formData.lastName,
             role: Role.STUDENT
         }
-        const studentData: Partial<Student> = {
+        const studentData: StudentDTO = {
             user: userData,
-            teacher: { id: parseInt(formData.teacherId) } as Teacher
+            teacher: { id: formData.teacherId } as TeacherDTO,
         };
         dispatch(addStudent(studentData))
             .unwrap()
@@ -64,9 +75,7 @@ export function CreateStudentModal({ show, onCancel, onSuccess }: CreateStudentM
                 error={error}
                 onInputChange={handleInputChange}
                 onSelectChange={handleSelectChange}
-                teacherDisplayValue={teacherDisplayValue}
-                showTeacherField={isAdmin || isTeacher}
-                isTeacherMode={isTeacher}
+                showTeacherField={isAdmin}
             />
         </BaseModal>
     );

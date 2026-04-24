@@ -1,24 +1,26 @@
-import { Teacher, StudentFormData } from '../../services';
 import { Form, Row, Col, Alert } from 'react-bootstrap';
+import { TeacherDTO } from '../../services';
 import { fullName } from '../../utils';
 import React from 'react';
 
 interface StudentFormProps {
-    formData: StudentFormData;
+    formData: {
+        firstName: string;
+        lastName: string;
+        email: string;
+        teacherId: number;
+    };
     formErrors: Record<string, string>;
-    teachers: Teacher[];
+    teachers: TeacherDTO[];
     loading: boolean;
     error?: string | null;
     onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onSelectChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-    teacherDisplayValue?: string;
     showTeacherField?: boolean;
-    isTeacherMode?: boolean;
 }
 
 export function StudentForm({ formData, formErrors, teachers, loading, onInputChange, onSelectChange,
-                                teacherDisplayValue, showTeacherField = true,
-                                isTeacherMode = false, error }: StudentFormProps) {
+                                showTeacherField = true, error }: StudentFormProps) {
     return (
         <Form>
             {formErrors.general && <Alert variant='danger'>{formErrors.general}</Alert>}
@@ -77,13 +79,7 @@ export function StudentForm({ formData, formErrors, teachers, loading, onInputCh
             {showTeacherField && (
                 <Form.Group className='mb-3'>
                     <Form.Label>Teacher</Form.Label>
-                    {isTeacherMode ? (
-                        <Form.Control
-                            type='text'
-                            value={teacherDisplayValue || 'N/A'}
-                            disabled
-                        />
-                    ) : loading ? (
+                    {loading ? (
                         <Form.Control
                             type='text'
                             value='Loading teachers...'
@@ -97,12 +93,15 @@ export function StudentForm({ formData, formErrors, teachers, loading, onInputCh
                             isInvalid={!!formErrors.teacherId}
                             disabled={loading}
                         >
-                            <option value=''>Select a teacher</option>
-                            {teachers.map((teacher: Teacher) => (
-                                <option key={teacher.id} value={teacher.id}>
-                                    {fullName(teacher.user)}
-                                </option>
-                            ))}
+                            <option value={-1}>Select a teacher</option>
+                            {teachers.map((teacher: TeacherDTO) => {
+                                if (teacher.id === undefined || teacher.id === null) return;
+                                return (
+                                    <option key={teacher.id} value={teacher.id}>
+                                        {fullName(teacher.user)}
+                                    </option>
+                                );
+                            })}
                         </Form.Select>
                     )}
                     <Form.Control.Feedback type='invalid'>

@@ -2,7 +2,7 @@ import { CreateUserModal, EditUserModal, DeleteUserModal, CrudTable } from '../i
 import { useUserTable } from '../../hooks';
 import { UserDTO } from '../../services';
 
-export interface UserTableProps {
+interface UserTableProps {
     itemsPerPage?: number;
     showFilters?: boolean;
     size?: 's' | 'm' | 'l';

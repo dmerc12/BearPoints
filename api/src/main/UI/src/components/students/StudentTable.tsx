@@ -3,8 +3,8 @@ import { useMemo, useCallback, useRef } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import { useNavigate } from 'react-router-dom';
 import { useStudentTable } from '../../hooks';
+import { StudentDTO } from '../../services';
 import { QRCodeSVG } from 'qrcode.react';
-import { Student } from '../../services';
 import { Button } from 'react-bootstrap';
 
 interface StudentTableProps {
@@ -25,7 +25,7 @@ export default function StudentTable (props: StudentTableProps) {
     const reactToPrintFn = useReactToPrint({ contentRef });
 
     const {
-        data, loading, error, filters, updateFilter, canManageStudent, columns,
+        data, loading, error, filters, updateFilter, sortConfig, handleSort, isAdmin, columns,
         showCreateModal, editingItem, deletingItem, handleCreateItem, handleEditItem, handleDeleteItem,
         handleCloseModals, retry, handleSuccess, filtersConfig, headerConfig,
         currentPage, totalPages, setCurrentPage, totalCount
@@ -61,16 +61,19 @@ export default function StudentTable (props: StudentTableProps) {
             enhanced.push({
                 key: 'qrCode',
                 header: 'QR Code',
-                render: (student: Student) => (
-                    <QRCodeSVG
-                        value={`${import.meta.env.VITE_APP_URL}/behavior?token=${student.token}`}
-                        size={ qrCodeSize }
-                        onClick={ () => handleQRScan(student.token) }
-                        bgColor='#FFFFFF'
-                        fgColor='#000000'
-                        level='L'
-                    />
-                )
+                render: (student: StudentDTO) => {
+                    if (student.token === undefined || student.token === null) return null;
+                    return (
+                        <QRCodeSVG
+                            value={`${import.meta.env.VITE_APP_URL}/behavior?token=${student.token}`}
+                            size={qrCodeSize}
+                            onClick={() => handleQRScan(student.token as string)}
+                            bgColor='#FFFFFF'
+                            fgColor='#000000'
+                            level='L'
+                        />
+                    );
+                }
             });
         }
         return enhanced;
@@ -78,7 +81,7 @@ export default function StudentTable (props: StudentTableProps) {
 
     return (
         <>
-            <CrudTable<Student>
+            <CrudTable<StudentDTO>
                 data={data}
                 loading={loading}
                 error={error}
@@ -93,8 +96,10 @@ export default function StudentTable (props: StudentTableProps) {
                 filters={filters}
                 updateFilter={updateFilter}
                 size={size}
-                canEdit={canManageStudent}
-                canDelete={canManageStudent}
+                sortConfig={sortConfig}
+                onSort={handleSort}
+                canEdit={isAdmin}
+                canDelete={isAdmin}
                 onEditItem={handleEditItem}
                 onDeleteItem={handleDeleteItem}
                 onCreateClick={handleCreateItem}
