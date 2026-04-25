@@ -1,9 +1,12 @@
-import { BehaviorTypeFormData } from '../../services';
 import { Form, Row, Col } from 'react-bootstrap';
 import React from 'react';
 
 interface BehaviorTypeFormProps {
-    formData: BehaviorTypeFormData;
+    formData: {
+        name: string,
+        pointValue: number,
+        active: boolean,
+    };
     formErrors: Record<string, string>;
     loading: boolean;
     onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;

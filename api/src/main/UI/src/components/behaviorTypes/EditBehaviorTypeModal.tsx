@@ -15,19 +15,19 @@ interface EditBehaviorTypeModalProps {
 export function EditBehaviorTypeModal({ show, behaviorType, onCancel, onSuccess }: EditBehaviorTypeModalProps) {
     const dispatch = useAppDispatch();
 
-    const { formData, formErrors, setFormErrors, error, loading, handleInputChange, handleSelectChange,
+    const { formData, formErrors, setFormErrors, error, loading, isAdmin, handleInputChange, handleSelectChange,
         handleCheckboxChange, validateForm, resetForm } = useBehaviorTypeForm({ show, isEdit: true, behaviorType });
     
     useEffect(() => {
-        if (show && behaviorType && behaviorType.active === undefined) {
+        if (show && behaviorType && !isAdmin) {
             onCancel();
-            setFormErrors({ 'general': 'Cannot edit this behavior type' });
+            setFormErrors({ 'general': 'Only administrators can edit behavior types' });
             const timer = setTimeout(() => {
                 setFormErrors({});
             }, 3000);
             return () => clearTimeout(timer);
         }
-    }, [show, behaviorType, onCancel, setFormErrors]);
+    }, [show, behaviorType, onCancel, setFormErrors, isAdmin]);
     
     const handleSubmit = () => {
         if (!validateForm() || !behaviorType || !behaviorType.id) return;

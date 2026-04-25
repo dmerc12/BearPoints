@@ -1,5 +1,5 @@
 import { behaviorTypeValidationRules } from '../../utils';
-import { BehaviorTypeDTO } from '../../services';
+import { BehaviorTypeDTO, Role } from '../../services';
 import { useAppSelector } from '../../store';
 import { useForm } from '../index';
 import { useEffect } from 'react';
@@ -13,6 +13,7 @@ export interface UseBehaviorTypeFormProps {
 export const useBehaviorTypeForm = ({ show, isEdit = false, behaviorType }: UseBehaviorTypeFormProps) => {
     const { loading, error } = useAppSelector(state => state.behaviorTypes);
     const currentUser = useAppSelector(state => state.user.data);
+    const isAdmin = currentUser?.role === Role.ADMIN;
 
     const initialData = {
         name: '',
@@ -49,6 +50,7 @@ export const useBehaviorTypeForm = ({ show, isEdit = false, behaviorType }: UseB
         currentUser,
         error,
         loading,
+        isAdmin,
         handleInputChange: form.handleInputChange,
         handleSelectChange: form.handleSelectChange,
         handleCheckboxChange: form.handleCheckboxChange,
