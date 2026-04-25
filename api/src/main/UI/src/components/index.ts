@@ -32,6 +32,13 @@ export {
     BehaviorTypeTable
 } from './behaviorTypes';
 export {
+    RewardItemForm,
+    CreateRewardItemModal,
+    EditRewardItemModal,
+    DeleteRewardItemModal,
+    RewardItemTable,
+} from './rewardItems';
+export {
     BragLogForm,
     CreateBragLogModal,
     EditBragLogModal,
