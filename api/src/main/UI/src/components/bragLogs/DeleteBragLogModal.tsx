@@ -1,5 +1,4 @@
 import { useAppDispatch, useAppSelector, removeBragLog } from '../../store';
-import { formatName, fullName } from '../../utils';
 import { BragLogDTO, Role } from '../../services';
 import { useEffect, useState } from 'react';
 import { Alert } from 'react-bootstrap';
@@ -68,11 +67,14 @@ export function DeleteBragLogModal({ show, bragLog, onCancel, onSuccess }: Delet
             {bragLog && (
                 <div className='mt-3 p-3 bg-light rounded'>
                     <h6>Brag Log Details:</h6>
-                    <p><strong>Student:</strong> {fullName(bragLog.student)}</p>
-                    <p><strong>Teacher:</strong> {formatName(bragLog.teacher)}</p>
-                    <p><strong>Behaviors:</strong> {bragLog.behaviors.map(b => b.name).join(', ')}</p>
+                    <p><strong>Student:</strong> {bragLog.studentName}</p>
+                    <p><strong>Teacher:</strong> {bragLog.teacherName}</p>
+                    <p><strong>Behaviors:</strong> {bragLog.behaviors?.map(b => b.name)
+                        .join(', ')}</p>
                     <p><strong>Points Generated:</strong> {bragLog.pointsGenerated}</p>
-                    <p><strong>Date:</strong> {new Date(bragLog.timestamp).toLocaleDateString()}</p>
+                    <p><strong>Date:</strong> {bragLog.timestamp
+                        ? new Date(bragLog.timestamp).toLocaleDateString()
+                        : 'N/A'}</p>
                     {bragLog.notes && (
                         <p><strong>Notes:</strong> {bragLog.notes}</p>
                     )}

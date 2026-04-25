@@ -13,7 +13,7 @@ interface BragLogTableProps {
 
 export default function BragLogTable({ itemsPerPage = 10, showFilters = true, size = 'm' }: BragLogTableProps) {
     const {
-        data, loading, error, filters, updateFilter, isAdmin, columns,
+        data, loading, error, filters, updateFilter, isAdmin, columns, sortConfig, handleSort,
         showCreateModal, editingItem, deletingItem, handleCreateItem, handleEditItem, handleDeleteItem,
         handleCloseModals, retry, handleSuccess, filtersConfig, headerConfig,
         currentPage, totalPages, setCurrentPage, totalCount
@@ -25,7 +25,7 @@ export default function BragLogTable({ itemsPerPage = 10, showFilters = true, si
             key: 'points',
             header: 'Points',
             render: (bragLog: BragLogDTO) => (
-                <Badge bg={getBragLogPointsVariant(bragLog.pointsGenerated)}>
+                <Badge bg={getBragLogPointsVariant(bragLog.pointsGenerated ? bragLog.pointsGenerated : 0)}>
                     {bragLog.pointsGenerated}
                 </Badge>
             ),
@@ -50,6 +50,8 @@ export default function BragLogTable({ itemsPerPage = 10, showFilters = true, si
             filters={filters}
             updateFilter={updateFilter}
             size={size}
+            sortConfig={sortConfig}
+            onSort={handleSort}
             canEdit={isAdmin}
             canDelete={isAdmin}
             onEditItem={handleEditItem}

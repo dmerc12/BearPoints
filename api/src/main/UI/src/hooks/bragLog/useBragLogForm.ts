@@ -40,6 +40,14 @@ export const useBragLogForm = ({ show, isEdit = false, bragLog, isPublic = false
         validationRules: bragLogValidationRules
     });
 
+    const totalPoints = useMemo(() => {
+        const ids = form.formData?.behaviorIds || [];
+        return ids.reduce((sum, id) => {
+            const behavior = behaviorTypes.find(bt => bt.id === id);
+            return sum + (behavior?.pointValue || 0);
+        }, 0);
+    }, [form.formData.behaviorIds, behaviorTypes]);
+
     useEffect(() => {
         if (show && !isEdit && !isPublic && currentUser) {
             const name = fullName(currentUser);
@@ -130,6 +138,8 @@ export const useBragLogForm = ({ show, isEdit = false, bragLog, isPublic = false
         behaviorTypes: behaviorTypes.filter(bt => bt.active),
         selectedTeacherId,
         setSelectedTeacherId,
+        selectedStudent,
+        totalPoints,
         handleInputChange: form.handleInputChange,
         handleSelectChange: form.handleSelectChange,
         toggleBehavior,

@@ -1,7 +1,7 @@
-import { BragLogDTO, Student, Teacher, BehaviorTypeDTO } from '../../services';
 import { useAppDispatch, modifyBragLog } from '../../store';
 import { BaseModal, BragLogForm } from '../index';
 import { useBragLogForm } from '../../hooks';
+import { BragLogDTO } from '../../services';
 import { Alert } from 'react-bootstrap';
 
 interface EditBragLogModalProps {
@@ -14,17 +14,18 @@ interface EditBragLogModalProps {
 export function EditBragLogModal({ show, bragLog, onCancel, onSuccess }: EditBragLogModalProps) {
     const dispatch = useAppDispatch();
 
-    const { formData, formErrors, error, loading, isAdmin, students, teachers, behaviorTypes, handleInputChange,
-        handleSelectChange, toggleBehavior, validateForm, resetForm } = useBragLogForm({ show, isEdit: true, bragLog });
+    const { formData, formErrors, error, loading, isAdmin, students, teachers, behaviorTypes, totalPoints,
+        handleInputChange, handleSelectChange, toggleBehavior, validateForm, resetForm } = useBragLogForm(
+            { show, isEdit: true, bragLog });
 
     const handleSubmit = () => {
         if (!validateForm() || !bragLog || !bragLog.id) return;
-        const bragLogData = {
-            student: { id: parseInt(formData.studentId) } as Student,
-            teacher: { id: parseInt(formData.teacherId) } as Teacher,
-            behaviors: formData.behaviorIds.map(id => ({ id: parseInt(id) } as BehaviorTypeDTO)),
+        const bragLogData: BragLogDTO = {
+            studentId: formData.studentId,
+            teacherId: formData.teacherId,
+            behaviorIds: formData.behaviorIds,
             notes: formData.notes,
-            pointsGenerated: formData.pointsGenerated
+            submitterName: formData.submitterName
         };
         dispatch(modifyBragLog({ id: bragLog.id, bragLogData }))
             .unwrap()
@@ -61,6 +62,7 @@ export function EditBragLogModal({ show, bragLog, onCancel, onSuccess }: EditBra
                 isAdmin={isAdmin}
                 students={students}
                 teachers={teachers}
+                totalPoints={totalPoints}
                 behaviorTypes={behaviorTypes}
                 onInputChange={handleInputChange}
                 onSelectChange={handleSelectChange}

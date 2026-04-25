@@ -1,47 +1,35 @@
-import {Form, Alert, Spinner, Card, Button, Container} from 'react-bootstrap';
-import { useAppDispatch, addPublicBragLog } from '../../store';
-import { PublicBragLogFormData } from '../../services';
+import { Form, Alert, Spinner, Card, Button, Container } from 'react-bootstrap';
+import { useAppDispatch, addBragLog } from '../../store';
 import { useBragLogForm } from '../../hooks';
+import { BragLogDTO } from '../../services';
 import { FormEvent, useState } from 'react';
 import { fullName } from '../../utils';
 import { BragLogForm } from '../index';
 
-interface BehaviorFormProps {
+interface PublicBragLogFormProps {
     studentToken: string;
 }
 
-export default function PublicBragLogForm ({ studentToken }: BehaviorFormProps) {
+export default function PublicBragLogForm ({ studentToken }: PublicBragLogFormProps) {
     const dispatch = useAppDispatch();
 
     const [ success, setSuccess ] = useState(false);
 
-    const { formData, formErrors, loading, error, behaviorTypes, handleInputChange, toggleBehavior,
-        publicStudent, resetForm } = useBragLogForm({ show: true, isPublic: true, studentToken });
-
-    if (!publicStudent) {
-        return (
-            <Alert variant='danger' className='mb-4'>
-                Student not found. Please check your link.
-            </Alert>
-        );
-    }
-
-    const points = formData.behaviorIds.reduce((total, id) => {
-        const behavior = behaviorTypes.find(bt => bt.id.toString() === id);
-        return total + (behavior?.pointValue || 0);
-    }, 0);
+    const { formData, formErrors, loading, error, students, teachers, behaviorTypes, totalPoints, selectedStudent,
+        handleInputChange, toggleBehavior, resetForm } = useBragLogForm({ show: true, isPublic: true, studentToken });
 
     const handleSubmit = async (event: FormEvent) => {
         event.preventDefault();
         try {
-            const bragLogData: PublicBragLogFormData = {
-                studentId: publicStudent.id,
-                teacherId: publicStudent.teacher.id,
-                behaviorIds: formData.behaviorIds.map(id => parseInt(id)),
-                notes: formData.notes
+
+            const bragLogData: BragLogDTO = {
+                studentId: formData.studentId,
+                behaviorIds: formData.behaviorIds,
+                notes: formData.notes,
+                submitterName: formData.submitterName,
             };
-            const result = await dispatch(addPublicBragLog(bragLogData));
-            if (addPublicBragLog.fulfilled.match(result)) {
+            const result = await dispatch(addBragLog(bragLogData));
+            if (addBragLog.fulfilled.match(result)) {
                 resetForm();
                 setSuccess(true);
                 const timer = setTimeout(() => {
@@ -50,7 +38,7 @@ export default function PublicBragLogForm ({ studentToken }: BehaviorFormProps) 
                 return () => clearTimeout(timer);
             }
         } catch (error) {
-            console.error('Submission failed with error:', error);
+            console.error('Submission failed:', error);
         }
     };
 
@@ -63,7 +51,7 @@ export default function PublicBragLogForm ({ studentToken }: BehaviorFormProps) 
         );
     }
 
-    if (!publicStudent) {
+    if (!selectedStudent) {
         return (
             <Container className='mt-4'>
                 <Alert variant='danger'>Invalid or expired QR code</Alert>
@@ -74,7 +62,7 @@ export default function PublicBragLogForm ({ studentToken }: BehaviorFormProps) 
     return (
         <Card className='mb-4'>
             <Card.Header>
-                <h3>Submit Bear Brag for {fullName(publicStudent)}</h3>
+                <h3>Submit Bear Brag for {fullName(selectedStudent)}</h3>
             </Card.Header>
             <Card.Body>
                 { success &&
@@ -88,18 +76,19 @@ export default function PublicBragLogForm ({ studentToken }: BehaviorFormProps) 
                         formErrors={formErrors}
                         loading={loading}
                         isAdmin={false}
-                        students={[publicStudent]}
-                        teachers={[publicStudent.teacher]}
+                        students={students}
+                        teachers={teachers}
                         behaviorTypes={behaviorTypes}
+                        totalPoints={totalPoints}
+                        publicStudent={selectedStudent}
+                        isPublic={true}
                         onInputChange={handleInputChange}
                         onSelectChange={() => {}}
                         onToggleBehavior={toggleBehavior}
-                        isPublic={true}
-                        publicStudent={publicStudent}
                     />
                     <div className='d-flex justify-content-between align-items-center'>
                         <div>
-                            <strong>Points: { points }</strong>
+                            <strong>Points: { totalPoints }</strong>
                         </div>
                         <Button variant='primary'
                                 type='submit'

@@ -11,6 +11,13 @@ export {
     default as BaseTable
 } from './BaseTable';
 export {
+    UserForm,
+    CreateUserModal,
+    EditUserModal,
+    DeleteUserModal,
+    UserTable
+} from './users';
+export {
     TeacherForm,
     CreateTeacherModal,
     EditTeacherModal,
@@ -18,12 +25,20 @@ export {
     TeacherTable,
 } from './teachers';
 export {
-    UserForm,
-    CreateUserModal,
-    EditUserModal,
-    DeleteUserModal,
-    UserTable
-} from './users';
+    BehaviorTypeForm,
+    CreateBehaviorTypeModal,
+    EditBehaviorTypeModal,
+    DeleteBehaviorTypeModal,
+    BehaviorTypeTable
+} from './behaviorTypes';
+export {
+    BragLogForm,
+    CreateBragLogModal,
+    EditBragLogModal,
+    DeleteBragLogModal,
+    BragLogTable,
+    PublicBragLogForm
+} from './bragLogs';
 export {
     StudentForm,
     CreateStudentModal,
@@ -32,7 +47,3 @@ export {
     QRCodesPrint,
     StudentTable
 } from './students';
-export { BehaviorTypeForm, CreateBehaviorTypeModal, EditBehaviorTypeModal,
-    DeleteBehaviorTypeModal, BehaviorTypeTable } from './behaviorTypes';
-export { BragLogForm, CreateBragLogModal, EditBragLogModal, DeleteBragLogModal, BragLogTable,
-    PublicBragLogForm } from './bragLogs';
