@@ -41,7 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *
  * @see TestDataInitializer
  * @see BaseIntegrationTest
- * @version 1.5
+ * @version 1.6
  * @author Dylan Mercer
  */
 @DisplayName("Teacher Integration Tests")
@@ -245,7 +245,7 @@ public class TeacherTests extends BaseIntegrationTest {
     @DisplayName("POST /teachers - Create teacher")
     class CreateTeacher {
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("creates teacher with valid data")
         void createdTeacher_withValidData() throws Exception {
             String uniqueEmail = "unique-teacher-" + System.currentTimeMillis() + "@okcps.org";
@@ -275,7 +275,7 @@ public class TeacherTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with invalid email format")
         void returns400_withInvalidEmailFormat() throws Exception {
             String teacherJson = """
@@ -299,7 +299,7 @@ public class TeacherTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with invalid email domain")
         void returns400_withInvalidEmailDomain() throws Exception {
             String teacherJson = """
@@ -323,7 +323,7 @@ public class TeacherTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with duplicate email")
         void returns400_withDuplicateEmail() throws Exception {
             Optional<User> teacherUser = userDAO.findByRole(Role.TEACHER, PageRequest.of(0, 1))
@@ -352,7 +352,7 @@ public class TeacherTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with invalid grade level")
         void returns400_withInvalidGradeLevel() throws Exception {
             String teacherJson = """
@@ -376,7 +376,7 @@ public class TeacherTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with blank first name")
         void returns400_withBlankFirstName() throws Exception {
             String teacherJson = """
@@ -400,7 +400,7 @@ public class TeacherTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with first name too long")
         void returns400_withFirstNameTooLong() throws Exception {
             String longName = "A".repeat(101);
@@ -425,7 +425,7 @@ public class TeacherTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with blank last name")
         void returns400_withBlankLastName() throws Exception {
             String teacherJson = """
@@ -449,7 +449,7 @@ public class TeacherTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with last name too long")
         void returns400_withLastNameTooLong() throws Exception {
             String longName = "A".repeat(101);
@@ -474,8 +474,8 @@ public class TeacherTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "STAFF"})
-        @DisplayName("returns 403 when user is not ADMIN")
+        @WithMockUser(roles = {"STUDENT", "TEACHER"})
+        @DisplayName("returns 403 when user is not ADMIN or STAFF")
         void returns403_whenUserIsNotAdmin() throws Exception {
             String uniqueEmail = "unique-teacher-" + System.currentTimeMillis() + "@okcps.org";
             String teacherJson = """
@@ -501,7 +501,7 @@ public class TeacherTests extends BaseIntegrationTest {
     @DisplayName("PUT /teachers/{id} - Update teacher")
     class UpdateTeacher {
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("updates teacher with valid data")
         void updatedTeacher_withValidData() throws Exception {
             Optional<Teacher> teacher = teacherDAO.findAll(PageRequest.of(0, 1))
@@ -536,7 +536,7 @@ public class TeacherTests extends BaseIntegrationTest {
         @DisplayName("PUT /teachers/{id} - Email update scenarios")
         class UpdateTeacherEmailTests {
             @Test
-            @WithMockUser(roles = "ADMIN")
+            @WithMockUser(roles = {"ADMIN", "STAFF"})
             @DisplayName("updates teacher when email is unchanged")
             void updatesTeacher_whenEmailUnchanged() throws Exception {
                 Optional<Teacher> teacher = teacherDAO.findAll(PageRequest.of(0, 1))
@@ -565,7 +565,7 @@ public class TeacherTests extends BaseIntegrationTest {
             }
 
             @Test
-            @WithMockUser(roles = "ADMIN")
+            @WithMockUser(roles = {"ADMIN", "STAFF"})
             @DisplayName("returns 409 when updating email to existing teacher's email")
             void returns409_whenUpdatingToExistingEmail() throws Exception {
                 Page<Teacher> teachers = teacherDAO.findAll(PageRequest.of(0, 2));
@@ -593,7 +593,7 @@ public class TeacherTests extends BaseIntegrationTest {
             }
 
             @Test
-            @WithMockUser(roles = "ADMIN")
+            @WithMockUser(roles = {"ADMIN", "STAFF"})
             @DisplayName("updates teacher when email is changed to new unique email")
             void updatesTeacher_whenEmailChangedToUnique() throws Exception {
                 Optional<Teacher> teacher = teacherDAO.findAll(PageRequest.of(0, 1))
@@ -622,7 +622,7 @@ public class TeacherTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 404 when updating non-existent teacher")
         void returns404_whenUpdatingNonExistentTeacher() throws Exception {
             Long nonExistentId = 9999L;
@@ -647,8 +647,8 @@ public class TeacherTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"TEACHER", "STUDENT", "STAFF"})
-        @DisplayName("returns 403 when non-admin tries to update teacher")
+        @WithMockUser(roles = {"TEACHER", "STUDENT"})
+        @DisplayName("returns 403 when tries to update teacher and doesn't have STAFF or ADMIN role")
         void returns403_whenNonAdminTriesToUpdate() throws Exception {
             Optional<Teacher> teacher = teacherDAO.findAll(PageRequest.of(0, 1))
                     .stream().findFirst();
@@ -678,7 +678,7 @@ public class TeacherTests extends BaseIntegrationTest {
     @DisplayName("DELETE /teachers/{id} - Delete teacher")
     class DeleteTeacher {
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("deletes teacher and returns 204")
         void deletesTeacher_andReturns204() throws Exception {
             Optional<Teacher> existingTeacher = teacherDAO.findAll(PageRequest.of(0, 1))
@@ -691,7 +691,7 @@ public class TeacherTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 404 when deleting non-existent teacher")
         void returns404_whenDeletingNonExistentTeacher() throws Exception {
             Long nonExistentId = 9999L;
@@ -704,8 +704,8 @@ public class TeacherTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"TEACHER", "STUDENT", "STAFF"})
-        @DisplayName("returns 403 when non-admin tries to delete teacher")
+        @WithMockUser(roles = {"TEACHER", "STUDENT"})
+        @DisplayName("returns 403 when tries to delete teacher and doesn't have STAFF or ADMIN role")
         void returns403_whenNonAdminTriesToDelete() throws Exception {
             mockMvc.perform(delete(baseUrl + "/{id}", 1L)
                             .with(csrf()))

@@ -13,7 +13,8 @@ export function useTeacherTable({ itemsPerPage = 10 }: UseTeacherTableProps) {
     const { data: teachers } = useAppSelector(state => state.teachers);
     const currentUser = useAppSelector(state => state.user.data);
 
-    const isAdmin = useMemo(() => currentUser?.role === Role.ADMIN, [currentUser]);
+    const isAuthorized = useMemo(() => currentUser?.role === Role.ADMIN
+        || currentUser?.role === Role.STAFF, [currentUser]);
 
     const initialFilters = { nameSearch: '', emailSearch: '', gradeFilter: '' };
 
@@ -99,10 +100,10 @@ export function useTeacherTable({ itemsPerPage = 10 }: UseTeacherTableProps) {
     const headerConfig = useMemo(() => ({
         title: 'Teachers',
         itemName: 'teachers',
-        showCreateButton: isAdmin,
+        showCreateButton: isAuthorized,
         createButtonText: 'Create Teacher',
         additionalElements: null,
-    }), [isAdmin]);
+    }), [isAuthorized]);
 
     const table = useTable<TeacherDTO, typeof initialFilters>({
         selector: (state: RootState) => state.teachers,
@@ -131,5 +132,5 @@ export function useTeacherTable({ itemsPerPage = 10 }: UseTeacherTableProps) {
         handleSuccess: () => void;
     }
 
-    return { ...crudTable, filtersConfig, headerConfig, isAdmin };
+    return { ...crudTable, filtersConfig, headerConfig, isAuthorized };
 }

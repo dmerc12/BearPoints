@@ -3,7 +3,6 @@ import { useAppDispatch, addTeacher } from '../../store';
 import { BaseModal, TeacherForm } from '../index';
 import { useTeacherForm } from '../../hooks';
 import { Alert } from 'react-bootstrap';
-import { useEffect } from 'react';
 
 interface CreateTeacherModalProps {
     show: boolean;
@@ -13,19 +12,8 @@ interface CreateTeacherModalProps {
 
 export function CreateTeacherModal({ show, onCancel, onSuccess }: CreateTeacherModalProps) {
     const dispatch = useAppDispatch();
-    const { formData, formErrors, setFormErrors, error, loading, handleInputChange, handleSelectChange,
-        validateForm, resetForm, isAdmin } = useTeacherForm({ show });
-
-    useEffect(() => {
-        if (show && !isAdmin) {
-            onCancel();
-            setFormErrors({ general: 'Only administrators can create teachers' });
-            const timer = setTimeout(() => {
-                setFormErrors({});
-            }, 3000);
-            return () => clearTimeout(timer);
-        }
-    }, [show, isAdmin, onCancel, setFormErrors]);
+    const { formData, formErrors, error, loading, handleInputChange, handleSelectChange,
+        validateForm, resetForm } = useTeacherForm({ show });
 
     const handleSubmit = () => {
         if (!validateForm()) return;

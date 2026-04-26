@@ -3,7 +3,6 @@ import { TeacherDTO, Role, GradeLevel } from '../../services';
 import { BaseModal, TeacherForm } from '../index';
 import { useTeacherForm } from '../../hooks';
 import { Alert } from 'react-bootstrap';
-import { useEffect } from 'react';
 
 interface EditTeacherModalProps {
     show: boolean;
@@ -14,19 +13,8 @@ interface EditTeacherModalProps {
 
 export function EditTeacherModal({ show, teacher, onCancel, onSuccess }: EditTeacherModalProps) {
     const dispatch = useAppDispatch();
-    const { formData, formErrors, setFormErrors, currentUser, isAdmin, error, loading, handleInputChange,
+    const { formData, formErrors, error, loading, handleInputChange,
         handleSelectChange, validateForm, resetForm } = useTeacherForm({ show, isEdit: true, teacher });
-
-    useEffect(() => {
-        if (show && !isAdmin && teacher) {
-            onCancel();
-            setFormErrors({ general: 'Only administrators can update teachers' });
-            const timer = setTimeout(() => {
-                setFormErrors({});
-            }, 3000);
-            return () => clearTimeout(timer);
-        }
-    }, [show, isAdmin, teacher, currentUser, onCancel, setFormErrors]);
 
     const handleSubmit = () => {
         if (!validateForm() || !teacher || teacher.id === undefined || teacher.id === null) return;

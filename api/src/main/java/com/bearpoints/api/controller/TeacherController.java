@@ -25,18 +25,18 @@ import org.springframework.web.bind.annotation.*;
  *     <li>GET /api/teachers - Retrieve all teachers (any authenticated user)</li>
  *     <li>GET /api/teachers/search - Search teachers by with flexible criteria (any authenticated user)</li>
  *     <li>GET /api/teachers/{id} - Retrieve teacher by ID (any authenticated user)</li>
- *     <li>POST /api/teachers - Create new teacher (ADMIN only)</li>
- *     <li>PUT /api/teachers/{id} - Update existing teacher (ADMIN only)</li>
- *     <li>DELETE /api/teachers/{id} - Delete teacher (ADMIN only)</li>
+ *     <li>POST /api/teachers - Create new teacher (ADMIN/STAFF only)</li>
+ *     <li>PUT /api/teachers/{id} - Update existing teacher (ADMIN/STAFF only)</li>
+ *     <li>DELETE /api/teachers/{id} - Delete teacher (ADMIN/STAFF only)</li>
  * </ul>
  *
  * <p>Security:
  * <ul>
  *     <li>GET endpoints - Any authenticated user</li>
- *     <li>POST, PUT, DELETE endpoints - ADMIN role required</li>
+ *     <li>POST, PUT, DELETE endpoints - ADMIN/STAFF role required</li>
  * </ul>
  *
- * @version 2.0
+ * @version 2.1
  * @author Dylan Mercer
  */
 @Slf4j
@@ -129,7 +129,7 @@ public class TeacherController {
      * @return Created teacher details
      */
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
     public ResponseEntity<TeacherDTO> createTeacher(
             @Valid @RequestBody TeacherDTO teacherDTO
     ) {
@@ -148,7 +148,7 @@ public class TeacherController {
      * @return Updated teacher details
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
     public ResponseEntity<TeacherDTO> updateTeacher(
             @PathVariable Long id,
             @Valid @RequestBody TeacherDTO teacherDTO
@@ -167,7 +167,7 @@ public class TeacherController {
      * @return No content response
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
     public ResponseEntity<TeacherDTO> deleteTeacher(
             @PathVariable Long id
     ) {

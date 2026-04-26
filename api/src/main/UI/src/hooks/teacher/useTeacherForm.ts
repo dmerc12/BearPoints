@@ -1,6 +1,6 @@
 import { teacherValidationRules } from '../../utils';
-import { TeacherDTO, Role } from '../../services';
 import { useAppSelector } from '../../store';
+import { TeacherDTO } from '../../services';
 import { useForm } from '../index';
 import { useEffect } from 'react';
 
@@ -13,8 +13,6 @@ export interface UseTeacherFormProps {
 export function useTeacherForm ({ show, isEdit = false, teacher }: UseTeacherFormProps) {
     const { loading, error } = useAppSelector(
         state => state.teachers);
-    const currentUser = useAppSelector(
-        state => state.user.data);
 
     const initialData = {
         firstName: '',
@@ -24,8 +22,6 @@ export function useTeacherForm ({ show, isEdit = false, teacher }: UseTeacherFor
     };
 
     const form = useForm({ initialData, validationRules: teacherValidationRules });
-
-    const isAdmin = currentUser?.role === Role.ADMIN;
 
     useEffect(() => {
         if (show && !isEdit) {
@@ -49,8 +45,6 @@ export function useTeacherForm ({ show, isEdit = false, teacher }: UseTeacherFor
         setFormData: form.setFormData,
         formErrors: form.formErrors,
         setFormErrors: form.setFormErrors,
-        currentUser,
-        isAdmin, 
         error,
         loading,
         handleInputChange: form.handleInputChange,
