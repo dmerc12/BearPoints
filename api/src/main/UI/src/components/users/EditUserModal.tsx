@@ -1,9 +1,8 @@
 import { useAppDispatch, modifyUser } from '../../store';
 import { BaseModal, UserForm } from '../index';
-import { Role, UserDTO } from '../../services';
 import { useUserForm } from '../../hooks';
+import { UserDTO } from '../../services';
 import { Alert } from 'react-bootstrap';
-import { useEffect } from 'react';
 
 interface EditUserModalProps {
     show: boolean;
@@ -15,19 +14,8 @@ interface EditUserModalProps {
 export function EditUserModal({ show, user, onCancel, onSuccess }: EditUserModalProps) {
     const dispatch = useAppDispatch();
 
-    const { formData, formErrors, setFormErrors, error, loading, handleInputChange, handleSelectChange,
-        validateForm, resetForm, currentUser } = useUserForm({ show, isEdit: true, user});
-
-    useEffect(() => {
-        if (show && currentUser?.role !== Role.ADMIN) {
-            onCancel();
-            setFormErrors({ general: 'Only administrators can edit users'});
-            const timer = setTimeout(() => {
-                setFormErrors({});
-            }, 3000);
-            return () => clearTimeout(timer);
-        }
-    }, [show, currentUser, onCancel, setFormErrors]);
+    const { formData, formErrors, error, loading, handleInputChange, handleSelectChange,
+        validateForm, resetForm } = useUserForm({ show, isEdit: true, user});
 
     const handleSubmit = () => {
         if (!validateForm() || !user || !user.id) return;

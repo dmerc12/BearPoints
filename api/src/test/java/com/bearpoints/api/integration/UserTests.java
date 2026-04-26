@@ -32,12 +32,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *     <li>Uses PostgreSQL Testcontainers for realistic database testing</li>
  *     <li>Activates "test" profile for isolated test execution</li>
  *     <li>Configures security context with mock authentication</li>
- *     <li>Leverages application's test data initializer for comprehensive admin data</li>
+ *     <li>Leverages application's test data initializer for comprehensive data</li>
  * </ul>
  *
  * @see TestDataInitializer
  * @see BaseIntegrationTest
- * @version 3.1
+ * @version 3.2
  * @author Dylan Mercer
  */
 @DisplayName("User Integration Tests")
@@ -323,7 +323,7 @@ public class UserTests extends BaseIntegrationTest {
     @DisplayName("POST /users - Create user")
     class CreateUser {
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("creates ADMIN user with valid data")
         void createdAdminUser_withValidData() throws Exception {
             String uniqueEmail = "unique-admin-" + System.currentTimeMillis() + "@okcps.org";
@@ -348,7 +348,7 @@ public class UserTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("creates STAFF user with valid data")
         void createdStaffUser_withValidData() throws Exception {
             String uniqueEmail = "unique-staff-" + System.currentTimeMillis() + "@okcps.org";
@@ -373,7 +373,7 @@ public class UserTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 when attempting to create user with TEACHER role")
         void returns400_whenCreatingTeacher() throws Exception {
             String uniqueEmail = "unique-teacher-" + System.currentTimeMillis() + "@okcps.org";
@@ -398,7 +398,7 @@ public class UserTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 when attempting to create user with STUDENT role")
         void returns400_whenCreatingStudent() throws Exception {
             String uniqueEmail = "unique-student-" + System.currentTimeMillis() + "@okcps.org";
@@ -423,7 +423,7 @@ public class UserTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with invalid email format")
         void returns400_withInvalidEmailFormat() throws Exception {
             String adminJson = """
@@ -444,7 +444,7 @@ public class UserTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with invalid email domain")
         void returns400_withInvalidEmailDomain() throws Exception {
             String adminJson = """
@@ -465,7 +465,7 @@ public class UserTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with duplicate email")
         void returns400_withDuplicateEmail() throws Exception {
             Optional<User> adminUser = userDAO.findByRole(Role.ADMIN, PageRequest.of(0, 1))
@@ -490,7 +490,7 @@ public class UserTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with blank email")
         void returns400_withBlankEmail() throws Exception {
             String adminJson = """
@@ -511,7 +511,7 @@ public class UserTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with blank first name")
         void returns400_withBlankFirstName() throws Exception {
             String adminJson = """
@@ -532,7 +532,7 @@ public class UserTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with first name too long")
         void returns400_withFirstNameTooLong() throws Exception {
             String longName = "A".repeat(101);
@@ -554,7 +554,7 @@ public class UserTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with blank last name")
         void returns400_withBlankLastName() throws Exception {
             String adminJson = """
@@ -575,7 +575,7 @@ public class UserTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with last name too long")
         void returns400_withLastNameTooLong() throws Exception {
             String longName = "A".repeat(101);
@@ -597,8 +597,8 @@ public class UserTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "STAFF"})
-        @DisplayName("returns 403 when user is not ADMIN")
+        @WithMockUser(roles = {"STUDENT", "TEACHER"})
+        @DisplayName("returns 403 when user is not ADMIN or STAFF")
         void returns403_whenUserIsNotAdmin() throws Exception {
             String uniqueEmail = "unique-admin-" + System.currentTimeMillis() + "@okcps.org";
             String adminJson = """
@@ -620,7 +620,7 @@ public class UserTests extends BaseIntegrationTest {
     @DisplayName("PUT /users/{id} - Update user")
     class UpdateUser {
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("updates ADMIN user with valid data")
         void updatedAdminUser_withValidData() throws Exception {
             Optional<User> adminUser = userDAO.findByRole(Role.ADMIN, PageRequest.of(0, 1))
@@ -649,7 +649,7 @@ public class UserTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("updates STAFF user with valid data")
         void updatedStaffUser_withValidData() throws Exception {
             Optional<User> staffUser = userDAO.findByRole(Role.STAFF, PageRequest.of(0, 1))
@@ -678,7 +678,7 @@ public class UserTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 404 when updating non-existent admin")
         void returns404_whenUpdatingNonExistentAdmin() throws Exception {
             Long nonExistentId = 9999L;
@@ -701,7 +701,7 @@ public class UserTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 when updating STUDENT user")
         void returns404_whenUpdatingStudentUser() throws Exception {
             Optional<User> studentUser = userDAO.findByRole(Role.STUDENT, PageRequest.of(0, 1))
@@ -732,7 +732,7 @@ public class UserTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 when updating TEACHER user")
         void returns404_whenUpdatingTeacherUser() throws Exception {
             Optional<User> teacherUser = userDAO.findByRole(Role.TEACHER, PageRequest.of(0, 1))
@@ -763,7 +763,7 @@ public class UserTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 when updating an ADMIN user to TEACHER role")
         void returns400_whenUpdatingAdminToTeacherRole() throws Exception {
             Optional<User> adminUser = userDAO.findByRole(Role.ADMIN, PageRequest.of(0, 1))
@@ -794,7 +794,7 @@ public class UserTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 when updating an ADMIN user to STUDENT role")
         void returns400_whenUpdatingAdminToStudentRole() throws Exception {
             Optional<User> adminUser = userDAO.findByRole(Role.ADMIN, PageRequest.of(0, 1))
@@ -825,8 +825,8 @@ public class UserTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"TEACHER", "STUDENT", "STAFF"})
-        @DisplayName("returns 403 when non-admin tries to update user")
+        @WithMockUser(roles = {"TEACHER", "STUDENT"})
+        @DisplayName("returns 403 when tries to update user without ADMIN or STAFF role")
         void returns403_whenNonAdminTriesToUpdate() throws Exception {
             Optional<User> adminUser = userDAO.findByRole(Role.ADMIN, PageRequest.of(0, 1))
                     .stream().findFirst();
@@ -853,7 +853,7 @@ public class UserTests extends BaseIntegrationTest {
     @DisplayName("DELETE /users/{id} - Delete user")
     class DeleteUser {
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("deletes ADMIN user and returns 204")
         void deletesAdminUser_andReturns204() throws Exception {
             Optional<User> existingUser = userDAO.findByRole(Role.ADMIN, PageRequest.of(0, 1))
@@ -866,7 +866,7 @@ public class UserTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("deletes STAFF user and returns 204")
         void deletesStaffUser_andReturns204() throws Exception {
             Optional<User> existingUser = userDAO.findByRole(Role.STAFF, PageRequest.of(0, 1))
@@ -879,7 +879,7 @@ public class UserTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 404 when deleting non-existent user")
         void returns404_whenDeletingNonExistentUser() throws Exception {
             Long nonExistentId = 9999L;
@@ -892,7 +892,7 @@ public class UserTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 when deleting STUDENT user")
         void returns400_whenDeletingStudentUser() throws Exception {
             Optional<User> studentUser = userDAO.findByRole(Role.STUDENT, PageRequest.of(0, 1))
@@ -913,7 +913,7 @@ public class UserTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 when deleting TEACHER user")
         void returns404_whenDeletingTeacherUser() throws Exception {
             Optional<User> teacherUser = userDAO.findByRole(Role.TEACHER, PageRequest.of(0, 1))
@@ -934,8 +934,8 @@ public class UserTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"TEACHER", "STUDENT", "STAFF"})
-        @DisplayName("returns 403 when non-admin tries to delete")
+        @WithMockUser(roles = {"TEACHER", "STUDENT"})
+        @DisplayName("returns 403 when tries to delete without ADMIN or STAFF role")
         void returns403_whenNonAdminTriesToDelete() throws Exception {
             mockMvc.perform(delete(baseUrl + "/{id}", 1L)
                             .with(csrf()))

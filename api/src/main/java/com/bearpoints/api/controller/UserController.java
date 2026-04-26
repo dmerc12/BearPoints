@@ -25,18 +25,18 @@ import org.springframework.web.bind.annotation.*;
  *     <li>GET /api/users - Retrieve all users (any authenticated user)</li>
  *     <li>GET /api/users/search - Search users with flexible criteria (any authenticated user)</li>
  *     <li>GET /api/users/{id} - Retrieve user by ID (any authenticated user)</li>
- *     <li>POST /api/users - Create new user (ADMIN only)</li>
- *     <li>PUT /api/users/{id} - Update existing user (ADMIN only)</li>
- *     <li>DELETE /api/users/{id} - Delete user (ADMIN only)</li>
+ *     <li>POST /api/users - Create new user (ADMIN/STAFF only)</li>
+ *     <li>PUT /api/users/{id} - Update existing user (ADMIN/STAFF only)</li>
+ *     <li>DELETE /api/users/{id} - Delete user (ADMIN/STAFF only)</li>
  * </ul>
  *
  * <p>Security:
  * <ul>
  *     <li>GET endpoints - Any authenticated user</li>
- *     <li>POST, PUT, DELETE endpoints - ADMIN role required</li>
+ *     <li>POST, PUT, DELETE endpoints - ADMIN/STAFF role required</li>
  * </ul>
  *
- * @version 3.0
+ * @version 3.1
  * @author Dylan Mercer
  */
 @Slf4j
@@ -122,13 +122,13 @@ public class UserController {
 
     /**
      * Creates a new user.
-     * <p>Accessible only to ADMIN users.
+     * <p>Accessible only to ADMIN and STAFF users.
      *
      * @param userDTO User data
      * @return Created user details
      */
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
     public ResponseEntity<UserDTO> createUser(@Valid @RequestBody UserDTO userDTO) {
         log.debug("Creating new user with email: {}", userDTO.getEmail());
         UserDTO createdUser = userService.createUser(userDTO);
@@ -145,7 +145,7 @@ public class UserController {
      * @return Updated user details
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
     public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @Valid @RequestBody UserDTO userDTO) {
         log.debug("Updating user with ID: {}", id);
         UserDTO updatedUser = userService.updateUser(id, userDTO);
@@ -161,7 +161,7 @@ public class UserController {
      * @return No content response
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
     public ResponseEntity<UserDTO> deleteUser(@PathVariable Long id) {
         log.debug("Deleting user with ID: {}", id);
         userService.deleteUser(id);

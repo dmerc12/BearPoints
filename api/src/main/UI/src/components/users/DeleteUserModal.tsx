@@ -1,9 +1,9 @@
 import { useAppDispatch, useAppSelector, removeUser } from '../../store';
 import { formatRole, fullName } from '../../utils';
-import { Role, UserDTO } from '../../services';
-import { useEffect, useState } from 'react';
+import { UserDTO } from '../../services';
 import { Alert } from 'react-bootstrap';
 import { BaseModal } from '../index';
+import { useState } from 'react';
 
 interface DeleteUserModalProps {
     show: boolean;
@@ -15,27 +15,11 @@ interface DeleteUserModalProps {
 export function DeleteUserModal({ show, user, onCancel, onSuccess }: DeleteUserModalProps) {
     const dispatch = useAppDispatch();
     const { loading, error } = useAppSelector(state => state.users);
-    const currentUser = useAppSelector(state => state.user.data);
 
     const [authError, setAuthError] = useState<string>('');
 
-    const isAuthorized = currentUser?.role === Role.ADMIN;
-    const disableConfirm = loading || !isAuthorized;
-
-    useEffect(() => {
-        if (show && !isAuthorized) {
-            setAuthError('Only administrators can delete users');
-            const timer = setTimeout(() => {
-                setAuthError('');
-            }, 3000);
-            return () => clearTimeout(timer);
-        } else {
-            setAuthError('');
-        }
-    }, [show, isAuthorized]);
-
     const handleConfirmDelete = () => {
-        if (!user || !user.id || !isAuthorized) return;
+        if (!user || !user.id || loading) return;
         dispatch(removeUser(user.id))
             .unwrap()
             .then(() => {
@@ -61,7 +45,7 @@ export function DeleteUserModal({ show, user, onCancel, onSuccess }: DeleteUserM
             cancelText='Cancel'
             confirmVariant='danger'
             isLoading={loading}
-            disableConfirm={disableConfirm}
+            disableConfirm={loading}
         >
             {authError && <Alert variant='danger'>{authError}</Alert>}
             {error && <Alert variant='danger'>{error}</Alert>}

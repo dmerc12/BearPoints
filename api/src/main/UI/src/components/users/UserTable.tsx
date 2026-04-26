@@ -12,7 +12,7 @@ export default function UserTable(props: UserTableProps) {
     const { itemsPerPage = 10, showFilters = true, size = 'm' } = props;
 
     const {
-        data, loading, error, filters, updateFilter, isAdmin, columns,
+        data, loading, error, filters, updateFilter, isAuthorized, columns,
         showCreateModal, editingItem, deletingItem, handleCreateItem, handleEditItem, handleDeleteItem,
         handleCloseModals, retry, handleSuccess, filtersConfig, headerConfig,
         currentPage, totalPages, setCurrentPage, totalCount, sortConfig, handleSort,
@@ -36,8 +36,8 @@ export default function UserTable(props: UserTableProps) {
             size={size}
             sortConfig={sortConfig}
             onSort={handleSort}
-            canEdit={isAdmin}
-            canDelete={isAdmin}
+            canEdit={isAuthorized}
+            canDelete={isAuthorized}
             onEditItem={handleEditItem}
             onDeleteItem={handleDeleteItem}
             onCreateClick={handleCreateItem}

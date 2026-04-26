@@ -11,7 +11,8 @@ export interface UseUserTableProps {
 export function useUserTable({ itemsPerPage = 10 }: UseUserTableProps) {
     const dispatch = useAppDispatch();
     const currentUser = useAppSelector(state => state.user.data);
-    const isAdmin = useMemo(() => currentUser?.role === Role.ADMIN, [currentUser]);
+    const isAuthorized = useMemo(() => currentUser?.role === Role.ADMIN
+        || currentUser?.role === Role.STAFF, [currentUser]);
 
     const initialFilters = { nameSearch: '', emailSearch: '', roleFilter: '' };
 
@@ -118,10 +119,10 @@ export function useUserTable({ itemsPerPage = 10 }: UseUserTableProps) {
     const headerConfig = useMemo(() => ({
         title: 'Users',
         itemName: 'users',
-        showCreateButton: isAdmin,
+        showCreateButton: isAuthorized,
         createButtonText: 'Create User',
         additionalElements: null,
-    }), [isAdmin]);
+    }), [isAuthorized]);
 
-    return { ...crudTable, filtersConfig, headerConfig, isAdmin };
+    return { ...crudTable, filtersConfig, headerConfig, isAuthorized };
 }
