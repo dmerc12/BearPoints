@@ -1,12 +1,18 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { StudentDashboard } from "./pages/StudentDashboard.tsx";
-import { TeacherDashboard } from "./pages/TeacherDashboard.tsx";
-import DashboardRedirect from "./pages/DashboardRedirect.tsx";
-import { AdminDashboard } from "./pages/AdminDashboard.tsx";
-import BearBragPage from './pages/BearBragPage.tsx';
+import { StudentDashboard } from './pages/StudentDashboard';
+import { TeacherDashboard } from './pages/TeacherDashboard';
+import DashboardRedirect from './pages/DashboardRedirect';
+import StudentRewardsPage from './pages/StudentRewardsPage';
+import BehaviorTypesPage from './pages/BehaviorTypePage';
+import { AdminDashboard } from './pages/AdminDashboard';
 import LeaderboardPage from './pages/LeaderboardPage';
+import RewardItemsPage from './pages/RewardItemsPage';
+import BearBragPage from './pages/BearBragPage';
 import NavigationBar from './components/NavBar';
 import StudentsPage from './pages/StudentsPage';
+import TeachersPage from './pages/TeachersPage';
+import BragLogsPage from './pages/BragLogsPage';
+import UsersPage from './pages/UsersPage';
 import AboutPage from './pages/AboutPage';
 import { Provider } from 'react-redux';
 import { store } from './store';
@@ -22,7 +28,13 @@ function App() {
               <NavigationBar />
               <Routes>
                   <Route path="/" element={<AboutPage />} />
+                  <Route path="/users" element={<UsersPage />} />
                   <Route path="/students" element={<StudentsPage />} />
+                  <Route path="/teachers" element={<TeachersPage />} />
+                  <Route path="/behaviors" element={<BehaviorTypesPage />} />
+                  <Route path="/brags" element={<BragLogsPage />} />
+                  <Route path="/rewards" element={<RewardItemsPage />} />
+                  <Route path="/redemptions" element={<StudentRewardsPage />} />
                   <Route path="/brag" element={<BearBragPage />} />
                   <Route path="/leaderboard" element={<LeaderboardPage />} />
                   <Route path="/dashboard" element={<DashboardRedirect />} />
