@@ -1,8 +1,11 @@
 export { type ManagementButtonsProps, ManagementButtons } from './ManagementButtons';
 export { SelectFilter, TextFilter, DateFilter, NumberFilter } from './filters';
 export { LeaderboardTable, LeaderboardTimeframeSelector } from './leaderboard';
+export { default as AuthenticatedLayout } from './AuthenticatedLayout';
 export { type CrudTableProps, CrudTable } from './CrudTable';
 export { default as BaseModal } from './BaseModal';
+export { default as Sidebar } from './Sidebar';
+export { default as NavBar } from './NavBar';
 export { default as Auth } from './Auth';
 export {
     type FilterConfig,

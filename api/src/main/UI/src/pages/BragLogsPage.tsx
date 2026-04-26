@@ -1,17 +1,15 @@
-import { BragLogTable, Auth } from '../components';
-import { Container, Row, Col } from 'react-bootstrap';
+import { BragLogTable, AuthenticatedLayout } from '../components';
+import { Row, Col } from 'react-bootstrap';
 
 export default function BragLogsPage () {
     return (
-        <Auth>
-            <Container className='mt-3 pt-2 mb-4'>
-                <Row className='mb-4 justify-content-center'>
-                    <Col md={ 6 } className='text-center'>
-                        <h1 className='mb-4'>Bear Brags</h1>
-                    </Col>
-                </Row>
-                <BragLogTable size='l' itemsPerPage={15} />
-            </Container>
-        </Auth>
+        <AuthenticatedLayout>
+            <Row className='mb-4 justify-content-center'>
+                <Col md={ 6 } className='text-center'>
+                    <h1 className='mb-4'>Bear Brags</h1>
+                </Col>
+            </Row>
+            <BragLogTable size='l' itemsPerPage={15} />
+        </AuthenticatedLayout>
     );
 }

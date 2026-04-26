@@ -1,22 +1,48 @@
-import { Navbar, Nav, Container } from 'react-bootstrap';
+import { Navbar, Nav, Container, Button } from 'react-bootstrap';
+import { useAppSelector } from '../store';
 import { Link } from 'react-router-dom';
 import { useLogin } from '../hooks';
 
-export default function NavigationBar () {
-    const { user, signingIn, handleLogin, handleLogout } = useLogin();
+interface NavigationBarProps {
+    onToggleSidebar?: () => void;
+    isDashboard?: boolean;
+}
+
+export default function NavigationBar ({ onToggleSidebar, isDashboard = false }:NavigationBarProps) {
+    const currentUser = useAppSelector(state => state.user.data);
+    const { signingIn, handleLogin, handleLogout } = useLogin();
+
+    if (isDashboard) {
+        return (
+            <Navbar bg='primary' variant='dark' expand='lg' className='mb-3' id='mainNav' aria-label='Navigation bar for BearPoints'>
+                <Container fluid>
+                    <Navbar.Brand as={ Link } to="/dashboard">BearPoints</Navbar.Brand>
+                    <Button variant='outline-light'
+                            onClick={onToggleSidebar}
+                            className='ms-2'
+                            aria-controls='basic-navbar-nav'
+                            aria-label="Toggle navigation bar"
+                    >
+                        ☰
+                    </Button>
+                    <Nav className='ms-auto'>
+                        <span className="text-white me-3">Welcome, {currentUser?.firstName}</span>
+                        <Nav.Link onClick={ handleLogout }>Logout</Nav.Link>
+                    </Nav>
+                </Container>
+            </Navbar>
+        );
+    }
 
     return (
         <Navbar bg='primary' variant='dark' expand='lg' className='fixed-top' id='mainNav' aria-label='Navigation bar for BearPoints'>
             <Container fluid>
-                <Navbar.Brand as={ Link } to="/">BearPoints</Navbar.Brand>
+                <Navbar.Brand as={ Link } to={currentUser ? '/dashboard' : '/'}>BearPoints</Navbar.Brand>
                 <Navbar.Toggle aria-controls='basic-navbar-nav' aria-label="Toggle navigation bar" />
                 <Navbar.Collapse id='basic-navbar-nav'>
                     <Nav className='ms-auto'>
-                        { user ? (
+                        { currentUser ? (
                             <>
-                                <Nav.Link as={ Link } to='/dashboard'>Dashboard</Nav.Link>
-                                <Nav.Link as={ Link } to='/students'>Students</Nav.Link>
-                                <Nav.Link as={ Link } to='/leaderboard'>Leaderboard</Nav.Link>
                                 <Nav.Link onClick={ handleLogout }>Logout</Nav.Link>
                             </>
                         ) :

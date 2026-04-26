@@ -1,7 +1,7 @@
+import { AuthenticatedLayout } from '../components';
 import { Button, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector } from '../store';
-import { Auth } from '../components';
 import { useEffect } from 'react';
 
 export default function DashboardRedirect() {
@@ -44,7 +44,7 @@ export default function DashboardRedirect() {
 
     if (loading) {
         return (
-            <Auth>
+            <AuthenticatedLayout>
                 <div className='text-center my-4'>
                     <div className='text-center my-4'>
                         <Spinner animation='border' role='status'>
@@ -57,7 +57,7 @@ export default function DashboardRedirect() {
                         Refresh Page
                     </Button>
                 </div>
-            </Auth>
+            </AuthenticatedLayout>
         );
     }
 

@@ -1,6 +1,6 @@
+import { PublicBragLogForm, NavBar } from '../components';
 import { Container, Row, Col } from 'react-bootstrap';
 import { useSearchParams } from 'react-router-dom';
-import { PublicBragLogForm } from '../components';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 
@@ -20,13 +20,16 @@ export default function BearBragPage () {
     }, [ token ]);
 
     return (
-        <Container className='mt-3 pt-2 mb-4'>
-            <Row className='mb-4 justify-content-center'>
-                <Col className='text-center'>
-                    <h1>Bear Brag</h1>
-                </Col>
-            </Row>
-            <PublicBragLogForm studentToken={studentToken} />
-        </Container>
+        <>
+            <NavBar />
+            <Container className='mt-3 pt-2 mb-4'>
+                <Row className='mb-4 justify-content-center'>
+                    <Col className='text-center'>
+                        <h1>Bear Brag</h1>
+                    </Col>
+                </Row>
+                <PublicBragLogForm studentToken={studentToken} />
+            </Container>
+        </>
     );
 }

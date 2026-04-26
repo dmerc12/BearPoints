@@ -1,9 +1,9 @@
-import { LeaderboardTable, Auth } from '../components';
+import { LeaderboardTable, AuthenticatedLayout } from '../components';
 
 export default function LeaderboardPage () {
     return (
-        <Auth>
+        <AuthenticatedLayout>
             <LeaderboardTable />
-        </Auth>
+        </AuthenticatedLayout>
     );
 }
