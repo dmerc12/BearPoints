@@ -133,10 +133,10 @@ export function useStudentRewardTable({ itemsPerPage = 10 }: UseStudentRewardTab
     ];
 
     const headerConfig = useMemo(() => ({
-        title: 'Student Rewards',
+        title: 'Reward Redemptions',
         itemName: 'student rewards',
         showCreateButton: isAdmin,
-        createButtonText: 'Create Student Reward',
+        createButtonText: 'Redeem Rewards',
         additionalElements: null,
     }), [isAdmin]);
 
@@ -167,5 +167,5 @@ export function useStudentRewardTable({ itemsPerPage = 10 }: UseStudentRewardTab
         handleSuccess: () => void;
     };
 
-    return { ...crudTable, filtersConfig, headerConfig };
+    return { ...crudTable, filtersConfig, headerConfig, isAdmin };
 }

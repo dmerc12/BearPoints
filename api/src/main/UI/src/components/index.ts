@@ -39,6 +39,13 @@ export {
     RewardItemTable,
 } from './rewardItems';
 export {
+    StudentRewardForm,
+    CreateStudentRewardModal,
+    EditStudentRewardModal,
+    DeleteStudentRewardModal,
+    StudentRewardTable,
+} from './studentRewards';
+export {
     BragLogForm,
     CreateBragLogModal,
     EditBragLogModal,
