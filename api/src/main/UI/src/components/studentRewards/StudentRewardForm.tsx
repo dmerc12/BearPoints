@@ -13,9 +13,10 @@ interface StudentRewardFormProps {
     students: StudentDTO[];
     rewardItems: RewardItemDTO[];
     onSelectChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+    isStudent: boolean;
 }
 
-export function StudentRewardForm({ formData, formErrors, loading, students, rewardItems, onSelectChange }: StudentRewardFormProps) {
+export function StudentRewardForm({ formData, formErrors, loading, students, rewardItems, onSelectChange, isStudent }: StudentRewardFormProps) {
     return (
         <Form>
             <Row>
@@ -27,7 +28,7 @@ export function StudentRewardForm({ formData, formErrors, loading, students, rew
                             value={formData.studentId}
                             onChange={onSelectChange}
                             isInvalid={!!formErrors.studentId}
-                            disabled={loading}
+                            disabled={loading || isStudent}
                         >
                             <option value="">Select a student</option>
                             {students.map(student => {

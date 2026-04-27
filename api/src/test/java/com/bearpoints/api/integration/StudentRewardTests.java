@@ -40,7 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *
  * @see TestDataInitializer
  * @see BaseIntegrationTest
- * @version 1.2
+ * @version 1.3
  * @author Dylan Mercer
  */
 @DisplayName("Student Reward Integration Tests")
@@ -382,7 +382,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
     @DisplayName("POST /api/rewards - Create student reward")
     class CreateStudentReward {
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER", "STUDENT"})
         @DisplayName("creates student reward with valid data")
         void createStudentRewardWithValidData() throws Exception {
             Optional<Student> student = studentDAO.findAll(PageRequest.of(0, 1))
@@ -411,7 +411,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER", "STUDENT"})
         @DisplayName("returns 400 when student has insufficient points")
         void returns400WithInsufficientPoints() throws Exception {
             Teacher teacher = new Teacher();
@@ -441,7 +441,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER", "STUDENT"})
         @DisplayName("returns 400 when reward item has insufficient stock")
         void returns400WithInsufficientStock() throws Exception {
             Teacher teacher = new Teacher();
@@ -471,7 +471,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER", "STUDENT"})
         @DisplayName("returns 404 with invalid student")
         void returns404WithInvalidStudent() throws Exception {
             Optional<RewardItem> rewardItem = rewardItemDAO.findAll(PageRequest.of(0, 1))
@@ -492,7 +492,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER", "STUDENT"})
         @DisplayName("returns 404 with invalid reward item")
         void Returns404WithInvalidRewardItem() throws Exception {
             Optional<Student> student = studentDAO.findAll(PageRequest.of(0, 1))
@@ -513,7 +513,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER", "STUDENT"})
         @DisplayName("returns 400 with missing student")
         void returns400WithMissingStudent() throws Exception {
             Optional<RewardItem> rewardItem = rewardItemDAO.findAll(PageRequest.of(0, 1))
@@ -535,7 +535,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER", "STUDENT"})
         @DisplayName("returns 400 with missing reward item")
         void Returns400WithMissingRewardItem() throws Exception {
             Optional<Student> student = studentDAO.findAll(PageRequest.of(0, 1))
@@ -555,33 +555,13 @@ public class StudentRewardTests extends BaseIntegrationTest {
                         .andExpect(jsonPath("$.timestamp").exists());
             }
         }
-
-        @Test
-        @WithMockUser(roles = {"TEACHER", "STUDENT", "STAFF"})
-        @DisplayName("returns 403 when user is not ADMIN")
-        void returns403WhenUserIsNotAdmin() throws Exception {
-            Optional<Student> student = studentDAO.findAll(PageRequest.of(0, 1))
-                    .stream().findFirst();
-            Optional<RewardItem> rewardItem = rewardItemDAO.findAll(PageRequest.of(0, 1))
-                    .stream().findFirst();
-            if (student.isPresent() && rewardItem.isPresent()) {
-                Long studentId = student.get().getId();
-                Long itemId = rewardItem.get().getId();
-                String createJSON = buildStudentRewardJson(studentId, itemId);
-                mockMvc.perform(post(baseUrl)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(createJSON)
-                                .with(csrf()))
-                        .andExpect(status().isForbidden());
-            }
-        }
     }
 
     @Nested
     @DisplayName("PUT /api/rewards/{id} - Update student reward")
     class UpdateStudentReward {
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER", "STUDENT"})
         @DisplayName("updates a student reward with valid data")
         void updatesStudentRewardWithValidData() throws Exception {
             Optional<Student> student = studentDAO.findAll(PageRequest.of(0, 1))
@@ -614,7 +594,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER", "STUDENT"})
         @DisplayName("updates a student reward with nothing changed")
         void updatesStudentRewardWithNothingChanged() throws Exception {
             Optional<StudentReward> studentReward = studentRewardDAO.findAll(PageRequest.of(0, 1))
@@ -644,7 +624,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER", "STUDENT"})
         @DisplayName("updates a student reward with only student changed")
         void updatesStudentRewardWithOnlyStudentChanged() throws Exception {
             Optional<StudentReward> studentReward = studentRewardDAO.findAll(PageRequest.of(0, 1))
@@ -676,7 +656,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER", "STUDENT"})
         @DisplayName("updates a student reward with only reward item changed")
         void updatesStudentRewardWithOnlyRewardItemChanged() throws Exception {
             Optional<StudentReward> studentReward = studentRewardDAO.findAll(PageRequest.of(0, 1))
@@ -708,7 +688,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER", "STUDENT"})
         @DisplayName("returns 400 when updating to a student with insufficient points")
         void returns400WithInsufficientPointsWhenChangingStudent() throws Exception {
             Teacher teacher = new Teacher();
@@ -748,7 +728,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER", "STUDENT"})
         @DisplayName("returns 400 when updating to an item with insufficient stock")
         void returns400WithInsufficientStockWhenChangingItem() throws Exception {
             Teacher teacher = new Teacher();
@@ -787,7 +767,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER", "STUDENT"})
         @DisplayName("returns 404 with invalid student")
         void returns404WithInvalidStudent() throws Exception {
             Optional<StudentReward> studentReward = studentRewardDAO.findAll(PageRequest.of(0, 1))
@@ -809,7 +789,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER", "STUDENT"})
         @DisplayName("returns 404 with invalid reward item")
         void Returns404WithInvalidRewardItem() throws Exception {
             Optional<StudentReward> studentReward = studentRewardDAO.findAll(PageRequest.of(0, 1))
@@ -831,7 +811,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER", "STUDENT"})
         @DisplayName("returns 400 with missing student")
         void returns400WithMissingStudent() throws Exception {
             Optional<StudentReward> studentReward = studentRewardDAO.findAll(PageRequest.of(0, 1))
@@ -854,7 +834,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER", "STUDENT"})
         @DisplayName("returns 400 with missing reward item")
         void Returns400WithMissingRewardItem() throws Exception {
             Optional<StudentReward> studentReward = studentRewardDAO.findAll(PageRequest.of(0, 1))
@@ -875,36 +855,13 @@ public class StudentRewardTests extends BaseIntegrationTest {
                         .andExpect(jsonPath("$.timestamp").exists());
             }
         }
-
-        @Test
-        @WithMockUser(roles = {"TEACHER", "STUDENT", "STAFF"})
-        @DisplayName("returns 403 when user is not ADMIN")
-        void returns403WhenUserIsNotAdmin() throws Exception {
-            Optional<Student> student = studentDAO.findAll(PageRequest.of(0, 1))
-                    .stream().findFirst();
-            Optional<StudentReward> studentReward = studentRewardDAO.findAll(PageRequest.of(0, 1))
-                    .stream().findFirst();
-            Optional<RewardItem> rewardItem = rewardItemDAO.findAll(PageRequest.of(0, 1))
-                    .stream().findFirst();
-            if (student.isPresent() && studentReward.isPresent() && rewardItem.isPresent()) {
-                Long studentId = student.get().getId();
-                Long studentRewardId = studentReward.get().getId();
-                Long itemId = rewardItem.get().getId();
-                String updateJSON = buildStudentRewardJson(studentId, itemId);
-                mockMvc.perform(put(baseUrl + "/{id}", studentRewardId)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(updateJSON)
-                                .with(csrf()))
-                        .andExpect(status().isForbidden());
-            }
-        }
     }
 
     @Nested
     @DisplayName("DELETE /api/rewards/{id} - Delete student reward")
     class DeleteStudentReward {
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER", "STUDENT"})
         @DisplayName("deletes student reward and returns 204")
         void deletesStudentRewardAndReturns204() throws Exception {
             Optional<StudentReward> studentReward = studentRewardDAO.findAll(PageRequest.of(0, 1))
@@ -917,7 +874,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER", "STUDENT"})
         @DisplayName("returns 404 when deleting non existent student reward")
         void returns404WhenDeletingNonExistentStudentReward() throws Exception {
             mockMvc.perform(delete(baseUrl + "/{id}", 9999L)
@@ -926,19 +883,6 @@ public class StudentRewardTests extends BaseIntegrationTest {
                     .andExpect(jsonPath("$.message")
                             .value("Student reward not found with ID: 9999"))
                     .andExpect(jsonPath("$.timestamp").exists());
-        }
-
-        @Test
-        @WithMockUser(roles = {"TEACHER", "STUDENT", "STAFF"})
-        @DisplayName("returns 403 when user is ADMIN")
-        void returns403WhenUserIsNotAdmin() throws Exception {
-            Optional<StudentReward> studentReward = studentRewardDAO.findAll(PageRequest.of(0, 1))
-                    .stream().findFirst();
-            if (studentReward.isPresent()) {
-                mockMvc.perform(delete(baseUrl + "/{id}", studentReward.get().getId())
-                                .with(csrf()))
-                        .andExpect(status().isForbidden());
-            }
         }
     }
 

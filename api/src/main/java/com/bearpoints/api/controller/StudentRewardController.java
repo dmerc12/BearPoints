@@ -26,18 +26,17 @@ import java.time.LocalDateTime;
  *     <li>GET /api/rewards - Retrieve all student rewards (any authenticated user)</li>
  *     <li>GET /api/rewards/search - Search student rewards (any authenticated user)</li>
  *     <li>GET /api/rewards/{id} - Retrieve student reward by ID (any authenticated user)</li>
- *     <li>POST /api/rewards - Create a new student reward (ADMIN only)</li>
- *     <li>PUT /api/rewards/{id} - Update existing student rewards (ADMIN only)</li>
- *     <li>DELETE /api/rewards/{id} - Delete a student reward (ADMIN only)</li>
+ *     <li>POST /api/rewards - Create a new student reward (any authenticated user)</li>
+ *     <li>PUT /api/rewards/{id} - Update existing student rewards (any authenticated user)</li>
+ *     <li>DELETE /api/rewards/{id} - Delete a student reward (any authenticated user)</li>
  * </ul>
  *
  * <p>Security:
  * <ul>
- *     <li>GET endpoints - Any authenticated user</li>
- *     <li>POST, PUT, DELETE endpoints - ADMIN role required</li>
+ *     <li>GET, POST, PUT, and Delete endpoints - Any authenticated user</li>
  * </ul>
  *
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @Slf4j
@@ -138,13 +137,12 @@ public class StudentRewardController {
 
     /**
      * Creates a new student reward.
-     * <p>Accessible only to ADMIN users.
+     * <p>Accessible only to any authenticated user
      *
      * @param studentRewardDTO Student reward data
      * @return Created student reward details
      */
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<StudentRewardDTO> createStudentReward(@Valid @RequestBody StudentRewardDTO studentRewardDTO) {
         log.debug("Creating new student reward with student ID: {} and reward item name: {}",
                 studentRewardDTO.getStudentId(), studentRewardDTO.getItemName());
@@ -157,14 +155,13 @@ public class StudentRewardController {
 
     /**
      * Updates an existing student reward.
-     * <p>Accessible only to ADMIN users.
+     * <p>Accessible only to any authenticated user
      *
      * @param id Student reward ID
      * @param studentRewardDTO Updated student reward data
      * @return Updated student reward details
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<StudentRewardDTO> updateStudentReward(
             @PathVariable Long id,
             @Valid @RequestBody StudentRewardDTO studentRewardDTO
@@ -177,13 +174,12 @@ public class StudentRewardController {
 
     /**
      * Deletes a student reward by ID.
-     * <p>Accessible only to ADMIN users.
+     * <p>Accessible only to any authenticated user
      *
      * @param id StudentReward ID
      * @return No content response
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteStudentReward(@PathVariable Long id) {
         log.debug("Deleting student reward with ID: {}", id);
         studentRewardService.deleteStudentReward(id);

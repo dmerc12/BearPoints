@@ -11,7 +11,8 @@ export interface UseStudentRewardTableProps {
 export function useStudentRewardTable({ itemsPerPage = 10 }: UseStudentRewardTableProps) {
     const dispatch = useAppDispatch();
     const currentUser = useAppSelector(state => state.user.data);
-    const isAdmin = useMemo(() => currentUser?.role === Role.ADMIN, [currentUser]);
+    const isAuthorized = useMemo(() => currentUser?.role === Role.ADMIN
+        || currentUser?.role === Role.STAFF || currentUser?.role === Role.TEACHER, [currentUser]);
 
     const initialFilters = {
         studentName: '',
@@ -135,10 +136,10 @@ export function useStudentRewardTable({ itemsPerPage = 10 }: UseStudentRewardTab
     const headerConfig = useMemo(() => ({
         title: 'Reward Redemptions',
         itemName: 'student rewards',
-        showCreateButton: isAdmin,
+        showCreateButton: isAuthorized,
         createButtonText: 'Redeem Rewards',
         additionalElements: null,
-    }), [isAdmin]);
+    }), [isAuthorized]);
 
     const table = useTable<StudentRewardDTO, typeof initialFilters>({
         selector: (state: RootState) => state.studentRewards,
@@ -167,5 +168,5 @@ export function useStudentRewardTable({ itemsPerPage = 10 }: UseStudentRewardTab
         handleSuccess: () => void;
     };
 
-    return { ...crudTable, filtersConfig, headerConfig, isAdmin };
+    return { ...crudTable, filtersConfig, headerConfig, isAuthorized };
 }

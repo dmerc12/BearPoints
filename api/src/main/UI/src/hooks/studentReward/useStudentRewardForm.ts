@@ -18,7 +18,7 @@ export const useStudentRewardForm = ({ show, isEdit = false, studentReward }
     const { data: rewardItems, loading: rewardItemsLoading } = useAppSelector(state => state.rewardItems);
     const currentUser = useAppSelector(state => state.user.data);
 
-    const isAdmin = useMemo(() => currentUser?.role === Role.ADMIN, [currentUser]);
+    const isStudent = useMemo(() => currentUser?.role === Role.STUDENT, [currentUser]);
 
     useEffect(() => {
         if (students.length === 0 && !studentsLoading) {
@@ -54,6 +54,15 @@ export const useStudentRewardForm = ({ show, isEdit = false, studentReward }
         }
     }, [show, isEdit, studentReward, form]);
 
+    useEffect(() => {
+        if (show && isStudent && currentUser && currentUser.studentId) {
+            form.setFormData({
+                studentId: currentUser.studentId ,
+                itemId: 0,
+            });
+        }
+    }, [show, isStudent, currentUser, form]);
+
     const isLoading = loading || studentsLoading || rewardItemsLoading;
 
     return {
@@ -61,12 +70,11 @@ export const useStudentRewardForm = ({ show, isEdit = false, studentReward }
         setFormData: form.setFormData,
         formErrors: form.formErrors,
         setFormErrors: form.setFormErrors,
-        currentUser,
         error,
         loading: isLoading,
-        isAdmin,
         students,
         rewardItems,
+        isStudent,
         handleSelectChange: form.handleSelectChange,
         validateForm: form.validateForm,
         resetForm: form.resetForm,

@@ -2,7 +2,6 @@ import { useAppDispatch, addStudentReward } from '../../store';
 import { BaseModal, StudentRewardForm } from '../index';
 import { useStudentRewardForm } from '../../hooks';
 import { Alert } from 'react-bootstrap';
-import { useEffect } from 'react';
 
 interface CreateStudentRewardModalProps {
     show: boolean;
@@ -13,19 +12,8 @@ interface CreateStudentRewardModalProps {
 export function CreateStudentRewardModal({ show, onCancel, onSuccess }: CreateStudentRewardModalProps) {
     const dispatch = useAppDispatch();
 
-    const { formData, formErrors, setFormErrors, error, loading, isAdmin, students, rewardItems,
+    const { formData, formErrors, error, loading, students, rewardItems, isStudent,
         handleSelectChange, validateForm, resetForm } = useStudentRewardForm({ show });
-
-    useEffect(() => {
-        if (show && !isAdmin) {
-            onCancel();
-            setFormErrors({ general: 'Only administrators can create student rewards' });
-            const timer = setTimeout(() => {
-                setFormErrors({});
-            }, 3000);
-            return () => clearTimeout(timer);
-        }
-    }, [show, isAdmin, onCancel, setFormErrors]);
 
     const handleSubmit = () => {
         if (!validateForm()) return;
@@ -68,6 +56,7 @@ export function CreateStudentRewardModal({ show, onCancel, onSuccess }: CreateSt
                 students={students}
                 rewardItems={rewardItems}
                 onSelectChange={handleSelectChange}
+                isStudent={isStudent}
             />
         </BaseModal>
     );

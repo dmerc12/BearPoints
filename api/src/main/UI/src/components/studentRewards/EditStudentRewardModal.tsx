@@ -3,7 +3,6 @@ import { BaseModal, StudentRewardForm } from '../index';
 import { useStudentRewardForm } from '../../hooks';
 import { StudentRewardDTO } from '../../services';
 import { Alert } from 'react-bootstrap';
-import { useEffect } from 'react';
 
 interface EditStudentRewardModalProps {
     show: boolean;
@@ -15,19 +14,8 @@ interface EditStudentRewardModalProps {
 export function EditStudentRewardModal({ show, studentReward, onCancel, onSuccess }: EditStudentRewardModalProps) {
     const dispatch = useAppDispatch();
 
-    const { formData, formErrors, setFormErrors, error, loading, isAdmin, students, rewardItems,
+    const { formData, formErrors, error, loading, isStudent, students, rewardItems,
         handleSelectChange, validateForm, resetForm } = useStudentRewardForm({ show, isEdit: true, studentReward });
-
-    useEffect(() => {
-        if (show && !isAdmin) {
-            onCancel();
-            setFormErrors({ general: 'Only administrators can edit student rewards' });
-            const timer = setTimeout(() => {
-                setFormErrors({});
-            }, 3000);
-            return () => clearTimeout(timer);
-        }
-    }, [show, isAdmin, onCancel, setFormErrors]);
 
     const handleSubmit = () => {
         if (!validateForm() || !studentReward || !studentReward.id) return;
@@ -70,6 +58,7 @@ export function EditStudentRewardModal({ show, studentReward, onCancel, onSucces
                 students={students}
                 rewardItems={rewardItems}
                 onSelectChange={handleSelectChange}
+                isStudent={isStudent}
             />
         </BaseModal>
     );

@@ -1,6 +1,5 @@
 import { useAppDispatch, useAppSelector, removeStudentReward } from '../../store';
-import { StudentRewardDTO, Role } from '../../services';
-import { useEffect, useState } from 'react';
+import { StudentRewardDTO } from '../../services';
 import { Alert } from 'react-bootstrap';
 import { BaseModal } from '../index';
 
@@ -14,25 +13,9 @@ interface DeleteStudentRewardModalProps {
 export function DeleteStudentRewardModal({ show, studentReward, onCancel, onSuccess }: DeleteStudentRewardModalProps) {
     const dispatch = useAppDispatch();
     const { loading, error } = useAppSelector(state => state.studentRewards);
-    const currentUser = useAppSelector(state => state.user.data);
-
-    const [authError, setAuthError] = useState<string>('');
-
-    const isAuthorized = currentUser?.role === Role.ADMIN;
-    const disableConfirm = loading || !isAuthorized;
-
-    useEffect(() => {
-        if (show && !isAuthorized) {
-            setAuthError('Only administrators can delete student rewards');
-            const timer = setTimeout(() => {
-                setAuthError('');
-            }, 3000);
-            return () => clearTimeout(timer);
-        }
-    }, [show, isAuthorized]);
 
     const handleConfirmDelete = () => {
-        if (!studentReward || !studentReward.id || !isAuthorized) return;
+        if (!studentReward || !studentReward.id) return;
         dispatch(removeStudentReward(studentReward.id))
             .unwrap()
             .then(() => {
@@ -43,24 +26,18 @@ export function DeleteStudentRewardModal({ show, studentReward, onCancel, onSucc
             });
     };
 
-    const handleClose = () => {
-        setAuthError('');
-        onCancel();
-    };
-
     return (
         <BaseModal
             title="Delete Reward Redemption"
             show={show}
             onConfirm={handleConfirmDelete}
-            onCancel={handleClose}
+            onCancel={onCancel}
             confirmText="Delete"
             cancelText="Cancel"
             confirmVariant="danger"
             isLoading={loading}
-            disableConfirm={disableConfirm}
+            disableConfirm={loading}
         >
-            {authError && <Alert variant="danger">{authError}</Alert>}
             {error && <Alert variant="danger">{error}</Alert>}
             <p>Are you sure you want to delete this reward redemption?</p>
             <p className="text-muted">This action cannot be undone.</p>
