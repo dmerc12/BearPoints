@@ -13,7 +13,6 @@ interface BragLogFormProps {
     };
     formErrors: Record<string, string>;
     loading: boolean;
-    isAdmin: boolean;
     isPublic?: boolean;
     publicStudent?: StudentDTO | null;
     students: StudentDTO[];
@@ -25,7 +24,7 @@ interface BragLogFormProps {
     onToggleBehavior: (behaviorId: number) => void;
 }
 
-export function BragLogForm({ formData, formErrors, loading, students, teachers, behaviorTypes, isAdmin,
+export function BragLogForm({ formData, formErrors, loading, students, teachers, behaviorTypes,
                                 isPublic = false, publicStudent = null, totalPoints, onInputChange,
                                 onSelectChange, onToggleBehavior }: BragLogFormProps) {
     let teacherName = '';
@@ -70,18 +69,17 @@ export function BragLogForm({ formData, formErrors, loading, students, teachers,
                     </>
                 ) : (
                     <>
-                        {isAdmin && (
-                            <Col md={6}>
-                                <Form.Group className='mb-3'>
-                                    <Form.Label>Teacher</Form.Label>
-                                    <Form.Select name='teacherId'
-                                                 value={formData.teacherId ?? ''}
-                                                 onChange={onSelectChange}
-                                                 isInvalid={!!formErrors.teacherId}
-                                                 disabled={loading}
-                                    >
-                                        <option value=''>Select a teacher</option>
-                                        {teachers.map(teacher => {
+                        <Col md={6}>
+                            <Form.Group className='mb-3'>
+                                <Form.Label>Teacher</Form.Label>
+                                <Form.Select name='teacherId'
+                                             value={formData.teacherId ?? ''}
+                                             onChange={onSelectChange}
+                                             isInvalid={!!formErrors.teacherId}
+                                             disabled={loading}
+                                >
+                                    <option value=''>Select a teacher</option>
+                                    {teachers.map(teacher => {
                                             if (teacher.id === undefined || teacher.id === null) return;
                                             return (
                                                 <option key={teacher.id} value={teacher.id}>
@@ -90,16 +88,15 @@ export function BragLogForm({ formData, formErrors, loading, students, teachers,
                                             );
                                         }
                                     )}
-                                    </Form.Select>
-                                    <Form.Text className='text-muted'>
-                                        Selecting a teacher will filter the students list
-                                    </Form.Text>
-                                    <Form.Control.Feedback type='invalid'>
-                                        {formErrors.teacherId}
-                                    </Form.Control.Feedback>
-                                </Form.Group>
-                            </Col>
-                        )}
+                                </Form.Select>
+                                <Form.Text className='text-muted'>
+                                    Selecting a teacher will filter the students list
+                                </Form.Text>
+                                <Form.Control.Feedback type='invalid'>
+                                    {formErrors.teacherId}
+                                </Form.Control.Feedback>
+                            </Form.Group>
+                        </Col>
                         <Col md={6}>
                             <Form.Group className='mb-3'>
                                 <Form.Label>Student</Form.Label>
@@ -123,11 +120,9 @@ export function BragLogForm({ formData, formErrors, loading, students, teachers,
                                 <Form.Control.Feedback type='invalid'>
                                     {formErrors.studentId}
                                 </Form.Control.Feedback>
-                                {!isAdmin && (
-                                    <Form.Text className='text-muted'>
-                                        Teacher will automatically set based on student selection
-                                    </Form.Text>
-                                )}
+                                <Form.Text className='text-muted'>
+                                    Teacher will automatically set based on student selection
+                                </Form.Text>
                             </Form.Group>
                         </Col>
                         <Col md={6}>

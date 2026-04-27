@@ -14,7 +14,7 @@ interface EditBragLogModalProps {
 export function EditBragLogModal({ show, bragLog, onCancel, onSuccess }: EditBragLogModalProps) {
     const dispatch = useAppDispatch();
 
-    const { formData, formErrors, error, loading, isAdmin, students, teachers, behaviorTypes, totalPoints,
+    const { formData, formErrors, error, loading, students, teachers, behaviorTypes, totalPoints,
         handleInputChange, handleSelectChange, toggleBehavior, validateForm, resetForm } = useBragLogForm(
             { show, isEdit: true, bragLog });
 
@@ -59,7 +59,6 @@ export function EditBragLogModal({ show, bragLog, onCancel, onSuccess }: EditBra
                 formData={formData}
                 formErrors={formErrors}
                 loading={loading}
-                isAdmin={isAdmin}
                 students={students}
                 teachers={teachers}
                 totalPoints={totalPoints}

@@ -1177,8 +1177,8 @@ public class BragLogTests extends BaseIntegrationTest {
 
         @Test
         @WithMockUser(roles = "STUDENT")
-        @DisplayName("returns 403 when user is not TEACHER or ADMIN")
-        void returns403_whenUserIsNotAdmin() throws Exception {
+        @DisplayName("returns 403 when user is not TEACHER, STAFF, or ADMIN")
+        void returns403_whenUserIsNotAdminTeacherOrStaff() throws Exception {
             Optional<BragLog> bragLog = bragLogDAO.findAll(PageRequest.of(0, 1))
                     .stream().findFirst();
             Optional<Student> student = studentDAO.findAll(PageRequest.of(1, 1))
@@ -1227,8 +1227,8 @@ public class BragLogTests extends BaseIntegrationTest {
 
         @Test
         @WithMockUser(roles = "STUDENT")
-        @DisplayName("returns 403 when user is not TEACHER or ADMIN")
-        void returns403_whenUserIsNotAdmin() throws Exception {
+        @DisplayName("returns 403 when user is not TEACHER, ADMIN, or STAFF")
+        void returns403_whenUserIsNotAdminTeacherOrStaff() throws Exception {
             Optional<BragLog> bragLog = bragLogDAO.findAll(PageRequest.of(0, 1))
                     .stream().findFirst();
             if (bragLog.isPresent()) {

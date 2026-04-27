@@ -1,6 +1,5 @@
 import { useAppDispatch, useAppSelector, removeBragLog } from '../../store';
-import { BragLogDTO, Role } from '../../services';
-import { useEffect, useState } from 'react';
+import { BragLogDTO } from '../../services';
 import { Alert } from 'react-bootstrap';
 import { BaseModal } from '../index';
 
@@ -14,25 +13,9 @@ interface DeleteBragLogModalProps {
 export function DeleteBragLogModal({ show, bragLog, onCancel, onSuccess }: DeleteBragLogModalProps) {
     const dispatch = useAppDispatch();
     const { loading, error } = useAppSelector(state => state.bragLogs);
-    const currentUser = useAppSelector(state => state.user.data);
-
-    const [authError, setAuthError] = useState<string>('');
-
-    const isAuthorized = currentUser?.role === Role.ADMIN;
-    const disableConfirm = loading || !isAuthorized;
-
-    useEffect(() => {
-        if (show && !isAuthorized) {
-            setAuthError('Only administrators can delete brag logs');
-            const timer = setTimeout(() => {
-                setAuthError('');
-            }, 3000);
-            return () => clearTimeout(timer);
-        }
-    }, [show, isAuthorized]);
 
     const handleConfirmDelete = () => {
-        if (!bragLog || !bragLog.id || !isAuthorized) return;
+        if (!bragLog || !bragLog.id) return;
         dispatch(removeBragLog(bragLog.id))
             .unwrap()
             .then(() => {
@@ -43,24 +26,18 @@ export function DeleteBragLogModal({ show, bragLog, onCancel, onSuccess }: Delet
             });
     };
 
-    const handleClose = () => {
-        setAuthError('');
-        onCancel();
-    };
-
     return (
         <BaseModal
             title='Delete Brag Log'
             show={show}
             onConfirm={handleConfirmDelete}
-            onCancel={handleClose}
+            onCancel={onCancel}
             confirmText='Delete'
             cancelText='Cancel'
             confirmVariant='danger'
             isLoading={loading}
-            disableConfirm={disableConfirm}
+            disableConfirm={loading}
         >
-            {authError && <Alert variant='danger'>{authError}</Alert>}
             {error && <Alert variant='danger'>{error}</Alert>}
             <p>Are you sure you want to delete this brag log?</p>
             <p className='text-muted'>This action cannot be undone.</p>

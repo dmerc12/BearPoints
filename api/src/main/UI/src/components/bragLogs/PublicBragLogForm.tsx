@@ -75,7 +75,6 @@ export default function PublicBragLogForm ({ studentToken }: PublicBragLogFormPr
                         formData={formData}
                         formErrors={formErrors}
                         loading={loading}
-                        isAdmin={false}
                         students={students}
                         teachers={teachers}
                         behaviorTypes={behaviorTypes}

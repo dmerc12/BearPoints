@@ -13,7 +13,7 @@ interface CreateBragLogModalProps {
 export function CreateBragLogModal({ show, onCancel, onSuccess }: CreateBragLogModalProps) {
     const dispatch = useAppDispatch();
 
-    const { formData, formErrors, error, loading, isAdmin, students, teachers, behaviorTypes, totalPoints,
+    const { formData, formErrors, error, loading, students, teachers, behaviorTypes, totalPoints,
         handleInputChange, handleSelectChange, toggleBehavior, validateForm, resetForm } = useBragLogForm({ show });
 
     const handleSubmit = () => {
@@ -57,7 +57,6 @@ export function CreateBragLogModal({ show, onCancel, onSuccess }: CreateBragLogM
                 formData={formData}
                 formErrors={formErrors}
                 loading={loading}
-                isAdmin={isAdmin}
                 students={students}
                 teachers={teachers}
                 totalPoints={totalPoints}

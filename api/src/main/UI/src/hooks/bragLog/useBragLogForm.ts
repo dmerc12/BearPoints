@@ -1,7 +1,7 @@
 import { fetchStudentByToken, searchStudentsInList, fetchStudents, useAppSelector, useAppDispatch } from '../../store';
-import { BragLogDTO, Role } from '../../services';
 import { useEffect, useMemo, useState } from 'react';
 import { bragLogValidationRules } from '../../utils';
+import { BragLogDTO } from '../../services';
 import { fullName } from '../../utils';
 import { useForm } from '../index';
 
@@ -25,8 +25,6 @@ export const useBragLogForm = ({ show, isEdit = false, bragLog, isPublic = false
     const currentUser = useAppSelector(state => state.user.data);
 
     const [selectedTeacherId, setSelectedTeacherId] = useState<number | null>(null);
-
-    const isAdmin = useMemo(() => currentUser?.role === Role.ADMIN, [currentUser]);
 
     const initialData: BragLogDTO = {
         studentId: 0,
@@ -132,7 +130,6 @@ export const useBragLogForm = ({ show, isEdit = false, bragLog, isPublic = false
         currentUser,
         error,
         loading,
-        isAdmin,
         students,
         teachers,
         behaviorTypes: behaviorTypes.filter(bt => bt.active),

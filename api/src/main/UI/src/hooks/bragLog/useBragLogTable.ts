@@ -11,9 +11,8 @@ export interface UseBragLogTableProps {
 export function useBragLogTable({ itemsPerPage = 10 }: UseBragLogTableProps) {
     const dispatch = useAppDispatch();
     const currentUser = useAppSelector(state => state.user.data);
-    const isAdmin = useMemo(() => currentUser?.role === Role.ADMIN, [currentUser]);
-    const isStaff = useMemo(() => currentUser?.role === Role.STAFF, [currentUser]);
-    const isTeacher = useMemo(() => currentUser?.role === Role.TEACHER, [currentUser]);
+    const isAuthorized = useMemo(() => currentUser?.role === Role.ADMIN
+        || currentUser?.role === Role.STAFF || currentUser?.role === Role.TEACHER, [currentUser]);
 
     const initialFilters = {
         studentName: '',
@@ -163,10 +162,10 @@ export function useBragLogTable({ itemsPerPage = 10 }: UseBragLogTableProps) {
     const headerConfig = useMemo(() => ({
         title: 'Brag Logs',
         itemName: 'brag logs',
-        showCreateButton: isAdmin || isStaff || isTeacher,
+        showCreateButton: isAuthorized,
         createButtonText: 'Create Brag Log',
         additionalElements: null,
-    }), [isAdmin, isStaff, isTeacher]);
+    }), [isAuthorized]);
 
     const table = useTable<BragLogDTO, typeof initialFilters>({
         selector: (state: RootState) => state.bragLogs,
@@ -195,5 +194,5 @@ export function useBragLogTable({ itemsPerPage = 10 }: UseBragLogTableProps) {
         handleSuccess: () => void;
     }
 
-    return { ...crudTable, filtersConfig, headerConfig, isAdmin, isStaff, isTeacher };
+    return { ...crudTable, filtersConfig, headerConfig, isAuthorized };
 }
