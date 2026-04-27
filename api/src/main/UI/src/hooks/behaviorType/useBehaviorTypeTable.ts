@@ -10,7 +10,8 @@ export interface UseBehaviorTypeTableProps {
 export function useBehaviorTypeTable({ itemsPerPage = 10 }: UseBehaviorTypeTableProps) {
     const dispatch = useAppDispatch();
     const currentUser = useAppSelector(state => state.user.data);
-    const isAdmin = useMemo(() => currentUser?.role === Role.ADMIN, [currentUser]);
+    const isAuthorized = useMemo(() => currentUser?.role === Role.ADMIN
+        || currentUser?.role === Role.STAFF, [currentUser]);
 
     const initialFilters = {
         nameSearch: '',
@@ -118,10 +119,10 @@ export function useBehaviorTypeTable({ itemsPerPage = 10 }: UseBehaviorTypeTable
     const headerConfig = useMemo(() => ({
         title: 'Behavior Types',
         itemName: 'behavior types',
-        showCreateButton: isAdmin,
+        showCreateButton: isAuthorized,
         createButtonText: 'Create Behavior Type',
         additionalElements: null,
-    }), [isAdmin]);
+    }), [isAuthorized]);
 
     const table = useTable<BehaviorTypeDTO, typeof initialFilters>({
         selector: (state: RootState) => state.behaviorTypes,
@@ -150,5 +151,5 @@ export function useBehaviorTypeTable({ itemsPerPage = 10 }: UseBehaviorTypeTable
         handleSuccess: () => void;
     }
 
-    return { ...crudTable, filtersConfig, headerConfig, isAdmin };
+    return { ...crudTable, filtersConfig, headerConfig, isAuthorized };
 }

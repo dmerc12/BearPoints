@@ -1,6 +1,5 @@
 import { useAppDispatch, useAppSelector, removeBehaviorType } from '../../store';
-import { BehaviorTypeDTO, Role } from '../../services';
-import { useEffect, useState } from 'react';
+import { BehaviorTypeDTO } from '../../services';
 import { Alert } from 'react-bootstrap';
 import { BaseModal } from '../index';
 
@@ -14,25 +13,9 @@ interface DeleteBehaviorTypeModal {
 export function DeleteBehaviorTypeModal({ show, behaviorType, onCancel, onSuccess }: DeleteBehaviorTypeModal) {
     const dispatch = useAppDispatch();
     const { loading, error } = useAppSelector(state => state.behaviorTypes);
-    const currentUser = useAppSelector(state => state.user.data);
-
-    const [authError, setAuthError] = useState<string>('');
-
-    const isAuthorized = currentUser?.role === Role.ADMIN;
-    const disableConfirm = loading || !isAuthorized;
-
-    useEffect(() => {
-        if (show && !isAuthorized) {
-            setAuthError('Only administrators can delete behavior types');
-            const timer = setTimeout(() => {
-                setAuthError('');
-            }, 3000);
-            return () => clearTimeout(timer);
-        }
-    }, [show, isAuthorized]);
 
     const handleConfirmDelete = () => {
-        if (!behaviorType || !behaviorType.id || !isAuthorized) return;
+        if (!behaviorType || !behaviorType.id) return;
         dispatch(removeBehaviorType(behaviorType.id))
             .unwrap()
             .then(() => {
@@ -43,24 +26,18 @@ export function DeleteBehaviorTypeModal({ show, behaviorType, onCancel, onSucces
             });
     };
 
-    const handleClose = () => {
-        setAuthError('');
-        onCancel();
-    };
-
     return (
         <BaseModal
             title='Delete Behavior Type'
             show={show}
             onConfirm={handleConfirmDelete}
-            onCancel={handleClose}
+            onCancel={onCancel}
             confirmText='Delete'
             cancelText='Cancel'
             confirmVariant='danger'
             isLoading={loading}
-            disableConfirm={disableConfirm}
+            disableConfirm={loading}
         >
-            {authError && <Alert variant='danger'>{authError}</Alert>}
             {error && <Alert variant='danger'>{error}</Alert>}
             <p>Are you sure you want to delete {behaviorType ? behaviorType.name : 'this behavior type'}?</p>
             <p className='text-muted'>This action cannot be undone.</p>

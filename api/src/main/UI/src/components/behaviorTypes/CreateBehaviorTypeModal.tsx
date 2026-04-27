@@ -3,7 +3,6 @@ import { BaseModal, BehaviorTypeForm } from '../index';
 import { useBehaviorTypeForm } from '../../hooks';
 import { BehaviorTypeDTO } from '../../services';
 import { Alert } from 'react-bootstrap';
-import { useEffect } from 'react';
 
 interface CreateBehaviorTypeModalProps {
     show: boolean;
@@ -14,19 +13,8 @@ interface CreateBehaviorTypeModalProps {
 export function CreateBehaviorTypeModal({ show, onCancel, onSuccess }: CreateBehaviorTypeModalProps) {
     const dispatch = useAppDispatch();
 
-    const { formData, formErrors, setFormErrors, error, loading, isAdmin, handleInputChange, handleSelectChange,
+    const { formData, formErrors, error, loading, handleInputChange, handleSelectChange,
         handleCheckboxChange, validateForm, resetForm } = useBehaviorTypeForm({ show });
-
-    useEffect(() => {
-        if (show  && !isAdmin) {
-            onCancel();
-            setFormErrors({ 'general': 'Only administrators can edit behavior types' });
-            const timer = setTimeout(() => {
-                setFormErrors({});
-            }, 3000);
-            return () => clearTimeout(timer);
-        }
-    }, [show, onCancel, setFormErrors, isAdmin]);
 
     const handleSubmit = () => {
         if (!validateForm()) return;

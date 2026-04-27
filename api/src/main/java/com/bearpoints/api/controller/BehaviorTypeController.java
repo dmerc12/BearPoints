@@ -24,18 +24,18 @@ import org.springframework.web.bind.annotation.*;
  *     <li>GET /api/behaviors - Retrieve all behavior types (any authenticated user)</li>
  *     <li>GET /api/behaviors/search - Search behavior types with (any authenticated user)</li>
  *     <li>GET /api/behaviors/{id} - Retrieve behavior type by ID (any authenticated user)</li>
- *     <li>POST /api/behaviors - Create a new behavior type (ADMIN only)</li>
- *     <li>PUT /api/behaviors/{id} - Update existing behavior type (ADMIN only)</li>
- *     <li>DELETE /api/behaviors/{id} - Delete a behavior type (ADMIN only)</li>
+ *     <li>POST /api/behaviors - Create a new behavior type (ADMIN/STAFF only)</li>
+ *     <li>PUT /api/behaviors/{id} - Update existing behavior type (ADMIN/STAFF only)</li>
+ *     <li>DELETE /api/behaviors/{id} - Delete a behavior type (ADMIN/STAFF only)</li>
  * </ul>
  *
  * <p>Security:
  * <ul>
  *     <li>GET endpoints - Any authenticated user</li>
- *     <li>POST, PUT, DELETE endpoints - ADMIN role required</li>
+ *     <li>POST, PUT, DELETE endpoints - ADMIN or STAFF role required</li>
  * </ul>
  *
- * @version 2.0
+ * @version 2.1
  * @author Dylan Mercer
  */
 @Slf4j
@@ -120,13 +120,13 @@ public class BehaviorTypeController {
 
     /**
      * Creates a new behavior type.
-     * <p>Accessible only to ADMIN users.
+     * <p>Accessible only to ADMIN or STAFF users.
      *
      * @param behaviorTypeDTO Behavior type data
      * @return Created behavior type details
      */
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
     public ResponseEntity<BehaviorTypeDTO> createBehaviorType(@Valid @RequestBody BehaviorTypeDTO behaviorTypeDTO) {
         log.debug("Creating new behavior type with name: {}", behaviorTypeDTO.getName());
         BehaviorTypeDTO createdBehaviorType = behaviorTypeService.createBehaviorType(behaviorTypeDTO);
@@ -138,14 +138,14 @@ public class BehaviorTypeController {
 
     /**
      * Updates an existing behavior type.
-     * <p>Accessible only to ADMIN users.
+     * <p>Accessible only to ADMIN or STAFF users.
      *
      * @param id Behavior type ID
      * @param behaviorTypeDTO Updated behavior type data
      * @return Updated behavior type details
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
     public ResponseEntity<BehaviorTypeDTO> updateBehaviorType(
             @PathVariable Long id,
             @Valid @RequestBody BehaviorTypeDTO behaviorTypeDTO
@@ -158,13 +158,13 @@ public class BehaviorTypeController {
 
     /**
      * Deletes a behavior type by ID.
-     * <p>Accessible only to ADMIN users.
+     * <p>Accessible only to ADMIN or STAFF users.
      *
      * @param id Behavior type ID
      * @return No content response
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
     public ResponseEntity<Void> deleteBehaviorType(@PathVariable Long id) {
         log.debug("Deleting behavior type with ID: {}", id);
         behaviorTypeService.deleteBehaviorType(id);

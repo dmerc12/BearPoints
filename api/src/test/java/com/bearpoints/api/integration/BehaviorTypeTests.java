@@ -36,7 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *
  * @see TestDataInitializer
  * @see BaseIntegrationTest
- * @version 1.3
+ * @version 1.4
  * @author Dylan Mercer
  */
 @DisplayName("Behavior Type Integration Tests")
@@ -237,7 +237,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
     @DisplayName("POST /api/behaviors - Create behavior type")
     class CreateBehaviorType {
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("creates behavior type with valid data")
         void createBehaviorType_withValidData() throws Exception {
             String uniqueName = "unique-name-" + System.currentTimeMillis();
@@ -262,7 +262,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 409 with duplicate name")
         void returns409_withDuplicateName() throws Exception {
             Optional<BehaviorType> existingBehaviorType = behaviorTypeDAO.findAll(PageRequest.of(0, 1))
@@ -287,7 +287,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with blank name")
         void returns400_withBlankName() throws Exception {
             String name = "";
@@ -309,7 +309,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with name too long")
         void returns400_withNameTooLong() throws Exception {
             String name = "a".repeat(51);
@@ -331,7 +331,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with point value below minimum")
         void returns400_withPointValueBelowMin() throws Exception {
             Integer pointValue = 0;
@@ -353,7 +353,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with point value above maximum")
         void returns400_withPointValueAboveMax() throws Exception {
             Integer pointValue = 6;
@@ -375,8 +375,9 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "STAFF"})        @DisplayName("returns 403 when user is not ADMIN")
-        void returns403_whenUserIsNotAdmin() throws Exception {
+        @WithMockUser(roles = {"STUDENT", "TEACHER"})
+        @DisplayName("returns 403 when user is not ADMIN or STAFF")
+        void returns403_whenUserIsNotAdminOrStaff() throws Exception {
             String uniqueName = "unique-name-" + System.currentTimeMillis();
             Integer pointValue = 2;
             Boolean active = true;
@@ -399,7 +400,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
     @DisplayName("PUT /api/behaviors/{id} - Update behavior type")
     class UpdateBehaviorType {
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("updates behavior type with valid data")
         void updateBehaviorType_withValidData() throws Exception {
             Optional<BehaviorType> existingBehaviorType = behaviorTypeDAO.findAll(PageRequest.of(0, 1))
@@ -429,7 +430,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("updates behavior type when name is unchanged")
         void updateBehaviorType_whenNameUnchanged() throws Exception {
             Optional<BehaviorType> existingBehaviorType = behaviorTypeDAO.findAll(PageRequest.of(0, 1))
@@ -461,7 +462,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
 
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 409 when updating to existing behavior type's name")
         void returns409_whenUpdatingToExistingName() throws Exception {
             Optional<BehaviorType> behaviorType = behaviorTypeDAO.findAll(PageRequest.of(0, 1))
@@ -489,7 +490,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with blank name")
         void returns400_withBlankName() throws Exception {
             Optional<BehaviorType> existingBehaviorType = behaviorTypeDAO.findAll(PageRequest.of(0, 1))
@@ -516,7 +517,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with name too long")
         void returns400_withNameTooLong() throws Exception {
             Optional<BehaviorType> existingBehaviorType = behaviorTypeDAO.findAll(PageRequest.of(0, 1))
@@ -543,7 +544,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with point value below minimum")
         void returns400_withPointValueBelowMin() throws Exception {
             Optional<BehaviorType> existingBehaviorType = behaviorTypeDAO.findAll(PageRequest.of(0, 1))
@@ -570,7 +571,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with point value above maximum")
         void returns400_withPointValueAboveMax() throws Exception {
             Optional<BehaviorType> existingBehaviorType = behaviorTypeDAO.findAll(PageRequest.of(0, 1))
@@ -597,7 +598,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 404 when updating non-existent behavior type")
         void returns404_whenUpdatingNonExistentBehaviorType() throws Exception {
             Long behaviorTypeId = 9999L;
@@ -619,9 +620,9 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "STAFF"})
-        @DisplayName("returns 403 when user is not ADMIN")
-        void returns403_whenUserIsNotAdmin() throws Exception {
+        @WithMockUser(roles = {"STUDENT", "TEACHER"})
+        @DisplayName("returns 403 when user is not ADMIN or STAFF")
+        void returns403_whenUserIsNotAdminOrStaff() throws Exception {
             Optional<BehaviorType> existingBehaviorType = behaviorTypeDAO.findAll(PageRequest.of(0, 1))
                     .stream().findFirst();
             if (existingBehaviorType.isPresent()) {
@@ -646,7 +647,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
     @DisplayName("DELETE /api/behaviors/{id} - Delete behavior type")
     class DeleteBehaviorType {
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("deletes behavior type and returns 204")
         void deletesBehaviorType_andReturns204() throws Exception {
             mockMvc.perform(delete(baseUrl + "/{id}", 1L)
@@ -655,7 +656,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 404 when deleting non-existent behavior type")
         void returns404_whenDeletingNonExistentBehaviorType() throws Exception {
             mockMvc.perform(delete(baseUrl + "/{id}", 9999L)
@@ -668,9 +669,9 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "STAFF"})
-        @DisplayName("returns 403 when user is not ADMIN")
-        void returns403_whenUserIsNotAdmin() throws Exception {
+        @WithMockUser(roles = {"STUDENT", "TEACHER"})
+        @DisplayName("returns 403 when user is not ADMIN or STAFF")
+        void returns403_whenUserIsNotAdminOrStaff() throws Exception {
             mockMvc.perform(delete(baseUrl + "/{id}", 1L)
                             .with(csrf()))
                     .andExpect(status().isForbidden());

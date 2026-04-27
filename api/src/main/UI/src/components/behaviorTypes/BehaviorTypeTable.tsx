@@ -15,7 +15,7 @@ export default function BehaviorTypeTable(props: BehaviorTypeTableProps) {
     const { itemsPerPage = 10, showFilters = true, size = 'm' } = props;
 
     const {
-        data, loading, error, filters, updateFilter, isAdmin, columns, sortConfig, handleSort,
+        data, loading, error, filters, updateFilter, isAuthorized, columns, sortConfig, handleSort,
         showCreateModal, editingItem, deletingItem, handleCreateItem, handleEditItem, handleDeleteItem,
         handleCloseModals, retry, handleSuccess, filtersConfig, headerConfig,
         currentPage, totalPages, setCurrentPage, totalCount
@@ -54,8 +54,8 @@ export default function BehaviorTypeTable(props: BehaviorTypeTableProps) {
             size={size}
             sortConfig={sortConfig}
             onSort={handleSort}
-            canEdit={isAdmin}
-            canDelete={isAdmin}
+            canEdit={isAuthorized}
+            canDelete={isAuthorized}
             onEditItem={handleEditItem}
             onDeleteItem={handleDeleteItem}
             onCreateClick={handleCreateItem}
