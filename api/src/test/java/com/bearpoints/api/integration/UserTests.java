@@ -599,7 +599,7 @@ public class UserTests extends BaseIntegrationTest {
         @Test
         @WithMockUser(roles = {"STUDENT", "TEACHER"})
         @DisplayName("returns 403 when user is not ADMIN or STAFF")
-        void returns403_whenUserIsNotAdmin() throws Exception {
+        void returns403_whenUserIsNotAdminOrStaff() throws Exception {
             String uniqueEmail = "unique-admin-" + System.currentTimeMillis() + "@okcps.org";
             String adminJson = """
                     {
@@ -826,8 +826,8 @@ public class UserTests extends BaseIntegrationTest {
 
         @Test
         @WithMockUser(roles = {"TEACHER", "STUDENT"})
-        @DisplayName("returns 403 when tries to update user without ADMIN or STAFF role")
-        void returns403_whenNonAdminTriesToUpdate() throws Exception {
+        @DisplayName("returns 403 when user tries to update user without ADMIN or STAFF role")
+        void returns403_whenUserTriesToUpdateWithoutAdminOrStaffRole() throws Exception {
             Optional<User> adminUser = userDAO.findByRole(Role.ADMIN, PageRequest.of(0, 1))
                     .stream().findFirst();
             if (adminUser.isPresent()) {
@@ -935,8 +935,8 @@ public class UserTests extends BaseIntegrationTest {
 
         @Test
         @WithMockUser(roles = {"TEACHER", "STUDENT"})
-        @DisplayName("returns 403 when tries to delete without ADMIN or STAFF role")
-        void returns403_whenNonAdminTriesToDelete() throws Exception {
+        @DisplayName("returns 403 when user tries to delete without ADMIN or STAFF role")
+        void returns403_whenUserTriesToDeleteWithoutStaffOrAdminRole() throws Exception {
             mockMvc.perform(delete(baseUrl + "/{id}", 1L)
                             .with(csrf()))
                     .andExpect(status().isForbidden());

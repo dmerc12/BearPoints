@@ -521,7 +521,7 @@ public class StudentTests extends BaseIntegrationTest {
         @Test
         @WithMockUser(roles = "STUDENT")
         @DisplayName("returns 403 when role is STUDENT")
-        void created403_whenRoleSTUDENT() throws Exception {
+        void created403_whenRoleStudent() throws Exception {
             String uniqueEmail = "unique-student-" + System.currentTimeMillis() + "@okcps.org";
             String studentJson = """
                     {
@@ -707,7 +707,7 @@ public class StudentTests extends BaseIntegrationTest {
         @Test
         @WithMockUser(roles = "STUDENT")
         @DisplayName("returns 403 when STUDENT tries to update student")
-        void returns403_whenSTUDENTTriesToUpdate() throws Exception {
+        void returns403_whenStudentTriesToUpdate() throws Exception {
             Optional<Student> student = studentDAO.findAll(PageRequest.of(0, 1))
                     .stream().findFirst();
             if (student.isPresent()) {
@@ -760,7 +760,7 @@ public class StudentTests extends BaseIntegrationTest {
         @Test
         @WithMockUser(roles = "STUDENT")
         @DisplayName("returns 403 when STUDENT tries to delete student")
-        void returns403_whenSTUDENTTriesToDelete() throws Exception {
+        void returns403_whenStudentTriesToDelete() throws Exception {
                 mockMvc.perform(delete(baseUrl + "/{id}", 1L)
                                 .with(csrf()))
                         .andExpect(status().isForbidden());

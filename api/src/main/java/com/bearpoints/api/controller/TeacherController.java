@@ -33,7 +33,7 @@ import org.springframework.web.bind.annotation.*;
  * <p>Security:
  * <ul>
  *     <li>GET endpoints - Any authenticated user</li>
- *     <li>POST, PUT, DELETE endpoints - ADMIN/STAFF role required</li>
+ *     <li>POST, PUT, DELETE endpoints - ADMIN or STAFF role required</li>
  * </ul>
  *
  * @version 2.1
@@ -123,7 +123,7 @@ public class TeacherController {
 
     /**
      * Creates a new teacher.
-     * <p>Accessible only to ADMIN users.
+     * <p>Accessible only to ADMIN or STAFF users.
      *
      * @param teacherDTO Teacher data
      * @return Created teacher details
@@ -141,7 +141,7 @@ public class TeacherController {
 
     /**
      * Updates an existing teacher.
-     * <p>Accessible only to ADMIN users.
+     * <p>Accessible only to ADMIN or STAFF users.
      *
      * @param id Teacher ID
      * @param teacherDTO Updated teacher data
@@ -161,7 +161,7 @@ public class TeacherController {
 
     /**
      * Deletes a teacher by ID.
-     * <p>Accessible only to ADMIN users.
+     * <p>Accessible only to ADMIN or STAFF users.
      *
      * @param id Teacher ID
      * @return No content response

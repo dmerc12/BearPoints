@@ -33,7 +33,7 @@ import org.springframework.web.bind.annotation.*;
  * <p>Security:
  * <ul>
  *     <li>GET endpoints - Any authenticated user</li>
- *     <li>POST, PUT, DELETE endpoints - ADMIN/STAFF role required</li>
+ *     <li>POST, PUT, DELETE endpoints - ADMIN or STAFF role required</li>
  * </ul>
  *
  * @version 3.1
@@ -122,7 +122,7 @@ public class UserController {
 
     /**
      * Creates a new user.
-     * <p>Accessible only to ADMIN and STAFF users.
+     * <p>Accessible only to ADMIN or STAFF users.
      *
      * @param userDTO User data
      * @return Created user details
@@ -138,7 +138,7 @@ public class UserController {
 
     /**
      * Updates an existing user.
-     * <p>Accessible only to ADMIN users.
+     * <p>Accessible only to ADMIN or STAFF users.
      *
      * @param id User ID
      * @param userDTO Updated user data
@@ -155,7 +155,7 @@ public class UserController {
 
     /**
      * Deletes a user by ID.
-     * <p>Accessible only to ADMIN users.
+     * <p>Accessible only to ADMIN or STAFF users.
      *
      * @param id User ID
      * @return No content response

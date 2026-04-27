@@ -169,7 +169,7 @@ public class StudentController {
 
     /**
      * Creates a new student.
-     * <p>Accessible only to ADMIN users.
+     * <p>Accessible only to ADMIN, STAFF, or TEACHER users.
      *
      * @param studentDTO Student data
      * @return Created student details
@@ -185,7 +185,7 @@ public class StudentController {
 
     /**
      * Updates an existing student.
-     * <p>Accessible only to ADMIN users.
+     * <p>Accessible only to ADMIN, STAFF, or TEACHER users.
      *
      * @param id Student ID
      * @param studentDTO Updated student data
@@ -202,7 +202,7 @@ public class StudentController {
 
     /**
      * Deletes a student by ID.
-     * <p>Accessible only to ADMIN users.
+     * <p>Accessible only to ADMIN, STAFF, or TEACHER users.
      *
      * @param id Student ID
      * @return No content response
