@@ -1,6 +1,5 @@
 import { useAppDispatch, useAppSelector, removeStudent } from '../../store';
-import { StudentDTO, Role } from '../../services';
-import { useEffect, useState } from 'react';
+import { StudentDTO } from '../../services';
 import { Alert } from 'react-bootstrap';
 import { fullName } from '../../utils';
 import { BaseModal } from '../index';
@@ -15,28 +14,9 @@ interface DeleteStudentModalProps {
 export function DeleteStudentModal({ show, student, onCancel, onSuccess }: DeleteStudentModalProps) {
     const dispatch = useAppDispatch();
     const { loading, error } = useAppSelector(state => state.students);
-    const currentUser = useAppSelector(state => state.user.data);
-
-    const [authError, setAuthError] = useState<string>('');
-
-    const isAdmin = currentUser?.role === Role.ADMIN;
-    const isAuthorized = !authError;
-    const disableConfirm = loading || !isAuthorized;
-
-    useEffect(() => {
-        if (show && !isAdmin && student) {
-            setAuthError('Only administrators can delete students');
-            const timer = setTimeout(() => {
-                setAuthError('');
-            }, 3000);
-            return () => clearTimeout(timer);
-        } else {
-            setAuthError('');
-        }
-    }, [show, isAdmin, student]);
 
     const handleConfirmDelete = () => {
-        if (!student || authError || student.id === undefined || student.id === null) return;
+        if (!student || student.id === undefined || student.id === null) return;
         dispatch(removeStudent(student.id))
             .unwrap()
             .then(() => {
@@ -47,24 +27,18 @@ export function DeleteStudentModal({ show, student, onCancel, onSuccess }: Delet
             });
     };
 
-    const handleClose = () => {
-        setAuthError('');
-        onCancel();
-    };
-
     return (
         <BaseModal
             title='Delete Student'
             show={show}
             onConfirm={handleConfirmDelete}
-            onCancel={handleClose}
+            onCancel={onCancel}
             confirmText='Delete'
             cancelText='Cancel'
             confirmVariant='danger'
             isLoading={loading}
-            disableConfirm={disableConfirm}
+            disableConfirm={loading}
         >
-            {authError && <Alert variant='danger'>{authError}</Alert>}
             {error && <Alert variant='danger'>{error}</Alert>}
             <p>Are you sure you want to delete { student ? fullName(student) : 'this student'}?</p>
             <p className='text-muted'>This action cannot be undone.</p>

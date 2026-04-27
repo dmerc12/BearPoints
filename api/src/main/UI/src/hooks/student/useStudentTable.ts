@@ -13,7 +13,8 @@ export function useStudentTable({ itemsPerPage = 10 }: UseStudentTableProps) {
     const currentUser = useAppSelector(state => state.user.data);
     const { data: students } = useAppSelector(state => state.students);
 
-    const isAdmin = useMemo(() => currentUser?.role === Role.ADMIN, [currentUser]);
+    const isAuthorized = useMemo(() => currentUser?.role === Role.ADMIN
+        || currentUser?.role === Role.STAFF || currentUser?.role === Role.TEACHER, [currentUser]);
 
     const initialFilters = {
         nameSearch: '',
@@ -148,10 +149,10 @@ export function useStudentTable({ itemsPerPage = 10 }: UseStudentTableProps) {
     const headerConfig = useMemo(() => ({
         title: 'Students',
         itemName: 'students',
-        showCreateButton: isAdmin,
+        showCreateButton: isAuthorized,
         createButtonText: 'Create Student',
         additionalElements: null,
-    }), [isAdmin]);
+    }), [isAuthorized]);
 
     const table = useTable<StudentDTO, typeof initialFilters>({
         selector: (state: RootState) => state.students,
@@ -178,8 +179,7 @@ export function useStudentTable({ itemsPerPage = 10 }: UseStudentTableProps) {
         handleDeleteItem: (item: StudentDTO) => void;
         handleCloseModals: () => void;
         handleSuccess: () => void;
-        isAdmin: boolean;
     }
 
-    return { ...crudTable, filtersConfig, headerConfig, isAdmin };
+    return { ...crudTable, filtersConfig, headerConfig, isAuthorized };
 }

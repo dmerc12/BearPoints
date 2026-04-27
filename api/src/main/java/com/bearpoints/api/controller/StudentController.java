@@ -26,18 +26,18 @@ import org.springframework.web.bind.annotation.*;
  *     <li>GET /api/students/leaderboard - Retrieve classroom leaderboard (any authenticated user)</li>
  *     <li>GET /api/students/{id} - Retrieve student by ID (any authenticated user)</li>
  *     <li>GET /api/students/token/{token} - Retrieve student by token (any authenticated user)</li>
- *     <li>POST /api/students - Create new student (ADMIN only)</li>
- *     <li>PUT /api/students - Update existing student (Admin only)</li>
- *     <li>DELETE /api/students/{id} - Delete student (Admin only)</li>
+ *     <li>POST /api/students - Create new student (exclude STUDENT role)</li>
+ *     <li>PUT /api/students - Update existing student (exclude STUDENT role)</li>
+ *     <li>DELETE /api/students/{id} - Delete student (exclude STUDENT role)</li>
  * </ul>
  *
  * <p>Security:
  * <ul>
  *     <li>GET endpoints - Any authenticated user</li>
- *     <li>POST, PUT, DELETE endpoints - ADMIN role required</li>
+ *     <li>POST, PUT, DELETE endpoints - ADMIN, STAFF, or TEACHER role required</li>
  * </ul>
  *
- * @version 2.0
+ * @version 2.1
  * @author Dylan Mercer
  */
 @Slf4j
@@ -175,7 +175,7 @@ public class StudentController {
      * @return Created student details
      */
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF', 'TEACHER')")
     public ResponseEntity<StudentDTO> createStudent(@Valid @RequestBody StudentDTO studentDTO) {
         log.debug("Creating new student with email: {}", studentDTO.getUser().getEmail());
         StudentDTO createdStudent = studentService.createStudent(studentDTO);
@@ -192,7 +192,7 @@ public class StudentController {
      * @return Updated student details
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF', 'TEACHER')")
     public ResponseEntity<StudentDTO> updateStudent(@PathVariable Long id, @Valid @RequestBody StudentDTO studentDTO) {
         log.debug("Updating student with ID: {}", id);
         StudentDTO updatedStudent = studentService.updateStudent(id, studentDTO);
@@ -208,7 +208,7 @@ public class StudentController {
      * @return No content response
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF', 'TEACHER')")
     public ResponseEntity<Void> deleteStudent(@PathVariable Long id) {
         log.debug("Deleting student with ID: {}", id);
         studentService.deleteStudent(id);

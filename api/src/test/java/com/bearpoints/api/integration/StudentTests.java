@@ -36,7 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *
  * @see TestDataInitializer
  * @see BaseIntegrationTest
- * @version 1.5
+ * @version 1.6
  * @author Dylan Mercer
  */
 @DisplayName("Student Integration Tests")
@@ -317,7 +317,7 @@ public class StudentTests extends BaseIntegrationTest {
     @DisplayName("POST /students - Create student")
     class CreateStudent {
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER"})
         @DisplayName("creates student with valid data")
         void createdStudent_withValidData() throws Exception {
             Long teacherId = 1L;
@@ -353,7 +353,7 @@ public class StudentTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER"})
         @DisplayName("returns 400 with invalid email format")
         void created400_withInvalidEmailFormat() throws Exception {
             String studentJson = """
@@ -380,7 +380,7 @@ public class StudentTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER"})
         @DisplayName("returns 400 with invalid email domain")
         void created400_withInvalidEmailDomain() throws Exception {
             String studentJson = """
@@ -407,7 +407,7 @@ public class StudentTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER"})
         @DisplayName("returns 409 with duplicate email")
         void created409_withDuplicateEmail() throws Exception {
             Optional<Student> existingStudent = studentDAO.findAll(PageRequest.of(0, 1))
@@ -438,7 +438,7 @@ public class StudentTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER"})
         @DisplayName("returns 404 when teacher does not exist")
         void created404_whenTeacherDoesNotExist() throws Exception {
             String uniqueEmail = "unique-student-" + System.currentTimeMillis() + "@okcps.org";
@@ -465,7 +465,7 @@ public class StudentTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER"})
         @DisplayName("returns 400 with blank first name")
         void created400_withBlankFirstName() throws Exception {
             String studentJson = """
@@ -492,7 +492,7 @@ public class StudentTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER"})
         @DisplayName("returns 400 with blank last name")
         void created400_withBlankLastName() throws Exception {
             String studentJson = """
@@ -519,9 +519,9 @@ public class StudentTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "STAFF"})
-        @DisplayName("returns 403 when user is not ADMIN")
-        void created403_whenUserIsNotAdmin() throws Exception {
+        @WithMockUser(roles = "STUDENT")
+        @DisplayName("returns 403 when role is STUDENT")
+        void created403_whenRoleSTUDENT() throws Exception {
             String uniqueEmail = "unique-student-" + System.currentTimeMillis() + "@okcps.org";
             String studentJson = """
                     {
@@ -548,7 +548,7 @@ public class StudentTests extends BaseIntegrationTest {
     @DisplayName("PUT /students/{id} - Update student")
     class UpdateStudent {
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER"})
         @DisplayName("updates student with valid data")
         void updatesStudent_withValidData() throws Exception {
             Optional<Student> student = studentDAO.findAll(PageRequest.of(0, 1))
@@ -584,7 +584,7 @@ public class StudentTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER"})
         @DisplayName("updates student when email is unchanged")
         void updatesStudent_whenEmailUnchanged() throws Exception {
             Optional<Student> student = studentDAO.findAll(PageRequest.of(0, 1))
@@ -615,7 +615,7 @@ public class StudentTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER"})
         @DisplayName("returns 409 when updating email to existing student's email")
         void created409_whenUpdatingToExistingEmail() throws Exception {
             Optional<Student> student = studentDAO.findAll(PageRequest.of(0, 1))
@@ -648,7 +648,7 @@ public class StudentTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER"})
         @DisplayName("returns 404 when updating to non-existent teacher")
         void returns404_whenUpdatingNonExistentTeacher() throws Exception {
             Optional<Student> student = studentDAO.findAll(PageRequest.of(0, 1))
@@ -679,7 +679,7 @@ public class StudentTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER"})
         @DisplayName("returns 404 when updating non-existent student")
         void returns404_whenUpdatingNonExistentStudent() throws Exception {
             String updateJson = """
@@ -705,9 +705,9 @@ public class StudentTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"TEACHER", "STUDENT", "STAFF"})
-        @DisplayName("returns 403 when non-admin tries to update student")
-        void returns403_whenNonAdminTriesToUpdate() throws Exception {
+        @WithMockUser(roles = "STUDENT")
+        @DisplayName("returns 403 when STUDENT tries to update student")
+        void returns403_whenSTUDENTTriesToUpdate() throws Exception {
             Optional<Student> student = studentDAO.findAll(PageRequest.of(0, 1))
                     .stream().findFirst();
             if (student.isPresent()) {
@@ -738,7 +738,7 @@ public class StudentTests extends BaseIntegrationTest {
     @DisplayName("DELETE /students/{id} - Delete student")
     class DeleteStudent {
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER"})
         @DisplayName("deletes student and returns 204")
         void deletesStudent_andReturns204() throws Exception {
             mockMvc.perform(delete(baseUrl + "/{id}", 1L)
@@ -747,7 +747,7 @@ public class StudentTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER"})
         @DisplayName("returns 404 when deleting non-existent student")
         void returns404_whenDeletingNonExistentStudent() throws Exception {
             mockMvc.perform(delete(baseUrl + "/{id}", 9999L)
@@ -758,9 +758,9 @@ public class StudentTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"TEACHER", "STUDENT", "STAFF"})
-        @DisplayName("returns 403 when non-admin tries to delete student")
-        void returns403_whenNonAdminTriesToDelete() throws Exception {
+        @WithMockUser(roles = "STUDENT")
+        @DisplayName("returns 403 when STUDENT tries to delete student")
+        void returns403_whenSTUDENTTriesToDelete() throws Exception {
                 mockMvc.perform(delete(baseUrl + "/{id}", 1L)
                                 .with(csrf()))
                         .andExpect(status().isForbidden());

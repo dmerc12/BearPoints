@@ -16,11 +16,10 @@ interface StudentFormProps {
     error?: string | null;
     onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onSelectChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-    showTeacherField?: boolean;
 }
 
 export function StudentForm({ formData, formErrors, teachers, loading, onInputChange, onSelectChange,
-                                showTeacherField = true, error }: StudentFormProps) {
+                                error }: StudentFormProps) {
     return (
         <Form>
             {formErrors.general && <Alert variant='danger'>{formErrors.general}</Alert>}
@@ -76,39 +75,37 @@ export function StudentForm({ formData, formErrors, teachers, loading, onInputCh
                     {formErrors.email}
                 </Form.Control.Feedback>
             </Form.Group>
-            {showTeacherField && (
-                <Form.Group className='mb-3'>
-                    <Form.Label>Teacher</Form.Label>
-                    {loading ? (
-                        <Form.Control
-                            type='text'
-                            value='Loading teachers...'
-                            disabled
-                        />
-                    ) : (
-                        <Form.Select
-                            name='teacherId'
-                            value={formData.teacherId}
-                            onChange={onSelectChange}
-                            isInvalid={!!formErrors.teacherId}
-                            disabled={loading}
-                        >
-                            <option value={-1}>Select a teacher</option>
-                            {teachers.map((teacher: TeacherDTO) => {
-                                if (teacher.id === undefined || teacher.id === null) return;
-                                return (
-                                    <option key={teacher.id} value={teacher.id}>
-                                        {fullName(teacher.user)}
-                                    </option>
-                                );
-                            })}
-                        </Form.Select>
-                    )}
-                    <Form.Control.Feedback type='invalid'>
-                        {formErrors.teacherId}
-                    </Form.Control.Feedback>
-                </Form.Group>
-            )}
+            <Form.Group className='mb-3'>
+                <Form.Label>Teacher</Form.Label>
+                {loading ? (
+                    <Form.Control
+                        type='text'
+                        value='Loading teachers...'
+                        disabled
+                    />
+                ) : (
+                    <Form.Select
+                        name='teacherId'
+                        value={formData.teacherId}
+                        onChange={onSelectChange}
+                        isInvalid={!!formErrors.teacherId}
+                        disabled={loading}
+                    >
+                        <option value={-1}>Select a teacher</option>
+                        {teachers.map((teacher: TeacherDTO) => {
+                            if (teacher.id === undefined || teacher.id === null) return;
+                            return (
+                                <option key={teacher.id} value={teacher.id}>
+                                    {fullName(teacher.user)}
+                                </option>
+                            );
+                        })}
+                    </Form.Select>
+                )}
+                <Form.Control.Feedback type='invalid'>
+                    {formErrors.teacherId}
+                </Form.Control.Feedback>
+            </Form.Group>
         </Form>
     );
 }

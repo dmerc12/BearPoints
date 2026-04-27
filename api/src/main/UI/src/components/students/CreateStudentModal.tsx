@@ -2,7 +2,6 @@ import { StudentDTO, Role, TeacherDTO } from '../../services';
 import { useAppDispatch, addStudent } from '../../store';
 import { BaseModal, StudentForm } from '../index';
 import { useStudentForm  } from '../../hooks';
-import { useEffect } from 'react';
 
 interface CreateStudentModalProps {
     show: boolean;
@@ -14,19 +13,8 @@ export function CreateStudentModal({ show, onCancel, onSuccess }: CreateStudentM
     const dispatch = useAppDispatch();
 
     const {
-        formData, formErrors, setFormErrors, teachers, isAdmin, error, isLoading, handleInputChange,
+        formData, formErrors, teachers, error, isLoading, handleInputChange,
         handleSelectChange, validateForm, resetForm } = useStudentForm({ show });
-
-    useEffect(() => {
-        if (show && !isAdmin) {
-            onCancel();
-            setFormErrors({ general: 'Only administrators can update students' });
-            const timer = setTimeout(() => {
-                setFormErrors({});
-            }, 3000);
-            return () => clearTimeout(timer);
-        }
-    }, [show, isAdmin, onCancel, setFormErrors]);
 
     const handleSubmit = () => {
         if (!validateForm()) return;
@@ -75,7 +63,6 @@ export function CreateStudentModal({ show, onCancel, onSuccess }: CreateStudentM
                 error={error}
                 onInputChange={handleInputChange}
                 onSelectChange={handleSelectChange}
-                showTeacherField={isAdmin}
             />
         </BaseModal>
     );

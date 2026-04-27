@@ -25,7 +25,7 @@ export default function StudentTable (props: StudentTableProps) {
     const reactToPrintFn = useReactToPrint({ contentRef });
 
     const {
-        data, loading, error, filters, updateFilter, sortConfig, handleSort, isAdmin, columns,
+        data, loading, error, filters, updateFilter, sortConfig, handleSort, isAuthorized, columns,
         showCreateModal, editingItem, deletingItem, handleCreateItem, handleEditItem, handleDeleteItem,
         handleCloseModals, retry, handleSuccess, filtersConfig, headerConfig,
         currentPage, totalPages, setCurrentPage, totalCount
@@ -98,8 +98,8 @@ export default function StudentTable (props: StudentTableProps) {
                 size={size}
                 sortConfig={sortConfig}
                 onSort={handleSort}
-                canEdit={isAdmin}
-                canDelete={isAdmin}
+                canEdit={isAuthorized}
+                canDelete={isAuthorized}
                 onEditItem={handleEditItem}
                 onDeleteItem={handleDeleteItem}
                 onCreateClick={handleCreateItem}

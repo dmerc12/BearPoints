@@ -1,6 +1,6 @@
 import { useAppSelector, useAppDispatch, fetchTeachers } from '../../store';
 import { studentValidationRules } from '../../utils';
-import { StudentDTO, Role } from '../../services';
+import { StudentDTO } from '../../services';
 import { useForm } from '../index';
 import { useEffect } from 'react';
 
@@ -16,8 +16,6 @@ export const useStudentForm = ({ show, isEdit = false, student }: UseStudentForm
         state => state.students);
     const { data: teachers, loading: teachersLoading, error: teachersError } = useAppSelector(
         state => state.teachers);
-    const currentUser = useAppSelector(
-        state => state.user.data);
 
     const initialData = {
         firstName: '',
@@ -28,15 +26,14 @@ export const useStudentForm = ({ show, isEdit = false, student }: UseStudentForm
 
     const form = useForm({ initialData, validationRules: studentValidationRules });
 
-    const isAdmin = currentUser?.role === Role.ADMIN;
     const error = studentsError || teachersError;
     const isLoading = studentsLoading || teachersLoading;
 
     useEffect(() => {
-        if (show && isAdmin && teachers.length === 0) {
+        if (show && teachers.length === 0) {
             dispatch(fetchTeachers({ page: 0, size: 1000, force: true }));
         }
-    }, [show, isAdmin, dispatch, teachers.length]);
+    }, [show, dispatch, teachers.length]);
 
     useEffect(() => {
         if (show && !isEdit) {
@@ -61,8 +58,6 @@ export const useStudentForm = ({ show, isEdit = false, student }: UseStudentForm
         formErrors: form.formErrors,
         setFormErrors: form.setFormErrors,
         teachers,
-        currentUser,
-        isAdmin,
         error,
         isLoading,
         handleInputChange: form.handleInputChange,
