@@ -2,7 +2,6 @@ import { useAppDispatch, addRewardItem } from '../../store';
 import { BaseModal, RewardItemForm } from '../index';
 import { useRewardItemForm } from '../../hooks';
 import { Alert } from 'react-bootstrap';
-import { useEffect } from 'react';
 
 interface CreateRewardItemModalProps {
     show: boolean;
@@ -13,19 +12,8 @@ interface CreateRewardItemModalProps {
 export function CreateRewardItemModal({ show, onCancel, onSuccess }: CreateRewardItemModalProps) {
     const dispatch = useAppDispatch();
 
-    const { formData, formErrors, setFormErrors, error, loading, isAdmin, handleInputChange,
+    const { formData, formErrors, error, loading, handleInputChange,
         validateForm, resetForm } = useRewardItemForm({ show });
-
-    useEffect(() => {
-        if (show && !isAdmin) {
-            onCancel();
-            setFormErrors({ general: 'Only administrators can create reward items' });
-            const timer = setTimeout(() => {
-                setFormErrors({});
-            }, 3000);
-            return () => clearTimeout(timer);
-        }
-    }, [show, isAdmin, onCancel, setFormErrors]);
 
     const handleSubmit = () => {
         if (!validateForm()) return;

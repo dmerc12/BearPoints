@@ -10,7 +10,8 @@ export interface UseRewardItemTableProps {
 export function useRewardItemTable({ itemsPerPage = 10 }: UseRewardItemTableProps) {
     const dispatch = useAppDispatch();
     const currentUser = useAppSelector(state => state.user.data);
-    const isAdmin = useMemo(() => currentUser?.role === Role.ADMIN, [currentUser]);
+    const isAuthorized = useMemo(() => currentUser?.role === Role.ADMIN
+        || currentUser?.role === Role.STAFF, [currentUser]);
 
     const initialFilters = {
         name: '',
@@ -122,10 +123,10 @@ export function useRewardItemTable({ itemsPerPage = 10 }: UseRewardItemTableProp
     const headerConfig = useMemo(() => ({
         title: 'Reward Items',
         itemName: 'reward items',
-        showCreateButton: isAdmin,
+        showCreateButton: isAuthorized,
         createButtonText: 'Create Reward Item',
         additionalElements: null,
-    }), [isAdmin]);
+    }), [isAuthorized]);
 
     const table = useTable<RewardItemDTO, typeof initialFilters>({
         selector: (state: RootState) => state.rewardItems,
@@ -154,5 +155,5 @@ export function useRewardItemTable({ itemsPerPage = 10 }: UseRewardItemTableProp
         handleSuccess: () => void;
     };
 
-    return { ...crudTable, filtersConfig, headerConfig, isAdmin };
+    return { ...crudTable, filtersConfig, headerConfig, isAuthorized };
 }

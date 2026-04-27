@@ -24,18 +24,18 @@ import org.springframework.web.bind.annotation.*;
  *     <li>GET /api/items - Retrieve all reward items (any authenticated user)</li>
  *     <li>GET /api/items/search - Search reward items (any authenticated user)</li>
  *     <li>GET /api/items/{id} - Retrieve reward item by ID (any authenticated user)</li>
- *     <li>POST /api/items - Create a new reward item (ADMIN only)</li>
- *     <li>PUT /api/items/{id} - Update existing reward item (ADMIN only)</li>
- *     <li>DELETE /api/items/{id} - Delete a reward item (ADMIN only)</li>
+ *     <li>POST /api/items - Create a new reward item (ADMIN/STAFF only)</li>
+ *     <li>PUT /api/items/{id} - Update existing reward item (ADMIN/STAFF only)</li>
+ *     <li>DELETE /api/items/{id} - Delete a reward item (ADMIN/STAFF only)</li>
  * </ul>
  *
  * <p>Security:
  * <ul>
  *     <li>GET endpoints - Any authenticated user</li>
- *     <li>POST, PUT, DELETE endpoints - ADMIN role required</li>
+ *     <li>POST, PUT, DELETE endpoints - ADMIN or STAFF role required</li>
  * </ul>
  *
- * @version 1.1
+ * @version 1.2
  * @author Dylan Mercer
  */
 @Slf4j
@@ -121,13 +121,13 @@ public class RewardItemController {
 
     /**
      * Creates a new reward item.
-     * <p>Accessible only to ADMIN users.
+     * <p>Accessible only to ADMIN or STAFF users.
      *
      * @param rewardItemDTO Reward item data
      * @return Created reward item details
      */
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
     public ResponseEntity<RewardItemDTO> createRewardItem(@Valid @RequestBody RewardItemDTO rewardItemDTO) {
         log.debug("Creating new reward item with name: {}", rewardItemDTO.getName());
         RewardItemDTO createdRewardItem = rewardItemService.createRewardItem(rewardItemDTO);
@@ -139,14 +139,14 @@ public class RewardItemController {
 
     /**
      * Updates an existing reward item.
-     * <p>Accessible only to ADMIN users.
+     * <p>Accessible only to ADMIN or STAFF users.
      *
      * @param id Reward item ID
      * @param rewardItemDTO Updated reward item data
      * @return Updated reward item details
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
     public ResponseEntity<RewardItemDTO> updateRewardItem(
             @PathVariable Long id,
             @Valid @RequestBody RewardItemDTO rewardItemDTO
@@ -159,13 +159,13 @@ public class RewardItemController {
 
     /**
      * Deletes a reward item by ID.
-     * <p>Accessible only to ADMIN users.
+     * <p>Accessible only to ADMIN or STAFF users.
      *
      * @param id Reward item ID
      * @return No content response
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
     public ResponseEntity<Void> deleteRewardItem(@PathVariable Long id) {
         log.debug("Deleting behavior type with ID: {}", id);
         rewardItemService.deleteRewardItem(id);

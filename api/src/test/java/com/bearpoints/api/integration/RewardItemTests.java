@@ -39,7 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *
  * @see TestDataInitializer
  * @see BaseIntegrationTest
- * @version 1.2
+ * @version 1.3
  * @author Dylan Mercer
  */
 @DisplayName("Reward Item Integration Tests")
@@ -270,7 +270,7 @@ public class RewardItemTests extends BaseIntegrationTest {
     @DisplayName("POST /api/items - Create reward item")
     class CreateRewardItem {
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("creates reward item with valid data")
         void createRewardItemWithValidData() throws Exception {
             String uniqueName = "unique-name-" + System.currentTimeMillis();
@@ -295,7 +295,7 @@ public class RewardItemTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 409 with duplicate name")
         void returns409WithDuplicateName() throws Exception {
             Optional<RewardItem> existingRewardItem = rewardItemDAO.findAll(PageRequest.of(0, 1))
@@ -320,7 +320,7 @@ public class RewardItemTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with blank name")
         void returns400WithBlankName() throws Exception {
             String rewardItemJson = """
@@ -341,7 +341,7 @@ public class RewardItemTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with name too long")
         void returns400WithNameTooLong() throws Exception {
             String name = "A".repeat(51);
@@ -363,7 +363,7 @@ public class RewardItemTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with point cost null")
         void returns400WithPointCostNull() throws Exception {
             String uniqueName = "unique-name-" + System.currentTimeMillis();
@@ -385,7 +385,7 @@ public class RewardItemTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with point cost below minimum")
         void returns400WithPointCostBelowMinimum() throws Exception {
             String uniqueName = "unique-name-" + System.currentTimeMillis();
@@ -407,7 +407,7 @@ public class RewardItemTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with stock null")
         void returns400WithStockNull() throws Exception {
             String uniqueName = "unique-name-" + System.currentTimeMillis();
@@ -429,7 +429,7 @@ public class RewardItemTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with stock below minimum")
         void returns400WithStockBelowMinimum() throws Exception {
             String uniqueName = "unique-name-" + System.currentTimeMillis();
@@ -451,9 +451,9 @@ public class RewardItemTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"TEACHER", "STUDENT", "STAFF"})
-        @DisplayName("returns 403 when user is not admin")
-        void returns403WhenUserIsNotAdmin() throws Exception {
+        @WithMockUser(roles = {"TEACHER", "STUDENT"})
+        @DisplayName("returns 403 when user is not admin or staff")
+        void returns403WhenUserIsNotAdminOrStaff() throws Exception {
             String uniqueName = "unique-name-" + System.currentTimeMillis();
             String rewardItemJson = """
                     {
@@ -474,7 +474,7 @@ public class RewardItemTests extends BaseIntegrationTest {
     @DisplayName("PUT /api/items/{id} - Update reward item")
     class UpdateRewardItem {
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("updates reward item with valid data")
         void updateRewardItemWithValidData() throws Exception {
             Optional<RewardItem> existingRewardItem = rewardItemDAO.findAll(PageRequest.of(0, 1))
@@ -504,7 +504,7 @@ public class RewardItemTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("updates reward item when name is unchanged")
         void updateRewardItemWhenNameIsUnchanged() throws Exception {
             Optional<RewardItem> existingRewardItem = rewardItemDAO.findAll(PageRequest.of(0, 1))
@@ -534,7 +534,7 @@ public class RewardItemTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 409 when updating to existing reward item's name")
         void returns409WhenUpdatingToExistingRewardItemName() throws Exception {
             Optional<RewardItem> existingRewardItem = rewardItemDAO.findAll(PageRequest.of(0, 1))
@@ -565,7 +565,7 @@ public class RewardItemTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with blank name")
         void returns400WithBlankName() throws Exception {
             Optional<RewardItem> existingRewardItem = rewardItemDAO.findAll(PageRequest.of(0, 1))
@@ -591,7 +591,7 @@ public class RewardItemTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with name too long")
         void returns400WithNameTooLong() throws Exception {
             Optional<RewardItem> existingRewardItem = rewardItemDAO.findAll(PageRequest.of(0, 1))
@@ -618,7 +618,7 @@ public class RewardItemTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with point cost null")
         void returns400WithPointCostNull() throws Exception {
             Optional<RewardItem> existingRewardItem = rewardItemDAO.findAll(PageRequest.of(0, 1))
@@ -645,7 +645,7 @@ public class RewardItemTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with point cost below minimum")
         void returns400WithPointCostBelowMinimum() throws Exception {
             Optional<RewardItem> existingRewardItem = rewardItemDAO.findAll(PageRequest.of(0, 1))
@@ -672,7 +672,7 @@ public class RewardItemTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with stock null")
         void returns400WithStockNull() throws Exception {
             Optional<RewardItem> existingRewardItem = rewardItemDAO.findAll(PageRequest.of(0, 1))
@@ -699,7 +699,7 @@ public class RewardItemTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with stock below minimum")
         void returns400WithStockBelowMinimum() throws Exception {
             Optional<RewardItem> existingRewardItem = rewardItemDAO.findAll(PageRequest.of(0, 1))
@@ -726,7 +726,7 @@ public class RewardItemTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 404 when updating non-existent reward item")
         void returns404WhenUpdatingNonExistentRewardItem() throws Exception {
             Long rewardItemId = 9999L;
@@ -749,9 +749,9 @@ public class RewardItemTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "STAFF"})
-        @DisplayName("returns 403 when user is not admin")
-        void returns403WhenUserIsNotAdmin() throws Exception {
+        @WithMockUser(roles = {"STUDENT", "TEACHER"})
+        @DisplayName("returns 403 when user is not admin or staff")
+        void returns403WhenUserIsNotAdminOrStaff() throws Exception {
             Optional<RewardItem> existingRewardItem = rewardItemDAO.findAll(PageRequest.of(0, 1))
                     .stream().findFirst();
             if (existingRewardItem.isPresent()) {
@@ -779,7 +779,7 @@ public class RewardItemTests extends BaseIntegrationTest {
     @DisplayName("DELETE /api/items/{id} - Delete reward item")
     class DeleteRewardItem {
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("deletes reward item and returns 204")
         void deletesRewardItemAndReturns204() throws Exception {
             mockMvc.perform(delete(baseUrl + "/{id}", 1L)
@@ -788,7 +788,7 @@ public class RewardItemTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 404 when deleting non-existent reward item")
         void returns404WhenDeletingNonExistentRewardItem() throws Exception {
             mockMvc.perform(delete(baseUrl + "/{id}", 9999L)
@@ -800,9 +800,9 @@ public class RewardItemTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "STAFF"})
-        @DisplayName("returns 403 when user is not admin")
-        void returns403WhenUserIsNotAdmin() throws Exception {
+        @WithMockUser(roles = {"STUDENT", "TEACHER"})
+        @DisplayName("returns 403 when user is not admin or staff")
+        void returns403WhenUserIsNotAdminOrStaff() throws Exception {
             mockMvc.perform(delete(baseUrl + "/{id}", 1L)
                             .with(csrf()))
                     .andExpect(status().isForbidden());

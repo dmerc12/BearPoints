@@ -3,7 +3,6 @@ import { BaseModal, RewardItemForm } from '../index';
 import { useRewardItemForm } from '../../hooks';
 import { RewardItemDTO} from '../../services';
 import { Alert } from 'react-bootstrap';
-import { useEffect } from 'react';
 
 interface EditRewardItemModalProps {
     show: boolean;
@@ -15,19 +14,8 @@ interface EditRewardItemModalProps {
 export function EditRewardItemModal({ show, rewardItem, onCancel, onSuccess }: EditRewardItemModalProps) {
     const dispatch = useAppDispatch();
 
-    const { formData, formErrors, setFormErrors, error, loading, isAdmin, handleInputChange,
+    const { formData, formErrors, error, loading, handleInputChange,
         validateForm, resetForm } = useRewardItemForm({ show, isEdit: true, rewardItem });
-
-    useEffect(() => {
-        if (show && !isAdmin) {
-            onCancel();
-            setFormErrors({ general: 'Only administrators can edit reward items' });
-            const timer = setTimeout(() => {
-                setFormErrors({});
-            }, 300);
-            return () => clearTimeout(timer);
-        }
-    }, [show, isAdmin, onCancel, setFormErrors]);
 
     const handleSubmit = () => {
         if (!validateForm() || !rewardItem || !rewardItem.id) return;

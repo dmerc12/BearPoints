@@ -1,6 +1,5 @@
 import { useAppDispatch, useAppSelector, removeRewardItem } from '../../store';
-import { RewardItemDTO, Role } from '../../services';
-import { useEffect, useState } from 'react';
+import { RewardItemDTO } from '../../services';
 import { Alert } from 'react-bootstrap';
 import { BaseModal } from '../index';
 
@@ -14,25 +13,9 @@ interface DeleteRewardItemModalProps {
 export function DeleteRewardItemModal({ show, rewardItem, onCancel, onSuccess }: DeleteRewardItemModalProps) {
     const dispatch = useAppDispatch();
     const { loading, error } = useAppSelector((state) => state.rewardItems);
-    const currentUser = useAppSelector((state) => state.user.data);
-
-    const [authError, setAuthError] = useState<string>('');
-
-    const isAuthorized = currentUser?.role === Role.ADMIN;
-    const disableConfirm = loading || !isAuthorized;
-
-    useEffect(() => {
-        if (show && !isAuthorized) {
-            setAuthError('Only administrators can delete reward items');
-            const timer = setTimeout(() => {
-                setAuthError('');
-            }, 3000);
-            return () => clearTimeout(timer);
-        }
-    }, [show, isAuthorized]);
 
     const handleConfirmDelete = () => {
-        if (!rewardItem || !rewardItem.id || !isAuthorized) return;
+        if (!rewardItem || !rewardItem.id) return;
         dispatch(removeRewardItem(rewardItem.id))
             .unwrap()
             .then(() => {
@@ -43,24 +26,18 @@ export function DeleteRewardItemModal({ show, rewardItem, onCancel, onSuccess }:
             });
     };
 
-    const handleClose = () => {
-        setAuthError('');
-        onCancel();
-    }
-
     return (
         <BaseModal
             title='Delete Reward Item'
             show={show}
             onConfirm={handleConfirmDelete}
-            onCancel={handleClose}
+            onCancel={onCancel}
             confirmText='Delete'
             cancelText='Cancel'
             confirmVariant='danger'
             isLoading={loading}
-            disableConfirm={disableConfirm}
+            disableConfirm={loading}
         >
-            {authError && <Alert variant='danger'>{authError}</Alert>}
             {error && <Alert variant='danger'>{error}</Alert>}
             <p>Are you sure you want to delete {rewardItem ? rewardItem.name : 'this reward item'}?</p>
             <p className="text-muted">This action cannot be undone.</p>

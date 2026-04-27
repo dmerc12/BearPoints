@@ -1,8 +1,8 @@
 import { rewardItemValidationRules } from '../../utils';
-import { RewardItemDTO, Role } from '../../services';
+import { RewardItemDTO } from '../../services';
 import { useAppSelector } from '../../store';
-import { useEffect, useMemo } from 'react';
 import { useForm } from '../index';
+import { useEffect } from 'react';
 
 export interface UseRewardItemFormProps {
     show: boolean;
@@ -12,9 +12,6 @@ export interface UseRewardItemFormProps {
 
 export const useRewardItemForm = ({ show, isEdit = false, rewardItem }: UseRewardItemFormProps) => {
     const { loading, error } = useAppSelector(state => state.rewardItems);
-    const currentUser = useAppSelector(state => state.user.data);
-
-    const isAdmin = useMemo(() => currentUser?.role === Role.ADMIN, [currentUser]);
 
     const initialData = {
         name: '',
@@ -48,10 +45,8 @@ export const useRewardItemForm = ({ show, isEdit = false, rewardItem }: UseRewar
         setFormData: form.setFormData,
         formErrors: form.formErrors,
         setFormErrors: form.setFormErrors,
-        currentUser,
         error,
         loading,
-        isAdmin,
         handleInputChange: form.handleInputChange,
         handleSelectChange: form.handleSelectChange,
         handleCheckboxChange: form.handleCheckboxChange,

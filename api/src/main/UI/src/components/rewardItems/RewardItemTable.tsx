@@ -9,7 +9,7 @@ interface RewardItemTableProps {
 }
 
 export default function RewardItemTable({ itemsPerPage = 10, showFilters = true, size = 'm' }: RewardItemTableProps) {
-    const { data, loading, error, filters, updateFilter, isAdmin, columns, sortConfig, handleSort,
+    const { data, loading, error, filters, updateFilter, isAuthorized, columns, sortConfig, handleSort,
         showCreateModal, editingItem, deletingItem, handleCreateItem, handleEditItem, handleDeleteItem,
         handleCloseModals, retry, handleSuccess, filtersConfig, headerConfig,
         currentPage, totalPages, setCurrentPage, totalCount } = useRewardItemTable({ itemsPerPage });
@@ -32,8 +32,8 @@ export default function RewardItemTable({ itemsPerPage = 10, showFilters = true,
             size={size}
             sortConfig={sortConfig}
             onSort={handleSort}
-            canEdit={isAdmin}
-            canDelete={isAdmin}
+            canEdit={isAuthorized}
+            canDelete={isAuthorized}
             onEditItem={handleEditItem}
             onDeleteItem={handleDeleteItem}
             onCreateClick={handleCreateItem}
