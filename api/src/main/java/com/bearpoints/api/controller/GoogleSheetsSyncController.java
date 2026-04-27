@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * <p>Security:
  * <ul>
- *     <li>All sync endpoints require ADMIN role</li>
+ *     <li>All sync endpoints require ADMIN or STAFF role</li>
  *     <li>Scheduled sync runs automatically via cron (8AM and 8PM)</li>
  * </ul>
  *
@@ -36,14 +36,14 @@ import org.springframework.web.bind.annotation.RestController;
  * </ul>
  *
  * @see GoogleSheetsSyncService
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/sync")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
 @Tag(name = "Google Sheets Sync", description = "Endpoints for managing Google Sheets synchronization")
 public class GoogleSheetsSyncController {
     private final GoogleSheetsSyncService googleSheetsSyncService;

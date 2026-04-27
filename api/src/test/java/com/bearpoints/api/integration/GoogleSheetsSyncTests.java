@@ -41,7 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * </ul>
  * @see TestDataInitializer
  * @see BaseIntegrationTest
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @Slf4j
@@ -95,7 +95,7 @@ public class GoogleSheetsSyncTests extends BaseIntegrationTest {
     @DisplayName("POST /api/sync - Trigger full synchronization")
     class TriggerFullSync {
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("accepts sync request from ADMIN user")
         void acceptsSyncRequestFromAdminUser() throws Exception {
             mockMvc.perform(post(baseUrl)
@@ -110,7 +110,7 @@ public class GoogleSheetsSyncTests extends BaseIntegrationTest {
     @DisplayName("Security - Endpoint access control")
     class SecurityAccessControl {
         @Test
-        @WithMockUser(roles = "ADMIN")
+        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("allows access for users with ADMIN role")
         void allowsAccessForAdminRole() throws Exception {
             mockMvc.perform(post(baseUrl)
@@ -119,9 +119,9 @@ public class GoogleSheetsSyncTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "STAFF", "TEACHER"})
-        @DisplayName("returns 403 for users with STUDENT, STAFF, or TEACHER roles")
-        void returns403ForStudentStaffTeacherRoles() throws Exception {
+        @WithMockUser(roles = {"STUDENT", "TEACHER"})
+        @DisplayName("returns 403 for users with STUDENT or TEACHER roles")
+        void returns403ForStudentOrTeacherRoles() throws Exception {
             mockMvc.perform(post(baseUrl)
                             .with(csrf()))
                     .andExpect(status().isForbidden());

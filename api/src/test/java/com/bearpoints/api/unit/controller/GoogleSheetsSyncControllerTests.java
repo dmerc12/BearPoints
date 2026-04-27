@@ -29,7 +29,7 @@ import static org.mockito.Mockito.*;
  * </ul>
  *
  * @see GoogleSheetsSyncController
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @ExtendWith(MockitoExtension.class)
@@ -147,11 +147,11 @@ public class GoogleSheetsSyncControllerTests {
     @DisplayName("Security - When checking endpoint access")
     class SecurityWhenCheckingEndpointAccess {
         @Test
-        @DisplayName("Should have @PreAuthorize annotation with ADMIN role")
+        @DisplayName("Should have @PreAuthorize annotation with ADMIN and STAFF role")
         void shouldHavePreAuthorizeAnnotationWithAdminRole() {
             var preAuthorize = GoogleSheetsSyncController.class.getAnnotation(PreAuthorize.class);
             assertNotNull(preAuthorize);
-            assertEquals("hasRole('ADMIN')", preAuthorize.value());
+            assertEquals("hasAnyRole('ADMIN', 'STAFF')", preAuthorize.value());
         }
 
         @Test
