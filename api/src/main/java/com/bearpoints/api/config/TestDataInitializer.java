@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
  * <ul>
  *     <li>Administrator accounts with varying permissions</li>
  *     <li>Staff accounts (non-teaching, non-admin personnel)</li>
+ *     <li>Paraprofessional accounts (non-admin personnel, who teach students 1 on 1)</li>
  *     <li>Teacher accounts with random grade level assignments</li>
  *     <li>Student accounts distributed across teachers</li>
  *     <li>Behavior types with mixed active/inactive status</li>
@@ -44,6 +45,7 @@ import java.util.stream.Collectors;
  *     <li>Creates primary test administrator account</li>
  *     <li>Generates additional test administrators</li>
  *     <li>Generates test staff accounts</li>
+ *     <li>Generates test para accounts</li>
  *     <li>Creates teachers with randomized grade levels</li>
  *     <li>Distributes students across created teachers</li>
  *     <li>Initializes behavior type catalog</li>
@@ -57,6 +59,7 @@ import java.util.stream.Collectors;
  * <ul>
  *     <li>NUM_TEST_ADMINS_TO_CREATE: Number of additional admin accounts (default: 12)</li>
  *     <li>NUM_TEST_STAFF_TO_CREATE: Number of staff accounts (default: 5)</li>
+ *     <li>NUM_TEST_PARAS_TO_CREATE: Number of paraprofessional accounts (default: 8)</li>
  *     <li>NUM_TEST_TEACHERS_TO_CREATE: Number of teacher accounts (default: 25)</li>
  *     <li>MIN/MAX_NUM_TEST_STUDENTS_PER_TEACHER: Student distribution range (default: 20-30)</li>
  *     <li>NUM_TEST_BRAG_LOGS_TO_CREATE: Brag log entries (default: 200)</li>
@@ -65,7 +68,7 @@ import java.util.stream.Collectors;
  * </ul>
  *
  * @see CommandLineRunner
- * @version 2.3
+ * @version 2.4
  * @author Dylan Mercer
  */
 @Component
@@ -80,6 +83,7 @@ public class TestDataInitializer implements CommandLineRunner {
     private final String testEmail;
     private final Integer NUM_TEST_ADMINS_TO_CREATE;
     private final Integer NUM_TEST_STAFF_TO_CREATE;
+    private final Integer NUM_TEST_PARAS_TO_CREATE;
     private final Integer NUM_TEST_TEACHERS_TO_CREATE;
     private final Integer MIN_NUM_TEST_STUDENTS_PER_TEACHER;
     private final Integer MAX_NUM_TEST_STUDENTS_PER_TEACHER;
@@ -98,6 +102,7 @@ public class TestDataInitializer implements CommandLineRunner {
         this.testEmail = System.getenv("TEST_EMAIL");
         NUM_TEST_ADMINS_TO_CREATE = 12;
         NUM_TEST_STAFF_TO_CREATE = 5;
+        NUM_TEST_PARAS_TO_CREATE = 8;
         NUM_TEST_TEACHERS_TO_CREATE = 25;
         MIN_NUM_TEST_STUDENTS_PER_TEACHER = 20;
         MAX_NUM_TEST_STUDENTS_PER_TEACHER = 30;
@@ -133,6 +138,8 @@ public class TestDataInitializer implements CommandLineRunner {
             createTestAdmins();
             // Create test staff
             createTestStaffs();
+            // Create test paras
+            createTestParas();
             // Create test teachers
             List<Teacher> createdTeachers = createTestTeachers();
             // Create test students
@@ -175,6 +182,14 @@ public class TestDataInitializer implements CommandLineRunner {
             createTestUser("staff" + i + "@okcps.org", "staff", "staff" + i, Role.STAFF);
         }
         log.info("Finished creating test staff");
+    }
+
+    private void createTestParas() {
+        log.info("Starting creating test para with number to create: {}", NUM_TEST_PARAS_TO_CREATE);
+        for (int i = 0; i < NUM_TEST_PARAS_TO_CREATE; i++) {
+            createTestUser("para" + i + "@okcps.org", "para", "para" + i, Role.PARA);
+        }
+        log.info("Finished creating test para");
     }
 
     private Teacher createTestTeacher(String email, String firstName, String lastName, GradeLevel gradeLevel) {

@@ -27,16 +27,17 @@ import java.time.LocalDateTime;
  *     <li>GET /api/rewards/search - Search student rewards (any authenticated user)</li>
  *     <li>GET /api/rewards/{id} - Retrieve student reward by ID (any authenticated user)</li>
  *     <li>POST /api/rewards - Create a new student reward (any authenticated user)</li>
- *     <li>PUT /api/rewards/{id} - Update existing student rewards (any authenticated user)</li>
- *     <li>DELETE /api/rewards/{id} - Delete a student reward (any authenticated user)</li>
+ *     <li>PUT /api/rewards/{id} - Update existing student rewards (exclude STUDENT role)</li>
+ *     <li>DELETE /api/rewards/{id} - Delete a student reward (exclude STUDENT role)</li>
  * </ul>
  *
  * <p>Security:
  * <ul>
- *     <li>GET, POST, PUT, and Delete endpoints - Any authenticated user</li>
+ *     <li>GET, POST endpoints - Any authenticated user</li>
+ *     <li>PUT, DELETE endpoints - ADMIN, STAFF, PARA, or TEACHER role required</li>
  * </ul>
  *
- * @version 1.1
+ * @version 1.2
  * @author Dylan Mercer
  */
 @Slf4j
@@ -155,13 +156,14 @@ public class StudentRewardController {
 
     /**
      * Updates an existing student reward.
-     * <p>Accessible only to any authenticated user
+     * <p>Accessible only to ADMIN, STAFF, PARA, and TEACHER users
      *
      * @param id Student reward ID
      * @param studentRewardDTO Updated student reward data
      * @return Updated student reward details
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF', 'TEACHER', 'PARA')")
     public ResponseEntity<StudentRewardDTO> updateStudentReward(
             @PathVariable Long id,
             @Valid @RequestBody StudentRewardDTO studentRewardDTO
@@ -174,12 +176,13 @@ public class StudentRewardController {
 
     /**
      * Deletes a student reward by ID.
-     * <p>Accessible only to any authenticated user
+     * <p>Accessible only to ADMIN, STAFF, PARA, and TEACHER users
      *
      * @param id StudentReward ID
      * @return No content response
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF', 'TEACHER', 'PARA')")
     public ResponseEntity<Void> deleteStudentReward(@PathVariable Long id) {
         log.debug("Deleting student reward with ID: {}", id);
         studentRewardService.deleteStudentReward(id);

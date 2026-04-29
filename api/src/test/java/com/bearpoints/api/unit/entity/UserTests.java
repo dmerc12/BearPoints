@@ -33,7 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 *  </ul>
  *
 * @see User
-* @version 1.2
+* @version 1.3
 * @author Dylan Mercer
 */
 public class UserTests {
@@ -248,6 +248,14 @@ public class UserTests {
         @DisplayName("User with STAFF role passes validation")
         public void userWithStaffRoleValid() {
             validUser.setRole(Role.STAFF);
+            Set<ConstraintViolation<User>> violations = validator.validate(validUser);
+            assertThat(violations).isEmpty();
+        }
+
+        @Test
+        @DisplayName("User with PARA role passes validation")
+        public void userWithParaRoleValid() {
+            validUser.setRole(Role.PARA);
             Set<ConstraintViolation<User>> violations = validator.validate(validUser);
             assertThat(violations).isEmpty();
         }

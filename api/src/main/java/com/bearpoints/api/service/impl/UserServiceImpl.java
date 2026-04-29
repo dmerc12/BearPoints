@@ -34,7 +34,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
-    private static final Set<Role> ALLOWED_ROLES = Set.of(Role.ADMIN, Role.STAFF);
+    private static final Set<Role> ALLOWED_ROLES = Set.of(Role.ADMIN, Role.STAFF, Role.PARA);
 
     private final UserDAO userDAO;
 

@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
  *
  * <p>Features:
  * <ul>
- *     <li>Requires STUDENT, TEACHER, STAFF, or ADMIN role</li>
+ *     <li>Requires valid role</li>
  *     <li>Supports timeframe filtering (WEEK, MONTH, SEMESTER, YEAR)</li>
  *     <li>Supports teacher and grade filtering</li>
  *     <li>Default timeframe is WEEK</li>
@@ -32,13 +32,13 @@ import org.springframework.web.bind.annotation.*;
  *
  * @see LeaderboardService
  * @see Timeframe
- * @version 3.3
+ * @version 3.4
  * @author Dylan Mercer
  */
 @CrossOrigin
 @RestController
 @RequestMapping("/api/leaderboard")
-@PreAuthorize("hasAnyRole('STUDENT', 'TEACHER', 'ADMIN', 'STAFF')")
+@PreAuthorize("isAuthenticated()")
 public class LeaderboardController {
     private final LeaderboardService leaderboardService;
 

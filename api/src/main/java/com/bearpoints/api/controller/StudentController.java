@@ -34,10 +34,10 @@ import org.springframework.web.bind.annotation.*;
  * <p>Security:
  * <ul>
  *     <li>GET endpoints - Any authenticated user</li>
- *     <li>POST, PUT, DELETE endpoints - ADMIN, STAFF, or TEACHER role required</li>
+ *     <li>POST, PUT, DELETE endpoints - ADMIN, STAFF, PARA, or TEACHER role required</li>
  * </ul>
  *
- * @version 2.1
+ * @version 2.2
  * @author Dylan Mercer
  */
 @Slf4j
@@ -169,13 +169,13 @@ public class StudentController {
 
     /**
      * Creates a new student.
-     * <p>Accessible only to ADMIN, STAFF, or TEACHER users.
+     * <p>Accessible only to ADMIN, STAFF, PARA, or TEACHER users.
      *
      * @param studentDTO Student data
      * @return Created student details
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF', 'TEACHER', 'PARA')")
     public ResponseEntity<StudentDTO> createStudent(@Valid @RequestBody StudentDTO studentDTO) {
         log.debug("Creating new student with email: {}", studentDTO.getUser().getEmail());
         StudentDTO createdStudent = studentService.createStudent(studentDTO);
@@ -185,14 +185,14 @@ public class StudentController {
 
     /**
      * Updates an existing student.
-     * <p>Accessible only to ADMIN, STAFF, or TEACHER users.
+     * <p>Accessible only to ADMIN, STAFF, PARA, or TEACHER users.
      *
      * @param id Student ID
      * @param studentDTO Updated student data
      * @return Updated student details
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF', 'TEACHER', 'PARA')")
     public ResponseEntity<StudentDTO> updateStudent(@PathVariable Long id, @Valid @RequestBody StudentDTO studentDTO) {
         log.debug("Updating student with ID: {}", id);
         StudentDTO updatedStudent = studentService.updateStudent(id, studentDTO);
@@ -202,13 +202,13 @@ public class StudentController {
 
     /**
      * Deletes a student by ID.
-     * <p>Accessible only to ADMIN, STAFF, or TEACHER users.
+     * <p>Accessible only to ADMIN, STAFF, PARA, or TEACHER users.
      *
      * @param id Student ID
      * @return No content response
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF', 'TEACHER', 'PARA')")
     public ResponseEntity<Void> deleteStudent(@PathVariable Long id) {
         log.debug("Deleting student with ID: {}", id);
         studentService.deleteStudent(id);

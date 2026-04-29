@@ -5,6 +5,7 @@ import com.bearpoints.api.entity.User;
 import com.bearpoints.api.security.FirebaseUserDetails;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,11 +26,12 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * @see FirebaseUserDetails
  * @see UserDTO
- * @version 2.0
+ * @version 2.1
  * @author Dylan Mercer
  */
 @CrossOrigin
 @RestController
+@PreAuthorize("isAuthenticated()")
 @RequestMapping("/api/users")
 public class CurrentUserController {
     /**

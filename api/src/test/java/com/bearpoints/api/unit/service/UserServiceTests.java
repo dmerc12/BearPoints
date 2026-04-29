@@ -36,7 +36,7 @@ import static org.mockito.Mockito.*;
  * <p>Verifies user management functionality including CRUD operations and search.
  *
  * @see UserServiceImpl
- * @version 2.2
+ * @version 2.3
  * @author Dylan Mercer
  */
 @DisplayName("UserService Tests")
@@ -55,21 +55,22 @@ public class UserServiceTests {
     @DisplayName("When retrieving users")
     class WhenRetrievingUsers {
         @Test
-        @DisplayName("Should return only allowed users (ADMIN and STAFF")
+        @DisplayName("Should return only allowed users (ADMIN, STAFF, and PARA")
         void shouldReturnOnlyAllowedUsers() {
             List<User> users = List.of(
                     createUser(1L, "admin1@okcps.org", "Admin1", "One", Role.ADMIN),
+                    createUser(5L, "para@okcps.org", "Para1", "One", Role.PARA),
                     createUser(4L, "staff@okcps.org", "Staff1", "One", Role.STAFF),
                     createUser(2L, "teacher@okcps.org", "Teacher", "One", Role.TEACHER),
                     createUser(3L, "student@okcps.org", "Student", "One", Role.STUDENT)
             );
-            List<User> filtered = List.of(users.getFirst(), users.get(1));
-            Page<User> userPage = new PageImpl<>(filtered, pageable, 2L);
+            List<User> filtered = List.of(users.getFirst(), users.get(1), users.get(2));
+            Page<User> userPage = new PageImpl<>(filtered, pageable, 3L);
             when(userDAO.findAll(any(Specification.class), eq(pageable))).thenReturn(userPage);
             PagedResponseDTO<UserDTO> result = userService.getAllUsers(pageable);
             assertNotNull(result);
-            assertEquals(2, result.getContent().size());
-            assertEquals(2L, result.getTotalElements());
+            assertEquals(3, result.getContent().size());
+            assertEquals(3L, result.getTotalElements());
             verify(userDAO).findAll(any(Specification.class), eq(pageable));
             verify(userDAO, never()).findAll(eq(pageable));
         }
@@ -164,7 +165,7 @@ public class UserServiceTests {
     class WhenRetrievingUserById {
         @Test
         @DisplayName("Should return user when found and role is ADMIN")
-        void shouldReturAdminnUserWhenFound() {
+        void shouldReturnAdminUserWhenFound() {
             Long userId = 1L;
             User user = createUser(userId, "user@okcps.org", "User", "User", Role.ADMIN);
             when(userDAO.findById(userId)).thenReturn(Optional.of(user));
@@ -195,6 +196,22 @@ public class UserServiceTests {
         }
 
         @Test
+        @DisplayName("Should return user when found and role is PARA")
+        void shouldReturnParaUserWhenFound() {
+            Long userId = 1L;
+            User user = createUser(userId, "user@okcps.org", "User", "User", Role.PARA);
+            when(userDAO.findById(userId)).thenReturn(Optional.of(user));
+            UserDTO result = userService.getUserById(userId);
+            assertNotNull(result);
+            assertEquals(userId, result.getId());
+            assertEquals("user@okcps.org", result.getEmail());
+            assertEquals("User", result.getFirstName());
+            assertEquals("User", result.getLastName());
+            assertEquals(Role.PARA, result.getRole());
+            verify(userDAO).findById(userId);
+        }
+
+        @Test
         @DisplayName("Should throw ResourceNotFoundException when user not found")
         void shouldThrowResourceNotFoundExceptionWhenUserNotFound() {
             Long userId = 999L;
@@ -214,7 +231,7 @@ public class UserServiceTests {
             );
             String message = ex.getMessage();
             assertTrue(message.contains("only handle users with roles:"));
-            assertTrue(message.contains("ADMIN") && message.contains("STAFF"));
+            assertTrue(message.contains("ADMIN") && message.contains("STAFF") && message.contains("PARA"));
             verify(userDAO).findById(userId);
         }
 
@@ -230,7 +247,7 @@ public class UserServiceTests {
             );
             String message = ex.getMessage();
             assertTrue(message.contains("only handle users with roles:"));
-            assertTrue(message.contains("ADMIN") && message.contains("STAFF"));
+            assertTrue(message.contains("ADMIN") && message.contains("STAFF") && message.contains("PARA"));
             verify(userDAO).findById(userId);
         }
     }
@@ -273,6 +290,23 @@ public class UserServiceTests {
         }
 
         @Test
+        @DisplayName("Should create new PARA user successfully")
+        void shouldCreateNewParaUserSuccessfully() {
+            Long userId = 1L;
+            String email = "new.para@okcps.org";
+            UserDTO userDTO = new UserDTO(createUser(null, email, "New", "Para", Role.PARA));
+            User savedUser = createUser(userId, email, "New", "User", Role.PARA);
+            when(userDAO.save(any(User.class))).thenReturn(savedUser);
+            UserDTO result = userService.createUser(userDTO);
+            assertNotNull(result);
+            assertEquals(userId, result.getId());
+            assertEquals(email, result.getEmail());
+            assertEquals(Role.PARA, result.getRole());
+            verify(userDAO).findByEmail(anyString());
+            verify(userDAO).save(any(User.class));
+        }
+
+        @Test
         @DisplayName("Should throw DuplicateResourceException when email already exists")
         void shouldThrowDuplicateResourceExceptionWhenEmailAlreadyExists() {
             UserDTO userDTO = new UserDTO(null, "existing@okcps.org", "New", "User", "ADMIN", null, null);
@@ -297,7 +331,7 @@ public class UserServiceTests {
             );
             String message = ex.getMessage();
             assertTrue(message.contains("only handle users with roles:"));
-            assertTrue(message.contains("ADMIN") && message.contains("STAFF"));
+            assertTrue(message.contains("ADMIN") && message.contains("STAFF") && message.contains("PARA"));
             verify(userDAO, never()).findByEmail(anyString());
             verify(userDAO, never()).save(any(User.class));
         }
@@ -312,7 +346,7 @@ public class UserServiceTests {
             );
             String message = ex.getMessage();
             assertTrue(message.contains("only handle users with roles:"));
-            assertTrue(message.contains("ADMIN") && message.contains("STAFF"));
+            assertTrue(message.contains("ADMIN") && message.contains("STAFF") && message.contains("PARA"));
             verify(userDAO, never()).findByEmail(anyString());
             verify(userDAO, never()).save(any(User.class));
         }
@@ -368,6 +402,29 @@ public class UserServiceTests {
         }
 
         @Test
+        @DisplayName("Should update existing PARA user successfully")
+        void shouldUpdateExistingParaUserUserSuccessfully() {
+            Long userId = 1L;
+            User existingUser = createUser(userId, "old@okcps.org", "Old", "Name", Role.PARA);
+            UserDTO updateDTO = new UserDTO(createUser(userId, "new@okcps.org", "New", "Last-Name", Role.PARA));
+            User updatedUser = createUser(userId, "new@okcps.org", "New", "Last-Name", Role.PARA);
+            when(userDAO.findById(userId)).thenReturn(Optional.of(existingUser));
+            when(userDAO.findByEmail("new@okcps.org")).thenReturn(Optional.empty());
+            when(userDAO.save(any(User.class))).thenReturn(updatedUser);
+            UserDTO result = userService.updateUser(userId, updateDTO);
+            assertNotNull(result);
+            assertEquals("new@okcps.org", result.getEmail());
+            assertEquals("New", result.getFirstName());
+            assertEquals("Last-Name",  result.getLastName());
+            verify(userDAO).findById(userId);
+            verify(userDAO).findByEmail("new@okcps.org");
+            verify(userDAO).save(existingUser);
+            assertEquals("new@okcps.org", existingUser.getEmail());
+            assertEquals("New", existingUser.getFirstName());
+            assertEquals("Last-Name", existingUser.getLastName());
+        }
+
+        @Test
         @DisplayName("Should update ADMIN user to STAFF role successfully")
         void shouldUpdateAdminToStaffSuccessfully() {
             Long userId = 1L;
@@ -384,6 +441,22 @@ public class UserServiceTests {
         }
 
         @Test
+        @DisplayName("Should update ADMIN user to PARA role successfully")
+        void shouldUpdateAdminToParaSuccessfully() {
+            Long userId = 1L;
+            User existingUser = createUser(userId, "admin@okcps.org", "Admin", "User", Role.ADMIN);
+            UserDTO updateDTO = new UserDTO(userId, "admin@okcps.org", "Admin", "User", "PARA", null, null);
+            User updatedUser = createUser(userId, "admin@okcps.org", "Admin", "User", Role.PARA);
+            when(userDAO.findById(userId)).thenReturn(Optional.of(existingUser));
+            when(userDAO.save(any(User.class))).thenReturn(updatedUser);
+            UserDTO result = userService.updateUser(userId, updateDTO);
+            assertEquals(Role.PARA, result.getRole());
+            verify(userDAO).findById(userId);
+            verify(userDAO, never()).findByEmail(anyString());
+            verify(userDAO).save(existingUser);
+        }
+
+        @Test
         @DisplayName("Should update STAFF user to ADMIN role successfully")
         void shouldUpdateStaffToAdminSuccessfully() {
             Long userId = 1L;
@@ -394,6 +467,22 @@ public class UserServiceTests {
             when(userDAO.save(any(User.class))).thenReturn(updatedUser);
             UserDTO result = userService.updateUser(userId, updateDTO);
             assertEquals(Role.ADMIN, result.getRole());
+            verify(userDAO).findById(userId);
+            verify(userDAO, never()).findByEmail(anyString());
+            verify(userDAO).save(existingUser);
+        }
+
+        @Test
+        @DisplayName("Should update STAFF user to PARA role successfully")
+        void shouldUpdateStaffToParaSuccessfully() {
+            Long userId = 1L;
+            User existingUser = createUser(userId, "staff@okcps.org", "Staff", "User", Role.STAFF);
+            UserDTO updateDTO = new UserDTO(userId, "staff@okcps.org", "Staff", "User", "PARA", null, null);
+            User updatedUser = createUser(userId, "staff@okcps.org", "Staff", "User", Role.PARA);
+            when(userDAO.findById(userId)).thenReturn(Optional.of(existingUser));
+            when(userDAO.save(any(User.class))).thenReturn(updatedUser);
+            UserDTO result = userService.updateUser(userId, updateDTO);
+            assertEquals(Role.PARA, result.getRole());
             verify(userDAO).findById(userId);
             verify(userDAO, never()).findByEmail(anyString());
             verify(userDAO).save(existingUser);
@@ -483,7 +572,7 @@ public class UserServiceTests {
             );
             String message = ex.getMessage();
             assertTrue(message.contains("only handle users with roles:"));
-            assertTrue(message.contains("ADMIN") && message.contains("STAFF"));
+            assertTrue(message.contains("ADMIN") && message.contains("STAFF") && message.contains("PARA"));
             verify(userDAO).findById(userId);
             verify(userDAO, never()).findByEmail(anyString());
             verify(userDAO, never()).save(any(User.class));
@@ -502,7 +591,7 @@ public class UserServiceTests {
             );
             String message = ex.getMessage();
             assertTrue(message.contains("only handle users with roles:"));
-            assertTrue(message.contains("ADMIN") && message.contains("STAFF"));
+            assertTrue(message.contains("ADMIN") && message.contains("STAFF") && message.contains("PARA"));
             verify(userDAO).findById(userId);
             verify(userDAO, never()).findByEmail(anyString());
             verify(userDAO, never()).save(any(User.class));
@@ -521,7 +610,7 @@ public class UserServiceTests {
             );
             String message = ex.getMessage();
             assertTrue(message.contains("only handle users with roles:"));
-            assertTrue(message.contains("ADMIN") && message.contains("STAFF"));
+            assertTrue(message.contains("ADMIN") && message.contains("STAFF") && message.contains("PARA"));
             verify(userDAO).findById(userId);
             verify(userDAO, never()).findByEmail(anyString());
             verify(userDAO, never()).save(any(User.class));
@@ -540,7 +629,7 @@ public class UserServiceTests {
             );
             String message = ex.getMessage();
             assertTrue(message.contains("only handle users with roles:"));
-            assertTrue(message.contains("ADMIN") && message.contains("STAFF"));
+            assertTrue(message.contains("ADMIN") && message.contains("STAFF") && message.contains("PARA"));
             verify(userDAO).findById(userId);
             verify(userDAO, never()).findByEmail(anyString());
             verify(userDAO, never()).save(any(User.class));
@@ -573,6 +662,17 @@ public class UserServiceTests {
         }
 
         @Test
+        @DisplayName("Should delete PARA user successfully")
+        void shouldDeleteParaUserSuccessfully() {
+            Long userId = 1L;
+            User user = createUser(userId, "user@okcps.org", "User", "User", Role.PARA);
+            when(userDAO.findById(userId)).thenReturn(Optional.of(user));
+            userService.deleteUser(userId);
+            verify(userDAO).findById(userId);
+            verify(userDAO).delete(user);
+        }
+
+        @Test
         @DisplayName("Should throw ResourceNotFoundException when user not found")
         void shouldThrowResourceNotFoundExceptionWhenAdminUserNotFound() {
             Long userId = 999L;
@@ -594,7 +694,7 @@ public class UserServiceTests {
             );
             String message = ex.getMessage();
             assertTrue(message.contains("only handle users with roles:"));
-            assertTrue(message.contains("ADMIN") && message.contains("STAFF"));
+            assertTrue(message.contains("ADMIN") && message.contains("STAFF") && message.contains("PARA"));
             verify(userDAO).findById(userId);
             verify(userDAO, never()).delete(user);
         }
@@ -611,7 +711,7 @@ public class UserServiceTests {
             );
             String message = ex.getMessage();
             assertTrue(message.contains("only handle users with roles:"));
-            assertTrue(message.contains("ADMIN") && message.contains("STAFF"));
+            assertTrue(message.contains("ADMIN") && message.contains("STAFF") && message.contains("PARA"));
             verify(userDAO).findById(userId);
             verify(userDAO, never()).delete(user);
         }
