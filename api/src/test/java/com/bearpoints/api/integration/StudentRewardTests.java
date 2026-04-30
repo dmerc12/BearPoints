@@ -11,16 +11,18 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * Full-stack integration tests for {@link StudentRewardController}.
@@ -40,7 +42,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *
  * @see TestDataInitializer
  * @see BaseIntegrationTest
- * @version 1.3
+ * @version 2.0
  * @author Dylan Mercer
  */
 @DisplayName("Student Reward Integration Tests")
@@ -65,6 +67,10 @@ public class StudentRewardTests extends BaseIntegrationTest {
 
     private static String baseUrl;
 
+    private static final RequestPostProcessor WRITE_ROLES = user("admin").roles("ADMIN", "STAFF", "TEACHER", "PARA");
+    private static final RequestPostProcessor DISALLOWED_ROLES = user("disallowed").roles("STUDENT");
+    private static final RequestPostProcessor READ_ROLES = user("any").roles("STUDENT", "TEACHER", "ADMIN", "STAFF", "PARA");
+
     @BeforeAll
     static void setUp() {
         baseUrl = "/api/rewards";
@@ -74,10 +80,10 @@ public class StudentRewardTests extends BaseIntegrationTest {
     @DisplayName("GET /api/rewards - Retrieve student rewards")
     class GetAllStudentRewards {
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns paginated student rewards with default parameters")
         void returnsPaginatedStudentRewardsWithDefaults() throws Exception {
-            mockMvc.perform(get(baseUrl))
+            mockMvc.perform(get(baseUrl)
+                            .with(READ_ROLES))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isArray())
                     .andExpect(jsonPath("$.number").value(0))
@@ -85,21 +91,21 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns sorted results when sort parameter provided")
         void returnsSortedStudentRewards() throws Exception {
             mockMvc.perform(get(baseUrl)
-                            .param("sort", "studentName,asc"))
+                            .param("sort", "studentName,asc")
+                            .with(READ_ROLES))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isArray());
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns empty page when no student rewards exist")
         void returnsEmptyPageWhenNoStudentRewardsExist() throws Exception {
             mockMvc.perform(get(baseUrl)
-                            .param("page", "1000"))
+                            .param("page", "1000")
+                            .with(READ_ROLES))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isEmpty());
         }
@@ -109,10 +115,10 @@ public class StudentRewardTests extends BaseIntegrationTest {
     @DisplayName("GET /api/rewards/search - Search student rewards")
     class SearchStudentRewards {
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("no criteria returns all student rewards")
         void noCriteriaReturnsAllStudentRewards() throws Exception {
-            mockMvc.perform(get(baseUrl + "/search"))
+            mockMvc.perform(get(baseUrl + "/search")
+                            .with(READ_ROLES))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isArray())
                     .andExpect(jsonPath("$.number").value(0))
@@ -120,58 +126,58 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by student name returns matching student rewards")
         void byStudentNameCriteriaReturnsMatchingStudentRewards() throws Exception {
             String searchTerm = "S";
             mockMvc.perform(get(baseUrl + "/search")
-                            .param("studentName", searchTerm))
+                            .param("studentName", searchTerm)
+                            .with(READ_ROLES))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[*].student.firstName",
                             everyItem(containsStringIgnoringCase(searchTerm))));
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("empty student name is ignored and returns all")
         void emptyStudentNameIsIgnored() throws Exception {
             mockMvc.perform(get(baseUrl + "/search")
-                        .param("studentName", ""))
+                        .param("studentName", "")
+                        .with(READ_ROLES))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isArray())
                     .andExpect(jsonPath("$.totalElements").value(greaterThan(0)));
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("blank student name is ignored and returns all")
         void blankStudentNameIsIgnored() throws Exception {
             mockMvc.perform(get(baseUrl + "/search")
-                            .param("studentName", "     "))
+                            .param("studentName", "     ")
+                            .with(READ_ROLES))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isArray())
                     .andExpect(jsonPath("$.totalElements").value(greaterThan(0)));
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by student ID returns matching student rewards")
         void byStudentIdCriteriaReturnsMatchingStudentRewards() throws Exception {
             Long studentId = 1L;
             mockMvc.perform(get(baseUrl + "/search")
-                            .param("studentId", String.valueOf(studentId)))
+                            .param("studentId", String.valueOf(studentId))
+                            .with(READ_ROLES))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[*].student.id",
                             everyItem(equalTo(studentId))));
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by item name returns matching student rewards")
         void byItemNameCriteriaReturnsMatchingStudentRewards() throws Exception {
             String searchTerm = "S";
             mockMvc.perform(get(baseUrl + "/search")
-                            .param("studentName", searchTerm))
+                            .param("studentName", searchTerm)
+                            .with(READ_ROLES))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isArray())
                     .andExpect(jsonPath("$.content[*].rewardItem.name",
@@ -179,37 +185,37 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("empty item name is ignored and returns all student rewards")
         void emptyItemNameCriteriaIgnoredAndReturnsAllStudentRewards() throws Exception {
             mockMvc.perform(get(baseUrl + "/search")
-                            .param("studentName", ""))
+                            .param("studentName", "")
+                            .with(READ_ROLES))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isArray())
                     .andExpect(jsonPath("$.totalElements").value(greaterThan(0)));
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by item ID returns matching student rewards")
         void byItemIdCriteriaReturnsMatchingStudentRewards() throws Exception {
             Long itemId = 1L;
             mockMvc.perform(get(baseUrl + "/search")
-                            .param("itemId", String.valueOf(itemId)))
+                            .param("itemId", String.valueOf(itemId))
+                            .with(READ_ROLES))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[*].rewardItem.id",
                             everyItem(equalTo(itemId))));
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by points used range returns matching student rewards")
         void byPointsUsedRangeCriteriaReturnsMatchingStudentRewards() throws Exception {
             Integer minPointsUsed = 5;
             Integer maxPointsUsed = 15;
             mockMvc.perform(get(baseUrl + "/search")
                             .param("minPointsUsed", String.valueOf(minPointsUsed))
-                            .param("maxPointsUsed", String.valueOf(maxPointsUsed)))
+                            .param("maxPointsUsed", String.valueOf(maxPointsUsed))
+                            .with(READ_ROLES))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[*].rewardItem.pointCost",
                             everyItem(greaterThanOrEqualTo(minPointsUsed))))
@@ -218,12 +224,12 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by min points used returns matching student rewards")
         void byMinPointsUsedCriteriaReturnsMatchingStudentRewards() throws Exception {
             Integer minPointsUsed = 10;
             mockMvc.perform(get(baseUrl + "/search")
-                            .param("minPointsUsed", String.valueOf(minPointsUsed)))
+                            .param("minPointsUsed", String.valueOf(minPointsUsed))
+                            .with(READ_ROLES))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isArray())
                     .andExpect(jsonPath("$.content[*].rewardItem.pointCost",
@@ -231,12 +237,12 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by max points used returns matching student rewards")
         void byMaxPointsUsedCriteriaReturnsMatchingStudentRewards() throws Exception {
             Integer maxPointsUsed = 10;
             mockMvc.perform(get(baseUrl + "/search")
-                            .param("maxPointsUsed", String.valueOf(maxPointsUsed)))
+                            .param("maxPointsUsed", String.valueOf(maxPointsUsed))
+                            .with(READ_ROLES))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isArray())
                     .andExpect(jsonPath("$.content[*].rewardItem.pointCost",
@@ -244,14 +250,14 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by redeemed during date range returns matching student rewards")
         void byRedeemedDuringDateRangeCriteriaReturnsMatchingStudentRewards() throws Exception {
             LocalDateTime startDate = LocalDateTime.now().minusDays(3);
             LocalDateTime endDate = LocalDateTime.now();
             mockMvc.perform(get(baseUrl + "/search")
                             .param("startDate", String.valueOf(startDate))
-                            .param("endDate", String.valueOf(endDate)))
+                            .param("endDate", String.valueOf(endDate))
+                            .with(READ_ROLES))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[*].redeemedAt",
                             everyItem(greaterThanOrEqualTo(startDate))))
@@ -260,31 +266,30 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by redeemed after start date only returns matching student rewards")
         void byRedeemedAfterStartDateCriteriaReturnsMatchingStudentRewards() throws Exception {
             LocalDateTime startDate = LocalDateTime.now().minusDays(3);
             mockMvc.perform(get(baseUrl + "/search")
-                            .param("startDate", String.valueOf(startDate)))
+                            .param("startDate", String.valueOf(startDate))
+                            .with(READ_ROLES))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[*].redeemedAt",
                             everyItem(greaterThanOrEqualTo(startDate))));
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by redeemed before end date only returns matching student rewards")
         void byRedeemedBeforeEndDateCriteriaReturnsMatchingStudentRewards() throws Exception {
             LocalDateTime endDate = LocalDateTime.now();
             mockMvc.perform(get(baseUrl + "/search")
-                            .param("endDate", String.valueOf(endDate)))
+                            .param("endDate", String.valueOf(endDate))
+                            .with(READ_ROLES))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[*].redeemedAt",
                             everyItem(lessThanOrEqualTo(endDate))));
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("with combined criteria returns matching student rewards")
         void withCombinedCriteriaReturnsMatchingStudentRewards() throws Exception {
             String studentName = "S";
@@ -303,7 +308,8 @@ public class StudentRewardTests extends BaseIntegrationTest {
                             .param("minPointsUsed", String.valueOf(minPointsUsed))
                             .param("maxPointsUsed", String.valueOf(maxPointsUsed))
                             .param("startDate", String.valueOf(startDate))
-                            .param("endDate", String.valueOf(endDate)))
+                            .param("endDate", String.valueOf(endDate))
+                            .with(READ_ROLES))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[*].student.firstName",
                             everyItem(containsStringIgnoringCase(studentName))))
@@ -324,22 +330,22 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("with non-matching criteria returns empty results")
         void withNonMatchingCriteriaReturnsEmptyResults() throws Exception {
             mockMvc.perform(get(baseUrl + "/search")
-                            .param("itemName", "non-existent"))
+                            .param("itemName", "non-existent")
+                            .with(READ_ROLES))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isEmpty());
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns sorted search results when sort parameter provided")
         void returnsSortedSearchResultsWhenSortParameterProvided() throws Exception {
             mockMvc.perform(get(baseUrl + "/search")
                             .param("itemName", "")
-                            .param("sort", "redeemedAt,asc"))
+                            .param("sort", "redeemedAt,asc")
+                            .with(READ_ROLES))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isArray());
         }
@@ -349,13 +355,13 @@ public class StudentRewardTests extends BaseIntegrationTest {
     @DisplayName("GET /api/rewards/{id} - Get student reward by ID")
     class GetStudentRewardById {
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns student reward when ID exists")
         void returnsStudentRewardWhenIdExists() throws Exception {
             Optional<StudentReward> studentReward = studentRewardDAO.findAll(PageRequest.of(0, 1))
                     .stream().findFirst();
             if (studentReward.isPresent()) {
-                mockMvc.perform(get(baseUrl + "/{id}", studentReward.get().getId()))
+                mockMvc.perform(get(baseUrl + "/{id}", studentReward.get().getId())
+                                .with(READ_ROLES))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.id").value(studentReward.get().getId()))
                         .andExpect(jsonPath("$.studentId").exists())
@@ -368,10 +374,10 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns 404 when ID does not exist")
         void returns404WhenIdDoesNotExist() throws Exception {
-            mockMvc.perform(get(baseUrl + "/{id}", "9999"))
+            mockMvc.perform(get(baseUrl + "/{id}", "9999")
+                            .with(READ_ROLES))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.message").value("Student reward not found with ID: 9999"))
                     .andExpect(jsonPath("$.timestamp").exists());
@@ -382,7 +388,6 @@ public class StudentRewardTests extends BaseIntegrationTest {
     @DisplayName("POST /api/rewards - Create student reward")
     class CreateStudentReward {
         @Test
-        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER", "STUDENT"})
         @DisplayName("creates student reward with valid data")
         void createStudentRewardWithValidData() throws Exception {
             Optional<Student> student = studentDAO.findAll(PageRequest.of(0, 1))
@@ -398,7 +403,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
                 mockMvc.perform(post(baseUrl)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(createJSON)
-                                .with(csrf()))
+                                .with(csrf()).with(WRITE_ROLES))
                         .andExpect(status().isCreated())
                         .andExpect(jsonPath("$.id").exists())
                         .andExpect(jsonPath("$.studentId").value(studentId))
@@ -411,7 +416,6 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER", "STUDENT"})
         @DisplayName("returns 400 when student has insufficient points")
         void returns400WithInsufficientPoints() throws Exception {
             Teacher teacher = new Teacher();
@@ -433,7 +437,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
             mockMvc.perform(post(baseUrl)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(createJSON)
-                            .with(csrf()))
+                            .with(csrf()).with(WRITE_ROLES))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.message")
                             .value("Insufficient points to redeem this reward"))
@@ -441,7 +445,6 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER", "STUDENT"})
         @DisplayName("returns 400 when reward item has insufficient stock")
         void returns400WithInsufficientStock() throws Exception {
             Teacher teacher = new Teacher();
@@ -463,7 +466,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
             mockMvc.perform(post(baseUrl)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(createJSON)
-                            .with(csrf()))
+                            .with(csrf()).with(WRITE_ROLES))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.message")
                             .value("Insufficient stock to redeem this reward"))
@@ -471,7 +474,6 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER", "STUDENT"})
         @DisplayName("returns 404 with invalid student")
         void returns404WithInvalidStudent() throws Exception {
             Optional<RewardItem> rewardItem = rewardItemDAO.findAll(PageRequest.of(0, 1))
@@ -483,7 +485,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
                 mockMvc.perform(post(baseUrl)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(createJSON)
-                                .with(csrf()))
+                                .with(csrf()).with(WRITE_ROLES))
                         .andExpect(status().isNotFound())
                         .andExpect(jsonPath("$.message")
                                 .value(containsString("Student not found with ID: " + studentId)))
@@ -492,7 +494,6 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER", "STUDENT"})
         @DisplayName("returns 404 with invalid reward item")
         void Returns404WithInvalidRewardItem() throws Exception {
             Optional<Student> student = studentDAO.findAll(PageRequest.of(0, 1))
@@ -504,7 +505,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
                 mockMvc.perform(post(baseUrl)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(createJSON)
-                                .with(csrf()))
+                                .with(csrf()).with(WRITE_ROLES))
                         .andExpect(status().isNotFound())
                         .andExpect(jsonPath("$.message")
                                 .value(containsString("Reward item not found with ID: " + itemId)))
@@ -513,7 +514,6 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER", "STUDENT"})
         @DisplayName("returns 400 with missing student")
         void returns400WithMissingStudent() throws Exception {
             Optional<RewardItem> rewardItem = rewardItemDAO.findAll(PageRequest.of(0, 1))
@@ -524,7 +524,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
                 mockMvc.perform(post(baseUrl)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(createJSON)
-                                .with(csrf()))
+                                .with(csrf()).with(WRITE_ROLES))
                         .andExpect(status().isBadRequest())
                         .andExpect(jsonPath("$.message")
                                 .value(containsString("Validation failed")))
@@ -535,7 +535,6 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER", "STUDENT"})
         @DisplayName("returns 400 with missing reward item")
         void Returns400WithMissingRewardItem() throws Exception {
             Optional<Student> student = studentDAO.findAll(PageRequest.of(0, 1))
@@ -546,7 +545,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
                 mockMvc.perform(post(baseUrl)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(createJSON)
-                                .with(csrf()))
+                                .with(csrf()).with(WRITE_ROLES))
                         .andExpect(status().isBadRequest())
                         .andExpect(jsonPath("$.message")
                                 .value(containsString("Validation failed")))
@@ -561,7 +560,6 @@ public class StudentRewardTests extends BaseIntegrationTest {
     @DisplayName("PUT /api/rewards/{id} - Update student reward")
     class UpdateStudentReward {
         @Test
-        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER", "STUDENT"})
         @DisplayName("updates a student reward with valid data")
         void updatesStudentRewardWithValidData() throws Exception {
             Optional<Student> student = studentDAO.findAll(PageRequest.of(0, 1))
@@ -581,7 +579,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
                 mockMvc.perform(put(baseUrl + "/{id}", studentRewardId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updateJSON)
-                                .with(csrf()))
+                                .with(csrf()).with(WRITE_ROLES))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.id").value(studentRewardId))
                         .andExpect(jsonPath("$.studentId").value(studentId))
@@ -594,7 +592,6 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER", "STUDENT"})
         @DisplayName("updates a student reward with nothing changed")
         void updatesStudentRewardWithNothingChanged() throws Exception {
             Optional<StudentReward> studentReward = studentRewardDAO.findAll(PageRequest.of(0, 1))
@@ -611,7 +608,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
                 mockMvc.perform(put(baseUrl + "/{id}", studentRewardId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updateJSON)
-                                .with(csrf()))
+                                .with(csrf()).with(WRITE_ROLES))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.id").value(studentRewardId))
                         .andExpect(jsonPath("$.studentId").value(studentId))
@@ -624,7 +621,6 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER", "STUDENT"})
         @DisplayName("updates a student reward with only student changed")
         void updatesStudentRewardWithOnlyStudentChanged() throws Exception {
             Optional<StudentReward> studentReward = studentRewardDAO.findAll(PageRequest.of(0, 1))
@@ -643,7 +639,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
                 mockMvc.perform(put(baseUrl + "/{id}", studentRewardId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updateJSON)
-                                .with(csrf()))
+                                .with(csrf()).with(WRITE_ROLES))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.id").value(studentRewardId))
                         .andExpect(jsonPath("$.studentId").value(studentId))
@@ -656,7 +652,6 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER", "STUDENT"})
         @DisplayName("updates a student reward with only reward item changed")
         void updatesStudentRewardWithOnlyRewardItemChanged() throws Exception {
             Optional<StudentReward> studentReward = studentRewardDAO.findAll(PageRequest.of(0, 1))
@@ -675,7 +670,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
                 mockMvc.perform(put(baseUrl + "/{id}", studentRewardId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updateJSON)
-                                .with(csrf()))
+                                .with(csrf()).with(WRITE_ROLES))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.id").value(studentRewardId))
                         .andExpect(jsonPath("$.studentId").value(studentId))
@@ -688,7 +683,6 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER", "STUDENT"})
         @DisplayName("returns 400 when updating to a student with insufficient points")
         void returns400WithInsufficientPointsWhenChangingStudent() throws Exception {
             Teacher teacher = new Teacher();
@@ -720,7 +714,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
             mockMvc.perform(put(baseUrl + "/{id}", savedReward.getId())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(updateJSON)
-                            .with(csrf()))
+                            .with(csrf()).with(WRITE_ROLES))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.message")
                             .value("Insufficient points to redeem this reward"))
@@ -728,7 +722,6 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER", "STUDENT"})
         @DisplayName("returns 400 when updating to an item with insufficient stock")
         void returns400WithInsufficientStockWhenChangingItem() throws Exception {
             Teacher teacher = new Teacher();
@@ -759,7 +752,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
             mockMvc.perform(put(baseUrl + "/{id}", savedReward.getId())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(updateJSON)
-                            .with(csrf()))
+                            .with(csrf()).with(WRITE_ROLES))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.message")
                             .value("Insufficient stock to redeem this reward"))
@@ -767,7 +760,6 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER", "STUDENT"})
         @DisplayName("returns 404 with invalid student")
         void returns404WithInvalidStudent() throws Exception {
             Optional<StudentReward> studentReward = studentRewardDAO.findAll(PageRequest.of(0, 1))
@@ -780,7 +772,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
                 mockMvc.perform(put(baseUrl + "/{id}", studentRewardId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updateJSON)
-                                .with(csrf()))
+                                .with(csrf()).with(WRITE_ROLES))
                         .andExpect(status().isNotFound())
                         .andExpect(jsonPath("$.message")
                                 .value(containsString("Student not found with ID: " + studentId)))
@@ -789,7 +781,6 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER", "STUDENT"})
         @DisplayName("returns 404 with invalid reward item")
         void Returns404WithInvalidRewardItem() throws Exception {
             Optional<StudentReward> studentReward = studentRewardDAO.findAll(PageRequest.of(0, 1))
@@ -802,7 +793,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
                 mockMvc.perform(put(baseUrl + "/{id}", studentRewardId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updateJSON)
-                                .with(csrf()))
+                                .with(csrf()).with(WRITE_ROLES))
                         .andExpect(status().isNotFound())
                         .andExpect(jsonPath("$.message")
                                 .value(containsString("Reward item not found with ID: " + itemId)))
@@ -811,7 +802,6 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER", "STUDENT"})
         @DisplayName("returns 400 with missing student")
         void returns400WithMissingStudent() throws Exception {
             Optional<StudentReward> studentReward = studentRewardDAO.findAll(PageRequest.of(0, 1))
@@ -823,7 +813,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
                 mockMvc.perform(put(baseUrl + "/{id}", studentRewardId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updateJSON)
-                                .with(csrf()))
+                                .with(csrf()).with(WRITE_ROLES))
                         .andExpect(status().isBadRequest())
                         .andExpect(jsonPath("$.message")
                                 .value(containsString("Validation failed")))
@@ -834,7 +824,6 @@ public class StudentRewardTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER", "STUDENT"})
         @DisplayName("returns 400 with missing reward item")
         void Returns400WithMissingRewardItem() throws Exception {
             Optional<StudentReward> studentReward = studentRewardDAO.findAll(PageRequest.of(0, 1))
@@ -846,7 +835,7 @@ public class StudentRewardTests extends BaseIntegrationTest {
                 mockMvc.perform(put(baseUrl + "/{id}", studentRewardId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updateJSON)
-                                .with(csrf()))
+                                .with(csrf()).with(WRITE_ROLES))
                         .andExpect(status().isBadRequest())
                         .andExpect(jsonPath("$.message")
                                 .value(containsString("Validation failed")))
@@ -855,34 +844,66 @@ public class StudentRewardTests extends BaseIntegrationTest {
                         .andExpect(jsonPath("$.timestamp").exists());
             }
         }
+
+        @Test
+        @DisplayName("returns 403 when user has disallowed role")
+        void returns403WhenUserHasDisallowedRole() throws Exception {
+            Optional<Student> student = studentDAO.findAll(PageRequest.of(0, 1))
+                    .stream().findFirst();
+            Optional<StudentReward> studentReward = studentRewardDAO.findAll(PageRequest.of(0, 1))
+                    .stream().findFirst();
+            Optional<RewardItem> rewardItem = rewardItemDAO.findAll(PageRequest.of(0, 1))
+                    .stream().findFirst();
+            if (student.isPresent() && studentReward.isPresent() && rewardItem.isPresent()) {
+                Long studentId = student.get().getId();
+                Long studentRewardId = studentReward.get().getId();
+                Long itemId = rewardItem.get().getId();
+                String updateJSON = buildStudentRewardJson(studentId, itemId);
+                mockMvc.perform(put(baseUrl + "/{id}", studentRewardId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(updateJSON)
+                                .with(csrf()).with(DISALLOWED_ROLES))
+                        .andExpect(status().isForbidden());
+            }
+        }
     }
 
     @Nested
     @DisplayName("DELETE /api/rewards/{id} - Delete student reward")
     class DeleteStudentReward {
         @Test
-        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER", "STUDENT"})
         @DisplayName("deletes student reward and returns 204")
         void deletesStudentRewardAndReturns204() throws Exception {
             Optional<StudentReward> studentReward = studentRewardDAO.findAll(PageRequest.of(0, 1))
                     .stream().findFirst();
             if (studentReward.isPresent()) {
                 mockMvc.perform(delete(baseUrl + "/{id}", studentReward.get().getId())
-                        .with(csrf()))
+                        .with(csrf()).with(WRITE_ROLES))
                         .andExpect(status().isNoContent());
             }
         }
 
         @Test
-        @WithMockUser(roles = {"ADMIN", "STAFF", "TEACHER", "STUDENT"})
         @DisplayName("returns 404 when deleting non existent student reward")
         void returns404WhenDeletingNonExistentStudentReward() throws Exception {
             mockMvc.perform(delete(baseUrl + "/{id}", 9999L)
-                            .with(csrf()))
+                            .with(csrf()).with(WRITE_ROLES))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.message")
                             .value("Student reward not found with ID: 9999"))
                     .andExpect(jsonPath("$.timestamp").exists());
+        }
+
+        @Test
+        @DisplayName("returns 403 when user has disallowed role")
+        void returns403WhenUserHasDisallowedRole() throws Exception {
+            Optional<StudentReward> studentReward = studentRewardDAO.findAll(PageRequest.of(0, 1))
+                    .stream().findFirst();
+            if (studentReward.isPresent()) {
+                mockMvc.perform(delete(baseUrl + "/{id}", studentReward.get().getId())
+                                .with(csrf()).with(DISALLOWED_ROLES))
+                        .andExpect(status().isForbidden());
+            }
         }
     }
 

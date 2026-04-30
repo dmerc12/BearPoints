@@ -4,19 +4,24 @@ import com.bearpoints.api.config.TestDataInitializer;
 import com.bearpoints.api.controller.BehaviorTypeController;
 import com.bearpoints.api.dao.BehaviorTypeDAO;
 import com.bearpoints.api.entity.BehaviorType;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import java.util.Optional;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * Full-stack integration tests for {@link BehaviorTypeController}.
@@ -36,7 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *
  * @see TestDataInitializer
  * @see BaseIntegrationTest
- * @version 1.4
+ * @version 2.0
  * @author Dylan Mercer
  */
 @DisplayName("Behavior Type Integration Tests")
@@ -49,6 +54,10 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
 
     private static String baseUrl;
 
+    private static final RequestPostProcessor WRITE_ROLES = user("admin").roles("ADMIN", "STAFF");
+    private static final RequestPostProcessor DISALLOWED_ROLES = user("disallowed").roles("STUDENT", "TEACHER", "PARA");
+    private static final RequestPostProcessor READ_ROLES = user("any").roles("STUDENT", "TEACHER", "ADMIN", "STAFF", "PARA");
+
     @BeforeAll
     static void setUp() {
         baseUrl = "/api/behaviors";
@@ -58,10 +67,10 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
     @DisplayName("GET /api/behaviors - Retrieve behavior types")
     class GetAllBehaviorTypes {
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns paginated behavior types with default parameters")
         void returnsPaginatedBehaviorTypesWithDefaults() throws Exception {
-            mockMvc.perform(get(baseUrl))
+            mockMvc.perform(get(baseUrl)
+                            .with(READ_ROLES))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isArray())
                     .andExpect(jsonPath("$.number").value(0))
@@ -69,21 +78,21 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns sorted results when sort parameter provided")
         void returnsSortedBehaviorTypes() throws Exception {
             mockMvc.perform(get(baseUrl)
-                            .param("sort", "name,asc;pointValue,desc"))
+                            .param("sort", "name,asc;pointValue,desc")
+                            .with(READ_ROLES))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isArray());
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns empty page when no behavior types exist")
         void returnsEmptyPageWhenNoBehaviorTypesExist() throws Exception {
             mockMvc.perform(get(baseUrl)
-                            .param("page", "1000"))
+                            .param("page", "1000")
+                            .with(READ_ROLES))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isEmpty());
         }
@@ -93,78 +102,77 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
     @DisplayName("GET /api/behaviors/search - Search behavior types")
     class SearchBehaviorTypes {
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("no criteria returns all behavior types")
         void noCriteriaReturnsAllBehaviorTypes() throws Exception {
-            mockMvc.perform(get(baseUrl + "/search"))
+            mockMvc.perform(get(baseUrl + "/search")
+                            .with(READ_ROLES))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isArray());
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by name returns matching behavior types")
         void searchByName_ReturnsMatchingBehaviorTypes() throws Exception {
             String searchTerm = "B";
             mockMvc.perform(get(baseUrl + "/search")
-                            .param("name", searchTerm))
+                            .param("name", searchTerm)
+                            .with(READ_ROLES))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[*].name",
                             everyItem(containsStringIgnoringCase(searchTerm))));
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by active returns matching behavior types")
         void searchByActive_ReturnsMatchingBehaviorTypes() throws Exception {
             Boolean searchTerm = true;
             mockMvc.perform(get(baseUrl + "/search")
-                            .param("active", String.valueOf(searchTerm)))
+                            .param("active", String.valueOf(searchTerm))
+                            .with(READ_ROLES))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[*].active",
                             everyItem(equalTo(searchTerm))));
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by point value range returns matching behavior types")
         void searchByPointValueRange_ReturnsMatchingBehaviorTypes() throws Exception {
             Integer minPointValue = 2;
             Integer maxPointValue = 5;
             mockMvc.perform(get(baseUrl + "/search")
                             .param("minPointValue", String.valueOf(minPointValue))
-                            .param("maxPointValue", String.valueOf(maxPointValue)))
+                            .param("maxPointValue", String.valueOf(maxPointValue))
+                            .with(READ_ROLES))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[*].pointValue",
                             everyItem(allOf(greaterThanOrEqualTo(minPointValue), lessThanOrEqualTo(maxPointValue)))));
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by min point value returns matching behavior types")
         void searchByMinPointValue_ReturnsMatchingBehaviorTypes() throws Exception {
             Integer minPointValue = 2;
             mockMvc.perform(get(baseUrl + "/search")
-                            .param("minPointValue", String.valueOf(minPointValue)))
+                            .param("minPointValue", String.valueOf(minPointValue))
+                            .with(READ_ROLES))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[*].pointValue",
                             everyItem(greaterThanOrEqualTo(minPointValue))));
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("by max point value returns matching behavior types")
         void searchByMaxPointValue_ReturnsMatchingBehaviorTypes() throws Exception {
             Integer maxPointValue = 5;
             mockMvc.perform(get(baseUrl + "/search")
-                            .param("maxPointValue", String.valueOf(maxPointValue)))
+                            .param("maxPointValue", String.valueOf(maxPointValue))
+                            .with(READ_ROLES))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[*].pointValue",
                             everyItem(lessThanOrEqualTo(maxPointValue))));
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("with combined criteria returns matching behavior types")
         void searchWithCombinedCriteria_ReturnsMatchingBehaviorTypes() throws Exception {
             String searchTerm = "B";
@@ -175,7 +183,8 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
                             .param("name", searchTerm)
                             .param("active", String.valueOf(activeStatus))
                             .param("minPointValue", String.valueOf(minPointValue))
-                            .param("maxPointValue", String.valueOf(maxPointValue)))
+                            .param("maxPointValue", String.valueOf(maxPointValue))
+                            .with(READ_ROLES))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[*].name",
                             everyItem(containsStringIgnoringCase(searchTerm))))
@@ -186,22 +195,22 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("with non-matching criteria returns empty results")
         void searchWithNonMatchingCriteria_ReturnsEmptyResults() throws Exception {
             mockMvc.perform(get(baseUrl + "/search")
-                            .param("name", "non-existent"))
+                            .param("name", "non-existent")
+                            .with(READ_ROLES))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isEmpty());
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns sorted search results when sort parameter provided")
         void returnsSortedSearchResults() throws Exception {
             mockMvc.perform(get(baseUrl + "/search")
                             .param("name", "")
-                            .param("sort", "pointValue,desc"))
+                            .param("sort", "pointValue,desc")
+                            .with(READ_ROLES))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isArray());
         }
@@ -211,10 +220,10 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
     @DisplayName("GET /api/behaviors/{id} - Get behavior type by ID")
     class GetBehaviorTypeById {
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns behavior type when ID exists")
         void returnsBehaviorType_whenIdExists() throws Exception {
-            mockMvc.perform(get(baseUrl + "/{id}", "1"))
+            mockMvc.perform(get(baseUrl + "/{id}", "1")
+                            .with(READ_ROLES))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.id").value(1))
                     .andExpect(jsonPath("$.name").exists())
@@ -223,10 +232,10 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN", "STAFF"})
         @DisplayName("returns 404 when ID does not exist")
         void returns404_whenIdDoesNotExist() throws Exception {
-            mockMvc.perform(get(baseUrl + "/{id}", "9999"))
+            mockMvc.perform(get(baseUrl + "/{id}", "9999")
+                            .with(READ_ROLES))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.message").value("Behavior type not found with ID: 9999"))
                     .andExpect(jsonPath("$.timestamp").exists());
@@ -237,7 +246,6 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
     @DisplayName("POST /api/behaviors - Create behavior type")
     class CreateBehaviorType {
         @Test
-        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("creates behavior type with valid data")
         void createBehaviorType_withValidData() throws Exception {
             String uniqueName = "unique-name-" + System.currentTimeMillis();
@@ -253,7 +261,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
             mockMvc.perform(post(baseUrl)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(behaviorTypeJson)
-                        .with(csrf()))
+                        .with(csrf()).with(WRITE_ROLES))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.id").exists())
                     .andExpect(jsonPath("$.name").value(uniqueName))
@@ -262,7 +270,6 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 409 with duplicate name")
         void returns409_withDuplicateName() throws Exception {
             Optional<BehaviorType> existingBehaviorType = behaviorTypeDAO.findAll(PageRequest.of(0, 1))
@@ -278,7 +285,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
                 mockMvc.perform(post(baseUrl)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(behaviorTypeJson)
-                            .with(csrf()))
+                            .with(csrf()).with(WRITE_ROLES))
                         .andExpect(status().isConflict())
                         .andExpect(jsonPath("$.message")
                                 .value("A behavior type with this name already exists"))
@@ -287,7 +294,6 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with blank name")
         void returns400_withBlankName() throws Exception {
             String name = "";
@@ -301,7 +307,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
             mockMvc.perform(post(baseUrl)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(behaviorTypeJson)
-                            .with(csrf()))
+                            .with(csrf()).with(WRITE_ROLES))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.message")
                             .value(containsString("Validation failed")))
@@ -309,7 +315,6 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with name too long")
         void returns400_withNameTooLong() throws Exception {
             String name = "a".repeat(51);
@@ -323,7 +328,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
             mockMvc.perform(post(baseUrl)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(behaviorTypeJson)
-                            .with(csrf()))
+                            .with(csrf()).with(WRITE_ROLES))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.message")
                             .value(containsString("Validation failed")))
@@ -331,7 +336,6 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with point value below minimum")
         void returns400_withPointValueBelowMin() throws Exception {
             Integer pointValue = 0;
@@ -345,7 +349,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
             mockMvc.perform(post(baseUrl)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(behaviorTypeJson)
-                            .with(csrf()))
+                            .with(csrf()).with(WRITE_ROLES))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.message")
                             .value(containsString("Validation failed")))
@@ -353,7 +357,6 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with point value above maximum")
         void returns400_withPointValueAboveMax() throws Exception {
             Integer pointValue = 6;
@@ -367,7 +370,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
             mockMvc.perform(post(baseUrl)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(behaviorTypeJson)
-                            .with(csrf()))
+                            .with(csrf()).with(WRITE_ROLES))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.message")
                             .value(containsString("Validation failed")))
@@ -375,9 +378,8 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER"})
-        @DisplayName("returns 403 when user is not ADMIN or STAFF")
-        void returns403_whenUserIsNotAdminOrStaff() throws Exception {
+        @DisplayName("returns 403 when user has disallowed role")
+        void returns403_whenUserHasDisallowedRole() throws Exception {
             String uniqueName = "unique-name-" + System.currentTimeMillis();
             Integer pointValue = 2;
             Boolean active = true;
@@ -391,7 +393,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
             mockMvc.perform(post(baseUrl)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(behaviorTypeJson)
-                            .with(csrf()))
+                            .with(csrf()).with(DISALLOWED_ROLES))
                     .andExpect(status().isForbidden());
         }
     }
@@ -400,7 +402,6 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
     @DisplayName("PUT /api/behaviors/{id} - Update behavior type")
     class UpdateBehaviorType {
         @Test
-        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("updates behavior type with valid data")
         void updateBehaviorType_withValidData() throws Exception {
             Optional<BehaviorType> existingBehaviorType = behaviorTypeDAO.findAll(PageRequest.of(0, 1))
@@ -420,7 +421,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
                 mockMvc.perform(put(baseUrl + "/{id}", behaviorTypeId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updateJson)
-                                .with(csrf()))
+                                .with(csrf()).with(WRITE_ROLES))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.id").value(behaviorTypeId))
                         .andExpect(jsonPath("$.name").value(uniqueName))
@@ -430,7 +431,6 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("updates behavior type when name is unchanged")
         void updateBehaviorType_whenNameUnchanged() throws Exception {
             Optional<BehaviorType> existingBehaviorType = behaviorTypeDAO.findAll(PageRequest.of(0, 1))
@@ -450,7 +450,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
                 mockMvc.perform(put(baseUrl + "/{id}", behaviorTypeId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updateJson)
-                                .with(csrf()))
+                                .with(csrf()).with(WRITE_ROLES))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.id").value(behaviorTypeId))
                         .andExpect(jsonPath("$.name").value(name))
@@ -462,7 +462,6 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
 
 
         @Test
-        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 409 when updating to existing behavior type's name")
         void returns409_whenUpdatingToExistingName() throws Exception {
             Optional<BehaviorType> behaviorType = behaviorTypeDAO.findAll(PageRequest.of(0, 1))
@@ -481,7 +480,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
                 mockMvc.perform(put(baseUrl + "/{id}", behaviorTypeId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updateJson)
-                                .with(csrf()))
+                                .with(csrf()).with(WRITE_ROLES))
                         .andExpect(status().isConflict())
                         .andExpect(jsonPath("$.message")
                                 .value("A behavior type with this name already exists"))
@@ -490,7 +489,6 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with blank name")
         void returns400_withBlankName() throws Exception {
             Optional<BehaviorType> existingBehaviorType = behaviorTypeDAO.findAll(PageRequest.of(0, 1))
@@ -508,7 +506,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
                 mockMvc.perform(put(baseUrl + "/{id}", behaviorTypeId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updateJson)
-                                .with(csrf()))
+                                .with(csrf()).with(WRITE_ROLES))
                         .andExpect(status().isBadRequest())
                         .andExpect(jsonPath("$.message")
                                 .value(containsString("Validation failed")))
@@ -517,7 +515,6 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with name too long")
         void returns400_withNameTooLong() throws Exception {
             Optional<BehaviorType> existingBehaviorType = behaviorTypeDAO.findAll(PageRequest.of(0, 1))
@@ -535,7 +532,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
                 mockMvc.perform(put(baseUrl + "/{id}", behaviorTypeId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updateJson)
-                                .with(csrf()))
+                                .with(csrf()).with(WRITE_ROLES))
                         .andExpect(status().isBadRequest())
                         .andExpect(jsonPath("$.message")
                                 .value(containsString("Validation failed")))
@@ -544,7 +541,6 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with point value below minimum")
         void returns400_withPointValueBelowMin() throws Exception {
             Optional<BehaviorType> existingBehaviorType = behaviorTypeDAO.findAll(PageRequest.of(0, 1))
@@ -562,7 +558,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
                 mockMvc.perform(put(baseUrl + "/{id}", behaviorTypeId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updateJson)
-                                .with(csrf()))
+                                .with(csrf()).with(WRITE_ROLES))
                         .andExpect(status().isBadRequest())
                         .andExpect(jsonPath("$.message")
                                 .value(containsString("Validation failed")))
@@ -571,7 +567,6 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 400 with point value above maximum")
         void returns400_withPointValueAboveMax() throws Exception {
             Optional<BehaviorType> existingBehaviorType = behaviorTypeDAO.findAll(PageRequest.of(0, 1))
@@ -589,7 +584,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
                 mockMvc.perform(put(baseUrl + "/{id}", behaviorTypeId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updateJson)
-                                .with(csrf()))
+                                .with(csrf()).with(WRITE_ROLES))
                         .andExpect(status().isBadRequest())
                         .andExpect(jsonPath("$.message")
                                 .value(containsString("Validation failed")))
@@ -598,7 +593,6 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 404 when updating non-existent behavior type")
         void returns404_whenUpdatingNonExistentBehaviorType() throws Exception {
             Long behaviorTypeId = 9999L;
@@ -612,7 +606,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
             mockMvc.perform(put(baseUrl + "/{id}", behaviorTypeId)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(updateJson)
-                            .with(csrf()))
+                            .with(csrf()).with(WRITE_ROLES))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.message")
                             .value("Behavior type not found with ID: 9999"))
@@ -620,9 +614,8 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER"})
-        @DisplayName("returns 403 when user is not ADMIN or STAFF")
-        void returns403_whenUserIsNotAdminOrStaff() throws Exception {
+        @DisplayName("returns 403 when user has disallowed role")
+        void returns403_whenUserHasDisallowedRole() throws Exception {
             Optional<BehaviorType> existingBehaviorType = behaviorTypeDAO.findAll(PageRequest.of(0, 1))
                     .stream().findFirst();
             if (existingBehaviorType.isPresent()) {
@@ -637,7 +630,7 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
                 mockMvc.perform(put(baseUrl + "/{id}", behaviorTypeId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updateJson)
-                                .with(csrf()))
+                                .with(csrf()).with(DISALLOWED_ROLES))
                         .andExpect(status().isForbidden());
             }
         }
@@ -647,20 +640,18 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
     @DisplayName("DELETE /api/behaviors/{id} - Delete behavior type")
     class DeleteBehaviorType {
         @Test
-        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("deletes behavior type and returns 204")
         void deletesBehaviorType_andReturns204() throws Exception {
             mockMvc.perform(delete(baseUrl + "/{id}", 1L)
-                            .with(csrf()))
+                            .with(csrf()).with(WRITE_ROLES))
                     .andExpect(status().isNoContent());
         }
 
         @Test
-        @WithMockUser(roles = {"ADMIN", "STAFF"})
         @DisplayName("returns 404 when deleting non-existent behavior type")
         void returns404_whenDeletingNonExistentBehaviorType() throws Exception {
             mockMvc.perform(delete(baseUrl + "/{id}", 9999L)
-                            .with(csrf()))
+                            .with(csrf()).with(WRITE_ROLES))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.message")
                             .value("Behavior type not found with ID: 9999"))
@@ -669,11 +660,10 @@ public class BehaviorTypeTests extends BaseIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER"})
-        @DisplayName("returns 403 when user is not ADMIN or STAFF")
-        void returns403_whenUserIsNotAdminOrStaff() throws Exception {
+        @DisplayName("returns 403 when user has disallowed role")
+        void returns403_whenUserHasDisallowedRole() throws Exception {
             mockMvc.perform(delete(baseUrl + "/{id}", 1L)
-                            .with(csrf()))
+                            .with(csrf()).with(DISALLOWED_ROLES))
                     .andExpect(status().isForbidden());
         }
     }

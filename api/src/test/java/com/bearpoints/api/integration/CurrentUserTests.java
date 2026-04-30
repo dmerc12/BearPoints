@@ -26,7 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *
  * @see CurrentUserController
  * @see BaseIntegrationTest
- * @version 1.1
+ * @version 1.2
  * @author Dylan Mercer
  */
 @DisplayName("Current User Integration Tests")
@@ -103,8 +103,17 @@ public class CurrentUserTests extends BaseIntegrationTest {
     }
 
     @Test
-    @DisplayName("GET /api/users/me without authentication returns 401 Unauthorized")
-    void getCurrentUserWithoutAuthenticationReturns401Unauthorized() throws Exception {
+    @DisplayName("GET /api/users/me as PARA returns correct user details")
+    void getCurrentUserAsParaReturnsUserDetails() throws Exception {
+        User para = userDAO.findByRole(Role.PARA, PageRequest.of(0, 1))
+                .stream().findFirst()
+                .orElseThrow(() -> new AssertionError("No para user found in test database"));
+        performGetCurrentUserWithUser(para);
+    }
+
+    @Test
+    @DisplayName("GET /api/users/me without authentication returns 403 Forbidden")
+    void getCurrentUserWithoutAuthenticationReturns403Forbidden() throws Exception {
         mockMvc.perform(get("/api/users/me"))
                 .andExpect(status().isForbidden());
     }

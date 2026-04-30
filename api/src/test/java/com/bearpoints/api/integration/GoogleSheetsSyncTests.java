@@ -7,8 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -41,7 +42,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * </ul>
  * @see TestDataInitializer
  * @see BaseIntegrationTest
- * @version 1.1
+ * @version 2.0
  * @author Dylan Mercer
  */
 @Slf4j
@@ -54,6 +55,9 @@ public class GoogleSheetsSyncTests extends BaseIntegrationTest {
     private GoogleSheetsService googleSheetsService;
 
     private static String baseUrl;
+
+    private static final RequestPostProcessor ALLOWED_ROLES = user("admin").roles("ADMIN", "STAFF");
+    private static final RequestPostProcessor DISALLOWED_ROLES = user("disallowed").roles("STUDENT", "TEACHER", "PARA");
 
     private static final List<String> SHEET_NAMES = Arrays.asList(
             "Users", "Teachers", "Students", "BehaviorTypes", "BragLogs", "RewardItems", "StudentRewards");
@@ -95,11 +99,10 @@ public class GoogleSheetsSyncTests extends BaseIntegrationTest {
     @DisplayName("POST /api/sync - Trigger full synchronization")
     class TriggerFullSync {
         @Test
-        @WithMockUser(roles = {"ADMIN", "STAFF"})
-        @DisplayName("accepts sync request from ADMIN user")
-        void acceptsSyncRequestFromAdminUser() throws Exception {
+        @DisplayName("accepts sync request from user with allowed role")
+        void acceptsSyncRequestFromUserWithAllowedRole() throws Exception {
             mockMvc.perform(post(baseUrl)
-                            .with(csrf()))
+                            .with(csrf()).with(ALLOWED_ROLES))
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.TEXT_PLAIN + ";charset=UTF-8"))
                     .andExpect(content().string("Google Sheets synchronization completed successfully"));
@@ -110,20 +113,18 @@ public class GoogleSheetsSyncTests extends BaseIntegrationTest {
     @DisplayName("Security - Endpoint access control")
     class SecurityAccessControl {
         @Test
-        @WithMockUser(roles = {"ADMIN", "STAFF"})
-        @DisplayName("allows access for users with ADMIN role")
-        void allowsAccessForAdminRole() throws Exception {
+        @DisplayName("allows access for users with allowed role")
+        void allowsAccessForAllowedRole() throws Exception {
             mockMvc.perform(post(baseUrl)
-                            .with(csrf()))
+                            .with(csrf()).with(ALLOWED_ROLES))
                     .andExpect(status().isOk());
         }
 
         @Test
-        @WithMockUser(roles = {"STUDENT", "TEACHER"})
         @DisplayName("returns 403 for users with STUDENT or TEACHER roles")
         void returns403ForStudentOrTeacherRoles() throws Exception {
             mockMvc.perform(post(baseUrl)
-                            .with(csrf()))
+                            .with(csrf()).with(DISALLOWED_ROLES))
                     .andExpect(status().isForbidden());
         }
 
