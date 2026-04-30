@@ -1,12 +1,13 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AdminStaffDashboard } from './pages/AdminStaffDashboard';
 import { StudentDashboard } from './pages/StudentDashboard';
 import { TeacherDashboard } from './pages/TeacherDashboard';
 import DashboardRedirect from './pages/DashboardRedirect';
 import StudentRewardsPage from './pages/StudentRewardsPage';
 import BehaviorTypesPage from './pages/BehaviorTypePage';
-import { AdminDashboard } from './pages/AdminDashboard';
 import LeaderboardPage from './pages/LeaderboardPage';
 import RewardItemsPage from './pages/RewardItemsPage';
+import { ParaDashboard } from './pages/ParaDashboard';
 import BearBragPage from './pages/BearBragPage';
 import NavigationBar from './components/NavBar';
 import StudentsPage from './pages/StudentsPage';
@@ -40,7 +41,8 @@ function App() {
                   <Route path="/dashboard" element={<DashboardRedirect />} />
                   <Route path="/dashboard/teacher" element={<TeacherDashboard />} />
                   <Route path="/dashboard/student" element={<StudentDashboard />} />
-                  <Route path="/dashboard/admin" element={<AdminDashboard />} />
+                  <Route path="/dashboard/admin" element={<AdminStaffDashboard />} />
+                  <Route path="/dashboard/para" element={<ParaDashboard />} />
                   <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
           </Router>

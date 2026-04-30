@@ -7,6 +7,11 @@ export function TeacherDashboard() {
             <Container className='mt-5'>
                 <h1>Teacher Dashboard</h1>
                 <p>Welcome to your teacher dashboard. Here you can manage students, view reports, and more.</p>
+                {/* Classroom leaderboard table */}
+                {/* Class bear brags table (teacher) */}
+                {/* Class rewards table */}
+                {/* Students table */}
+                {/* My bear brags table (as submitter) */}
             </Container>
         </AuthenticatedLayout>
     );
