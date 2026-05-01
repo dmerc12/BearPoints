@@ -7,10 +7,12 @@ import teachersReducer from './slices/teachersSlice';
 import studentsReducer from './slices/studentsSlice';
 import { configureStore } from '@reduxjs/toolkit';
 import usersReducer from './slices/usersSlice';
+import syncReducer from './slices/syncSlice';
 import userReducer from './slices/userSlice';
 
 export const store = configureStore({
     reducer: {
+        sync: syncReducer,
         user: userReducer,
         users: usersReducer,
         teachers: teachersReducer,
@@ -30,7 +32,7 @@ export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 export { useAppDispatch, useAppSelector } from './hooks';
 export {
-    fetchCurrentUser, clearCurrentUser,
+    fetchCurrentUser, clearCurrentUser, triggerSync, resetSync, clearSyncStatus,
     fetchUsers, searchUsersInList, fetchUserById, addUser, modifyUser, removeUser,
     resetUsers, clearUsersError, clearSelectedUser,
     fetchTeachers, searchTeachersInList, fetchTeacherById, addTeacher, modifyTeacher, removeTeacher,

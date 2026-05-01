@@ -3,6 +3,10 @@ export { GradeLevel } from './GradeLevel';
 export { Timeframe } from './Timeframe';
 export { Role } from './Role';
 
+// Sync
+export { type SyncState } from './SyncState';
+export { type SyncResponse } from './SyncResponse';
+
 // DTOs
 export { type UserDTO } from './UserDTO';
 export { type TeacherDTO } from './TeacherDTO';

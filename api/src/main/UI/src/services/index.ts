@@ -1,11 +1,11 @@
 export {
     Timeframe, Role, GradeLevel, type UserDTO, type StudentDTO, type TeacherDTO, type BehaviorTypeDTO,
     type BragLogDTO, type RewardItemDTO, type StudentRewardDTO, type LeaderboardEntryDTO,
-    type  PagedResponseDTO, type ErrorResponseDTO, type PersonDTO
+    type  PagedResponseDTO, type ErrorResponseDTO, type PersonDTO, type SyncState, type SyncResponse
 } from './types';
 export {
     // Core
-    api, withHealthAwareRetry, ensureBackendHealthy, checkHealth,
+    api, withHealthAwareRetry, ensureBackendHealthy, checkHealth, triggerSync,
     // User
     getCurrentUser, getUserById, searchUsers, getUsers, createUser, updateUser, deleteUser,
     // Teacher

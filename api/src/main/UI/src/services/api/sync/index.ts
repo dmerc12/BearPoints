@@ -1,0 +1,1 @@
+export { triggerSync } from './sync';

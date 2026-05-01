@@ -32,3 +32,4 @@ export {
 export {
     fetchLeaderboard, setTimeframe, resetLeaderboard, clearLeaderboardError, clearTimeframeCache, clearSortCache
 } from './leaderboardSlice';
+export { triggerSync, clearSyncStatus, resetSync } from './syncSlice';

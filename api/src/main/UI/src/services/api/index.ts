@@ -23,6 +23,8 @@ export { getStudentRewardById, searchStudentRewards, getStudentRewards, createSt
 export { getBragLogById, searchBragLogs, getBragLogs, createBragLog, updateBragLog, deleteBragLog } from './bragLog';
 // Leaderboard
 export { getLeaderboard } from './leaderboard';
+// Sync Trigger
+export { triggerSync } from './sync';
 // Interceptors
 import './requestInterceptors.ts';
 import './responseInterceptors.ts';

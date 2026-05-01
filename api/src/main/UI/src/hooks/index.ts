@@ -8,4 +8,5 @@ export { type FormData, type ValidationRule, type UseFormProps, useForm } from '
 export { type UseStudentFormProps, useStudentForm, useStudentTable } from './student';
 export { type UseBragLogFormProps, useBragLogForm, useBragLogTable } from './bragLog';
 export { type UseLeaderboardTableProps, useLeaderboardTable } from './leaderboard';
+export { type UseSyncReturn, useSync } from './sync';
 export { default as useLogin } from './useLogin';
