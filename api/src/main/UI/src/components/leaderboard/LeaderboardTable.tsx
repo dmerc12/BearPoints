@@ -1,13 +1,17 @@
-import { LeaderboardTimeframeSelector, BaseTable } from '../index';
+import { LeaderboardTimeframeSelector, BaseTable, FilterConfig, HeaderConfig } from '../index';
 import { useLeaderboardTable } from '../../hooks';
 import { LeaderboardEntryDTO } from '../../services';
 import { Container } from 'react-bootstrap';
 
 interface LeaderboardTableProps {
     itemsPerPage?: number;
+    customFiltersConfig?: FilterConfig[];
+    customHeaderConfig?: HeaderConfig;
+    size?: 's' | 'm' | 'l';
 }
 
-export default function LeaderboardTable ({ itemsPerPage = 10 }: LeaderboardTableProps) {
+export default function LeaderboardTable ({ itemsPerPage = 10, customFiltersConfig, customHeaderConfig, size = 'm' }
+                                          : LeaderboardTableProps) {
     const {
         data, loading, error, filters, updateFilter, columns,
         retry, currentTimeframe, handleTimeframeChange, filtersConfig, headerConfig,
@@ -15,8 +19,11 @@ export default function LeaderboardTable ({ itemsPerPage = 10 }: LeaderboardTabl
         sortConfig, handleSort,
     } = useLeaderboardTable({ itemsPerPage });
 
+    const finalFiltersConfig = customFiltersConfig ?? filtersConfig;
+    const finalHeaderConfig = customHeaderConfig ?? headerConfig;
+
     const enhancedHeaderConfig = {
-       ...headerConfig,
+       ...finalHeaderConfig,
         additionalElements: (
             <LeaderboardTimeframeSelector
                 currentTimeframe={currentTimeframe}
@@ -37,12 +44,13 @@ export default function LeaderboardTable ({ itemsPerPage = 10 }: LeaderboardTabl
                 totalCount={totalCount}
                 onPageChange={setCurrentPage}
                 onRetry={retry}
-                filtersConfig={filtersConfig}
+                filtersConfig={finalFiltersConfig}
                 headerConfig={enhancedHeaderConfig}
                 filters={filters}
                 updateFilter={updateFilter}
                 sortConfig={sortConfig}
                 onSort={handleSort}
+                size={size}
             />
         </Container>
     );

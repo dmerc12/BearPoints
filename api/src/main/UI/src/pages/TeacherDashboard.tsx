@@ -1,4 +1,4 @@
-import { AuthenticatedLayout, ClassroomStudentsTable } from '../components';
+import { AuthenticatedLayout, ClassroomStudentsTable, ClassroomLeaderboardTable } from '../components';
 import { Container, Alert } from 'react-bootstrap';
 import { useAppSelector } from '../store';
 
@@ -24,6 +24,11 @@ export function TeacherDashboard() {
                 <h1>Teacher Dashboard</h1>
                 <p>Welcome to your teacher dashboard. Here you can manage students, view reports, and more.</p>
                 {/* Classroom leaderboard table */}
+                <ClassroomLeaderboardTable
+                    teacherId={teacherId}
+                    itemsPerPage={10}
+                    size='m'
+                />
                 {/* Class bear brags table (teacher) */}
                 {/* Class rewards table */}
                 {/* Students table */}
