@@ -15,7 +15,8 @@ export function useStudentTable({ itemsPerPage = 10 }: UseStudentTableProps) {
     const { data: students } = useAppSelector(state => state.students);
 
     const isAuthorized = useMemo(() => currentUser?.role === Role.ADMIN
-        || currentUser?.role === Role.STAFF || currentUser?.role === Role.TEACHER, [currentUser]);
+        || currentUser?.role === Role.STAFF || currentUser?.role === Role.TEACHER
+        || currentUser?.role === Role.PARA, [currentUser]);
 
     const initialFilters = {
         nameSearch: '',

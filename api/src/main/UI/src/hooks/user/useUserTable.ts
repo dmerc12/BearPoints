@@ -110,8 +110,9 @@ export function useUserTable({ itemsPerPage = 10 }: UseUserTableProps) {
             type: 'select' as const,
             label: 'Role',
             options: [
-                { value: 'ADMIN', label: 'Admin' },
-                { value: 'STAFF', label: 'Staff' },
+                { value: 'ADMIN', label: formatRole(Role.ADMIN) },
+                { value: 'STAFF', label: formatRole(Role.STAFF) },
+                { value: 'PARA', label: formatRole(Role.PARA) },
             ],
         },
     ];

@@ -12,7 +12,8 @@ export function useBragLogTable({ itemsPerPage = 10 }: UseBragLogTableProps) {
     const dispatch = useAppDispatch();
     const currentUser = useAppSelector(state => state.user.data);
     const isAuthorized = useMemo(() => currentUser?.role === Role.ADMIN
-        || currentUser?.role === Role.STAFF || currentUser?.role === Role.TEACHER, [currentUser]);
+        || currentUser?.role === Role.STAFF || currentUser?.role === Role.TEACHER
+        || currentUser?.role === Role.PARA, [currentUser]);
 
     const initialFilters = {
         studentName: '',

@@ -1,5 +1,6 @@
 import { Form, Row, Col } from 'react-bootstrap';
 import { UserDTO, Role } from '../../services';
+import { formatRole } from '../../utils';
 import React from 'react';
 
 interface UserFormProps {
@@ -75,8 +76,9 @@ export function UserForm({ formData, formErrors, loading, onInputChange, onSelec
                     isInvalid={!!formErrors.role}
                     disabled={loading || isEdit}
                 >
-                    <option value={Role.ADMIN}>Administrator</option>
-                    <option value={Role.STAFF}>Staff</option>
+                    <option value={Role.ADMIN}>{formatRole(Role.ADMIN)}</option>
+                    <option value={Role.STAFF}>{formatRole(Role.STAFF)}</option>
+                    <option value={Role.PARA}>{formatRole(Role.PARA)}</option>
                 </Form.Select>
                 <Form.Control.Feedback type='invalid'>
                     {formErrors.role}

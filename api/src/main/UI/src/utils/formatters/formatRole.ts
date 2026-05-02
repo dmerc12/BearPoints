@@ -8,6 +8,10 @@ export function formatRole(role: Role): string {
             return 'Teacher';
         case Role.STUDENT:
             return 'Student';
+        case Role.STAFF:
+            return 'Staff';
+        case Role.PARA:
+            return 'Paraprofessional';
         default:
             return role;
     }
