@@ -1,4 +1,4 @@
-import { AuthenticatedLayout } from '../components';
+import { AuthenticatedLayout, LeaderboardTable, StudentTable } from '../components';
 import { Container } from 'react-bootstrap';
 
 export function ParaDashboard() {
@@ -7,8 +7,14 @@ export function ParaDashboard() {
             <Container className='mt-5'>
                 <h1>Para Dashboard</h1>
                 <p>Welcome to your para dashboard.</p>
-                {/* Leaderboard table */}
-                {/* Students table */}
+                <LeaderboardTable
+                    itemsPerPage={10}
+                    size='m'
+                />
+                <StudentTable
+                    itemsPerPage={10}
+                    size='m'
+                />
                 {/* My bear brags table (as submitter) */}
             </Container>
         </AuthenticatedLayout>
