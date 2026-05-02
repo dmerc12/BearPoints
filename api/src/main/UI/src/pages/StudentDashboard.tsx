@@ -1,6 +1,7 @@
-import { AuthenticatedLayout, ClassroomLeaderboardTable, ClassroomBragLogsTable } from '../components';
+import { AuthenticatedLayout, ClassroomLeaderboardTable, ClassroomBragLogsTable, StudentBragLogsTable } from '../components';
 import { useAppDispatch, useAppSelector, fetchStudentById} from '../store';
 import { Container, Spinner, Alert } from 'react-bootstrap';
+import { fullName } from '../utils';
 import { useEffect } from 'react';
 
 export function StudentDashboard() {
@@ -71,7 +72,11 @@ export function StudentDashboard() {
                 <h1>Student Dashboard</h1>
                 <p>Welcome to your student dashboard. View your points and rewards here.</p>
                 {/* Points / fundraiser bar */}
-                {/* My bear brags table (as student) */}
+                <StudentBragLogsTable
+                    studentName={fullName(selectedStudent)}
+                    itemsPerPage={10}
+                    size='m'
+                />
                 {/* My related rewards table */}
                 <ClassroomLeaderboardTable
                     teacherId={teacherId}

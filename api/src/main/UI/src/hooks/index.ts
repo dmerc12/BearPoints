@@ -11,9 +11,11 @@ export { type UseLeaderboardTableProps, useLeaderboardTable } from './leaderboar
 export { type UseSyncReturn, useSync } from './sync';
 export { default as useLogin } from './useLogin';
 export {
+    type UseStudentBragLogTableReturn,
     type UseClassroomStudentsTableReturn,
     type UseClassroomLeaderboardTableReturn,
     type UseClassroomBragLogsTableReturn,
+    useStudentBragLogsTable,
     useClassroomStudentsTable,
     useClassroomBragLogsTable,
     useClassroomLeaderboardTable,

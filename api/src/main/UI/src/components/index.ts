@@ -8,6 +8,7 @@ export { default as Sidebar } from './Sidebar';
 export { default as NavBar } from './NavBar';
 export { default as Auth } from './Auth';
 export {
+    StudentBragLogsTable,
     ClassroomLeaderboardTable,
     ClassroomBragLogsTable,
     ClassroomStudentsTable,
