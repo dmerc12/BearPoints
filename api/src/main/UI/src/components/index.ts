@@ -9,6 +9,7 @@ export { default as NavBar } from './NavBar';
 export { default as Auth } from './Auth';
 export {
     StudentBragLogsTable,
+    SubmitterBragLogsTable,
     ClassroomLeaderboardTable,
     ClassroomBragLogsTable,
     ClassroomStudentsTable,

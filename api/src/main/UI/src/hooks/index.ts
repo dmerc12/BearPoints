@@ -12,10 +12,12 @@ export { type UseSyncReturn, useSync } from './sync';
 export { default as useLogin } from './useLogin';
 export {
     type UseStudentBragLogTableReturn,
+    type UseSubmitterBragLogsTableReturn,
     type UseClassroomStudentsTableReturn,
     type UseClassroomLeaderboardTableReturn,
     type UseClassroomBragLogsTableReturn,
     useStudentBragLogsTable,
+    useSubmitterBragLogsTable,
     useClassroomStudentsTable,
     useClassroomBragLogsTable,
     useClassroomLeaderboardTable,

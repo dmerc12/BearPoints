@@ -1,5 +1,5 @@
 import { AuthenticatedLayout, LeaderboardTable, UserTable, TeacherTable, StudentTable, BehaviorTypeTable,
-    RewardItemTable, BragLogTable, StudentRewardTable, SyncButton } from '../components';
+    RewardItemTable, BragLogTable, StudentRewardTable, SubmitterBragLogsTable, SyncButton } from '../components';
 import { Container } from 'react-bootstrap';
 
 export function AdminStaffDashboard() {
@@ -43,7 +43,10 @@ export function AdminStaffDashboard() {
                     itemsPerPage={10}
                     size='m'
                 />
-                {/* My bear brags table (as submitter) */}
+                <SubmitterBragLogsTable
+                    itemsPerPage={10}
+                    size='m'
+                />
             </Container>
         </AuthenticatedLayout>
     );

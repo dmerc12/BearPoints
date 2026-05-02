@@ -1,4 +1,5 @@
-import { AuthenticatedLayout, ClassroomStudentsTable, ClassroomBragLogsTable, ClassroomLeaderboardTable } from '../components';
+import { AuthenticatedLayout, ClassroomStudentsTable, ClassroomBragLogsTable, ClassroomLeaderboardTable,
+    SubmitterBragLogsTable } from '../components';
 import { Container, Alert } from 'react-bootstrap';
 import { useAppSelector } from '../store';
 
@@ -33,14 +34,16 @@ export function TeacherDashboard() {
                     itemsPerPage={10}
                     size='m'
                 />
-                {/* Class rewards table */}
                 <ClassroomStudentsTable
                     teacherId={teacherId}
                     showActions={true}
                     itemsPerPage={10}
                     size='m'
                 />
-                {/* My bear brags table (as submitter) */}
+                <SubmitterBragLogsTable
+                    itemsPerPage={10}
+                    size='m'
+                />
             </Container>
         </AuthenticatedLayout>
     );
