@@ -1,4 +1,5 @@
 import { searchStudentRewardsInList, RootState, useAppDispatch, useAppSelector } from '../../store';
+import { FilterConfig, HeaderConfig } from '../../components';
 import { StudentRewardDTO, Role } from '../../services';
 import { useCallback, useEffect, useMemo } from 'react';
 import { formatBragLogDate } from '../../utils';
@@ -91,7 +92,7 @@ export function useStudentRewardTable({ itemsPerPage = 10 }: UseStudentRewardTab
         };
     }, []);
 
-    const filtersConfig = [
+    const filtersConfig: FilterConfig[] = [
         {
             key: 'studentName',
             type: 'text' as const,
@@ -134,7 +135,7 @@ export function useStudentRewardTable({ itemsPerPage = 10 }: UseStudentRewardTab
         },
     ];
 
-    const headerConfig = useMemo(() => ({
+    const headerConfig: HeaderConfig = useMemo(() => ({
         title: 'Reward Redemptions',
         itemName: 'student rewards',
         showCreateButton: isAuthorized,

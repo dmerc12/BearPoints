@@ -1,4 +1,10 @@
-import { CreateStudentRewardModal, EditStudentRewardModal, DeleteStudentRewardModal, CrudTable } from '../index';
+import {
+    CreateStudentRewardModal,
+    EditStudentRewardModal,
+    DeleteStudentRewardModal,
+    CrudTable,
+    FilterConfig, HeaderConfig
+} from '../index';
 import { useStudentRewardTable } from '../../hooks';
 import { StudentRewardDTO } from '../../services';
 
@@ -6,15 +12,26 @@ interface StudentRewardTableProps {
     itemsPerPage?: number;
     showFilters?: boolean;
     size?: 's' | 'm' | 'l';
+    customFiltersConfig?: FilterConfig[];
+    customHeaderConfig?: HeaderConfig;
 }
 
-export default function StudentRewardTable({ itemsPerPage = 10, showFilters = true, size = 'm' }: StudentRewardTableProps) {
+export default function StudentRewardTable({ itemsPerPage = 10, showFilters = true, size = 'm',
+                                               customFiltersConfig, customHeaderConfig }: StudentRewardTableProps) {
     const {
         data, loading, error, filters, updateFilter, isAuthorized, columns, sortConfig, handleSort,
         showCreateModal, editingItem, deletingItem, handleCreateItem, handleEditItem, handleDeleteItem,
         handleCloseModals, retry, handleSuccess, filtersConfig, headerConfig, currentPage, totalPages,
         setCurrentPage, totalCount
     } = useStudentRewardTable({ itemsPerPage });
+
+    const finalHeaderConfig = customHeaderConfig ? {
+        ...headerConfig,
+        ...customHeaderConfig,
+        additionalElements: customHeaderConfig.additionalElements ?? headerConfig.additionalElements,
+    } : headerConfig;
+
+    const finalFiltersConfig = customFiltersConfig ?? (showFilters ? filtersConfig : undefined);
 
     return (
         <CrudTable<StudentRewardDTO>
@@ -27,8 +44,8 @@ export default function StudentRewardTable({ itemsPerPage = 10, showFilters = tr
             totalCount={totalCount}
             onPageChange={setCurrentPage}
             onRetry={retry}
-            filtersConfig={showFilters ? filtersConfig : undefined}
-            headerConfig={headerConfig}
+            filtersConfig={finalFiltersConfig}
+            headerConfig={finalHeaderConfig}
             filters={filters}
             updateFilter={updateFilter}
             size={size}

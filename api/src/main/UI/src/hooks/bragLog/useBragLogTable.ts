@@ -1,4 +1,5 @@
 import { searchBragLogsInList, RootState, useAppDispatch, useAppSelector } from '../../store';
+import { FilterConfig, HeaderConfig } from '../../components';
 import { useCallback, useEffect, useMemo } from 'react';
 import { BragLogDTO, Role } from '../../services';
 import { formatBragLogDate } from '../../utils';
@@ -111,7 +112,7 @@ export function useBragLogTable({ itemsPerPage = 10 }: UseBragLogTableProps) {
         };
     }, []);
 
-    const filtersConfig = [
+    const filtersConfig: FilterConfig[] = [
         {
             key: 'studentName',
             type: 'text' as const,
@@ -160,7 +161,7 @@ export function useBragLogTable({ itemsPerPage = 10 }: UseBragLogTableProps) {
         },
     ];
 
-    const headerConfig = useMemo(() => ({
+    const headerConfig: HeaderConfig = useMemo(() => ({
         title: 'Brag Logs',
         itemName: 'brag logs',
         showCreateButton: isAuthorized,
