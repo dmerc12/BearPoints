@@ -4,6 +4,7 @@ export { type UseStudentRewardFormProps, useStudentRewardForm, useStudentRewardT
 export { type UseBehaviorTypeFormProps, useBehaviorTypeForm, useBehaviorTypeTable } from './behaviorType';
 export { type UseRewardItemFormProps, useRewardItemForm, useRewardItemTable } from './rewardItem';
 export { type UseUserFormProps, type UseUserTableProps, useUserForm, useUserTable } from './user';
+export { type UseClassroomStudentsTableReturn, useClassroomStudentsTable } from './dashboard';
 export { type FormData, type ValidationRule, type UseFormProps, useForm } from './useForm';
 export { type UseStudentFormProps, useStudentForm, useStudentTable } from './student';
 export { type UseBragLogFormProps, useBragLogForm, useBragLogTable } from './bragLog';

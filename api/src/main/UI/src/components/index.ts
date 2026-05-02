@@ -7,7 +7,10 @@ export { default as BaseModal } from './BaseModal';
 export { default as Sidebar } from './Sidebar';
 export { default as NavBar } from './NavBar';
 export { default as Auth } from './Auth';
-export { SyncButton } from './dashboard';
+export {
+    ClassroomStudentsTable,
+    SyncButton
+} from './dashboard';
 export {
     type FilterConfig,
     type HeaderConfig,

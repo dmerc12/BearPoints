@@ -1,17 +1,19 @@
 import { useAppSelector, useAppDispatch, fetchTeachers } from '../../store';
-import { studentValidationRules } from '../../utils';
+import { studentValidationRules, fullName } from '../../utils';
 import { StudentDTO } from '../../services';
+import { useEffect, useMemo } from 'react';
 import { useForm } from '../index';
-import { useEffect } from 'react';
 
 export interface UseStudentFormProps {
     show: boolean;
     isEdit?: boolean;
     student?: StudentDTO | null;
+    defaultTeacherId?: number;
 }
 
-export const useStudentForm = ({ show, isEdit = false, student }: UseStudentFormProps) => {
+export const useStudentForm = ({ show, isEdit = false, student, defaultTeacherId }: UseStudentFormProps) => {
     const dispatch = useAppDispatch();
+    const currentUser = useAppSelector(state => state.user.data);
     const { loading: studentsLoading, error: studentsError } = useAppSelector(
         state => state.students);
     const { data: teachers, loading: teachersLoading, error: teachersError } = useAppSelector(
@@ -52,6 +54,23 @@ export const useStudentForm = ({ show, isEdit = false, student }: UseStudentForm
         }
     }, [show, isEdit, student, form.setFormData, form]);
 
+    useEffect(() => {
+        if (show && !isEdit && defaultTeacherId && defaultTeacherId !== -1) {
+            form.setFormData(prev => ({ ...prev, teacherId: defaultTeacherId }));
+        }
+    }, [show, isEdit, defaultTeacherId, form]);
+
+    const selectedTeacherName = useMemo(() => {
+        if (!defaultTeacherId || defaultTeacherId === -1) return '';
+        if (currentUser?.teacherId === defaultTeacherId) {
+            return fullName(currentUser);
+        }
+        const selectedTeacher = teachers.find(t => t.id === defaultTeacherId);
+        return selectedTeacher ? fullName(selectedTeacher) : '';
+    }, [defaultTeacherId, currentUser, teachers]);
+
+    const isTeacherSelectDisabled = !isEdit && !!defaultTeacherId && defaultTeacherId !== -1;
+
     return {
         formData: form.formData,
         setFormData: form.setFormData,
@@ -60,6 +79,8 @@ export const useStudentForm = ({ show, isEdit = false, student }: UseStudentForm
         teachers,
         error,
         isLoading,
+        selectedTeacherName,
+        isTeacherSelectDisabled,
         handleInputChange: form.handleInputChange,
         handleSelectChange: form.handleSelectChange,
         handleCheckboxChange: form.handleCheckboxChange,

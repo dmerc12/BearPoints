@@ -7,14 +7,15 @@ interface CreateStudentModalProps {
     show: boolean;
     onCancel: () => void;
     onSuccess: () => void;
+    defaultTeacherId?: number;
 }
 
-export function CreateStudentModal({ show, onCancel, onSuccess }: CreateStudentModalProps) {
+export function CreateStudentModal({ show, onCancel, onSuccess, defaultTeacherId }: CreateStudentModalProps) {
     const dispatch = useAppDispatch();
 
     const {
-        formData, formErrors, teachers, error, isLoading, handleInputChange,
-        handleSelectChange, validateForm, resetForm } = useStudentForm({ show });
+        formData, formErrors, teachers, error, isLoading, handleInputChange, isTeacherSelectDisabled, selectedTeacherName,
+        handleSelectChange, validateForm, resetForm } = useStudentForm({ show, defaultTeacherId });
 
     const handleSubmit = () => {
         if (!validateForm()) return;
@@ -63,6 +64,8 @@ export function CreateStudentModal({ show, onCancel, onSuccess }: CreateStudentM
                 error={error}
                 onInputChange={handleInputChange}
                 onSelectChange={handleSelectChange}
+                selectedTeacherName={selectedTeacherName}
+                disableTeacherSelect={isTeacherSelectDisabled}
             />
         </BaseModal>
     );

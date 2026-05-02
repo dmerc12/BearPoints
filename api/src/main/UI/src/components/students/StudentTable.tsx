@@ -1,5 +1,6 @@
 import { CreateStudentModal, EditStudentModal, DeleteStudentModal, CrudTable, QRCodesPrint } from '../index';
-import { useMemo, useCallback, useRef } from 'react';
+import React, { useMemo, useCallback, useRef } from 'react';
+import type { FilterConfig, HeaderConfig } from '../index';
 import { useReactToPrint } from 'react-to-print';
 import { useNavigate } from 'react-router-dom';
 import { useStudentTable } from '../../hooks';
@@ -13,11 +14,15 @@ interface StudentTableProps {
     showPrintButton?: boolean;
     showQRCodes?: boolean;
     size?: 's' | 'm' | 'l';
+    customCreateModal?: React.ReactNode;
+    customFiltersConfig?: FilterConfig[];
+    customHeaderConfig?: HeaderConfig;
 }
 
 export default function StudentTable (props: StudentTableProps) {
     const {
-        itemsPerPage = 10, showFilters = true, showPrintButton = true, showQRCodes = true, size = 'm'
+        itemsPerPage = 10, showFilters = true, showPrintButton = true, showQRCodes = true, size = 'm',
+        customCreateModal, customFiltersConfig, customHeaderConfig,
     } = props;
 
     const navigate = useNavigate();
@@ -32,7 +37,7 @@ export default function StudentTable (props: StudentTableProps) {
     } = useStudentTable({ itemsPerPage });
 
     const enhancedHeaderConfig = useMemo(() => ({
-        ...headerConfig,
+        ...(customHeaderConfig || headerConfig),
         additionalElements: showPrintButton && data.length > 0 ? (
             <Button variant='primary'
                     onClick={() => reactToPrintFn()}
@@ -42,8 +47,8 @@ export default function StudentTable (props: StudentTableProps) {
             >
                 Print QR Codes ({data.length})
             </Button>
-        ) : null,
-    }), [headerConfig, showPrintButton, data.length, reactToPrintFn, size]);
+        ) : (customHeaderConfig?.additionalElements || null),
+    }), [customHeaderConfig, headerConfig, showPrintButton, data.length, reactToPrintFn, size]);
 
     const qrCodeSize = useMemo(() => {
         if (size === 's') return 48;
@@ -79,6 +84,8 @@ export default function StudentTable (props: StudentTableProps) {
         return enhanced;
     }, [columns, showQRCodes, qrCodeSize, handleQRScan]);
 
+    const finalFiltersConfig = customFiltersConfig ?? (showFilters ? filtersConfig : undefined);
+
     return (
         <>
             <CrudTable<StudentDTO>
@@ -91,7 +98,7 @@ export default function StudentTable (props: StudentTableProps) {
                 totalCount={totalCount}
                 onPageChange={setCurrentPage}
                 onRetry={retry}
-                filtersConfig={showFilters ? filtersConfig : undefined}
+                filtersConfig={finalFiltersConfig}
                 headerConfig={enhancedHeaderConfig}
                 filters={filters}
                 updateFilter={updateFilter}
@@ -103,13 +110,13 @@ export default function StudentTable (props: StudentTableProps) {
                 onEditItem={handleEditItem}
                 onDeleteItem={handleDeleteItem}
                 onCreateClick={handleCreateItem}
-                createModal={
+                createModal={customCreateModal || (
                     <CreateStudentModal
                         show={showCreateModal}
                         onCancel={handleCloseModals}
                         onSuccess={handleSuccess}
                     />
-                }
+                )}
                 editModal={
                     <EditStudentModal
                         show={!!editingItem}

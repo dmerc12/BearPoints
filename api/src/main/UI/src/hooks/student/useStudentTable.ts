@@ -1,4 +1,5 @@
 import { searchStudentsInList, RootState, useAppDispatch, useAppSelector } from '../../store';
+import type { FilterConfig, HeaderConfig } from '../../components';
 import { fullName, formatGrade, formatName } from '../../utils';
 import { useCallback, useEffect, useMemo } from 'react';
 import { StudentDTO, Role } from '../../services';
@@ -109,7 +110,7 @@ export function useStudentTable({ itemsPerPage = 10 }: UseStudentTableProps) {
             ({ value: id.toString(), label: name}));
     }, [students]);
 
-    const filtersConfig = [
+    const filtersConfig: FilterConfig[] = [
         {
             key: 'nameSearch',
             type: 'text' as const,
@@ -146,7 +147,7 @@ export function useStudentTable({ itemsPerPage = 10 }: UseStudentTableProps) {
         },
     ];
 
-    const headerConfig = useMemo(() => ({
+    const headerConfig: HeaderConfig = useMemo(() => ({
         title: 'Students',
         itemName: 'students',
         showCreateButton: isAuthorized,

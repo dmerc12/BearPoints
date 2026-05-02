@@ -16,10 +16,12 @@ interface StudentFormProps {
     error?: string | null;
     onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onSelectChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+    selectedTeacherName?: string;
+    disableTeacherSelect?: boolean;
 }
 
 export function StudentForm({ formData, formErrors, teachers, loading, onInputChange, onSelectChange,
-                                error }: StudentFormProps) {
+                                error, disableTeacherSelect = false, selectedTeacherName = '' }: StudentFormProps) {
     return (
         <Form>
             {formErrors.general && <Alert variant='danger'>{formErrors.general}</Alert>}
@@ -83,6 +85,13 @@ export function StudentForm({ formData, formErrors, teachers, loading, onInputCh
                         value='Loading teachers...'
                         disabled
                     />
+                ) : disableTeacherSelect ? (
+                    <Form.Control
+                        type='text'
+                        value={selectedTeacherName || 'Teacher assigned automatically'}
+                        disabled
+                        readOnly
+                    />
                 ) : (
                     <Form.Select
                         name='teacherId'
@@ -105,6 +114,11 @@ export function StudentForm({ formData, formErrors, teachers, loading, onInputCh
                 <Form.Control.Feedback type='invalid'>
                     {formErrors.teacherId}
                 </Form.Control.Feedback>
+                {disableTeacherSelect && (
+                    <Form.Text className='text-muted'>
+                        Students will be automatically assigned to your class
+                    </Form.Text>
+                )}
             </Form.Group>
         </Form>
     );
