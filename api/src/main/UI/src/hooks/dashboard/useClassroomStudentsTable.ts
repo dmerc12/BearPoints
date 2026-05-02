@@ -5,7 +5,6 @@ import { useMemo, useEffect } from 'react';
 export interface UseClassroomStudentsTableProps {
     teacherId: number;
     itemsPerPage?: number;
-    size?: 's' | 'm' | 'l';
     showActions?: boolean;
 }
 
@@ -13,14 +12,12 @@ export interface UseClassroomStudentsTableReturn {
     studentTableProps: ReturnType<typeof useStudentTable>;
     modifiedFiltersConfig: FilterConfig[];
     modifiedHeaderConfig: HeaderConfig;
-    size: 's' | 'm' | 'l';
     showActions: boolean;
 }
 
 export function useClassroomStudentsTable({
     teacherId,
     itemsPerPage = 10,
-    size = 'm',
     showActions = true,
 }: UseClassroomStudentsTableProps): UseClassroomStudentsTableReturn {
     const studentTableProps = useStudentTable({ itemsPerPage });
@@ -46,7 +43,6 @@ export function useClassroomStudentsTable({
         studentTableProps,
         modifiedFiltersConfig,
         modifiedHeaderConfig,
-        size,
         showActions
     };
 }

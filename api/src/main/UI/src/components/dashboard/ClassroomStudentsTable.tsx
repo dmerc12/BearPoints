@@ -17,7 +17,7 @@ export default function ClassroomStudentsTable({
     showActions = false
 }: ClassroomStudentsTableProps) {
     const { studentTableProps, modifiedFiltersConfig, modifiedHeaderConfig } =
-        useClassroomStudentsTable({ teacherId, itemsPerPage, size, showActions });
+        useClassroomStudentsTable({ teacherId, itemsPerPage, showActions });
 
     const customCreateModal = useMemo(() => (
         <CreateStudentModal
