@@ -1,4 +1,4 @@
-import { AuthenticatedLayout, ClassroomLeaderboardTable } from '../components';
+import { AuthenticatedLayout, ClassroomLeaderboardTable, ClassroomBragLogsTable } from '../components';
 import { useAppDispatch, useAppSelector, fetchStudentById} from '../store';
 import { Container, Spinner, Alert } from 'react-bootstrap';
 import { useEffect } from 'react';
@@ -73,13 +73,16 @@ export function StudentDashboard() {
                 {/* Points / fundraiser bar */}
                 {/* My bear brags table (as student) */}
                 {/* My related rewards table */}
-                {/* Classroom leaderboard table */}
                 <ClassroomLeaderboardTable
                     teacherId={teacherId}
                     itemsPerPage={10}
                     size='m'
                 />
-                {/* Class bear brags table (teacher) */}
+                <ClassroomBragLogsTable
+                    teacherId={teacherId}
+                    itemsPerPage={10}
+                    size='m'
+                />
             </Container>
         </AuthenticatedLayout>
     );

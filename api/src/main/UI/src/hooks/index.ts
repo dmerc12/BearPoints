@@ -13,6 +13,8 @@ export { default as useLogin } from './useLogin';
 export {
     type UseClassroomStudentsTableReturn,
     type UseClassroomLeaderboardTableReturn,
+    type UseClassroomBragLogsTableReturn,
     useClassroomStudentsTable,
-    useClassroomLeaderboardTable
+    useClassroomBragLogsTable,
+    useClassroomLeaderboardTable,
 } from './dashboard';
