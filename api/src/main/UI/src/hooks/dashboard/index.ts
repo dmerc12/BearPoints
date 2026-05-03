@@ -4,3 +4,4 @@ export { type UseClassroomBragLogsTableReturn, useClassroomBragLogsTable } from 
 export { type UseSubmitterBragLogsTableReturn, useSubmitterBragLogsTable } from './useSubmitterBragLogsTable';
 export { type UseStudentBragLogTableReturn, useStudentBragLogsTable } from './useStudentBragLogTable';
 export { type UseStudentRewardsTableReturn, useStudentRewardsTable } from './useStudentRewardsTable';
+export { type UseNearestRewardReturn, useNearestReward } from './useNearestReward';

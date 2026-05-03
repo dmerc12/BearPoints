@@ -5,3 +5,4 @@ export { default as SubmitterBragLogsTable } from './SubmitterBragLogsTable';
 export { default as StudentBragLogsTable } from './StudentBragLogsTable';
 export { default as StudentRewardsTable } from './StudentRewardsTable';
 export { default as SyncButton } from './SyncButton';
+export { default as PointsBar } from './PointsBar';
