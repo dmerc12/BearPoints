@@ -24,6 +24,12 @@ export default function DashboardRedirect() {
                     case 'ADMIN':
                         navigate('/dashboard/admin', { replace: true });
                         break;
+                    case 'STAFF':
+                        navigate('/dashboard/admin', { replace: true });
+                        break;
+                    case 'PARA':
+                        navigate('/dashboard/para', { replace: true });
+                        break;
                     default:
                         navigate('/', { replace: true });
                 }
