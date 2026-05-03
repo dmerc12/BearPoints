@@ -3,3 +3,4 @@ export { type UseClassroomStudentsTableReturn, useClassroomStudentsTable } from 
 export { type UseClassroomBragLogsTableReturn, useClassroomBragLogsTable } from './useClassroomBragLogsTable';
 export { type UseSubmitterBragLogsTableReturn, useSubmitterBragLogsTable } from './useSubmitterBragLogsTable';
 export { type UseStudentBragLogTableReturn, useStudentBragLogsTable } from './useStudentBragLogTable';
+export { type UseStudentRewardsTableReturn, useStudentRewardsTable } from './useStudentRewardsTable';

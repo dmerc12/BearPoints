@@ -8,12 +8,13 @@ export { default as Sidebar } from './Sidebar';
 export { default as NavBar } from './NavBar';
 export { default as Auth } from './Auth';
 export {
+    SyncButton,
+    StudentRewardsTable,
     StudentBragLogsTable,
     SubmitterBragLogsTable,
-    ClassroomLeaderboardTable,
     ClassroomBragLogsTable,
     ClassroomStudentsTable,
-    SyncButton
+    ClassroomLeaderboardTable
 } from './dashboard';
 export {
     type FilterConfig,

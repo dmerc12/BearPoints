@@ -1,4 +1,5 @@
-import { AuthenticatedLayout, ClassroomLeaderboardTable, ClassroomBragLogsTable, StudentBragLogsTable } from '../components';
+import { AuthenticatedLayout, ClassroomLeaderboardTable, ClassroomBragLogsTable, StudentBragLogsTable,
+    StudentRewardsTable } from '../components';
 import { useAppDispatch, useAppSelector, fetchStudentById} from '../store';
 import { Container, Spinner, Alert } from 'react-bootstrap';
 import { fullName } from '../utils';
@@ -51,6 +52,7 @@ export function StudentDashboard() {
     }
 
     const teacherId = selectedStudent.teacher?.id;
+    const studentName = fullName(selectedStudent);
 
     if (!teacherId) {
         return (
@@ -73,11 +75,16 @@ export function StudentDashboard() {
                 <p>Welcome to your student dashboard. View your points and rewards here.</p>
                 {/* Points / fundraiser bar */}
                 <StudentBragLogsTable
-                    studentName={fullName(selectedStudent)}
+                    studentName={studentName}
                     itemsPerPage={10}
                     size='m'
                 />
                 {/* My related rewards table */}
+                <StudentRewardsTable
+                    studentName={studentName}
+                    itemsPerPage={10}
+                    size='m'
+                />
                 <ClassroomLeaderboardTable
                     teacherId={teacherId}
                     itemsPerPage={10}
