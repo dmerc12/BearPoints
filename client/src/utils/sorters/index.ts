@@ -1,1 +1,0 @@
-export { sortGrades } from './sortGrades';
