@@ -1,0 +1,87 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: bearpoints-postgres
+    environment:
+      POSTGRES_DB: bearpoints
+      POSTGRES_USER: bearpoints
+      POSTGRES_PASSWORD: bearpoints
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bearpoints"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  # Spring Boot API
+  api:
+    build:
+      context: ./API
+      dockerfile: Dockerfile
+    container_name: bearpoints-api
+    env_file:
+      - ./.env
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: bearpoints
+      DB_USERNAME: bearpoints
+      DB_PASSWORD: bearpoints
+      # Application configuration
+      PORT: 8080
+      SHOW_SQL: "true"
+      SPRING_PROFILES_ACTIVE: dev
+      # Google Sheets
+      GOOGLE_SERVICE_ACCOUNT_KEY: ${GOOGLE_SERVICE_ACCOUNT_KEY}
+      GOOGLE_SHEET_ID: ${GOOGLE_SHEET_ID}
+      # Firebase
+      FIREBASE_SERVICE_ACCOUNT_KEY: ${FIREBASE_SERVICE_ACCOUNT_KEY}
+    ports:
+      - "8080:8080"
+    volumes:
+      - api_logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+  # React UI (Development with hot reload)
+  ui-dev:
+    build:
+      context: ./UI
+      dockerfile: Dockerfile
+      target: development
+    container_name: bearpoints-ui-dev
+    environment:
+      VITE_API_URL: http://localhost:8080
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./UI:/app
+      - /app/node_modules
+    depends_on:
+      - api
+  # React UI (production build with nginx) - For testing production build locally
+  ui-prod:
+    build:
+      context: ./UI
+      dockerfile: Dockerfile
+      target: production
+      args:
+        VITE_API_URL: http://localhost:8080
+    container_name: bearpoints-ui-prod
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:
+  api_logs:
