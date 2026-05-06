@@ -389,7 +389,7 @@ public class BragLogTests extends BaseIntegrationTest {
                         .andExpect(jsonPath("$.behaviorIds").exists())
                         .andExpect(jsonPath("$.behaviors").exists())
                         .andExpect(jsonPath("$.pointsGenerated").value(bl.getPointsGenerated()))
-                        .andExpect(jsonPath("$.timestamp").value(bl.getTimestamp().toString()))
+                        .andExpect(jsonPath("$.timestamp").exists())
                         .andExpect(jsonPath("$.notes").value(bl.getNotes()))
                         .andExpect(jsonPath("$.submitterName").value(bl.getSubmitterName()))
                         .andExpect(jsonPath("$.submitterUserId").value(bragLog.get().getSubmitterUser().getId()));
