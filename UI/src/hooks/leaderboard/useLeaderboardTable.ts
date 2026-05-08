@@ -74,7 +74,7 @@ export function useLeaderboardTable({ itemsPerPage = 20 }: UseLeaderboardTablePr
         teacherId?: number;
         grade?: GradeLevel;
     }) => {
-        dispatch(fetchLeaderboard({
+        return fetchLeaderboard({
             timeframe: currentTimeframe,
             page: params.page,
             size: params.size,
@@ -82,8 +82,8 @@ export function useLeaderboardTable({ itemsPerPage = 20 }: UseLeaderboardTablePr
             teacherId: params.teacherId,
             grade: params.grade,
             force: params.force || false,
-        }));
-    }, [dispatch, currentTimeframe]);
+        });
+    }, [currentTimeframe]);
 
     const getFetchParams = useCallback((
         filters: typeof initialFilters,

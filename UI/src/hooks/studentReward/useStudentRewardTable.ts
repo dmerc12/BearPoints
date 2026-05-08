@@ -1,4 +1,4 @@
-import { searchStudentRewardsInList, RootState, useAppDispatch, useAppSelector } from '../../store';
+import { searchStudentRewardsInList, RootState, useAppSelector } from '../../store';
 import { FilterConfig, HeaderConfig } from '../../components';
 import { StudentRewardDTO, Role } from '../../services';
 import { useCallback, useEffect, useMemo } from 'react';
@@ -10,7 +10,6 @@ export interface UseStudentRewardTableProps {
 }
 
 export function useStudentRewardTable({ itemsPerPage = 10 }: UseStudentRewardTableProps) {
-    const dispatch = useAppDispatch();
     const currentUser = useAppSelector(state => state.user.data);
     const isAuthorized = useMemo(() => currentUser?.role === Role.ADMIN
         || currentUser?.role === Role.STAFF || currentUser?.role === Role.TEACHER
@@ -64,8 +63,8 @@ export function useStudentRewardTable({ itemsPerPage = 10 }: UseStudentRewardTab
         startDate?: string;
         endDate?: string;
     }) => {
-        dispatch(searchStudentRewardsInList(params) as never);
-    }, [dispatch]);
+        return  searchStudentRewardsInList(params);
+    }, []);
 
     const getFetchParams = useCallback((
         filters: typeof initialFilters,

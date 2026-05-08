@@ -1,4 +1,4 @@
-import { searchStudentsInList, RootState, useAppDispatch, useAppSelector } from '../../store';
+import { searchStudentsInList, RootState, useAppSelector } from '../../store';
 import type { FilterConfig, HeaderConfig } from '../../components';
 import { fullName, formatGrade, formatName } from '../../utils';
 import { useCallback, useEffect, useMemo } from 'react';
@@ -10,7 +10,6 @@ export interface UseStudentTableProps {
 }
 
 export function useStudentTable({ itemsPerPage = 10 }: UseStudentTableProps) {
-    const dispatch = useAppDispatch();
     const currentUser = useAppSelector(state => state.user.data);
     const { data: students } = useAppSelector(state => state.students);
 
@@ -71,8 +70,8 @@ export function useStudentTable({ itemsPerPage = 10 }: UseStudentTableProps) {
         minPoints?: number;
         maxPoints?: number;
     })=> {
-        dispatch(searchStudentsInList(params) as never);
-    }, [dispatch]);
+        return searchStudentsInList(params);
+    }, []);
 
     const getFetchParams = useCallback((
         filters: typeof initialFilters,

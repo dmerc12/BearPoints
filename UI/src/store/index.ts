@@ -24,6 +24,7 @@ export const store = configureStore({
         leaderboard: leaderboardReducer,
     },
     middleware: (getDefaultMiddleware) => getDefaultMiddleware({
+        thunk: true,
         serializableCheck: false
     })
 });

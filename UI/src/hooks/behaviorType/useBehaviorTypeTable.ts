@@ -1,4 +1,4 @@
-import { searchBehaviorTypesInList, RootState, useAppDispatch, useAppSelector } from '../../store';
+import { searchBehaviorTypesInList, RootState, useAppSelector } from '../../store';
 import { useCallback, useEffect, useMemo } from 'react';
 import { BehaviorTypeDTO, Role } from '../../services';
 import { useTable } from '../index';
@@ -8,7 +8,6 @@ export interface UseBehaviorTypeTableProps {
 }
 
 export function useBehaviorTypeTable({ itemsPerPage = 10 }: UseBehaviorTypeTableProps) {
-    const dispatch = useAppDispatch();
     const currentUser = useAppSelector(state => state.user.data);
     const isAuthorized = useMemo(() => currentUser?.role === Role.ADMIN
         || currentUser?.role === Role.STAFF, [currentUser]);
@@ -50,8 +49,8 @@ export function useBehaviorTypeTable({ itemsPerPage = 10 }: UseBehaviorTypeTable
         minPointValue?: number;
         maxPointValue?: number;
     }) => {
-        dispatch(searchBehaviorTypesInList(params) as never);
-    }, [dispatch]);
+        return searchBehaviorTypesInList(params);
+    }, []);
 
     const getFetchParams = useCallback((
         filters: typeof initialFilters,

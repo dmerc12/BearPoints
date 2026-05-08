@@ -1,4 +1,4 @@
-import { searchRewardItemsInList, RootState, useAppDispatch, useAppSelector } from '../../store';
+import { searchRewardItemsInList, RootState, useAppSelector } from '../../store';
 import { useCallback, useEffect, useMemo } from 'react';
 import { RewardItemDTO, Role } from '../../services';
 import { useTable } from '../index';
@@ -8,7 +8,6 @@ export interface UseRewardItemTableProps {
 }
 
 export function useRewardItemTable({ itemsPerPage = 10 }: UseRewardItemTableProps) {
-    const dispatch = useAppDispatch();
     const currentUser = useAppSelector(state => state.user.data);
     const isAuthorized = useMemo(() => currentUser?.role === Role.ADMIN
         || currentUser?.role === Role.STAFF, [currentUser]);
@@ -53,8 +52,8 @@ export function useRewardItemTable({ itemsPerPage = 10 }: UseRewardItemTableProp
         minStock?: number;
         maxStock?: number;
     }) => {
-        dispatch(searchRewardItemsInList(params) as never);
-    }, [dispatch]);
+        return searchRewardItemsInList(params);
+    }, []);
 
     const getFetchParams = useCallback((
         filters: typeof initialFilters,

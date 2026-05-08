@@ -1,4 +1,4 @@
-import { searchBragLogsInList, RootState, useAppDispatch, useAppSelector } from '../../store';
+import { searchBragLogsInList, RootState, useAppSelector } from '../../store';
 import { FilterConfig, HeaderConfig } from '../../components';
 import { useCallback, useEffect, useMemo } from 'react';
 import { BragLogDTO, Role } from '../../services';
@@ -10,7 +10,6 @@ export interface UseBragLogTableProps {
 }
 
 export function useBragLogTable({ itemsPerPage = 10 }: UseBragLogTableProps) {
-    const dispatch = useAppDispatch();
     const currentUser = useAppSelector(state => state.user.data);
     const isAuthorized = useMemo(() => currentUser?.role === Role.ADMIN
         || currentUser?.role === Role.STAFF || currentUser?.role === Role.TEACHER
@@ -78,8 +77,8 @@ export function useBragLogTable({ itemsPerPage = 10 }: UseBragLogTableProps) {
         endDate?: string;
         submitterName?: string;
     }) => {
-        dispatch(searchBragLogsInList(params) as never);
-    }, [dispatch]);
+        return searchBragLogsInList(params);
+    }, []);
 
     const getFetchParams = useCallback((
         filters: typeof initialFilters,

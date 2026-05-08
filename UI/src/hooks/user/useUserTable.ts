@@ -1,4 +1,4 @@
-import { searchUsersInList, RootState, useAppDispatch, useAppSelector } from '../../store';
+import { searchUsersInList, RootState, useAppSelector } from '../../store';
 import { useCallback, useEffect, useMemo } from 'react';
 import { fullName, formatRole } from '../../utils';
 import { UserDTO, Role } from '../../services';
@@ -9,7 +9,6 @@ export interface UseUserTableProps {
 }
 
 export function useUserTable({ itemsPerPage = 10 }: UseUserTableProps) {
-    const dispatch = useAppDispatch();
     const currentUser = useAppSelector(state => state.user.data);
     const isAuthorized = useMemo(() => currentUser?.role === Role.ADMIN
         || currentUser?.role === Role.STAFF, [currentUser]);
@@ -47,8 +46,8 @@ export function useUserTable({ itemsPerPage = 10 }: UseUserTableProps) {
         email?: string;
         role?: Role;
     }) => {
-        dispatch(searchUsersInList(params) as never);
-    }, [dispatch]);
+        return searchUsersInList(params);
+    }, []);
 
     const getFetchParams = useCallback((
         filters: typeof initialFilters,

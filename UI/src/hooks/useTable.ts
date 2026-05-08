@@ -1,5 +1,8 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { RootState, useAppDispatch, useAppSelector } from '../store';
+import { UnknownAction} from '@reduxjs/toolkit';
+import { ThunkAction } from 'redux-thunk';
+
 
 export interface SortingConfig {
     propertyName: string;
@@ -23,6 +26,8 @@ export interface TableColumn<T> {
     sortable?: boolean;
 }
 
+type ThunkResult<R> = ThunkAction<R, any, any, UnknownAction>;
+
 export interface UseTableOptions<T, F extends TableFilters> {
     selector: (state: RootState) => {
         data: T[];
@@ -41,7 +46,7 @@ export interface UseTableOptions<T, F extends TableFilters> {
         sort?: string;
         force?: boolean;
         [key: string]: unknown;
-    }) => unknown;
+    }) => ThunkResult<unknown>;
     itemsPerPage?: number;
     columnsBuilder?: (helpers: TableHelpers<T>) => TableColumn<T>[];
     defaultColumns?: TableColumn<T>[];
@@ -110,7 +115,7 @@ export function useTable<T, F extends TableFilters>(props: UseTableOptions<T, F>
     useEffect(() => {
         if (!fetchAction) return;
         const params = buildFetchParams();
-        dispatch(fetchAction(params) as never);
+        dispatch(fetchAction(params));
     }, [dispatch, fetchAction, currentPage, itemsPerPage, sortParam, filters, buildFetchParams]);
 
     const helpers = useMemo(() => ({
@@ -200,7 +205,7 @@ export function useTable<T, F extends TableFilters>(props: UseTableOptions<T, F>
     const retryFetch = useCallback(() => {
         if (fetchAction) {
             const params = buildFetchParams();
-            dispatch(fetchAction({ ...params, force: true }) as never);
+            dispatch(fetchAction({ ...params, force: true }));
         }
     }, [dispatch, fetchAction, buildFetchParams]);
 

@@ -1,4 +1,4 @@
-import { searchTeachersInList, RootState, useAppSelector, useAppDispatch } from '../../store';
+import { searchTeachersInList, RootState, useAppSelector } from '../../store';
 import { fullName, formatGrade, sortGrades } from '../../utils';
 import { TeacherDTO, Role, GradeLevel } from '../../services';
 import { useCallback, useEffect, useMemo } from 'react';
@@ -9,7 +9,6 @@ export interface UseTeacherTableProps {
 }
 
 export function useTeacherTable({ itemsPerPage = 10 }: UseTeacherTableProps) {
-    const dispatch = useAppDispatch();
     const { data: teachers } = useAppSelector(state => state.teachers);
     const currentUser = useAppSelector(state => state.user.data);
 
@@ -49,8 +48,8 @@ export function useTeacherTable({ itemsPerPage = 10 }: UseTeacherTableProps) {
         email?: string;
         grade?: GradeLevel;
     }) => {
-        dispatch(searchTeachersInList(params) as never);
-    }, [dispatch]);
+        return searchTeachersInList(params);
+    }, []);
 
     const getFetchParams = useCallback((
         filters: typeof initialFilters,
