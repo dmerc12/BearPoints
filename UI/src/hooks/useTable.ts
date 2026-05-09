@@ -1,8 +1,7 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { RootState, useAppDispatch, useAppSelector } from '../store';
 import { UnknownAction} from '@reduxjs/toolkit';
 import { ThunkAction } from 'redux-thunk';
-
 
 export interface SortingConfig {
     propertyName: string;
@@ -82,6 +81,9 @@ export function useTable<T, F extends TableFilters>(props: UseTableOptions<T, F>
     const [editingItem, setEditingItem] = useState<T | null>(null);
     const [deletingItem, setDeletingItem] = useState<T | null>(null);
 
+    const lastFetchedRef = useRef<string>('');
+    const abortControllerRef = useRef<AbortController | null>(null);
+
     const getSortField = useCallback(
         (clientField: string): string => {
             if (getServerSortField) {
@@ -113,10 +115,18 @@ export function useTable<T, F extends TableFilters>(props: UseTableOptions<T, F>
 
     // Fetch data on mount
     useEffect(() => {
-        if (!fetchAction) return;
-        const params = buildFetchParams();
+        if (!fetchAction) return
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
+        const params = { ...buildFetchParams(), signal: controller.signal };
+        const paramsKey = JSON.stringify(params);
+        if (paramsKey ===  lastFetchedRef.current) return;
+        lastFetchedRef.current = paramsKey;
         dispatch(fetchAction(params));
-    }, [dispatch, fetchAction, currentPage, itemsPerPage, sortParam, filters, buildFetchParams]);
+    }, [dispatch, fetchAction, buildFetchParams]);
 
     const helpers = useMemo(() => ({
         handleEditItem: mode === 'crud' ? (item: T) => setEditingItem(item) : undefined,
@@ -153,10 +163,10 @@ export function useTable<T, F extends TableFilters>(props: UseTableOptions<T, F>
     }, []);
 
     const updateFilter = useCallback((filterKey: keyof F, value: string) => {
-        setFilters(prev => ({
-            ...prev,
-            [filterKey]: value,
-        }));
+        setFilters(prev => {
+            if (prev[filterKey] === value) return prev;
+            return { ...prev, [filterKey]: value };
+        });
         setCurrentPage(1);
     }, []);
 
