@@ -15,16 +15,18 @@ export function ManagementButtons(props: ManagementButtonsProps) {
 
     return (
         <ButtonGroup size={size}>
-            {showEdit && (
-                <Button variant='outline-primary' onClick={onEdit}>
-                    Edit
-                </Button>
-            )}
-            {showDelete && (
-                <Button variant='danger' onClick={onDelete}>
-                    Delete
-                </Button>
-            )}
+            <div className="d-flex gap-2 my-auto">
+                {showEdit && (
+                    <Button variant='outline-primary' onClick={onEdit}>
+                        Edit
+                    </Button>
+                )}
+                {showDelete && (
+                    <Button variant='danger' onClick={onDelete}>
+                        Delete
+                    </Button>
+                )}
+            </div>
         </ButtonGroup>
     );
 }
