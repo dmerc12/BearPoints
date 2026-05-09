@@ -1,7 +1,7 @@
-import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { RootState, useAppDispatch, useAppSelector } from '../store';
-import { UnknownAction} from '@reduxjs/toolkit';
-import { ThunkAction } from 'redux-thunk';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {RootState, useAppDispatch, useAppSelector} from '../store';
+import {UnknownAction} from '@reduxjs/toolkit';
+import {ThunkAction} from 'redux-thunk';
 
 export interface SortingConfig {
     propertyName: string;
@@ -119,9 +119,8 @@ export function useTable<T, F extends TableFilters>(props: UseTableOptions<T, F>
         if (abortControllerRef.current) {
             abortControllerRef.current.abort();
         }
-        const controller = new AbortController();
-        abortControllerRef.current = controller;
-        const params = { ...buildFetchParams(), signal: controller.signal };
+        abortControllerRef.current = new AbortController();
+        const params = buildFetchParams();
         const paramsKey = JSON.stringify(params);
         if (paramsKey ===  lastFetchedRef.current) return;
         lastFetchedRef.current = paramsKey;

@@ -1,5 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Form } from 'react-bootstrap';
+
+const inputCache = new Map<string, string>();
 
 interface TextFilterProps {
     value: string;
@@ -9,17 +11,26 @@ interface TextFilterProps {
     disabled?: boolean;
     showHelpText?: boolean;
     helpText?: string;
+    instanceId?: string;
 }
 
 export function TextFilter({ value, onChange, label = 'Search', placeholder = 'Search...', disabled = false,
-                               showHelpText = true, helpText = 'Partial matches accepted' }: TextFilterProps) {
-    const [localValue, setLocalValue] = useState(value);
+                               showHelpText = true, helpText = 'Partial matches accepted', instanceId }
+                           : TextFilterProps) {
+    const stableId = useRef(instanceId || `${label}-${placeholder}`);
+
+    const [localValue, setLocalValue] = useState(() => {
+        const cached = inputCache.get(stableId.current);
+        return cached !== undefined ? cached : value;
+    });
+
     useEffect(() => {
-        const timer = setTimeout(() => onChange(localValue), 300);
+        const timer = setTimeout(() => {
+            onChange(localValue);
+            inputCache.set(stableId.current, localValue);
+        }, 300);
         return () => clearTimeout(timer);
     }, [localValue, onChange]);
-
-    useEffect(() => setLocalValue(value), [value]);
 
     return (
         <Form.Group>

@@ -131,12 +131,15 @@ export default function BaseTable<T>(props: BaseTableProps<T>) {
                     if (filter.type === 'text') {
                         return (
                             <Col key={filter.key} md={4}>
-                                <TextFilter value={filters?.[filter.key] || ''}
-                                            onChange={(value) => updateFilter(filter.key, value)}
-                                            label={filter.label}
-                                            placeholder={filter.placeholder}
-                                            showHelpText={filter.showHelpText}
-                                            helpText={filter.helpText}
+                                <TextFilter
+                                    key={filter.key}
+                                    instanceId={`filter-${filter.key}`}
+                                    value={filters?.[filter.key] || ''}
+                                    onChange={(value) => updateFilter(filter.key, value)}
+                                    label={filter.label}
+                                    placeholder={filter.placeholder}
+                                    showHelpText={filter.showHelpText}
+                                    helpText={filter.helpText}
                                 />
                             </Col>
                         );
