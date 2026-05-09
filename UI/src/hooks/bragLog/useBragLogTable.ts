@@ -1,8 +1,8 @@
 import { searchBragLogsInList, RootState, useAppSelector } from '../../store';
 import { FilterConfig, HeaderConfig } from '../../components';
-import { useCallback, useEffect, useMemo } from 'react';
 import { BragLogDTO, Role } from '../../services';
 import { formatBragLogDate } from '../../utils';
+import { useCallback, useMemo } from 'react';
 import { useTable } from '../index';
 
 export interface UseBragLogTableProps {
@@ -15,7 +15,7 @@ export function useBragLogTable({ itemsPerPage = 10 }: UseBragLogTableProps) {
         || currentUser?.role === Role.STAFF || currentUser?.role === Role.TEACHER
         || currentUser?.role === Role.PARA, [currentUser]);
 
-    const initialFilters = {
+    const initialFilters = useMemo(() => ({
         studentName: '',
         teacherName: '',
         minPoints: '',
@@ -23,7 +23,7 @@ export function useBragLogTable({ itemsPerPage = 10 }: UseBragLogTableProps) {
         startDate: '',
         endDate: '',
         submitterName: '',
-    };
+    }), []);
 
     const columnsBuilder = useCallback(() => [
         {
@@ -177,12 +177,6 @@ export function useBragLogTable({ itemsPerPage = 10 }: UseBragLogTableProps) {
         itemsPerPage,
         mode: 'crud' as const,
     });
-
-    useEffect(() => {
-        return () => {
-            table.resetFilters();
-        };
-    }, [table]);
 
     const crudTable = table as typeof table & {
         showCreateModal: boolean;

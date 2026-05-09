@@ -1,6 +1,6 @@
 import { searchRewardItemsInList, RootState, useAppSelector } from '../../store';
-import { useCallback, useEffect, useMemo } from 'react';
 import { RewardItemDTO, Role } from '../../services';
+import { useCallback, useMemo } from 'react';
 import { useTable } from '../index';
 
 export interface UseRewardItemTableProps {
@@ -12,13 +12,13 @@ export function useRewardItemTable({ itemsPerPage = 10 }: UseRewardItemTableProp
     const isAuthorized = useMemo(() => currentUser?.role === Role.ADMIN
         || currentUser?.role === Role.STAFF, [currentUser]);
 
-    const initialFilters = {
+    const initialFilters = useMemo(() => ({
         name: '',
         minPointCost: '',
         maxPointCost: '',
         minStock: '',
         maxStock: '',
-    };
+    }), []);
 
     const columnsBuilder = useCallback(() => [
         {
@@ -136,12 +136,6 @@ export function useRewardItemTable({ itemsPerPage = 10 }: UseRewardItemTableProp
         itemsPerPage,
         mode: 'crud' as const,
     });
-
-    useEffect(() => {
-        return () => {
-            table.resetFilters();
-        };
-    }, [table]);
 
     const crudTable = table as typeof table & {
         showCreateModal: boolean;

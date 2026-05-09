@@ -1,7 +1,7 @@
 import { searchTeachersInList, RootState, useAppSelector } from '../../store';
 import { fullName, formatGrade, sortGrades } from '../../utils';
 import { TeacherDTO, Role, GradeLevel } from '../../services';
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useTable } from '../index';
 
 export interface UseTeacherTableProps {
@@ -15,7 +15,11 @@ export function useTeacherTable({ itemsPerPage = 10 }: UseTeacherTableProps) {
     const isAuthorized = useMemo(() => currentUser?.role === Role.ADMIN
         || currentUser?.role === Role.STAFF, [currentUser]);
 
-    const initialFilters = { nameSearch: '', emailSearch: '', gradeFilter: '' };
+    const initialFilters = useMemo(() => ({
+        nameSearch: '',
+        emailSearch: '',
+        gradeFilter: ''
+    }), []);
 
     const columnsBuilder = useCallback(() => [
         {
@@ -113,12 +117,6 @@ export function useTeacherTable({ itemsPerPage = 10 }: UseTeacherTableProps) {
         itemsPerPage,
         mode: 'crud' as const,
     });
-
-    useEffect(() => {
-        return () => {
-            table.resetFilters();
-        };
-    }, [table]);
 
     const crudTable = table as typeof table & {
         showCreateModal: boolean;

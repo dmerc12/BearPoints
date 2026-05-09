@@ -1,7 +1,7 @@
 import { searchUsersInList, RootState, useAppSelector } from '../../store';
-import { useCallback, useEffect, useMemo } from 'react';
 import { fullName, formatRole } from '../../utils';
 import { UserDTO, Role } from '../../services';
+import { useCallback, useMemo } from 'react';
 import { useTable } from '../index';
 
 export interface UseUserTableProps {
@@ -13,7 +13,11 @@ export function useUserTable({ itemsPerPage = 10 }: UseUserTableProps) {
     const isAuthorized = useMemo(() => currentUser?.role === Role.ADMIN
         || currentUser?.role === Role.STAFF, [currentUser]);
 
-    const initialFilters = { nameSearch: '', emailSearch: '', roleFilter: '' };
+    const initialFilters = useMemo(() => ({
+        nameSearch: '',
+        emailSearch: '',
+        roleFilter: '',
+    }), []);
 
     const columnsBuilder = useCallback(() => [
         {
@@ -73,12 +77,6 @@ export function useUserTable({ itemsPerPage = 10 }: UseUserTableProps) {
         itemsPerPage,
         mode: 'crud' as const,
     });
-
-    useEffect(() => {
-        return () => {
-            table.resetFilters();
-        };
-    }, [table]);
 
     const crudTable = table as typeof table & {
         showCreateModal: boolean;

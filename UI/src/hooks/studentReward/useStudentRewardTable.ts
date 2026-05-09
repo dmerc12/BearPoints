@@ -1,8 +1,8 @@
 import { searchStudentRewardsInList, RootState, useAppSelector } from '../../store';
 import { FilterConfig, HeaderConfig } from '../../components';
 import { StudentRewardDTO, Role } from '../../services';
-import { useCallback, useEffect, useMemo } from 'react';
 import { formatBragLogDate } from '../../utils';
+import { useCallback, useMemo } from 'react';
 import { useTable } from '../index';
 
 export interface UseStudentRewardTableProps {
@@ -15,14 +15,14 @@ export function useStudentRewardTable({ itemsPerPage = 10 }: UseStudentRewardTab
         || currentUser?.role === Role.STAFF || currentUser?.role === Role.TEACHER
         || currentUser?.role === Role.PARA, [currentUser]);
 
-    const initialFilters = {
+    const initialFilters = useMemo(() => ({
         studentName: '',
         itemName: '',
         minPointsUsed: '',
         maxPointsUsed: '',
         startDate: '',
         endDate: '',
-    };
+    }), []);
 
     const columnsBuilder = useCallback(() => [
         {
@@ -151,12 +151,6 @@ export function useStudentRewardTable({ itemsPerPage = 10 }: UseStudentRewardTab
         itemsPerPage,
         mode: 'crud' as const,
     });
-
-    useEffect(() => {
-        return () => {
-            table.resetFilters();
-        };
-    }, [table]);
 
     const crudTable = table as typeof table & {
         showCreateModal: boolean;

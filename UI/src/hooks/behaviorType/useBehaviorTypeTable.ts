@@ -1,6 +1,6 @@
 import { searchBehaviorTypesInList, RootState, useAppSelector } from '../../store';
-import { useCallback, useEffect, useMemo } from 'react';
 import { BehaviorTypeDTO, Role } from '../../services';
+import { useCallback, useMemo } from 'react';
 import { useTable } from '../index';
 
 export interface UseBehaviorTypeTableProps {
@@ -12,12 +12,12 @@ export function useBehaviorTypeTable({ itemsPerPage = 10 }: UseBehaviorTypeTable
     const isAuthorized = useMemo(() => currentUser?.role === Role.ADMIN
         || currentUser?.role === Role.STAFF, [currentUser]);
 
-    const initialFilters = {
+    const initialFilters = useMemo(() => ({
         nameSearch: '',
         statusFilter: '',
         minPointValueFilter: '',
         maxPointValueFilter: '',
-    };
+    }), []);
 
     const columnsBuilder = useCallback(() => [
         {
@@ -132,12 +132,6 @@ export function useBehaviorTypeTable({ itemsPerPage = 10 }: UseBehaviorTypeTable
         itemsPerPage,
         mode: 'crud' as const,
     });
-
-    useEffect(() => {
-        return () => {
-            table.resetFilters();
-        };
-    }, [table]);
 
     const crudTable = table as typeof table & {
         showCreateModal: boolean;

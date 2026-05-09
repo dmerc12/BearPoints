@@ -1,8 +1,8 @@
 import { searchStudentsInList, RootState, useAppSelector } from '../../store';
 import type { FilterConfig, HeaderConfig } from '../../components';
 import { fullName, formatGrade, formatName } from '../../utils';
-import { useCallback, useEffect, useMemo } from 'react';
 import { StudentDTO, Role } from '../../services';
+import { useCallback, useMemo } from 'react';
 import { useTable } from '../index';
 
 export interface UseStudentTableProps {
@@ -17,13 +17,13 @@ export function useStudentTable({ itemsPerPage = 10 }: UseStudentTableProps) {
         || currentUser?.role === Role.STAFF || currentUser?.role === Role.TEACHER
         || currentUser?.role === Role.PARA, [currentUser]);
 
-    const initialFilters = {
+    const initialFilters = useMemo(() => ({
         nameSearch: '',
         emailSearch: '',
         teacherId: '',
         minPoints: '',
         maxPoints: '',
-    };
+    }), []);
 
     const columnsBuilder = useCallback(() => [
         {
@@ -164,12 +164,6 @@ export function useStudentTable({ itemsPerPage = 10 }: UseStudentTableProps) {
         itemsPerPage,
         mode: 'crud' as const,
     });
-
-    useEffect(() => {
-        return () => {
-            table.resetFilters();
-        };
-    }, [table]);
 
     const crudTable = table as typeof table & {
         showCreateModal: boolean;

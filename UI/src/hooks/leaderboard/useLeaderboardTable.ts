@@ -14,7 +14,8 @@ export function useLeaderboardTable({ itemsPerPage = 20 }: UseLeaderboardTablePr
     const { currentTimeframe } = useAppSelector(
         state => state.leaderboard);
 
-    const initialFilters = { teacherId: '', grade: '' };
+    const initialFilters = useMemo(() =>
+        ({ teacherId: '', grade: '' }), []);
 
     useEffect(() => {
         if (teachers.length === 0 && !teachersLoading) {
@@ -144,7 +145,6 @@ export function useLeaderboardTable({ itemsPerPage = 20 }: UseLeaderboardTablePr
 
     useEffect(() => {
         return () => {
-            table.resetFilters();
             table.resetSorting();
         };
     }, [table]);
