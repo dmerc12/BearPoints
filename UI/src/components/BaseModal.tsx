@@ -26,20 +26,22 @@ export default function BaseModal({ title, onConfirm, onCancel, show, children,
             <Modal.Body>{children}</Modal.Body>
             <Modal.Footer>
                 <ButtonGroup>
-                    <Button variant='secondary'
-                            onClick={onCancel}
-                            disabled={isLoading}
-                    >
-                        {cancelText}
-                    </Button>
-                    { onConfirm && (
-                        <Button variant={confirmVariant}
-                                onClick={onConfirm}
-                                disabled={isLoading || disableConfirm}
+                    <div className="d-flex gap-2 my-auto">
+                        <Button variant='secondary'
+                                onClick={onCancel}
+                                disabled={isLoading}
                         >
-                            {isLoading ? 'Loading...' : confirmText}
+                            {cancelText}
                         </Button>
-                    )}
+                        { onConfirm && (
+                            <Button variant={confirmVariant}
+                                    onClick={onConfirm}
+                                    disabled={isLoading || disableConfirm}
+                            >
+                                {isLoading ? 'Loading...' : confirmText}
+                            </Button>
+                        )}
+                    </div>
                 </ButtonGroup>
             </Modal.Footer>
         </Modal>
