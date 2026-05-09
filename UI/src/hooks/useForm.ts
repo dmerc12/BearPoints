@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { createFormHandlers } from '../utils';
 
 export type FormData = Record<string, unknown>;
@@ -38,7 +38,8 @@ export function useForm<T>({ initialData, validationRules, onSubmit }: UseFormPr
         return Object.keys(errors).length === 0;
     }, [validationRules, validateField, formData]);
 
-    const { handleInputChange, handleSelectChange, handleCheckboxChange } = createFormHandlers(setFormData, setFormErrors);
+    const { handleInputChange, handleSelectChange, handleCheckboxChange } = useMemo(() =>
+        createFormHandlers(setFormData, setFormErrors), []);
 
     const handleSubmit = useCallback(async (e?: React.FormEvent) => {
         e?.preventDefault();
@@ -62,6 +63,8 @@ export function useForm<T>({ initialData, validationRules, onSubmit }: UseFormPr
         setFormErrors({});
     }, [initialData]);
 
-    return { formData, formErrors, isSubmitting, handleInputChange, handleSelectChange, handleCheckboxChange,
-        handleSubmit, validateForm, resetForm, setFormData, setFormErrors };
+    return useMemo(() => ({ formData, formErrors, isSubmitting, handleInputChange,
+        handleSelectChange, handleCheckboxChange, handleSubmit, validateForm, resetForm, setFormData, setFormErrors }),
+        [formData, formErrors, isSubmitting, handleInputChange, handleSelectChange, handleCheckboxChange, handleSubmit,
+            validateForm, resetForm, setFormData, setFormErrors]);
 }
