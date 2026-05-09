@@ -1,21 +1,26 @@
+import { LayoutDashboard, Users, PencilRuler, GraduationCap, ListChecks, Star, Gift, History, Trophy } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Nav } from 'react-bootstrap';
 
 const navItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: '🏠' },
-    { path: '/users', label: 'Users', icon: '👥' },
-    { path: '/teachers', label: 'Teachers', icon: '👩‍🏫' },
-    { path: '/students', label: 'Students', icon: '🧑‍🎓' },
-    { path: '/behaviors', label: 'Behavior Types', icon: '📋' },
-    { path: '/brags', label: 'Bear Brags', icon: '🌟' },
-    { path: '/rewards', label: 'Reward Items', icon: '🎁' },
-    { path: '/redemptions', label: 'Redeemed Rewards', icon: '🔄' },
-    { path: '/leaderboard', label: 'Leaderboard', icon: '🏆' },
+    { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { path: '/users', label: 'Users', icon: Users },
+    { path: '/teachers', label: 'Teachers', icon: PencilRuler },
+    { path: '/students', label: 'Students', icon: GraduationCap },
+    { path: '/behaviors', label: 'Behavior Types', icon: ListChecks },
+    { path: '/brags', label: 'Bear Brags', icon: Star },
+    { path: '/rewards', label: 'Reward Items', icon: Gift },
+    { path: '/redemptions', label: 'Redeemed Rewards', icon: History },
+    { path: '/leaderboard', label: 'Leaderboard', icon: Trophy },
 ];
 
-export default function Sidebar() {
+interface SidebarProps {
+    collapsed?: boolean;
+}
+
+export default function Sidebar({ collapsed = false }: SidebarProps) {
     return (
-        <Nav className="flex-column pt-3">
+        <Nav className="flex-column">
             {navItems.map(item => (
                 <Nav.Link
                     as={Link}
@@ -23,8 +28,8 @@ export default function Sidebar() {
                     key={item.path}
                     className="d-flex align-items-center gap-2"
                 >
-                    <span>{item.icon}</span>
-                    {item.label}
+                    <item.icon size={20} />
+                    {!collapsed && <span>{item.label}</span>}
                 </Nav.Link>
             ))}
         </Nav>

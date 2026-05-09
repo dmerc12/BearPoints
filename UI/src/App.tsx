@@ -9,7 +9,6 @@ import LeaderboardPage from './pages/LeaderboardPage';
 import RewardItemsPage from './pages/RewardItemsPage';
 import { ParaDashboard } from './pages/ParaDashboard';
 import BearBragPage from './pages/BearBragPage';
-import NavigationBar from './components/NavBar';
 import StudentsPage from './pages/StudentsPage';
 import TeachersPage from './pages/TeachersPage';
 import BragLogsPage from './pages/BragLogsPage';
@@ -26,7 +25,6 @@ function App() {
   return (
       <Provider store={store}>
           <Router>
-              <NavigationBar />
               <Routes>
                   <Route path="/" element={<AboutPage />} />
                   <Route path="/users" element={<UsersPage />} />
