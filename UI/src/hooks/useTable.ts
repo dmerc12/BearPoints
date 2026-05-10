@@ -84,11 +84,6 @@ export function useTable<T, F extends TableFilters>(props: UseTableOptions<T, F>
     const lastFetchedRef = useRef<string>('');
     const abortControllerRef = useRef<AbortController | null>(null);
 
-    useEffect(() => {
-        console.log('[useTable] Component mounted');
-        return () => console.log('[useTable] Component unmounted')
-    }, []);
-
     const getSortField = useCallback(
         (clientField: string): string => {
             if (getServerSortField) {
@@ -107,14 +102,7 @@ export function useTable<T, F extends TableFilters>(props: UseTableOptions<T, F>
 
     // Fetch data on mount
     useEffect(() => {
-        console.log('[useTable] Fetch effect triggered', {
-            fetchAction: !!fetchAction,
-            currentPage,
-        })
-        if (!fetchAction) {
-            console.log('[useTable] Skipping fetch - no action')
-            return;
-        }
+        if (!fetchAction) return;
         if (abortControllerRef.current) {
             abortControllerRef.current.abort();
         }
@@ -128,11 +116,7 @@ export function useTable<T, F extends TableFilters>(props: UseTableOptions<T, F>
             ? getFetchParams(filters, currentPage - 1, itemsPerPage, sortParam)
             : baseParams;
         const paramsKey = JSON.stringify(params);
-        if (paramsKey ===  lastFetchedRef.current) {
-            console.log('[useTable] Same parameters, skipping fetch');
-            return;
-        }
-        console.log('[useTable] Dispatching fetch with params:', params);
+        if (paramsKey ===  lastFetchedRef.current) return;
         lastFetchedRef.current = paramsKey;
         dispatch(fetchAction(params));
     }, [dispatch, fetchAction, currentPage, itemsPerPage, sortParam, filters, getFetchParams]);
@@ -153,7 +137,6 @@ export function useTable<T, F extends TableFilters>(props: UseTableOptions<T, F>
     const totalCount = pagination.totalElements;
 
     const handleSort = useCallback((field: string) => {
-        console.log('[useTable] handleSort called', { field, currentSortConfig: sortConfig });
         setSortConfig((currentConfig) => {
             const pendingChange = [...currentConfig];
             const existingIndex = pendingChange.findIndex((config) =>
@@ -169,38 +152,29 @@ export function useTable<T, F extends TableFilters>(props: UseTableOptions<T, F>
             }
             return pendingChange;
         });
-        console.log('[useTable] handleSort resetting page to 1')
         setCurrentPage(1);
-    }, [sortConfig]);
+    }, []);
 
     const updateFilter = useCallback((filterKey: keyof F, value: string) => {
-        console.log('[useTable] updateFilter called', { filterKey, value });
         setFilters(prev => {
-            if (prev[filterKey] === value) {
-                console.log('[useTable] filter value unchanged, no update');
-                return prev;
-            }
-            console.log('[useTable] filter changed, resetting page to 1')
+            if (prev[filterKey] === value) return prev;
             setCurrentPage(1);
             return { ...prev, [filterKey]: value };
         });
     }, []);
 
     const updateFilterAny = useCallback((key: string, value: string) => {
-        console.log('[useTable] updateFilterAny called', { key, value });
         if (key in initialFilters) {
             updateFilter(key as keyof F, value);
         }
     }, [updateFilter, initialFilters]);
 
     const resetFilters = useCallback(() => {
-        console.log('[useTable] resetFilters called');
         setFilters(initialFilters);
         setCurrentPage(1);
     }, [initialFilters]);
 
     const resetSorting = useCallback(() => {
-        console.log('[useTable] resetSorting called');
         setSortConfig([]);
         setCurrentPage(1);
     }, []);
@@ -232,7 +206,6 @@ export function useTable<T, F extends TableFilters>(props: UseTableOptions<T, F>
     }, [mode]);
 
     const retryFetch = useCallback(() => {
-        console.log('[useTable] retryFetch called');
         if (fetchAction) {
             const baseParams = {
                 page: currentPage - 1,
