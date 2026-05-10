@@ -1,8 +1,8 @@
-import { searchStudentsInList, RootState, useAppSelector } from '../../store';
+import { searchStudentsInList, fetchTeachers, RootState, useAppSelector, useAppDispatch } from '../../store';
 import type { FilterConfig, HeaderConfig } from '../../components';
 import { fullName, formatGrade, formatName } from '../../utils';
+import { useCallback, useEffect, useMemo } from 'react';
 import { StudentDTO, Role } from '../../services';
-import { useCallback, useMemo } from 'react';
 import { useTable } from '../index';
 
 export interface UseStudentTableProps {
@@ -10,12 +10,19 @@ export interface UseStudentTableProps {
 }
 
 export function useStudentTable({ itemsPerPage = 10 }: UseStudentTableProps) {
+    const dispatch = useAppDispatch();
     const currentUser = useAppSelector(state => state.user.data);
-    const { data: students } = useAppSelector(state => state.students);
+    const { data: teachers } = useAppSelector(state => state.teachers);
 
     const isAuthorized = useMemo(() => currentUser?.role === Role.ADMIN
         || currentUser?.role === Role.STAFF || currentUser?.role === Role.TEACHER
         || currentUser?.role === Role.PARA, [currentUser]);
+
+    useEffect(() => {
+        if (teachers.length === 0) {
+            dispatch(fetchTeachers({  page: 0, size: 1000, force: true }));
+        }
+    }, [dispatch, teachers.length]);
 
     const initialFilters = useMemo(() => ({
         nameSearch: '',
@@ -97,18 +104,9 @@ export function useStudentTable({ itemsPerPage = 10 }: UseStudentTableProps) {
     }, []);
 
     const teacherOptions = useMemo(() => {
-        const teacherMap = new Map<number, string>();
-        students.forEach(student => {
-            const teacher = student.teacher;
-            if (teacher?.id) {
-                if (!teacherMap.has(teacher.id)) {
-                    teacherMap.set(teacher.id, formatName(teacher));
-                }
-            }
-        });
-        return Array.from(teacherMap.entries()).map(([id, name]) =>
-            ({ value: id.toString(), label: name}));
-    }, [students]);
+        return teachers.filter(teacher => teacher.id !== null && teacher.id !== undefined)
+            .map(teacher => ({ value: teacher.id!.toString(), label: formatName(teacher) }));
+    }, [teachers]);
 
     const filtersConfig: FilterConfig[] = [
         {
