@@ -1,5 +1,5 @@
 import { LayoutDashboard, Users, PencilRuler, GraduationCap, ListChecks, Star, Gift, History, Trophy } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { LinkContainer } from 'react-router-bootstrap';
 import { Nav } from 'react-bootstrap';
 
 const navItems = [
@@ -22,15 +22,12 @@ export default function Sidebar({ collapsed = false }: SidebarProps) {
     return (
         <Nav className="flex-column">
             {navItems.map(item => (
-                <Nav.Link
-                    as={Link}
-                    to={item.path}
-                    key={item.path}
-                    className="d-flex align-items-center gap-2"
-                >
-                    <item.icon size={20} />
-                    {!collapsed && <span>{item.label}</span>}
-                </Nav.Link>
+                <LinkContainer to={item.path} key={item.path}>
+                    <Nav.Link className="d-flex align-items-center gap-2">
+                        <item.icon size={20} />
+                        {!collapsed && <span>{item.label}</span>}
+                    </Nav.Link>
+                </LinkContainer>
             ))}
         </Nav>
     );
