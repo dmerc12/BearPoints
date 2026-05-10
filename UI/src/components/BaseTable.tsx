@@ -1,4 +1,4 @@
-import { Table, Pagination, Spinner, Alert, Container, Button, Row, Col } from 'react-bootstrap';
+import { Table, Pagination, Spinner, Alert, Container, Button, Row, Col, Form } from 'react-bootstrap';
 import { TextFilter, SelectFilter, DateFilter, NumberFilter } from './index';
 import { TableColumn, TableFilters, SortingConfig } from '../hooks';
 import React, { useMemo, useCallback } from 'react';
@@ -44,10 +44,16 @@ export interface BaseTableProps<T> {
     onSort?: (field: string) => void;
     filtersConfig?: FilterConfig[];
     headerConfig?: HeaderConfig;
+    headerButtons?: React.ReactNode;
     filters?: TableFilters;
     updateFilter?: (key: string, value: string) => void;
     hidePagination?: boolean;
     emptyMessage?: string;
+    selectable?: boolean;
+    selectedIds?: (number | string)[];
+    onSelectRow?: (id: number | string, checked: boolean) => void;
+    onSelectAll?: (checked: boolean, allIds: (number | string)[]) => void;
+    getId?: (item: T) => number | string;
 }
 
 export default function BaseTable<T>(props: BaseTableProps<T>) {
@@ -55,7 +61,8 @@ export default function BaseTable<T>(props: BaseTableProps<T>) {
         data, loading, error, columns, currentPage, totalPages, totalCount, onPageChange, onRetry, size = 'm',
         showCreateButton = false, createButtonText = 'Create', onCreateClick, renderFilters, renderHeader,
         sortConfig = [], onSort, filtersConfig, headerConfig, filters, updateFilter, hidePagination = false,
-        emptyMessage = 'Nothing found matching the current filters'
+        emptyMessage = 'Nothing found matching the current filters', headerButtons,
+        selectable = false, selectedIds, onSelectRow, onSelectAll, getId
     } = props;
 
     const renderPaginationItems = () => {
@@ -195,7 +202,7 @@ export default function BaseTable<T>(props: BaseTableProps<T>) {
                         Showing {data.length} of {totalCount} {headerConfig.itemName}
                     </p>
                 </div>
-                <div>
+                <div className="d-flex gap-2 align-items-center">
                     {headerConfig.showCreateButton && onCreateClick && (
                         <Button variant='primary'
                                 onClick={onCreateClick}
@@ -205,35 +212,43 @@ export default function BaseTable<T>(props: BaseTableProps<T>) {
                             {headerConfig.createButtonText || `Create ${headerConfig.itemName}`}
                         </Button>
                     )}
-                    {headerConfig.additionalElements}
+                    {headerButtons}
                 </div>
             </div>
         );
-    }, [headerConfig, data.length, totalCount, onCreateClick, size, renderHeader]);
+    }, [headerConfig, data.length, totalCount, onCreateClick, size, renderHeader, headerButtons]);
 
     const defaultHeader = useMemo(() => {
         if (generatedHeader) return generatedHeader;
         return (
             <div className='m-2 d-flex justify-content-between align-items-center'>
                 <span>Showing {data.length} items</span>
-                {showCreateButton && onCreateClick && (
-                    <Button variant='primary'
-                            onClick={onCreateClick}
-                            className='me-2'
-                            size={size === 's' ? 'sm' : undefined}
-                    >
-                        {createButtonText}
-                    </Button>
-                )}
+                <div className="d-flex gap-2 align-items-center">
+                    {showCreateButton && onCreateClick && (
+                        <Button variant='primary'
+                                onClick={onCreateClick}
+                                className='me-2'
+                                size={size === 's' ? 'sm' : undefined}
+                        >
+                            {createButtonText}
+                        </Button>
+                    )}
+                    {headerButtons}
+                </div>
             </div>
         );
-    }, [generatedHeader, data.length, showCreateButton, onCreateClick, createButtonText, size]);
+    }, [generatedHeader, data.length, showCreateButton, onCreateClick, createButtonText, size, headerButtons]);
 
     const handleHeaderClick = useCallback((column: TableColumn<T>) => {
         if (column.sortable && onSort) {
             onSort(column.key);
         }
     }, [onSort]);
+
+    const getIdFromItem = useCallback((item: T) => {
+        if (getId) return getId(item);
+        return (item as { id?: number | string }).id ?? '';
+    }, [getId]);
 
     if (loading) {
         return (
@@ -284,6 +299,22 @@ export default function BaseTable<T>(props: BaseTableProps<T>) {
             >
                 <thead>
                     <tr>
+                        {selectable && (
+                            <th style={{ width: '40px' }}>
+                                <Form.Check
+                                    type="checkbox"
+                                    checked={selectedIds?.length === data.length && data.length > 0}
+                                    ref={(input) => {
+                                        if (input) {
+                                            input.indeterminate = !!(selectedIds?.length && (selectedIds.length > 0)
+                                                && (selectedIds.length < data.length));
+                                        }
+                                    }}
+                                    onChange={(e) =>
+                                        onSelectAll?.(e.target.checked, data.map(getIdFromItem))}
+                                />
+                            </th>
+                        )}
                         {columns.map(column => (
                             <th key={column.key}
                                 className={column.className}
@@ -312,17 +343,29 @@ export default function BaseTable<T>(props: BaseTableProps<T>) {
                         </td>
                     </tr>
                 ) : (
-                    data.map((item, index) => (
-                        <tr key={ index }>
-                            {columns.map(column => (
-                                <td key={column.key}
-                                    className={column.className}
-                                >
-                                    {column.render(item)}
-                                </td>
-                            ))}
-                        </tr>
-                    ))
+                    data.map((item) => {
+                        const id = getIdFromItem(item);
+                        return (
+                            <tr key={id}>
+                                {selectable && (
+                                    <td>
+                                        <Form.Check
+                                            type="checkbox"
+                                            checked={selectedIds?.includes(id) || false}
+                                            onChange={(e) => onSelectRow?.(id, e.target.checked)}
+                                        />
+                                    </td>
+                                )}
+                                {columns.map(column => (
+                                    <td key={column.key}
+                                        className={column.className}
+                                    >
+                                        {column.render(item)}
+                                    </td>
+                                ))}
+                            </tr>
+                        );
+                    })
                 )}
                 </tbody>
             </Table>

@@ -1,7 +1,7 @@
 import { searchStudentsInList, fetchTeachers, RootState, useAppSelector, useAppDispatch } from '../../store';
 import type { FilterConfig, HeaderConfig } from '../../components';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { fullName, formatGrade, formatName } from '../../utils';
-import { useCallback, useEffect, useMemo } from 'react';
 import { StudentDTO, Role } from '../../services';
 import { useTable } from '../index';
 
@@ -20,9 +20,17 @@ export function useStudentTable({ itemsPerPage = 10 }: UseStudentTableProps) {
 
     useEffect(() => {
         if (teachers.length === 0) {
-            dispatch(fetchTeachers({  page: 0, size: 1000, force: true }));
+            dispatch(fetchTeachers({  page: 0, size: 1000 }));
         }
-    }, [dispatch, teachers.length]);
+    }, [dispatch, teachers.length])
+
+    const [selectedStudentIds, setSelectedStudentIds] = useState<number[]>([]);
+    const handleSelectRow = useCallback((id: number | string, checked: boolean) => {
+        setSelectedStudentIds(prev => checked ? [...prev, id as number] : prev.filter(i => i !== id));
+    }, []);
+    const handleSelectAll = useCallback((checked: boolean, allIds: (number | string)[]) => {
+        setSelectedStudentIds(checked ? allIds as number[] : []);
+    }, []);
 
     const initialFilters = useMemo(() => ({
         nameSearch: '',
@@ -174,5 +182,8 @@ export function useStudentTable({ itemsPerPage = 10 }: UseStudentTableProps) {
         handleSuccess: () => void;
     }
 
-    return { ...crudTable, filtersConfig, headerConfig, isAuthorized };
+    const selectedStudents = table.data.filter(s => selectedStudentIds.includes(s.id!));
+
+    return { ...crudTable, filtersConfig, headerConfig, isAuthorized,
+        selectedStudentIds, selectedStudents, handleSelectRow, handleSelectAll };
 }

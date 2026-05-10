@@ -16,6 +16,7 @@ export interface CrudTableProps<T> {
     size?: 's' | 'm' | 'l';
     filtersConfig?: FilterConfig[];
     headerConfig?: HeaderConfig;
+    headerButtons?: React.ReactNode;
     filters?: TableFilters;
     updateFilter?: (key: string, value: string) => void;
     sortConfig?: SortingConfig[];
@@ -31,14 +32,20 @@ export interface CrudTableProps<T> {
     deleteModal: React.ReactNode;
     actionColumnHeader?: string;
     managementButtonsSize?: 'sm' | 'lg';
+    selectable?: boolean;
+    selectedIds?: (number | string)[];
+    onSelectRow?: (id: number | string, checked: boolean) => void;
+    onSelectAll?: (checked: boolean, allIds: (number | string)[]) => void;
+    getId?: (item: T) => number | string;
 }
 
 export function CrudTable<T>(props: CrudTableProps<T>) {
     const {
         data, loading, error, columns, currentPage, totalPages, totalCount, onPageChange, onRetry, size = 'm',
-        filtersConfig, headerConfig, filters, updateFilter, sortConfig, onSort, canEdit, canDelete,
+        filtersConfig, headerConfig, headerButtons, filters, updateFilter, sortConfig, onSort, canEdit, canDelete,
         onEditItem, onDeleteItem, onCreateClick, createModal, editModal, deleteModal,
-        actionColumnHeader = 'Actions', managementButtonsSize = 'sm'
+        actionColumnHeader = 'Actions', managementButtonsSize = 'sm',
+        selectable = false, selectedIds = [], onSelectRow, onSelectAll, getId
     } = props;
 
     const tableColumns = useMemo(() => {
@@ -91,6 +98,12 @@ export function CrudTable<T>(props: CrudTableProps<T>) {
                 showCreateButton={headerConfig?.showCreateButton || false}
                 createButtonText={headerConfig?.createButtonText || 'Create'}
                 onCreateClick={onCreateClick}
+                headerButtons={headerButtons}
+                selectable={selectable}
+                selectedIds={selectedIds}
+                onSelectRow={onSelectRow}
+                onSelectAll={onSelectAll}
+                getId={getId}
             />
             {createModal}
             {editModal}

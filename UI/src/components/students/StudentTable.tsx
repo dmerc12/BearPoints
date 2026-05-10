@@ -22,7 +22,7 @@ interface StudentTableProps {
 export default function StudentTable (props: StudentTableProps) {
     const {
         itemsPerPage = 10, showFilters = true, showPrintButton = true, showQRCodes = true, size = 'm',
-        customCreateModal, customFiltersConfig, customHeaderConfig,
+        customCreateModal, customFiltersConfig, customHeaderConfig
     } = props;
 
     const navigate = useNavigate();
@@ -33,22 +33,21 @@ export default function StudentTable (props: StudentTableProps) {
         data, loading, error, filters, updateFilter, sortConfig, handleSort, isAuthorized, columns,
         showCreateModal, editingItem, deletingItem, handleCreateItem, handleEditItem, handleDeleteItem,
         handleCloseModals, retry, handleSuccess, filtersConfig, headerConfig,
-        currentPage, totalPages, setCurrentPage, totalCount
+        currentPage, totalPages, setCurrentPage, totalCount,
+        selectedStudentIds, selectedStudents, handleSelectRow, handleSelectAll
     } = useStudentTable({ itemsPerPage });
 
-    const enhancedHeaderConfig = useMemo(() => ({
-        ...(customHeaderConfig || headerConfig),
-        additionalElements: showPrintButton && data.length > 0 ? (
-            <Button variant='primary'
-                    onClick={() => reactToPrintFn()}
-                    className='no-print'
-                    style={{ marginLeft: '10px' }}
-                    size={size === 's' ? 'sm' : undefined}
-            >
-                Print QR Codes ({data.length})
-            </Button>
-        ) : (customHeaderConfig?.additionalElements || null),
-    }), [customHeaderConfig, headerConfig, showPrintButton, data.length, reactToPrintFn, size]);
+    const printButton = showPrintButton ? (
+        <Button variant='primary'
+                onClick={() => reactToPrintFn()}
+                className='no-print'
+                style={{ marginLeft: '10px' }}
+                size={size === 's' ? 'sm' : undefined}
+                disabled={selectedStudents.length === 0}
+        >
+            Print QR Codes ({selectedStudents.length})
+        </Button>
+    ) : null;
 
     const qrCodeSize = useMemo(() => {
         if (size === 's') return 48;
@@ -99,7 +98,13 @@ export default function StudentTable (props: StudentTableProps) {
                 onPageChange={setCurrentPage}
                 onRetry={retry}
                 filtersConfig={finalFiltersConfig}
-                headerConfig={enhancedHeaderConfig}
+                headerConfig={customHeaderConfig || headerConfig}
+                headerButtons={printButton}
+                selectable={true}
+                selectedIds={selectedStudentIds}
+                onSelectRow={handleSelectRow}
+                onSelectAll={handleSelectAll}
+                getId={(student) => student.id!}
                 filters={filters}
                 updateFilter={updateFilter}
                 size={size}
@@ -135,7 +140,7 @@ export default function StudentTable (props: StudentTableProps) {
                 }
             />
             <div style={{ display: 'none' }}>
-                <QRCodesPrint ref={ contentRef } students={ data } />
+                <QRCodesPrint ref={ contentRef } students={ selectedStudents } />
             </div>
         </>
     );
