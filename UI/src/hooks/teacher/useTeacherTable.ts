@@ -9,7 +9,6 @@ export interface UseTeacherTableProps {
 }
 
 export function useTeacherTable({ itemsPerPage = 10 }: UseTeacherTableProps) {
-    const { data: teachers } = useAppSelector(state => state.teachers);
     const currentUser = useAppSelector(state => state.user.data);
 
     const isAuthorized = useMemo(() => currentUser?.role === Role.ADMIN
@@ -73,11 +72,10 @@ export function useTeacherTable({ itemsPerPage = 10 }: UseTeacherTableProps) {
     }, []);
 
     const gradeOptions = useMemo(() => {
-        const teacherGrades = teachers.map(teacher => teacher.grade);
-        const uniqueGrades = Array.from(new Set(teacherGrades));
-        const sortedGrades = sortGrades(uniqueGrades);
+        const allGrades = Object.values(GradeLevel);
+        const sortedGrades = sortGrades(allGrades);
         return sortedGrades.map(grade => ({ value: grade, label: formatGrade(grade) }));
-    }, [teachers]);
+    }, []);
 
     const filtersConfig = [
         {

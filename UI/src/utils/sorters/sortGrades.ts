@@ -1,11 +1,17 @@
 import { GradeLevel } from '../../services';
 
 export function sortGrades(grades: (GradeLevel | string)[]) {
+    const orderMap: Record<string, number> = {
+        [GradeLevel.PRE_K]: 0,
+        [GradeLevel.K]: 1,
+        [GradeLevel.FIRST]: 2,
+        [GradeLevel.SECOND]: 3,
+        [GradeLevel.THIRD]: 4,
+        [GradeLevel.FOURTH]: 5,
+    };
     return [...grades].sort((a, b) => {
-       if (a === GradeLevel.PRE_K) return -1;
-       if (b === GradeLevel.PRE_K) return 1;
-       if (a === GradeLevel.K) return -1;
-       if (b === GradeLevel.K) return 1;
-       return a.localeCompare(b);
+       const orderA = orderMap[a as GradeLevel] ?? 999;
+       const orderB = orderMap[b as GradeLevel] ?? 999;
+       return orderA - orderB;
     });
 }
