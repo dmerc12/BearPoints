@@ -22,18 +22,19 @@ export default function BehaviorTypeTable(props: BehaviorTypeTableProps) {
     } = useBehaviorTypeTable({ itemsPerPage });
 
     const enhancedColumns = useMemo(() => {
-        const enhanced = [...columns];
-        enhanced.push({
-            key: 'status',
-            header: 'Status',
-            render: (behaviorType: BehaviorTypeDTO) => (
-                <Badge bg={getBehaviorTypeStatusVariant(behaviorType.active)}>
-                    {formatBehaviorTypeStatus(behaviorType.active)}
-                </Badge>
-            ),
-            sortable: true
+        return columns.map(col => {
+            if (col.key === 'status') {
+                return {
+                    ...col,
+                    render: (behaviorType: BehaviorTypeDTO) => (
+                        <Badge bg={getBehaviorTypeStatusVariant(behaviorType.active)}>
+                            {formatBehaviorTypeStatus(behaviorType.active)}
+                        </Badge>
+                    ),
+                };
+            }
+            return col;
         });
-        return enhanced;
     }, [columns]);
 
     return (

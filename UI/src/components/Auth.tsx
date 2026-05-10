@@ -26,7 +26,7 @@ export default function Auth ({ children }: AuthProps) {
                     await auth.signOut();
                     dispatch(clearCurrentUser());
                 } else {
-                    dispatch(fetchCurrentUser({ force: true }));
+                    dispatch(fetchCurrentUser({ force: false }));
                 }
             } else {
                 console.log('No authenticated user');
