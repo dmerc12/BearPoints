@@ -1,5 +1,6 @@
 import { searchBragLogsInList, RootState, useAppSelector } from '../../store';
 import { FilterConfig, HeaderConfig } from '../../components';
+import { addDays, format, parseISO } from "date-fns";
 import { BragLogDTO, Role } from '../../services';
 import { formatBragLogDate } from '../../utils';
 import { useCallback, useMemo } from 'react';
@@ -95,7 +96,12 @@ export function useBragLogTable({ itemsPerPage = 10 }: UseBragLogTableProps) {
             ? parseInt(filters.maxPoints, 10)
             : undefined;
         const startDate = filters.startDate || undefined;
-        const endDate = filters.endDate || undefined;
+        let endDate = filters.endDate || undefined;
+        if (endDate && filters.startDate) {
+            const endDateObj = parseISO(endDate);
+            const nextDay = addDays(endDateObj, 1);
+            endDate = format(nextDay, "yyyy-MM-dd'T'00:00:00");
+        }
         const submitterName = filters.submitterName || undefined;
         return {
             page,

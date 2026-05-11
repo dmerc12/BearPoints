@@ -1,4 +1,4 @@
-import { parseISO, formatISO } from 'date-fns';
+import { parseISO, format } from 'date-fns';
 import DatePicker from 'react-datepicker';
 import { Form } from 'react-bootstrap';
 
@@ -14,7 +14,7 @@ export function DateFilter({ value, onChange, label = 'Date', placeholder = 'Sel
                            : DateFilterProps) {
     const selectedDate = value ? parseISO(value) : null;
     const handleDateChange = (date: Date | null) => {
-        onChange(date ? formatISO(date, { representation: 'date' }) : '');
+        onChange(date ? format(date, "yyyy-MM-dd'T'00:00:00") : '');
     };
 
     return (

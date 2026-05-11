@@ -23,18 +23,19 @@ export default function BragLogTable({ itemsPerPage = 10, showFilters = true, si
     } = useBragLogTable({ itemsPerPage });
 
     const enhancedColumns = useMemo(() => {
-        const enhanced = [...columns];
-        enhanced.push({
-            key: 'points',
-            header: 'Points',
-            render: (bragLog: BragLogDTO) => (
-                <Badge bg={getBragLogPointsVariant(bragLog.pointsGenerated ? bragLog.pointsGenerated : 0)}>
-                    {bragLog.pointsGenerated}
-                </Badge>
-            ),
-            sortable: true
+        return columns.map(col => {
+            if (col.key === 'points') {
+                return {
+                    ...col,
+                    render: (bragLog: BragLogDTO) => (
+                        <Badge bg={getBragLogPointsVariant(bragLog.pointsGenerated ? bragLog.pointsGenerated : 0)}>
+                            {bragLog.pointsGenerated}
+                        </Badge>
+                    ),
+                };
+            }
+            return col;
         });
-        return enhanced;
     }, [columns]);
 
     const finalHeaderConfig = customHeaderConfig ? {
