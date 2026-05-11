@@ -28,7 +28,7 @@ export function TextFilter({ value, onChange, label = 'Search', placeholder = 'S
         const timer = setTimeout(() => {
             onChange(localValue);
             inputCache.set(stableId.current, localValue);
-        }, 300);
+        }, 1000);
         return () => clearTimeout(timer);
     }, [localValue, onChange]);
 
