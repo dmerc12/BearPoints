@@ -1,8 +1,8 @@
 import { teacherValidationRules } from '../../utils';
+import { TeacherDTO, Role } from '../../services';
 import { useAppSelector } from '../../store';
-import { TeacherDTO } from '../../services';
+import { useEffect, useRef } from 'react';
 import { useForm } from '../index';
-import { useEffect } from 'react';
 
 export interface UseTeacherFormProps {
     show: boolean;
@@ -13,30 +13,40 @@ export interface UseTeacherFormProps {
 export function useTeacherForm ({ show, isEdit = false, teacher }: UseTeacherFormProps) {
     const { loading, error } = useAppSelector(
         state => state.teachers);
+    const prevIdRef = useRef<number | null | undefined>(null);
+    const hasResetForCurrentShowRef = useRef(false);
 
     const initialData = {
         firstName: '',
         lastName: '',
         email: '',
+        role: Role.TEACHER,
         grade: '',
     };
 
     const form = useForm({ initialData, validationRules: teacherValidationRules });
 
     useEffect(() => {
-        if (show && !isEdit) {
-            form.resetForm();
+        if (!show) {
+            prevIdRef.current = null;
+            hasResetForCurrentShowRef.current = false;
         }
-    }, [show, isEdit, form]);
+    }, [show]);
 
     useEffect(() => {
-        if (show && isEdit && teacher) {
+        if (!show) return;
+        if (isEdit && teacher && teacher.id !== prevIdRef.current) {
             form.setFormData({
                 firstName: teacher.user.firstName,
                 lastName: teacher.user.lastName,
                 email: teacher.user.email,
+                role: teacher.user.role,
                 grade: teacher.grade
             });
+            prevIdRef.current = teacher.id;
+        } else if (!isEdit && !hasResetForCurrentShowRef.current) {
+            form.resetForm();
+            hasResetForCurrentShowRef.current = true;
         }
     }, [show, isEdit, teacher, form]);
 

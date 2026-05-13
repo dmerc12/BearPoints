@@ -1,8 +1,8 @@
 import { userValidationRules } from '../../utils';
 import { UserDTO, Role } from '../../services';
 import { useAppSelector } from '../../store';
+import { useEffect, useRef } from 'react';
 import { useForm } from '../index';
-import { useEffect } from 'react';
 
 export interface UseUserFormProps {
     show: boolean;
@@ -13,6 +13,8 @@ export interface UseUserFormProps {
 export const useUserForm = ({ show, isEdit = false, user }: UseUserFormProps) => {
     const { loading, error } = useAppSelector(state => state.users);
     const currentUser = useAppSelector(state => state.user.data);
+    const prevIdRef = useRef<number | null | undefined>(null);
+    const hasResetForCurrentShowRef = useRef(false);
 
     const initialData = {
         firstName: '',
@@ -27,21 +29,25 @@ export const useUserForm = ({ show, isEdit = false, user }: UseUserFormProps) =>
     });
 
     useEffect(() => {
-        if (show && !isEdit) {
-            form.resetForm();
+        if (!show) {
+            prevIdRef.current = null;
+            hasResetForCurrentShowRef.current = false;
         }
-    }, [show, isEdit, form]);
+    }, [show]);
 
     useEffect(() => {
-        if (show && isEdit && user) {
+        if (!show) return;
+        if (isEdit && user && user.id !== prevIdRef.current) {
             form.setFormData({
                 firstName: user.firstName,
                 lastName: user.lastName,
                 email: user.email,
                 role: user.role,
             });
-        } else if (show && !isEdit) {
+            prevIdRef.current = user.id;
+        } else if (!isEdit && !hasResetForCurrentShowRef.current) {
             form.resetForm();
+            hasResetForCurrentShowRef.current = true;
         }
     }, [show, isEdit, user, form]);
 

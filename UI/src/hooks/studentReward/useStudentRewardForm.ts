@@ -1,7 +1,7 @@
 import { useAppSelector, useAppDispatch, fetchStudents, fetchRewardItems } from '../../store';
 import { studentRewardValidationRules } from '../../utils';
 import { StudentRewardDTO, Role } from '../../services';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useForm } from '../index';
 
 export interface UseStudentRewardFormProps {
@@ -17,15 +17,21 @@ export const useStudentRewardForm = ({ show, isEdit = false, studentReward }
     const { data: students, loading: studentsLoading } = useAppSelector(state => state.students);
     const { data: rewardItems, loading: rewardItemsLoading } = useAppSelector(state => state.rewardItems);
     const currentUser = useAppSelector(state => state.user.data);
+    const prevIdRef = useRef<number | null | undefined>(null);
+    const hasResetForCurrentShowRef = useRef(false);
+    const hasFetchedDataRef = useRef(false);
 
     const isStudent = useMemo(() => currentUser?.role === Role.STUDENT, [currentUser]);
 
     useEffect(() => {
-        if (students.length === 0 && !studentsLoading) {
-            dispatch(fetchStudents({ page: 0, size: 100, force: true }));
-        }
-        if (rewardItems.length === 0 && !rewardItemsLoading) {
-            dispatch(fetchRewardItems({ page: 0, size: 100, force: true }));
+        if (!hasFetchedDataRef.current) {
+            if (students.length === 0 && !studentsLoading) {
+                dispatch(fetchStudents({ page: 0, size: 100, force: true }));
+            }
+            if (rewardItems.length === 0 && !rewardItemsLoading) {
+                dispatch(fetchRewardItems({ page: 0, size: 100, force: true }));
+            }
+            hasFetchedDataRef.current = true;
         }
     }, [students.length, studentsLoading, rewardItems.length, rewardItemsLoading, dispatch]);
 
@@ -40,28 +46,32 @@ export const useStudentRewardForm = ({ show, isEdit = false, studentReward }
     });
 
     useEffect(() => {
-        if (show && !isEdit) {
-            form.resetForm();
+        if (!show) {
+            prevIdRef.current = null;
+            hasResetForCurrentShowRef.current = false;
+            hasFetchedDataRef.current = false;
         }
-    }, [show, isEdit, form]);
+    }, [show]);
 
     useEffect(() => {
-        if (show && isEdit && studentReward) {
+        if (!show) return;
+        if (isEdit && studentReward && studentReward.id !== prevIdRef.current) {
             form.setFormData({
                 studentId: studentReward.studentId,
                 itemId: studentReward.itemId,
             });
+            prevIdRef.current = studentReward.id;
+        } else if (!isEdit && !hasResetForCurrentShowRef.current) {
+            form.resetForm();
+            hasResetForCurrentShowRef.current = true;
         }
     }, [show, isEdit, studentReward, form]);
 
     useEffect(() => {
-        if (show && isStudent && currentUser && currentUser.studentId) {
-            form.setFormData({
-                studentId: currentUser.studentId ,
-                itemId: 0,
-            });
+        if (show && isStudent && currentUser?.studentId && !isEdit && !hasResetForCurrentShowRef.current) {
+            form.setFormData({ studentId: currentUser.studentId!, itemId: 0 });
         }
-    }, [show, isStudent, currentUser, form]);
+    }, [show, isStudent, isEdit, currentUser, form]);
 
     const isLoading = loading || studentsLoading || rewardItemsLoading;
 

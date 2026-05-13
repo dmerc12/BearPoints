@@ -1,9 +1,17 @@
-import { fetchStudentByToken, searchStudentsInList, fetchStudents, useAppSelector, useAppDispatch } from '../../store';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { bragLogValidationRules } from '../../utils';
 import { BragLogDTO } from '../../services';
 import { fullName } from '../../utils';
 import { useForm } from '../index';
+import {
+    fetchStudentByToken,
+    searchStudentsInList,
+    fetchStudents,
+    fetchTeachers,
+    searchBehaviorTypesInList,
+    useAppSelector,
+    useAppDispatch,
+} from '../../store';
 
 export interface UseBragLogFormProps {
     show: boolean;
@@ -18,16 +26,21 @@ export const useBragLogForm = ({ show, isEdit = false, bragLog, isPublic = false
     const dispatch = useAppDispatch();
     const { loading: bragLogLoading, error: bragLogError } = useAppSelector(state =>
         state.bragLogs);
-    const { data: behaviorTypes } = useAppSelector(state => state.behaviorTypes);
+    const { data: behaviorTypes, currentParams } = useAppSelector(state => state.behaviorTypes);
     const { data: students, loading: studentsLoading, error: studentsError, selectedStudent } = useAppSelector(state =>
         state.students);
     const { data: teachers } = useAppSelector(state => state.teachers);
     const currentUser = useAppSelector(state => state.user.data);
+    const prevIdRef = useRef<number | null | undefined>(null);
+    const hasResetForCurrentShowRef = useRef(false);
+    const hasSetSelectedTeacherRef = useRef(false);
+    const hasFetchedBehaviorTypesRef = useRef(false);
 
     const [selectedTeacherId, setSelectedTeacherId] = useState<number | null>(null);
 
     const initialData: BragLogDTO = {
         studentId: 0,
+        teacherId: 0,
         behaviorIds: [],
         notes: '',
         submitterName: ''
@@ -46,62 +59,109 @@ export const useBragLogForm = ({ show, isEdit = false, bragLog, isPublic = false
         }, 0);
     }, [form.formData.behaviorIds, behaviorTypes]);
 
+    // Fetch active behavior types
     useEffect(() => {
-        if (show && !isEdit && !isPublic && currentUser) {
-            const name = fullName(currentUser);
-            if (name && !form.formData.submitterName) {
-                form.setFormData(prev => ({ ...prev, submitterName: name }));
-            }
+        if (show && !hasFetchedBehaviorTypesRef.current || !currentParams?.active) {
+            dispatch(searchBehaviorTypesInList({ active: true, page: 0, size: 100, force: false }));
+            hasFetchedBehaviorTypesRef.current = true;
         }
-    }, [show, isEdit, isPublic, currentUser, form]);
+    }, [show, behaviorTypes.length, dispatch, currentParams]);
 
+    // Reset state when modal closes
     useEffect(() => {
-        if (!isPublic && selectedTeacherId) {
+        if (!show) {
+            prevIdRef.current = null;
+            hasResetForCurrentShowRef.current = false;
+            hasSetSelectedTeacherRef.current = false;
+            hasFetchedBehaviorTypesRef.current = false;
+            setSelectedTeacherId(null);
+        }
+    }, [show]);
+
+    // Fetch teachers for internal form
+    useEffect(() => {
+        if (show && !isPublic && teachers.length === 0) {
+            dispatch(fetchTeachers({ page: 0, size: 1000, force: true }));
+        }
+    }, [show, isPublic, teachers.length, dispatch])
+
+    // Initialize form data for create/edit
+    useEffect(() => {
+        if (!show) return;
+        if (isEdit && bragLog && bragLog.id !== prevIdRef.current) {
+            form.setFormData({
+                ...bragLog,
+                notes: bragLog.notes || '',
+            });
+            prevIdRef.current = bragLog.id;
+        } else if (!isEdit && !hasResetForCurrentShowRef.current) {
+            form.resetForm();
+            if (!isPublic && currentUser && fullName(currentUser)) {
+                form.setFormData(prev => ({ ...prev, submitterName: fullName(currentUser )}));
+            }
+            hasResetForCurrentShowRef.current = true;
+        }
+    }, [show, isEdit, bragLog, form, isPublic, currentUser]);
+
+    // Public mode: when selectedStudent is loaded, populate studentId and teacherId
+    useEffect(() => {
+        if (show && isPublic && selectedStudent && selectedStudent.id) {
+            form.setFormData(prev => ({
+                ...prev,
+                studentId: selectedStudent.id!,
+                teacherId: selectedStudent.teacher.id!,
+            }));
+            hasSetSelectedTeacherRef.current = true;
+        }
+    }, [show, isPublic, selectedStudent, form]);
+
+    // Public mode: fetch student by token
+    useEffect(() => {
+        if (show && isPublic && studentToken) {
+            dispatch(fetchStudentByToken(studentToken));
+        }
+    }, [show, isPublic, studentToken, dispatch]);
+
+    // Internal mode: when teacherId changes in form, update selectedTeacherId to filter students
+    useEffect(() => {
+        if (show && !isPublic && form.formData.teacherId && form.formData.teacherId !== selectedTeacherId) {
+            setSelectedTeacherId(form.formData.teacherId);
+        } else if (show && !isPublic && form.formData.teacherId === 0 && selectedTeacherId !== null) {
+            setSelectedTeacherId(null);
+        }
+    }, [show, isPublic, form.formData.teacherId, selectedTeacherId]);
+
+    // Internal mode: fetch students based on selectedTeacherId
+    useEffect(() => {
+        if (!show || isPublic) return;
+        if (selectedTeacherId) {
             dispatch(searchStudentsInList({
                 page: 0,
                 size: 100,
                 teacherId: selectedTeacherId,
                 force: true,
             }));
-        } else if (!isPublic && !selectedTeacherId && students.length === 0) {
+        } else if (!selectedTeacherId && students.length === 0) {
             dispatch(fetchStudents({
                 page: 0,
                 size: 100,
                 force: true,
             }));
         }
-    }, [selectedTeacherId, dispatch, isPublic, students.length]);
+    }, [selectedTeacherId, dispatch, isPublic, students.length, show]);
 
+    // Internal mode: when student is selected, automatically set teacherId
     useEffect(() => {
-        if (isPublic && studentToken) {
-            dispatch(fetchStudentByToken(studentToken));
-        }
-    }, [isPublic, studentToken, dispatch]);
-
-    useEffect(() => {
-        if (isPublic && selectedStudent && selectedStudent.id) {
-            form.setFormData(prev => ({ ...prev, studentId: selectedStudent.id! }));
-        }
-    }, [isPublic, selectedStudent, form]);
-
-    useEffect(() => {
-        if (show && isEdit && bragLog) {
-            form.setFormData({
-                ...bragLog,
-                notes: bragLog.notes || '',
-            });
-        }
-    }, [show, isEdit, bragLog, form]);
-
-    useEffect(() => {
-        if (form.formData.studentId && !isEdit && !isPublic) {
-            const selectedStudentObj = students.find(s =>
-                s.id === form.formData.studentId);
+        if (!show || isEdit || isPublic) return;
+        const studentId = form.formData.studentId;
+        if (studentId) {
+            const selectedStudentObj = students.find(s => s.id === studentId);
             if (selectedStudentObj?.teacher?.id && selectedStudentObj.teacher.id !== selectedTeacherId) {
                 setSelectedTeacherId(selectedStudentObj.teacher.id);
+                form.setFormData(prev => ({ ...prev, teacherId: selectedStudentObj.teacher.id! }));
             }
         }
-    }, [form.formData.studentId, students, isEdit, isPublic, selectedTeacherId]);
+    }, [students, isEdit, isPublic, selectedTeacherId, show, form]);
 
     const toggleBehavior = (behaviorId: number) => {
         const current = form.formData.behaviorIds || [];

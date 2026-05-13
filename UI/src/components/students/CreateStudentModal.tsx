@@ -1,5 +1,5 @@
-import { StudentDTO, Role, TeacherDTO } from '../../services';
 import { useAppDispatch, addStudent } from '../../store';
+import { StudentDTO, TeacherDTO } from '../../services';
 import { BaseModal, StudentForm } from '../index';
 import { useStudentForm  } from '../../hooks';
 
@@ -24,7 +24,7 @@ export function CreateStudentModal({ show, onCancel, onSuccess, defaultTeacherId
             email: formData.email,
             firstName: formData.firstName,
             lastName: formData.lastName,
-            role: Role.STUDENT
+            role: formData.role,
         }
         const studentData: StudentDTO = {
             user: userData,

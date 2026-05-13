@@ -1,8 +1,8 @@
 import { rewardItemValidationRules } from '../../utils';
 import { RewardItemDTO } from '../../services';
 import { useAppSelector } from '../../store';
+import { useEffect, useRef } from 'react';
 import { useForm } from '../index';
-import { useEffect } from 'react';
 
 export interface UseRewardItemFormProps {
     show: boolean;
@@ -12,6 +12,8 @@ export interface UseRewardItemFormProps {
 
 export const useRewardItemForm = ({ show, isEdit = false, rewardItem }: UseRewardItemFormProps) => {
     const { loading, error } = useAppSelector(state => state.rewardItems);
+    const prevIdRef = useRef<number | null | undefined>(null);
+    const hasResetForCurrentShowRef = useRef(false);
 
     const initialData = {
         name: '',
@@ -25,18 +27,24 @@ export const useRewardItemForm = ({ show, isEdit = false, rewardItem }: UseRewar
     });
 
     useEffect(() => {
-        if (show && !isEdit) {
-            form.resetForm();
+        if (!show) {
+            prevIdRef.current = null;
+            hasResetForCurrentShowRef.current = false;
         }
-    }, [show, isEdit, form]);
+    }, [show]);
 
     useEffect(() => {
-        if (show && isEdit && rewardItem) {
+        if (!show) return;
+        if (isEdit && rewardItem && rewardItem.id !== prevIdRef.current) {
             form.setFormData({
                 name: rewardItem.name,
                 pointCost: rewardItem.pointCost,
                 stock: rewardItem.stock,
-            })
+            });
+            prevIdRef.current = rewardItem.id;
+        } else if (!isEdit && !hasResetForCurrentShowRef.current) {
+            form.resetForm();
+            hasResetForCurrentShowRef.current = true;
         }
     }, [show, isEdit, rewardItem, form]);
 

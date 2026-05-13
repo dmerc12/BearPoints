@@ -12,9 +12,17 @@ export const behaviorTypeValidationRules: ValidationRule[] = [
     {
         field: 'pointValue',
         validator: (value) => {
-            if (typeof value !== 'number') return 'Point value is required';
-            if (value < 1) return 'Minimum point value is 1';
-            if (value > 5) return 'Maximum point value is 5';
+            let num: number;
+            if (typeof value === 'string') {
+                num = parseInt(value, 10);
+                if (isNaN(num)) return 'Point value is required';
+            } else if (typeof value === 'number') {
+                num = value;
+            } else {
+                return 'Point value is required';
+            }
+            if (num < 1) return 'Minimum point value is 1';
+            if (num > 5) return 'Maximum point value is 5';
             return null;
         }
     },

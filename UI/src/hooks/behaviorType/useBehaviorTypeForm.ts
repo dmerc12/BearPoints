@@ -1,8 +1,8 @@
 import { behaviorTypeValidationRules } from '../../utils';
 import { BehaviorTypeDTO } from '../../services';
 import { useAppSelector } from '../../store';
+import { useEffect, useRef } from 'react';
 import { useForm } from '../index';
-import { useEffect } from 'react';
 
 export interface UseBehaviorTypeFormProps {
     show: boolean;
@@ -12,6 +12,8 @@ export interface UseBehaviorTypeFormProps {
 
 export const useBehaviorTypeForm = ({ show, isEdit = false, behaviorType }: UseBehaviorTypeFormProps) => {
     const { loading, error } = useAppSelector(state => state.behaviorTypes);
+    const prevIdRef = useRef<number | null | undefined>(null);
+    const hasResetForCurrentShowRef = useRef(false);
 
     const initialData = {
         name: '',
@@ -25,18 +27,24 @@ export const useBehaviorTypeForm = ({ show, isEdit = false, behaviorType }: UseB
     });
 
     useEffect(() => {
-        if (show && !isEdit) {
-            form.resetForm();
+        if (!show) {
+            prevIdRef.current = null;
+            hasResetForCurrentShowRef.current = false;
         }
-    }, [show, isEdit, form]);
+    }, [show]);
 
     useEffect(() => {
-        if (show && isEdit && behaviorType) {
+        if (!show) return;
+        if (isEdit && behaviorType && behaviorType.id !== prevIdRef.current) {
             form.setFormData({
                 name: behaviorType.name,
                 pointValue: behaviorType.pointValue,
                 active: behaviorType.active
             });
+            prevIdRef.current = behaviorType.id;
+        } else if (!isEdit && !hasResetForCurrentShowRef.current) {
+            form.resetForm();
+            hasResetForCurrentShowRef.current = true;
         }
     }, [show, isEdit, behaviorType, form]);
 

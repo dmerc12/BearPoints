@@ -1,5 +1,5 @@
 import { useAppDispatch, modifyTeacher } from '../../store';
-import { TeacherDTO, Role, GradeLevel } from '../../services';
+import { TeacherDTO, GradeLevel } from '../../services';
 import { BaseModal, TeacherForm } from '../index';
 import { useTeacherForm } from '../../hooks';
 import { Alert } from 'react-bootstrap';
@@ -23,7 +23,7 @@ export function EditTeacherModal({ show, teacher, onCancel, onSuccess }: EditTea
             firstName: formData.firstName,
             lastName: formData.lastName,
             email: formData.email,
-            role: Role.TEACHER
+            role: formData.role,
         };
         const teacherData: TeacherDTO = {
             id: teacher.id,

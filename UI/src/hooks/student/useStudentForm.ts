@@ -1,7 +1,7 @@
 import { useAppSelector, useAppDispatch, fetchTeachers } from '../../store';
 import { studentValidationRules, fullName } from '../../utils';
-import { StudentDTO } from '../../services';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
+import { StudentDTO, Role } from '../../services';
 import { useForm } from '../index';
 
 export interface UseStudentFormProps {
@@ -18,12 +18,16 @@ export const useStudentForm = ({ show, isEdit = false, student, defaultTeacherId
         state => state.students);
     const { data: teachers, loading: teachersLoading, error: teachersError } = useAppSelector(
         state => state.teachers);
+    const prevIdRef = useRef<number | null | undefined>(null);
+    const hasResetForCurrentShowRef = useRef(false);
+    const hasAutoAssignedTeacherRef = useRef(false);
 
     const initialData = {
         firstName: '',
         lastName: '',
         email: '',
         teacherId: -1,
+        role: Role.STUDENT,
     };
 
     const form = useForm({ initialData, validationRules: studentValidationRules });
@@ -38,25 +42,35 @@ export const useStudentForm = ({ show, isEdit = false, student, defaultTeacherId
     }, [show, dispatch, teachers.length]);
 
     useEffect(() => {
-        if (show && !isEdit) {
-            form.resetForm();
+        if (!show) {
+            prevIdRef.current = null;
+            hasResetForCurrentShowRef.current = false;
+            hasAutoAssignedTeacherRef.current = false;
         }
-    }, [show, isEdit, form]);
+    }, [show]);
 
     useEffect(() => {
-        if(show && isEdit && student) {
+        if (!show) return;
+        if (isEdit && student && student.id !== prevIdRef.current) {
             form.setFormData({
                 firstName: student.user.firstName,
                 lastName: student.user.lastName,
                 email: student.user.email,
-                teacherId: student.teacher?.id ?? -1
+                teacherId: student.teacher.id ?? -1,
+                role: student.user.role,
             });
+            prevIdRef.current = student.id;
+        } else if (!isEdit && !hasResetForCurrentShowRef.current) {
+            form.resetForm();
+            hasResetForCurrentShowRef.current = true;
+            hasAutoAssignedTeacherRef.current = false;
         }
     }, [show, isEdit, student, form.setFormData, form]);
 
     useEffect(() => {
-        if (show && !isEdit && defaultTeacherId && defaultTeacherId !== -1) {
+        if (show && !isEdit && defaultTeacherId && defaultTeacherId !== -1 && !hasAutoAssignedTeacherRef.current) {
             form.setFormData(prev => ({ ...prev, teacherId: defaultTeacherId }));
+            hasAutoAssignedTeacherRef.current = true;
         }
     }, [show, isEdit, defaultTeacherId, form]);
 

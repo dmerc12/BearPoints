@@ -6,7 +6,8 @@ export const studentValidationRules: ValidationRule[] = [
     {
         field: 'teacherId',
         validator: (value) => {
-            if (typeof value !== 'string' || !value.trim()) return 'Teacher is required';
+            const numValue = typeof value === 'string' ? parseInt(value, 10) : value;
+            if (numValue === -1 || numValue === null || isNaN(<number>numValue)) return 'Teacher is required';
             return null;
         }
     },

@@ -12,16 +12,32 @@ export const rewardItemValidationRules: ValidationRule[] = [
     {
         field: 'pointCost',
         validator: (value) => {
-            if (typeof value !== 'number') return 'Point cost is required';
-            if (value < 0) return 'Point cost cannot be negative';
+            let num: number;
+            if (typeof value === 'string') {
+                num = parseInt(value, 10);
+                if (isNaN(num)) return 'Point cost is required';
+            } else if (typeof value === 'number') {
+                num = value;
+            } else {
+                return 'Point cost is required';
+            }
+            if (num < 0) return 'Point cost cannot be negative';
             return null;
         }
     },
     {
         field: 'stock',
         validator: (value) => {
-            if (typeof value !== 'number') return 'Stock quantity is required';
-            if (value < 0) return 'Stock quantity cannot be negative';
+            let num: number;
+            if (typeof value === 'string') {
+                num = parseInt(value, 10);
+                if (isNaN(num)) return 'Stock quantity is required';
+            } else if (typeof value === 'number') {
+                num = value;
+            } else {
+                return 'Stock quantity is required';
+            }
+            if (num < 0) return 'Stock quantity cannot be negative';
             return null;
         }
     },

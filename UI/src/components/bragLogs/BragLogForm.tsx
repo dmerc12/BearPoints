@@ -1,4 +1,4 @@
-import { StudentDTO, TeacherDTO, BehaviorTypeDTO } from '../../services';
+import { StudentDTO, TeacherDTO, BehaviorTypeDTO, Role } from '../../services';
 import { Form, Row, Col, Card } from 'react-bootstrap';
 import { fullName } from '../../utils';
 import React from 'react';
@@ -79,7 +79,7 @@ export function BragLogForm({ formData, formErrors, loading, students, teachers,
                                              disabled={loading}
                                 >
                                     <option value=''>Select a teacher</option>
-                                    {teachers.map(teacher => {
+                                    {teachers.filter(s => s.user?.role === Role.TEACHER).map(teacher => {
                                             if (teacher.id === undefined || teacher.id === null) return;
                                             return (
                                                 <option key={teacher.id} value={teacher.id}>
@@ -107,7 +107,7 @@ export function BragLogForm({ formData, formErrors, loading, students, teachers,
                                              disabled={loading}
                                 >
                                     <option value=''>Select a student</option>
-                                    {students.map(student => {
+                                    {students.filter(t => t.user?.role === Role.STUDENT).map(student => {
                                         if (student.id === undefined || student.id === null) return;
                                         return (
                                             <option key={student.id} value={student.id}>
@@ -125,19 +125,6 @@ export function BragLogForm({ formData, formErrors, loading, students, teachers,
                                 </Form.Text>
                             </Form.Group>
                         </Col>
-                        <Col md={6}>
-                            <Form.Group className='mb-3'>
-                                <Form.Label>Teacher</Form.Label>
-                                <Form.Control type='text'
-                                              value={teacherName}
-                                              readOnly
-                                              disabled
-                                />
-                                <Form.Text className='text-muted'>
-                                    Automatically set based on student selection
-                                </Form.Text>
-                            </Form.Group>
-                        </Col>
                     </>
                 )}
             </Row>
@@ -149,7 +136,7 @@ export function BragLogForm({ formData, formErrors, loading, students, teachers,
                     value={formData.submitterName}
                     onChange={onInputChange}
                     isInvalid={!!formErrors.submitterName}
-                    disabled={loading || !isPublic}
+                    disabled={loading}
                     placeholder='First and last name'
                 />
                 <Form.Control.Feedback type='invalid'>

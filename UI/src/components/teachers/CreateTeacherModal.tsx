@@ -1,4 +1,4 @@
-import { TeacherDTO, Role, GradeLevel } from '../../services';
+import { TeacherDTO, GradeLevel } from '../../services';
 import { useAppDispatch, addTeacher } from '../../store';
 import { BaseModal, TeacherForm } from '../index';
 import { useTeacherForm } from '../../hooks';
@@ -22,7 +22,7 @@ export function CreateTeacherModal({ show, onCancel, onSuccess }: CreateTeacherM
             firstName: formData.firstName,
             lastName: formData.lastName,
             email: formData.email,
-            role: Role.TEACHER
+            role: formData.role,
         };
         const teacherData: TeacherDTO = {
             user: userData,

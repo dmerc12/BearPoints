@@ -1,5 +1,5 @@
-import { StudentDTO, Role, TeacherDTO } from '../../services';
 import { useAppDispatch, modifyStudent } from '../../store';
+import { StudentDTO, TeacherDTO } from '../../services';
 import { BaseModal, StudentForm } from '../index';
 import { useStudentForm } from '../../hooks';
 
@@ -25,7 +25,7 @@ export function EditStudentModal({ show, student, onCancel, onSuccess }: EditStu
             email: formData.email,
             firstName: formData.firstName,
             lastName: formData.lastName,
-            role: Role.STUDENT
+            role: formData.role,
         }
         const studentData: StudentDTO = {
             id: student.id,
