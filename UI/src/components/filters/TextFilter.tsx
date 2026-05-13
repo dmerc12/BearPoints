@@ -1,7 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
+import { useDebouncedInput } from '../../hooks';
 import { Form } from 'react-bootstrap';
-
-const inputCache = new Map<string, string>();
 
 interface TextFilterProps {
     value: string;
@@ -11,26 +9,15 @@ interface TextFilterProps {
     disabled?: boolean;
     showHelpText?: boolean;
     helpText?: string;
+    debounceDelay?: number;
     instanceId?: string;
 }
 
 export function TextFilter({ value, onChange, label = 'Search', placeholder = 'Search...', disabled = false,
-                               showHelpText = true, helpText = 'Partial matches accepted', instanceId }
+                               showHelpText = true, helpText = 'Partial matches accepted', debounceDelay = 500, instanceId }
                            : TextFilterProps) {
-    const stableId = useRef(instanceId || `${label}-${placeholder}`);
 
-    const [localValue, setLocalValue] = useState(() => {
-        const cached = inputCache.get(stableId.current);
-        return cached !== undefined ? cached : value;
-    });
-
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            onChange(localValue);
-            inputCache.set(stableId.current, localValue);
-        }, 1000);
-        return () => clearTimeout(timer);
-    }, [localValue, onChange]);
+    const { localValue, setLocalValue } = useDebouncedInput({ value, onChange, debounceDelay, instanceId });
 
     return (
         <Form.Group>
