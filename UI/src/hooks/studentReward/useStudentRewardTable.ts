@@ -1,6 +1,7 @@
 import { searchStudentRewardsInList, RootState, useAppSelector } from '../../store';
 import { FilterConfig, HeaderConfig } from '../../components';
 import { StudentRewardDTO, Role } from '../../services';
+import { addDays, format, parseISO } from 'date-fns';
 import { formatBragLogDate } from '../../utils';
 import { useCallback, useMemo } from 'react';
 import { useTable } from '../index';
@@ -77,7 +78,12 @@ export function useStudentRewardTable({ itemsPerPage = 10 }: UseStudentRewardTab
         const minPointsUsed = filters.minPointsUsed ? parseInt(filters.minPointsUsed, 10) : undefined;
         const maxPointsUsed = filters.maxPointsUsed ? parseInt(filters.maxPointsUsed, 10) : undefined;
         const startDate = filters.startDate || undefined;
-        const endDate = filters.endDate || undefined;
+        let endDate = filters.endDate || undefined;
+        if (endDate) {
+            const endDateObj = parseISO(endDate);
+            const nextDay = addDays(endDateObj, 1);
+            endDate = format(nextDay, "yyyy-MM-dd'T'00:00:00");
+        }
         return {
           page,
           size,
