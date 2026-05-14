@@ -8,6 +8,7 @@ import com.bearpoints.api.entity.GradeLevel;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -36,9 +37,10 @@ import java.util.stream.Collectors;
  * </ul>
  *
  * @see LeaderboardDAO
- * @version 1.2
+ * @version 1.3
  * @author Dylan Mercer
  */
+@Slf4j
 @Repository
 public class LeaderboardDAOImpl implements LeaderboardDAO {
     @PersistenceContext
@@ -48,6 +50,8 @@ public class LeaderboardDAOImpl implements LeaderboardDAO {
     public PagedResponseDTO<LeaderboardEntryDTO> findRankedLeaderboard(
             LocalDateTime startDate, Long teacherId, GradeLevel grade,
             Pageable pageable) {
+        log.debug("Executing ranked leaderboard query - startDate: {}, teacherId: {}, grade: {}, page: {}, size: {}",
+                startDate, teacherId, grade, pageable.getPageNumber(), pageable.getPageSize());
         String jpql = """
                 SELECT
                     RANK() OVER (ORDER BY COALESCE(SUM(bl.pointsGenerated), 0) DESC),
@@ -77,7 +81,10 @@ public class LeaderboardDAOImpl implements LeaderboardDAO {
                 .setParameter("grade", grade);
         query.setFirstResult((int) pageable.getOffset());
         query.setMaxResults(pageable.getPageSize());
+        long queryStart = System.currentTimeMillis();
         List<Object[]> results = query.getResultList();
+        long queryTime = System.currentTimeMillis() - queryStart;
+        log.debug("Query returned {} rows in {} ms", results.size(), queryTime);
         List<LeaderboardEntryDTO> content = results.stream()
                 .map(row -> {
                     Integer rank = ((Number) row[0]).intValue();
@@ -94,6 +101,7 @@ public class LeaderboardDAOImpl implements LeaderboardDAO {
                     return new LeaderboardEntryDTO(rank, student, teacher, storedGrade, points);
                 }).collect(Collectors.toList());
         Long total = getTotalCount(startDate, teacherId, grade);
+        log.debug("Total count matching filters: {}", total);
         Page<LeaderboardEntryDTO> page = new PageImpl<>(content, pageable, total);
         return PagedResponseDTO.of(page);
     }

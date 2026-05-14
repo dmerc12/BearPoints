@@ -5,6 +5,7 @@ import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.entity.GradeLevel;
 import com.bearpoints.api.entity.Timeframe;
 import com.bearpoints.api.service.LeaderboardService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
@@ -32,9 +33,10 @@ import org.springframework.web.bind.annotation.*;
  *
  * @see LeaderboardService
  * @see Timeframe
- * @version 3.4
+ * @version 3.5
  * @author Dylan Mercer
  */
+@Slf4j
 @CrossOrigin
 @RestController
 @RequestMapping("/api/leaderboard")
@@ -56,7 +58,7 @@ public class LeaderboardController {
      * @param pageable  Pagination and sorting parameters (page, size, sort)
      * @return List of leaderboard entries with structured student/teacher details
      *
-     * @example
+     * <p>{@code @example}
      * GET /api/leaderboard?timeframe=MONTH&page=0&size=20&sort=points,desc
      * GET /api/leaderboard?page=1&size=10
      * GET /api/leaderboard?teacherId=123&grade=FIRST&page=1&size=10
@@ -68,6 +70,11 @@ public class LeaderboardController {
             @RequestParam(required = false) Long teacherId,
             @RequestParam(required = false) GradeLevel grade,
             @PageableDefault(size = 20) Pageable pageable) {
-        return ResponseEntity.ok(leaderboardService.getLeaderboard(timeframe, teacherId, grade, pageable));
+        log.debug("Leaderboard request - timeframe: {}, teacherId: {}, grade: {}, page: {}, size: {}, sort: {}",
+                timeframe, teacherId, grade, pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
+        PagedResponseDTO<LeaderboardEntryDTO> response = leaderboardService.getLeaderboard(timeframe, teacherId, grade, pageable);
+        log.info("Returning leaderboard - {} entries, total elements: {}",
+                response.getNumberOfElements(), response.getTotalElements());
+        return ResponseEntity.ok(response);
     }
 }
