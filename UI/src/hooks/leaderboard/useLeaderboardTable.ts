@@ -1,7 +1,7 @@
 import { useAppDispatch, useAppSelector, fetchLeaderboard, setTimeframe, fetchTeachers } from '../../store';
 import { LeaderboardEntryDTO, Timeframe, GradeLevel } from '../../services';
 import { fullName, formatGrade, formatName } from '../../utils';
-import { useMemo, useCallback, useEffect } from 'react';
+import { useMemo, useCallback, useEffect, useRef } from 'react';
 import { TableColumn, useTable } from '../../hooks';
 
 export interface UseLeaderboardTableProps {
@@ -13,12 +13,14 @@ export function useLeaderboardTable({ itemsPerPage = 20 }: UseLeaderboardTablePr
     const { data: teachers, loading: teachersLoading } = useAppSelector(state => state.teachers);
     const { currentTimeframe } = useAppSelector(
         state => state.leaderboard);
+    const hasFetchedTeachers = useRef(false);
 
     const initialFilters = useMemo(() =>
         ({ teacherId: '', grade: '' }), []);
 
     useEffect(() => {
-        if (teachers.length === 0 && !teachersLoading) {
+        if (!hasFetchedTeachers.current && teachers.length === 0 && !teachersLoading) {
+            hasFetchedTeachers.current = true;
             dispatch(fetchTeachers({ page: 0, size: 100, force: true }));
         }
     }, [teachers.length, teachersLoading, dispatch]);
@@ -74,9 +76,10 @@ export function useLeaderboardTable({ itemsPerPage = 20 }: UseLeaderboardTablePr
         force?: boolean;
         teacherId?: number;
         grade?: GradeLevel;
+        timeframe?: Timeframe;
     }) => {
         return fetchLeaderboard({
-            timeframe: currentTimeframe,
+            timeframe: params.timeframe!,
             page: params.page,
             size: params.size,
             sort: params.sort,
@@ -84,7 +87,7 @@ export function useLeaderboardTable({ itemsPerPage = 20 }: UseLeaderboardTablePr
             grade: params.grade,
             force: params.force || false,
         });
-    }, [currentTimeframe]);
+    }, []);
 
     const getFetchParams = useCallback((
         filters: typeof initialFilters,
@@ -94,8 +97,8 @@ export function useLeaderboardTable({ itemsPerPage = 20 }: UseLeaderboardTablePr
     ) => {
         const teacherId = filters.teacherId ? parseInt(filters.teacherId, 10) : undefined;
         const grade = filters.grade ? (filters.grade as GradeLevel) : undefined;
-        return { page, size, sort, teacherId, grade };
-    }, []);
+        return { page, size, sort, teacherId, grade, timeframe: currentTimeframe };
+    }, [currentTimeframe]);
 
     const teacherOptions = useMemo(() => {
         return teachers.map(teacher => ({
@@ -142,12 +145,6 @@ export function useLeaderboardTable({ itemsPerPage = 20 }: UseLeaderboardTablePr
         mode: 'read-only',
         getServerSortField
     });
-
-    useEffect(() => {
-        return () => {
-            table.resetSorting();
-        };
-    }, [table]);
 
     const handleTimeframeChange = useCallback((timeframe: Timeframe) => {
         dispatch(setTimeframe(timeframe));

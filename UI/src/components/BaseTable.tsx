@@ -343,10 +343,11 @@ export default function BaseTable<T>(props: BaseTableProps<T>) {
                         </td>
                     </tr>
                 ) : (
-                    data.map((item) => {
+                    data.map((item, index) => {
                         const id = getIdFromItem(item);
+                        const rowKey = (id !== undefined && id !== null && id !== '') ? id : index;
                         return (
-                            <tr key={id}>
+                            <tr key={rowKey}>
                                 {selectable && (
                                     <td>
                                         <Form.Check

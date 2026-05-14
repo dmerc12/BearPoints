@@ -52,7 +52,7 @@ export const fetchLeaderboard = createAsyncThunk(
     }, { getState, signal }) => {
         const state = getState() as RootState;
         const { timeframe, page = 0, size = 20, sort, force = false, teacherId, grade } = params;
-        const cacheKey = sort || 'default'
+        const cacheKey = `${sort || 'default'}_teacher_${params.teacherId || 'none'}_grade_${params.grade || 'none'}`
         const cachedTimeframe = state.leaderboard.cachedEntries[timeframe];
         const cachedData = cachedTimeframe ? cachedTimeframe[cacheKey] : null;
         const lastFetched = cachedData?.lastFetched;
