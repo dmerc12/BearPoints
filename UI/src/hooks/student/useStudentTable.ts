@@ -33,7 +33,8 @@ export function useStudentTable({ itemsPerPage = 10 }: UseStudentTableProps) {
     }, []);
 
     const initialFilters = useMemo(() => ({
-        nameSearch: '',
+        firstNameSearch: '',
+        lastNameSearch: '',
         emailSearch: '',
         teacherId: '',
         minPoints: '',
@@ -94,7 +95,6 @@ export function useStudentTable({ itemsPerPage = 10 }: UseStudentTableProps) {
         size: number,
         sort?: string
     ) => {
-        const nameValue = filters.nameSearch || undefined;
         const teacherId = filters.teacherId ? parseInt(filters.teacherId, 10) : undefined;
         const minPoints = filters.minPoints ? parseInt(filters.minPoints, 10) : undefined;
         const maxPoints = filters.maxPoints ? parseInt(filters.maxPoints, 10) : undefined;
@@ -102,8 +102,8 @@ export function useStudentTable({ itemsPerPage = 10 }: UseStudentTableProps) {
             page,
             size,
             sort,
-            firstName: nameValue,
-            lastName: nameValue,
+            firstName: filters.firstNameSearch || undefined,
+            lastName: filters.lastNameSearch || undefined,
             email: filters.emailSearch,
             teacherId,
             minPoints,
@@ -118,10 +118,16 @@ export function useStudentTable({ itemsPerPage = 10 }: UseStudentTableProps) {
 
     const filtersConfig: FilterConfig[] = [
         {
-            key: 'nameSearch',
+            key: 'firstNameSearch',
             type: 'text' as const,
-            label: 'Search by name',
-            placeholder: 'First or last name...',
+            label: 'Search by first name',
+            placeholder: 'Search by first name...',
+        },
+        {
+            key: 'lastNameSearch',
+            type: 'text' as const,
+            label: 'Search by last name',
+            placeholder: 'Search by last name...',
         },
         {
             key: 'emailSearch',

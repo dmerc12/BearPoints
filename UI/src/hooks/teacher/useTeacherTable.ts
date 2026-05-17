@@ -15,7 +15,8 @@ export function useTeacherTable({ itemsPerPage = 10 }: UseTeacherTableProps) {
         || currentUser?.role === Role.STAFF, [currentUser]);
 
     const initialFilters = useMemo(() => ({
-        nameSearch: '',
+        firstNameSearch: '',
+        lastNameSearch: '',
         emailSearch: '',
         gradeFilter: ''
     }), []);
@@ -64,8 +65,8 @@ export function useTeacherTable({ itemsPerPage = 10 }: UseTeacherTableProps) {
             page,
             size,
             sort,
-            firstName: filters.nameSearch || undefined,
-            lastName: filters.nameSearch || undefined,
+            firstName: filters.firstNameSearch || undefined,
+            lastName: filters.lastNameSearch || undefined,
             email: filters.emailSearch || undefined,
             grade: filters.gradeFilter ? (filters.gradeFilter as GradeLevel) : undefined,
         };
@@ -79,10 +80,16 @@ export function useTeacherTable({ itemsPerPage = 10 }: UseTeacherTableProps) {
 
     const filtersConfig = [
         {
-            key: 'nameSearch',
+            key: 'firstNameSearch',
             type: 'text' as const,
-            label: 'Search by name',
-            placeholder: 'Search by name...',
+            label: 'Search by first name',
+            placeholder: 'Search by first name...',
+        },
+        {
+            key: 'lastNameSearch',
+            type: 'text' as const,
+            label: 'Search by last name',
+            placeholder: 'Search by last name...',
         },
         {
             key: 'emailSearch',
