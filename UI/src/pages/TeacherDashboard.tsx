@@ -1,5 +1,4 @@
-import { AuthenticatedLayout, ClassroomStudentsTable, ClassroomBragLogsTable, ClassroomLeaderboardTable,
-    SubmitterBragLogsTable } from '../components';
+import { AuthenticatedLayout } from '../components';
 import { Container, Alert } from 'react-bootstrap';
 import { useAppSelector } from '../store';
 
@@ -23,27 +22,35 @@ export function TeacherDashboard() {
         <AuthenticatedLayout>
             <Container className='mt-5'>
                 <h1>Teacher Dashboard</h1>
-                <p>Welcome to your teacher dashboard. Here you can manage students, view reports, and more.</p>
-                <ClassroomLeaderboardTable
-                    teacherId={teacherId}
-                    itemsPerPage={10}
-                    size='m'
-                />
-                <ClassroomBragLogsTable
-                    teacherId={teacherId}
-                    itemsPerPage={10}
-                    size='m'
-                />
-                <ClassroomStudentsTable
-                    teacherId={teacherId}
-                    showActions={true}
-                    itemsPerPage={10}
-                    size='m'
-                />
-                <SubmitterBragLogsTable
-                    itemsPerPage={10}
-                    size='m'
-                />
+                <Alert variant="info" className="mb-4">
+                    <Alert.Heading>Coming Soon</Alert.Heading>
+                    <p>
+                        Classroom leaderboard, bear brags, student management, and submitter brags will be re-enabled
+                        in a future release.
+                    </p>
+                </Alert>
+                {/* Tables temporarily disabled for future release after thorough testing */}
+                {/*<p>Welcome to your teacher dashboard. Here you can manage students, view reports, and more.</p>*/}
+                {/*<ClassroomLeaderboardTable*/}
+                {/*    teacherId={teacherId}*/}
+                {/*    itemsPerPage={10}*/}
+                {/*    size='m'*/}
+                {/*/>*/}
+                {/*<ClassroomBragLogsTable*/}
+                {/*    teacherId={teacherId}*/}
+                {/*    itemsPerPage={10}*/}
+                {/*    size='m'*/}
+                {/*/>*/}
+                {/*<ClassroomStudentsTable*/}
+                {/*    teacherId={teacherId}*/}
+                {/*    showActions={true}*/}
+                {/*    itemsPerPage={10}*/}
+                {/*    size='m'*/}
+                {/*/>*/}
+                {/*<SubmitterBragLogsTable*/}
+                {/*    itemsPerPage={10}*/}
+                {/*    size='m'*/}
+                {/*/>*/}
             </Container>
         </AuthenticatedLayout>
     );

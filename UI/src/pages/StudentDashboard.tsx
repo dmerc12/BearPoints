@@ -1,8 +1,6 @@
-import { AuthenticatedLayout, ClassroomLeaderboardTable, ClassroomBragLogsTable, StudentBragLogsTable,
-    StudentRewardsTable, PointsBar } from '../components';
 import { useAppDispatch, useAppSelector, fetchStudentById} from '../store';
+import { AuthenticatedLayout, PointsBar } from '../components';
 import { Container, Spinner, Alert } from 'react-bootstrap';
-import { fullName } from '../utils';
 import { useEffect } from 'react';
 
 export function StudentDashboard() {
@@ -52,7 +50,7 @@ export function StudentDashboard() {
     }
 
     const teacherId = selectedStudent.teacher?.id;
-    const studentName = fullName(selectedStudent);
+    // const studentName = fullName(selectedStudent);
     const points = selectedStudent.points || 0;
 
     if (!teacherId) {
@@ -60,10 +58,15 @@ export function StudentDashboard() {
             <AuthenticatedLayout>
                 <Container className='mt-5'>
                     <h1>Student Dashboard</h1>
-                    <p>Welcome to your student dashboard.</p>
-                    <Alert variant="info">
-                        No teacher is currently assigned to your account. Please contact an administrator.
+                    <Alert variant="info" className="mb-4">
+                        <Alert.Heading>Coming Soon</Alert.Heading>
+                        <p>Full dashboard features will be available in a future release.</p>
                     </Alert>
+                    {/* Tables temporarily disabled for future release after thorough testing */}
+                    {/*<p>Welcome to your student dashboard.</p>*/}
+                    {/*<Alert variant="info">*/}
+                    {/*    No teacher is currently assigned to your account. Please contact an administrator.*/}
+                    {/*</Alert>*/}
                 </Container>
             </AuthenticatedLayout>
         );
@@ -73,6 +76,10 @@ export function StudentDashboard() {
         <AuthenticatedLayout>
             <Container className='mt-5'>
                 <h1>Student Dashboard</h1>
+                <Alert variant="info" className="mb-4">
+                    <Alert.Heading>Coming Soon</Alert.Heading>
+                    <p>Points, bear brags, rewards, and classroom views will be re-enabled in a future .</p>
+                </Alert>
                 <p>Welcome to your student dashboard. View your points and rewards here.</p>
                 <PointsBar
                     points={points}
@@ -80,26 +87,27 @@ export function StudentDashboard() {
                     size='l'
                     showNextReward={true}
                 />
-                <StudentBragLogsTable
-                    studentName={studentName}
-                    itemsPerPage={10}
-                    size='m'
-                />
-                <StudentRewardsTable
-                    studentName={studentName}
-                    itemsPerPage={10}
-                    size='m'
-                />
-                <ClassroomLeaderboardTable
-                    teacherId={teacherId}
-                    itemsPerPage={10}
-                    size='m'
-                />
-                <ClassroomBragLogsTable
-                    teacherId={teacherId}
-                    itemsPerPage={10}
-                    size='m'
-                />
+                {/* Tables temporarily disabled for future release after thorough testing */}
+                {/*<StudentBragLogsTable*/}
+                {/*    studentName={studentName}*/}
+                {/*    itemsPerPage={10}*/}
+                {/*    size='m'*/}
+                {/*/>*/}
+                {/*<StudentRewardsTable*/}
+                {/*    studentName={studentName}*/}
+                {/*    itemsPerPage={10}*/}
+                {/*    size='m'*/}
+                {/*/>*/}
+                {/*<ClassroomLeaderboardTable*/}
+                {/*    teacherId={teacherId}*/}
+                {/*    itemsPerPage={10}*/}
+                {/*    size='m'*/}
+                {/*/>*/}
+                {/*<ClassroomBragLogsTable*/}
+                {/*    teacherId={teacherId}*/}
+                {/*    itemsPerPage={10}*/}
+                {/*    size='m'*/}
+                {/*/>*/}
             </Container>
         </AuthenticatedLayout>
     );
