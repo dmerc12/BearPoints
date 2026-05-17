@@ -62,6 +62,16 @@ public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
     private static final Logger logger = LoggerFactory.getLogger(GoogleSheetsSyncServiceImpl.class);
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
+    private static final Map<String, List<String>> SHEET_HEADERS = Map.of(
+            "Users", Arrays.asList("ID", "Email", "First Name", "Last Name", "Role"),
+            "Teachers", Arrays.asList("ID", "Grade", "User ID"),
+            "Students", Arrays.asList("ID", "Points", "Token", "User ID", "Teacher ID"),
+            "BehaviorTypes", Arrays.asList("ID", "Name", "Point Value", "Active"),
+            "BragLogs", Arrays.asList("ID", "Student ID", "Teacher ID", "Behaviors", "Points Generated", "Submitter Name", "Submitter User ID", "Notes", "Timestamp"),
+            "RewardItems", Arrays.asList("ID", "Name", "Point Cost", "Stock"),
+            "StudentRewards", Arrays.asList("ID", "Redeemed At", "Student ID", "Reward Item ID")
+    );
+
     private final UserDAO userRepository;
     private final StudentDAO studentRepository;
     private final TeacherDAO teacherRepository;
@@ -265,6 +275,33 @@ public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
     }
 
     /**
+     * Ensures that the given sheet has a header row. If the sheet is empty or has no headers, the header row is appended.
+     *
+     * @param sheetName Name of the sheet to check
+     * @throws IOException If the operation fails
+     */
+    private void ensureHeaders(String sheetName) throws IOException {
+        logger.info("Ensuring headers for sheet {}", sheetName);
+        List<List<Object>> existingData = googleSheetsService.getSheetData(sheetName);
+        if (existingData == null || existingData.isEmpty()) {
+            // Sheet is completely empty - add header row
+            List<String> headers = SHEET_HEADERS.get(sheetName);
+            if (headers == null) {
+                logger.warn("No header definition for sheet: {}", sheetName);
+                return;
+            }
+            logger.info("Sheet '{}' is empty - adding header row", sheetName);
+            googleSheetsService.appendToSheet(sheetName, Collections.singletonList(headers));
+        } else if (existingData.size() == 1 && existingData.getFirst().size() < SHEET_HEADERS.get(sheetName).size()) {
+            // Only one row exists, but it's incomplete - replace with proper header
+            logger.warn("Sheet '{}' has invalid headers, overwriting", sheetName);
+            googleSheetsService.clearSheet(sheetName);
+            List<String> headers = SHEET_HEADERS.get(sheetName);
+            googleSheetsService.appendToSheet(sheetName, Collections.singletonList(headers));
+        }
+    }
+
+    /**
      * Generic synchronization method for entities.
      *
      * @param <T> Entity type implementing Syncable
@@ -282,6 +319,8 @@ public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
             Function<List<Object>, Optional<T>> fromRowConverter,
             Consumer<T> repositorySave,
             Consumer<List<T>> markAndSave) throws IOException {
+        // Ensure sheet headers exist and are valid
+        ensureHeaders(sheetName);
         // 1. Get sheet data
         List<List<Object>> sheetData = googleSheetsService.getSheetData(sheetName);
         Map<Long, Integer> sheetRowMap = createRowIdMap(sheetData);
@@ -479,6 +518,7 @@ public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
 
     private Map<Long, Integer> createRowIdMap(List<List<Object>> sheetData) {
         Map<Long, Integer> sheetRowMap = new HashMap<>();
+        if (sheetData == null || sheetData.size() <= 1) return sheetRowMap;
         // Create ID -> row number mapping (skip header row)
         for (int i = 1; i < sheetData.size(); i++) {
             List<Object> row = sheetData.get(i);

@@ -136,8 +136,8 @@ public class GoogleSheetsSyncServiceTests {
             when(googleSheetsService.getSheetData(anyString())).thenReturn(Collections.emptyList());
             when(googleSheetsService.getRowCount(anyString())).thenReturn(10);
             syncService.syncAllData();
-            verify(googleSheetsService, times(14)).getSheetData(anyString());
-            verify(googleSheetsService, times(7)).appendToSheet(anyString(), anyList());
+            verify(googleSheetsService, times(21)).getSheetData(anyString());
+            verify(googleSheetsService, times(14)).appendToSheet(anyString(), anyList());
         }
     }
 
@@ -191,7 +191,7 @@ public class GoogleSheetsSyncServiceTests {
             when(googleSheetsService.getRowCount("Users")).thenReturn(10);
             when(googleSheetsService.getSheetData("Users")).thenReturn(Collections.emptyList());
             syncService.syncAllData();
-            verify(googleSheetsService, times(2)).getSheetData("Users");
+            verify(googleSheetsService, times(3)).getSheetData("Users");
         }
 
         /**
