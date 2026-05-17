@@ -50,6 +50,7 @@ public interface TeacherDAO extends JpaRepository<Teacher, Long>, JpaSpecificati
     @NonNull
     @Override
     @Cacheable("teachers")
+    @Query("SELECT t FROM Teacher t JOIN t.user u WHERE u.role = 'TEACHER'")
     Page<Teacher> findAll(@NonNull Pageable pageable);
 
     /**

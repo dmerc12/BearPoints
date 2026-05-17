@@ -59,6 +59,7 @@ public interface StudentDAO extends JpaRepository<Student, Long>, JpaSpecificati
     @NonNull
     @Override
     @Cacheable("students")
+    @Query("SELECT s FROM Student s JOIN s.user u WHERE u.role = 'STUDENT'")
     Page<Student> findAll(@NonNull Pageable pageable);
 
     /**
