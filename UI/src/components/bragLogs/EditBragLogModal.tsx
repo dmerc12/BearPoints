@@ -1,6 +1,6 @@
 import { useAppDispatch, modifyBragLog } from '../../store';
+import { useInternalBragLogForm } from '../../hooks';
 import { BaseModal, BragLogForm } from '../index';
-import { useBragLogForm } from '../../hooks';
 import { BragLogDTO } from '../../services';
 import { Alert } from 'react-bootstrap';
 
@@ -15,8 +15,8 @@ export function EditBragLogModal({ show, bragLog, onCancel, onSuccess }: EditBra
     const dispatch = useAppDispatch();
 
     const { formData, formErrors, error, loading, students, teachers, behaviorTypes, totalPoints,
-        handleInputChange, handleSelectChange, toggleBehavior, validateForm, resetForm } = useBragLogForm(
-            { show, isEdit: true, bragLog });
+        handleInputChange, handleSelectChange, toggleBehavior, validateForm, resetForm, handleClose }
+        = useInternalBragLogForm({ show, onCancel });
 
     const handleSubmit = () => {
         if (!validateForm() || !bragLog || !bragLog.id) return;
@@ -36,11 +36,6 @@ export function EditBragLogModal({ show, bragLog, onCancel, onSuccess }: EditBra
             .catch((error: Error) => {
                 console.log('Failed to update brag log:', error);
             });
-    };
-
-    const handleClose = () => {
-        resetForm();
-        onCancel();
     };
 
     return (

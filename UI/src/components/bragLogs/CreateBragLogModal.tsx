@@ -1,6 +1,6 @@
 import { useAppDispatch, addBragLog } from '../../store';
+import { useInternalBragLogForm } from '../../hooks';
 import { BaseModal, BragLogForm } from '../index';
-import { useBragLogForm } from '../../hooks';
 import { BragLogDTO } from '../../services';
 import { Alert } from 'react-bootstrap';
 
@@ -14,13 +14,13 @@ export function CreateBragLogModal({ show, onCancel, onSuccess }: CreateBragLogM
     const dispatch = useAppDispatch();
 
     const { formData, formErrors, error, loading, students, teachers, behaviorTypes, totalPoints,
-        handleInputChange, handleSelectChange, toggleBehavior, validateForm, resetForm } = useBragLogForm({ show });
+        handleInputChange, handleSelectChange, toggleBehavior, validateForm, resetForm, handleClose }
+        = useInternalBragLogForm({ show, onCancel });
 
     const handleSubmit = () => {
-        if (!validateForm() || !formData.studentId || !formData.teacherId) return;
+        if (!validateForm() || !formData.studentId) return;
         const bragLogData: BragLogDTO = {
             studentId: formData.studentId,
-            teacherId: formData.teacherId,
             behaviorIds: formData.behaviorIds,
             notes: formData.notes,
             submitterName: formData.submitterName,
@@ -34,11 +34,6 @@ export function CreateBragLogModal({ show, onCancel, onSuccess }: CreateBragLogM
             .catch((error: Error) => {
                 console.log('Failed to create brag log:', error);
             });
-    };
-
-    const handleClose = () => {
-        resetForm();
-        onCancel();
     };
 
     return (

@@ -151,4 +151,12 @@ public class Teacher implements Syncable {
     public void setSheetRowId(Integer rowId) {
         this.sheetRowId = rowId;
     }
+
+    @PrePersist
+    @PreUpdate
+    public void validateRole() {
+        if (user != null && user.getRole() != Role.TEACHER) {
+            throw new IllegalStateException("Teacher can only be linked to user with role TEACHER, but found: " + user.getRole());
+        }
+    }
 }

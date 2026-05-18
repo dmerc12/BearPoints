@@ -76,6 +76,8 @@ import java.util.stream.Collectors;
 @Profile("!prod")
 public class TestDataInitializer implements CommandLineRunner {
     private final UserDAO userDAO;
+    private final StudentDAO studentDAO;
+    private final TeacherDAO teacherDAO;
     private final BehaviorTypeDAO behaviorTypeDAO;
     private final BragLogDAO bragLogDAO;
     private final RewardItemDAO rewardItemDAO;
@@ -92,9 +94,12 @@ public class TestDataInitializer implements CommandLineRunner {
     private final Integer NUM_TEST_STUDENT_REWARDS_TO_CREATE;
     private final List<BehaviorType> createdBehaviorTypes = new ArrayList<>();
 
-    public TestDataInitializer(UserDAO userDAO, BehaviorTypeDAO behaviorTypeDAO, BragLogDAO bragLogDAO,
-                               RewardItemDAO rewardItemDAO, StudentRewardDAO studentRewardDAO) {
+    public TestDataInitializer(UserDAO userDAO, StudentDAO studentDAO, TeacherDAO teacherDAO,
+                               BehaviorTypeDAO behaviorTypeDAO, BragLogDAO bragLogDAO, RewardItemDAO rewardItemDAO,
+                               StudentRewardDAO studentRewardDAO) {
         this.userDAO = userDAO;
+        this.studentDAO = studentDAO;
+        this.teacherDAO = teacherDAO;
         this.behaviorTypeDAO = behaviorTypeDAO;
         this.bragLogDAO = bragLogDAO;
         this.rewardItemDAO = rewardItemDAO;
@@ -152,6 +157,13 @@ public class TestDataInitializer implements CommandLineRunner {
             List<RewardItem> createdRewardItems = createTestRewardItems();
             // Create test student rewards
             createTestStudentRewards(createdStudents, createdRewardItems);
+            // Clean up any incorrectly created students/teachers
+            studentDAO.findAll().stream()
+                    .filter(s -> s.getUser().getRole() != Role.STUDENT)
+                    .forEach(studentDAO::delete);
+            teacherDAO.findAll().stream()
+                    .filter(t -> t.getUser().getRole() != Role.TEACHER)
+                    .forEach(teacherDAO::delete);
         } finally {
             SecurityContextHolder.clearContext();
         }

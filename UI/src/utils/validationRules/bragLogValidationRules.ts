@@ -4,14 +4,23 @@ export const bragLogValidationRules: ValidationRule[] = [
     {
         field: 'studentId',
         validator: (value) => {
-            if (typeof value !== 'string' || !value.trim()) return 'Student is required';
-            return null;
+            if (value === undefined || value === null) return 'Student is required';
+            if (typeof value === 'number') {
+                return value > 0 ? null : 'Student is required';
+            }
+            if (typeof value === 'string') {
+                return value.trim() ? null : 'Student is required';
+            }
+            return 'Student is required';
         }
     },
     {
-        field: 'teacherId',
+        field: 'submitterName',
         validator: (value) => {
-            if (typeof value !== 'string' || !value.trim()) return 'Teacher is required';
+            if (typeof value !== 'string' || !value.trim()) return 'Submitter name is required';
+            const trimmed = value.trim();
+            if (trimmed.length < 2) return 'Submitter name must be at least 2 characters';
+            if (trimmed.length > 250) return 'Submitter name cannot exceed 250 characters';
             return null;
         }
     },

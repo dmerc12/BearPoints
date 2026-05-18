@@ -152,13 +152,31 @@ public class Student implements Syncable {
         this.sheetRowId = rowId;
     }
 
+
+    @PrePersist
+    public void prePersist() {
+        validateRole();
+        generateToken();
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        validateRole();
+    }
+
     /**
      * Generates and sets a new UUID token if it is null on initial save
      */
-    @PrePersist
     public void generateToken() {
         if (token == null) {
             token = UUID.randomUUID().toString();
         }
     }
+
+    public void validateRole() {
+        if (user != null && user.getRole() != Role.STUDENT) {
+            throw new IllegalStateException("Student can only be linked to user with role STUDENT, but found: " + user.getRole());
+        }
+    }
+
 }

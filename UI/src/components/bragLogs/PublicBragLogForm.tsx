@@ -1,8 +1,5 @@
-import { Form, Alert, Spinner, Card, Button, Container } from 'react-bootstrap';
-import { useAppDispatch, addBragLog } from '../../store';
-import { useBragLogForm } from '../../hooks';
-import { BragLogDTO } from '../../services';
-import { FormEvent, useState } from 'react';
+import { Alert, Spinner, Card, Button, Container } from 'react-bootstrap';
+import { usePublicBragLogForm } from '../../hooks';
 import { fullName } from '../../utils';
 import { BragLogForm } from '../index';
 
@@ -11,36 +8,8 @@ interface PublicBragLogFormProps {
 }
 
 export default function PublicBragLogForm ({ studentToken }: PublicBragLogFormProps) {
-    const dispatch = useAppDispatch();
-
-    const [ success, setSuccess ] = useState(false);
-
-    const { formData, formErrors, loading, error, students, teachers, behaviorTypes, totalPoints, selectedStudent,
-        handleInputChange, toggleBehavior, resetForm } = useBragLogForm({ show: true, isPublic: true, studentToken });
-
-    const handleSubmit = async (event: FormEvent) => {
-        event.preventDefault();
-        try {
-
-            const bragLogData: BragLogDTO = {
-                studentId: formData.studentId,
-                behaviorIds: formData.behaviorIds,
-                notes: formData.notes,
-                submitterName: formData.submitterName,
-            };
-            const result = await dispatch(addBragLog(bragLogData));
-            if (addBragLog.fulfilled.match(result)) {
-                resetForm();
-                setSuccess(true);
-                const timer = setTimeout(() => {
-                    setSuccess(false);
-                }, 3000);
-                return () => clearTimeout(timer);
-            }
-        } catch (error) {
-            console.error('Submission failed:', error);
-        }
-    };
+    const { formData, formErrors, loading, error, behaviorTypes, totalPoints, selectedStudent,
+        handleInputChange, toggleBehavior, handleSubmit, success } = usePublicBragLogForm(studentToken);
 
     if (loading) {
         return (
@@ -70,35 +39,34 @@ export default function PublicBragLogForm ({ studentToken }: PublicBragLogFormPr
                         Bear brag submitted successfully!
                     </Alert>
                 }
-                <Form onSubmit={ handleSubmit }>
-                    <BragLogForm
-                        formData={formData}
-                        formErrors={formErrors}
-                        loading={loading}
-                        students={students}
-                        teachers={teachers}
-                        behaviorTypes={behaviorTypes}
-                        totalPoints={totalPoints}
-                        publicStudent={selectedStudent}
-                        isPublic={true}
-                        onInputChange={handleInputChange}
-                        onSelectChange={() => {}}
-                        onToggleBehavior={toggleBehavior}
-                    />
-                    <div className='d-flex justify-content-between align-items-center'>
-                        <div>
-                            <strong>Points: { totalPoints }</strong>
-                        </div>
-                        <Button variant='primary'
-                                type='submit'
-                                disabled={ loading || formData.behaviorIds.length === 0 }
-                                style={{ minWidth: '120px', minHeight: '48px' }}
-                        >
-                            { loading ? <Spinner size='sm' animation='border' /> : 'Submit' }
-                        </Button>
+                <BragLogForm
+                    formData={formData}
+                    formErrors={formErrors}
+                    loading={loading}
+                    students={[]}
+                    teachers={[]}
+                    behaviorTypes={behaviorTypes}
+                    totalPoints={totalPoints}
+                    publicStudent={selectedStudent}
+                    isPublic={true}
+                    onInputChange={handleInputChange}
+                    onSelectChange={() => {}}
+                    onToggleBehavior={toggleBehavior}
+                />
+                <div className='d-flex justify-content-between align-items-center'>
+                    <div>
+                        <strong>Points: { totalPoints }</strong>
                     </div>
-                    { error && <Alert variant='danger' className='mt-3'>{ error }</Alert> }
-                </Form>
+                    <Button variant='primary'
+                            type='submit'
+                            onClick={handleSubmit}
+                            disabled={ loading || formData.behaviorIds.length === 0 }
+                            style={{ minWidth: '120px', minHeight: '48px' }}
+                    >
+                        { loading ? <Spinner size='sm' animation='border' /> : 'Submit' }
+                    </Button>
+                </div>
+                { error && <Alert variant='danger' className='mt-3'>{ error }</Alert> }
             </Card.Body>
         </Card>
     );

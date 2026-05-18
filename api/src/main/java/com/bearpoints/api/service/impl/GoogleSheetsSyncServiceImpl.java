@@ -400,6 +400,9 @@ public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
             Long userId = Long.parseLong(row.get(2).toString());
             User user = userRepository.findById(userId).orElseThrow(() ->
                     new EntityNotFoundException("User not found: " + userId));
+            if (user.getRole() != Role.TEACHER) {
+                throw new IllegalArgumentException("User " + user.getEmail() + " is not a TEACHER");
+            }
             teacher.setUser(user);
             return Optional.of(teacher);
         } catch (Exception e) {
@@ -419,6 +422,9 @@ public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
             User user = userRepository.findById(userId).orElseThrow(() ->
                     new EntityNotFoundException("User not found: " + userId));
             student.setUser(user);
+            if (user.getRole() != Role.STUDENT) {
+                throw new IllegalArgumentException("User " + user.getEmail() + " is not a STUDENT");
+            }
             Long teacherId = Long.parseLong(row.get(4).toString());
             Teacher teacher = teacherRepository.findById(teacherId).orElseThrow(() ->
                     new EntityNotFoundException("Teacher not found: " + teacherId));
