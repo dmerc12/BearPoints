@@ -33,7 +33,6 @@ export const useInternalBragLogForm = ({ show, isEdit = false, bragLog, onCancel
     const hasFetchedBehaviorTypesRef = useRef(false);
 
     const [selectedTeacherId, setSelectedTeacherId] = useState<number | null | undefined>(null);
-    const [selectedStudentId, setSelectedStudentId] = useState<number | null | undefined>(null);
 
     const { form, totalPoints, toggleBehavior } = useBragLogForm();
 
@@ -84,7 +83,6 @@ export const useInternalBragLogForm = ({ show, isEdit = false, bragLog, onCancel
                 form.setFormData(prev => ({ ...prev, submitterName: fullName(currentUser) }));
             }
             setSelectedTeacherId(null);
-            setSelectedStudentId(null);
             hasResetForCurrentShowRef.current = true;
         }
     }, [show, isEdit, bragLog, form, currentUser]);
@@ -100,20 +98,9 @@ export const useInternalBragLogForm = ({ show, isEdit = false, bragLog, onCancel
         }
     }, [form.formData.teacherId, selectedTeacherId, show, isEdit]);
 
-    // Sync selectedStudentId with formData.studentId
-    useEffect(() => {
-        if (!show || isEdit) return;
-        const currentStudentId = form.formData.studentId;
-        if (currentStudentId && currentStudentId !== selectedStudentId) {
-            setSelectedStudentId(currentStudentId);
-        } else if (!currentStudentId && selectedStudentId !== null) {
-            setSelectedStudentId(selectedStudentId);
-        }
-    }, [form, selectedStudentId, show, isEdit]);
-
     // When teacher selection changes, filter students
     useEffect(() => {
-        if (show && !isEdit && selectedTeacherId !== undefined) {
+        if (show && !isEdit && selectedTeacherId) {
             dispatch(searchStudentsInList({
                 page: 0,
                 size: 1000,
