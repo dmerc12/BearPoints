@@ -64,7 +64,7 @@ export default function BragLogTable({ itemsPerPage = 10, showFilters = true, si
             size={size}
             sortConfig={sortConfig}
             onSort={handleSort}
-            canEdit={isAuthorized}
+            canEdit={false}
             canDelete={isAuthorized}
             onEditItem={handleEditItem}
             onDeleteItem={handleDeleteItem}

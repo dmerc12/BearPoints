@@ -169,10 +169,10 @@ export function useBragLogTable({ itemsPerPage = 10 }: UseBragLogTableProps) {
     const headerConfig: HeaderConfig = useMemo(() => ({
         title: 'Brag Logs',
         itemName: 'brag logs',
-        showCreateButton: isAuthorized,
+        showCreateButton: false,
         createButtonText: 'Create Brag Log',
         additionalElements: null,
-    }), [isAuthorized]);
+    }), []);
 
     const table = useTable<BragLogDTO, typeof initialFilters>({
         selector: (state: RootState) => state.bragLogs,

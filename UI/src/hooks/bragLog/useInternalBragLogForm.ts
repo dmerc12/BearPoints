@@ -4,8 +4,10 @@ import { useBragLogForm } from '../index';
 import { fullName } from '../../utils';
 import {
     searchStudentsInList,
+    resetTeachers,
     fetchTeachers,
     searchBehaviorTypesInList,
+    resetStudents,
     useAppSelector,
     useAppDispatch,
 } from '../../store';
@@ -50,12 +52,15 @@ export const useInternalBragLogForm = ({ show, isEdit = false, bragLog, onCancel
             prevIdRef.current = null;
             hasResetForCurrentShowRef.current = false;
             setSelectedTeacherId(null);
+            dispatch(resetTeachers());
+            dispatch(resetStudents());
         }
-    }, [show]);
+    }, [show, dispatch]);
 
     // Fetch teachers (once)
     useEffect(() => {
         if (show && teachers.length === 0) {
+            dispatch(resetTeachers());
             dispatch(fetchTeachers({ page: 0, size: 1000, force: true }));
         }
     }, [show, teachers.length, dispatch]);
@@ -101,6 +106,7 @@ export const useInternalBragLogForm = ({ show, isEdit = false, bragLog, onCancel
     // When teacher selection changes, filter students
     useEffect(() => {
         if (show && !isEdit && selectedTeacherId) {
+            dispatch(resetStudents());
             dispatch(searchStudentsInList({
                 page: 0,
                 size: 1000,
