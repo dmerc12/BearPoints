@@ -16,12 +16,22 @@ jobs:
         with:
           java-version: '24'
           distribution: 'temurin'
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
       - name: Cache Maven
         uses: actions/cache@v3
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('api/pom.xml') }}
       - name: Run unit & integration tests
+        env: 
+          FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
+          GOOGLE_SERVICE_ACCOUNT_KEY: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}
+          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+          FIREBASE_WEB_API_KEY: ${{ secrets.FIREBASE_WEB_API_KEY }}
+          FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
+          SHOW_SQL: false
         run: |
           cd api
           mvn clean verify
