@@ -3,7 +3,6 @@ package com.bearpoints.api.config;
 import com.bearpoints.api.security.FirebaseAuthFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -43,7 +42,7 @@ import java.util.List;
  *
  * @see SecurityFilterChain
  * @see FirebaseAuthFilter
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @Configuration
@@ -79,8 +78,7 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, "/api/public/brag-logs").permitAll()
-                        .requestMatchers("/api/health", "/public/**").permitAll()
+                        .requestMatchers("/actuator/health").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(firebaseAuthFilter, UsernamePasswordAuthenticationFilter.class);
