@@ -28,16 +28,16 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('API/pom.xml') }}
+          key: ${{ runner.os }}-m2-${{ hashFiles('api/pom.xml') }}
       - name: Run unit & integration tests
         run: |
-          cd API
+          cd api
           mvn clean verify
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: API/target/site/jacoco/
+          path: api/target/site/jacoco/
 
   deploy:
     name: Build & Deploy API + UI
@@ -53,7 +53,7 @@ jobs:
           java-version: '24'
           distribution: 'temurin'
       - name: Build JAR
-        run: cd API && mvn clean package -DskipTests
+        run: cd api && mvn clean package -DskipTests
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -67,13 +67,14 @@ jobs:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t $REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./API
+          docker build -t $REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./api
           docker tag $REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $REGISTRY/$ECR_REPOSITORY:latest
           docker push $REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $REGISTRY/$ECR_REPOSITORY:latest
       - name: Force ECS deployment
         run: |
           aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_SERVICE --force-new-deployment --region $AWS_REGION
+          
       # UI: Build & Deploy to S3 + CloudFront
       - name: Setup Node
         uses: actions/setup-node@v4
