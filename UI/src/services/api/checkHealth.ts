@@ -16,7 +16,7 @@ export const checkHealth = async (signal?: AbortSignal): Promise<boolean> => {
     try {
         healthCheckInProgress = true;
         console.log('Starting health check')
-        const response = await api.get('actuator/health', {
+        const response = await api.get('/actuator/health', {
             timeout: 3000,
             signal
         });

@@ -4,7 +4,7 @@ import { api } from './index'
 api.interceptors.request.use(async (config) => {
     try {
         // Skip health check for health endpoint itself
-        if (config.url  && config.url.includes('actuator/health')) return config;
+        if (config.url  && config.url.includes('/actuator/health')) return config;
         // Add auth token if user is logged in
         await auth.authStateReady();
         const user = auth.currentUser;
