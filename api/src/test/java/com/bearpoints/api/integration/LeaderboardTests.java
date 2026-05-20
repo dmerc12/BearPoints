@@ -2,36 +2,32 @@ package com.bearpoints.api.integration;
 
 import com.bearpoints.api.config.TestDataInitializer;
 import com.bearpoints.api.controller.LeaderboardController;
+import com.bearpoints.api.dao.TeacherDAO;
+import com.bearpoints.api.entity.Teacher;
 import com.bearpoints.api.entity.Timeframe;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import static org.hamcrest.Matchers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Full-stack integration tests for {@link LeaderboardController} utilizing
- * Testcontainers with PostgreSQL and comprehensive test data initialization with
- * the existing {@link TestDataInitializer}.
+ * Full-stack integration tests for {@link LeaderboardController}.
+ * Extends {@link BaseIntegrationTest} for common test configuration.
  *
  *
  * <p>Tests the complete flow from HTTP endpoint through service layer to database,
- * validating system behavior against a production-like database environment.
+ * validating system behavior against a production-like database environment with existing
+ * {@link TestDataInitializer}.
  *
  * <p>Test Configuration:
  * <ul>
@@ -42,29 +38,22 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * </ul>
  *
  * @see TestDataInitializer
- * @see MockMvc
+ * @see BaseIntegrationTest
+ * @version 2.0
  * @author Dylan Mercer
- * @version 1.1
  */
-@Testcontainers
-@SpringBootTest
-@AutoConfigureMockMvc
-@ActiveProfiles("test")
 @DisplayName("Leaderboard Integration Tests")
-public class LeaderboardTests {
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine");
-
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-    }
+public class LeaderboardTests extends BaseIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private TeacherDAO teacherDAO;
+
     private static String baseUrl;
+
+    private static final RequestPostProcessor ROLES = user("any").roles("STUDENT", "TEACHER", "ADMIN", "STAFF", "PARA");
+    private static final String[] ROLES_ARRAY = {"STUDENT", "TEACHER", "ADMIN", "STAFF", "PARA"};
 
     @BeforeAll
     static void setUp() {
@@ -86,13 +75,13 @@ public class LeaderboardTests {
      * ranking algorithm with real data distribution.</p>
      */
     @Test
-    @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
     @DisplayName("GET /leaderboard returns ranked results with comprehensive test data")
     void getLeaderboard_WithFullTestData_ReturnsRankedResults() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get(baseUrl)
                     .param("timeframe", "WEEK")
                     .param("page", "0")
-                    .param("size", "20"))
+                    .param("size", "20")
+                    .with(ROLES))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content").isNotEmpty())
@@ -120,16 +109,18 @@ public class LeaderboardTests {
      * to validate realistic class sizes.
      */
     @Test
-    @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
     @DisplayName("GET /leaderboard with teacher filter returns class-specific ranking")
     void getLeaderboard_WithTeacherFilter_ReturnsClassRanking() throws Exception {
+        Teacher anyTeacher = teacherDAO.findAll(PageRequest.of(0, 1)).getContent().getFirst();
+        Long teacherId = anyTeacher.getId();
         mockMvc.perform(MockMvcRequestBuilders.get(baseUrl)
                     .param("timeframe", "WEEK")
-                    .param("teacherId", "1"))
+                    .param("teacherId", teacherId.toString())
+                    .with(ROLES))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content").isNotEmpty())
-                .andExpect(jsonPath("$.content[*].teacher.id").value(everyItem(is(1))))
+                .andExpect(jsonPath("$.content[*].teacher.id").value(everyItem(is(teacherId.intValue()))))
                 .andExpect(jsonPath("$.content[0].rank").value(1));
     }
 
@@ -145,13 +136,14 @@ public class LeaderboardTests {
      * </ul>
      */
     @Test
-    @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
     @DisplayName("GET /leaderboard with grade filter returns grade-specific ranking")
     void getLeaderboard_WithGradeFilter_ReturnsGradeRanking() throws Exception {
-        String grade = "FIRST";
+        Teacher anyTeacher = teacherDAO.findAll(PageRequest.of(0, 1)).getContent().getFirst();
+        String grade = anyTeacher.getGrade().name();
         mockMvc.perform(MockMvcRequestBuilders.get(baseUrl)
                     .param("timeframe", "WEEK")
-                    .param("grade", grade))
+                    .param("grade", grade)
+                    .with(ROLES))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content").isArray())
@@ -167,11 +159,11 @@ public class LeaderboardTests {
      * brag log timestamps, ensuring recent data is included while properly excluding older records.
      */
     @Test
-    @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
     @DisplayName("GET /leaderboard with WEEK timeframe filters recent brag logs correctly")
     void getLeaderboard_WeekTimeframe_FiltersRecentData() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get(baseUrl)
-                    .param("timeframe", "WEEK"))
+                    .param("timeframe", "WEEK")
+                    .with(ROLES))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").isNumber())
                 .andExpect(jsonPath("$.totalElements").value(greaterThan(0)));
@@ -184,12 +176,12 @@ public class LeaderboardTests {
      * temporal data distribution.
      */
     @Test
-    @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
     @DisplayName("GET /leaderboard handles all timeframe values correctly")
     void getLeaderboard_HandlesAllTimeframes_ReturnResults() throws Exception {
         for (Timeframe timeframe : Timeframe.values()) {
             mockMvc.perform(MockMvcRequestBuilders.get(baseUrl)
-                        .param("timeframe", timeframe.name()))
+                        .param("timeframe", timeframe.name())
+                        .with(ROLES))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").exists());
         }
@@ -202,13 +194,13 @@ public class LeaderboardTests {
      * ensuring correct page metadata and result slicing.
      */
     @Test
-    @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
     @DisplayName("GET /leaderboard with pagination returns correct page metadata")
     void getLeaderboard_WithPagination_ReturnsCorrectPageData() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get(baseUrl)
                     .param("timeframe", "WEEK")
                     .param("page", "0")
-                    .param("size", "5"))
+                    .param("size", "5")
+                    .with(ROLES))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.length()").value(lessThanOrEqualTo(5)))
                 .andExpect(jsonPath("$.number").value(0))
@@ -224,16 +216,18 @@ public class LeaderboardTests {
      * complex data relationships.
      */
     @Test
-    @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
     @DisplayName("GET /leaderboard with combined filters returns precise results")
     void getLeaderboard_WithCombinedFilters_ReturnsPreciseResults() throws Exception {
-        String grade = "FIRST";
+        Teacher anyTeacher = teacherDAO.findAll(PageRequest.of(0, 1)).getContent().getFirst();
+        Long teacherId = anyTeacher.getId();
+        String grade = anyTeacher.getGrade().name();
         mockMvc.perform(MockMvcRequestBuilders.get(baseUrl)
                     .param("timeframe", "WEEK")
-                    .param("teacherId", "1")
-                    .param("grade", grade))
+                    .param("teacherId", teacherId.toString())
+                    .param("grade", grade)
+                    .with(ROLES))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[*].teacher.id").value(everyItem(is(1))))
+                .andExpect(jsonPath("$.content[*].teacher.id").value(everyItem(is(teacherId.intValue()))))
                 .andExpect(jsonPath("$.content[*].grade").value(everyItem(is(grade))));
     }
 
@@ -243,12 +237,12 @@ public class LeaderboardTests {
      * <p>Validates graceful handling of scenarios where no data matches the filter criteria.
      */
     @Test
-    @WithMockUser(roles = {"STUDENT", "TEACHER", "ADMIN"})
     @DisplayName("GET /leaderboard with non-matching filters returns empty results gracefully")
     void getLeaderboard_WithNonMatchingFilters_ReturnsEmptyResults() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get(baseUrl)
                     .param("timeframe", "WEEK")
-                    .param("teacherId", "9999"))
+                    .param("teacherId", "9999")
+                    .with(ROLES))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content").isEmpty())
@@ -264,8 +258,7 @@ public class LeaderboardTests {
     @Test
     @DisplayName("All authorized roles can access leaderboard endpoint")
     void getLeaderboard_AllAuthorizedRoles_CanAccess() throws Exception {
-        String[] roles = {"STUDENT", "TEACHER", "ADMIN"};
-        for (String role : roles) {
+        for (String role : ROLES_ARRAY) {
             mockMvc.perform(MockMvcRequestBuilders.get(baseUrl)
                         .param("timeframe", "WEEK")
                         .with(SecurityMockMvcRequestPostProcessors.user("testUser").roles(role)))

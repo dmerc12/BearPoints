@@ -17,7 +17,7 @@ import java.util.Set;
  * @see Role
  * @see Syncable
  * @see GradeLevel
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @Data
@@ -48,6 +48,17 @@ public class Teacher implements Syncable {
     @JoinColumn(name = "user_id", nullable = false)
     @NotNull(message = "User reference is required")
     private User user;
+
+    /**
+     * Teacher's active status.
+     * <p>Constraints:
+     * <ul>
+     *     <li>Non-null</li>
+     * </ul>
+     */
+    @NotNull(message = "Active status is required")
+    @Column(nullable = false)
+    private Boolean active = true;
 
     /**
      * Associated students in teacher's class
@@ -139,5 +150,13 @@ public class Teacher implements Syncable {
     @Override
     public void setSheetRowId(Integer rowId) {
         this.sheetRowId = rowId;
+    }
+
+    @PrePersist
+    @PreUpdate
+    public void validateRole() {
+        if (user != null && user.getRole() != Role.TEACHER) {
+            throw new IllegalStateException("Teacher can only be linked to user with role TEACHER, but found: " + user.getRole());
+        }
     }
 }

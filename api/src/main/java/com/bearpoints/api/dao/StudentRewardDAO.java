@@ -1,85 +1,61 @@
 package com.bearpoints.api.dao;
 
-import com.bearpoints.api.dto.StudentRewardProjection;
 import com.bearpoints.api.entity.StudentReward;
 import io.micrometer.common.lang.NonNull;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.rest.core.annotation.RepositoryRestResource;
-import org.springframework.data.rest.core.annotation.RestResource;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.lang.Nullable;
 
 import java.util.List;
 
 /**
  * JPA repository for {@link StudentReward} entities.
- * <p>Manages reward redemption records with synchronization capabilities.
- * Exposes REST endpoints under '/student-rewards' with role-based access control.
+ * <p>Provides CRUD operations and queries for student reward management
  *
  * <p>Key features:
  * <ul>
- *     <li>Student reward redemption tracking</li>
- *     <li>Internal synchronization for Google Sheets integration</li>
- *     <li>Role-based access control for write operations</li>
- *     <li>Uses {@link StudentRewardProjection} for condensed REST representations</li>
+ *     <li>Standard CRUD operations</li>
+ *     <li>Pagination and sorting support</li>
+ *     <li>Advanced filtering via specifications</li>
+ *     <li>Internal synchronization methods</li>
  * </ul>
- *
- * <p>Security constraints:
- * <ul>
- *     <li>Save: Requires STUDENT, TEACHER, or ADMIN role</li>
- *     <li>Delete: ADMIN role only</li>
- *     <li>Sync methods: Internal use only</li>
- * </ul>
- *
- * <p>Usage notes:
- * <ul>
- *     <li>Students can redeem rewards via save operations</li>
- *     <li>Teachers can record student reward redemptions</li>
- *     <li>Sync methods used for Google Sheets integration</li>
- * </ul>
- *
- * <p>Projection Usage:
- * REST representations use {@link StudentRewardProjection} by default for condensed views.
  *
  * @see StudentReward
- * @see StudentRewardProjection
- * @version 1.1
+ * @version 2.0
  * @author Dylan Mercer
  */
-@RepositoryRestResource(
-        path = "student-rewards",
-        excerptProjection = StudentRewardProjection.class
-)
-public interface StudentRewardDAO extends JpaRepository<StudentReward, Long> {
+public interface StudentRewardDAO extends JpaRepository<StudentReward, Long>, JpaSpecificationExecutor<StudentReward> {
     /**
-     * Saves a student reward redemption record.
-     * <p>Requires STUDENT, TEACHER, or ADMIN role. Used for reward redemption.
+     * Retrieves all student rewards with pagination and caching support.
      *
-     * @param entity StudentReward to save
-     * @return Saved student reward record
+     * @param pageable Pagination information
+     * @return Paginated list of all student rewards
      */
     @NonNull
     @Override
-    @PreAuthorize("hasAnyRole('STUDENT', 'TEACHER', 'ADMIN')")
-    <S extends StudentReward> S save(@NonNull S entity);
+    @Cacheable("studentRewards")
+    Page<StudentReward> findAll(@NonNull Pageable pageable);
 
+    /**
+     * Retrieves all student rewards with pagination and caching support.
+     *
+     * @param spec Specification to search / filter for
+     * @param pageable Pagination information
+     * @return Paginated list of all student rewards
+     */
+    @NonNull
     @Override
-    @PreAuthorize("hasRole('ADMIN')")
-    void delete(@NonNull StudentReward entity);
-
-    @Override
-    @PreAuthorize("hasRole('ADMIN')")
-    void deleteAll();
-
-    @Override
-    @PreAuthorize("hasRole('ADMIN')")
-    void deleteAll(@NonNull Iterable<? extends StudentReward> entities);
+    @Cacheable("studentRewards")
+    Page<StudentReward> findAll(@Nullable Specification<StudentReward> spec, @NonNull Pageable pageable);
 
     /**
      * Finds un-synced student rewards (internal use only).
-     * <p>Not exposed via REST API. Used for Google Sheets synchronization.
      *
      * @return List of unsynced student rewards
      */
-    @RestResource(exported = false)
     List<StudentReward> findBySyncedToSheetsFalse();
 }

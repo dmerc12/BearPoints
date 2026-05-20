@@ -1,12 +1,14 @@
 package com.bearpoints.api.controller;
 
 import com.bearpoints.api.dto.LeaderboardEntryDTO;
+import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.entity.GradeLevel;
 import com.bearpoints.api.entity.Timeframe;
 import com.bearpoints.api.service.LeaderboardService;
-import org.springframework.data.domain.Page;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,7 +23,7 @@ import org.springframework.web.bind.annotation.*;
  *
  * <p>Features:
  * <ul>
- *     <li>Requires STUDENT, TEACHER, or ADMIN role</li>
+ *     <li>Requires valid role</li>
  *     <li>Supports timeframe filtering (WEEK, MONTH, SEMESTER, YEAR)</li>
  *     <li>Supports teacher and grade filtering</li>
  *     <li>Default timeframe is WEEK</li>
@@ -31,13 +33,14 @@ import org.springframework.web.bind.annotation.*;
  *
  * @see LeaderboardService
  * @see Timeframe
- * @version 3.1
+ * @version 3.5
  * @author Dylan Mercer
  */
+@Slf4j
 @CrossOrigin
 @RestController
 @RequestMapping("/api/leaderboard")
-@PreAuthorize("hasAnyRole('STUDENT', 'TEACHER', 'ADMIN')")
+@PreAuthorize("isAuthenticated()")
 public class LeaderboardController {
     private final LeaderboardService leaderboardService;
 
@@ -55,18 +58,23 @@ public class LeaderboardController {
      * @param pageable  Pagination and sorting parameters (page, size, sort)
      * @return List of leaderboard entries with structured student/teacher details
      *
-     * @example
+     * <p>{@code @example}
      * GET /api/leaderboard?timeframe=MONTH&page=0&size=20&sort=points,desc
      * GET /api/leaderboard?page=1&size=10
      * GET /api/leaderboard?teacherId=123&grade=FIRST&page=1&size=10
      * GET /api/leaderboard?timeframe=WEEK&grade=SECOND&page=0&size-15
      */
     @GetMapping
-    public Page<LeaderboardEntryDTO> getLeaderboard(
+    public ResponseEntity<PagedResponseDTO<LeaderboardEntryDTO>> getLeaderboard(
             @RequestParam(defaultValue = "WEEK") Timeframe timeframe,
             @RequestParam(required = false) Long teacherId,
             @RequestParam(required = false) GradeLevel grade,
             @PageableDefault(size = 20) Pageable pageable) {
-        return leaderboardService.getLeaderboard(timeframe, teacherId, grade, pageable);
+        log.debug("Leaderboard request - timeframe: {}, teacherId: {}, grade: {}, page: {}, size: {}, sort: {}",
+                timeframe, teacherId, grade, pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
+        PagedResponseDTO<LeaderboardEntryDTO> response = leaderboardService.getLeaderboard(timeframe, teacherId, grade, pageable);
+        log.info("Returning leaderboard - {} entries, total elements: {}",
+                response.getNumberOfElements(), response.getTotalElements());
+        return ResponseEntity.ok(response);
     }
 }

@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Unit tests for {@link Student} entity validation and functionality.
@@ -33,7 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  *  </ul>
  *
  * @see Student
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 public class StudentTests {
@@ -163,6 +164,110 @@ public class StudentTests {
             student.setToken(existingToken);
             student.generateToken();
             assertThat(student.getToken()).isEqualTo(existingToken);
+        }
+    }
+
+    /** Tests null active status validation */
+    @Test
+    @DisplayName("Null active status fails validation")
+    public void studentActiveStatusNull() {
+        validStudent.setActive(null);
+        Set<ConstraintViolation<Student>> violations = validator.validate(validStudent);
+        assertThat(violations)
+                .filteredOn(v -> v.getPropertyPath().toString().equals("active"))
+                .extracting(ConstraintViolation::getMessage)
+                .containsExactly("Active status is required");
+    }
+
+    @Nested
+    @DisplayName("Role validation tests")
+    class RoleValidationTests {
+        private Student createStudentWithUserRole(Role role) {
+            User user = new User();
+            user.setRole(role);
+            user.setEmail("test@okcps.org");
+            user.setFirstName("test");
+            user.setLastName("test");
+            Teacher teacher = new Teacher();
+            teacher.setUser(user);
+            Student student = new Student();
+            student.setTeacher(teacher);
+            student.setUser(user);
+            return student;
+        }
+
+        @Test
+        @DisplayName("validateRole does nothing when user is null")
+        void validateRoleWithNullUser() {
+            Student student = new Student();
+            student.setUser(null);
+            student.validateRole();
+        }
+
+        @Test
+        @DisplayName("validateRole does nothing when user role is STUDENT")
+        void validateRoleWithStudentRole() {
+            Student student = new Student();
+            student.setUser(null);
+            student.validateRole();
+        }
+
+        @Test
+        @DisplayName(" validateRole throws IllegalStateException when user role is TEACHER")
+        void validateRoleWithTeacherRole() {
+            Student student = createStudentWithUserRole(Role.TEACHER);
+            assertThatThrownBy(student::validateRole)
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("Student can only be linked to user with role STUDENT")
+                    .hasMessageContaining(Role.TEACHER.name());
+        }
+
+        @Test
+        @DisplayName(" validateRole throws IllegalStateException when user role is ADMIN")
+        void validateRoleWithAdminRole() {
+            Student student = createStudentWithUserRole(Role.ADMIN);
+            assertThatThrownBy(student::validateRole)
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("Student can only be linked to user with role STUDENT")
+                    .hasMessageContaining(Role.ADMIN.name());
+        }
+
+        @Test
+        @DisplayName(" validateRole throws IllegalStateException when user role is STAFF")
+        void validateRoleWithStaffRole() {
+            Student student = createStudentWithUserRole(Role.STAFF);
+            assertThatThrownBy(student::validateRole)
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("Student can only be linked to user with role STUDENT")
+                    .hasMessageContaining(Role.STAFF.name());
+        }
+
+        @Test
+        @DisplayName(" validateRole throws IllegalStateException when user role is PARA")
+        void validateRoleWithParaRole() {
+            Student student = createStudentWithUserRole(Role.PARA);
+            assertThatThrownBy(student::validateRole)
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("Student can only be linked to user with role STUDENT")
+                    .hasMessageContaining(Role.PARA.name());
+        }
+
+        @Test
+        @DisplayName("prePersist calls validateRole and throws on invalid role")
+        void prePersistThrowsWhenRoleInvalid() {
+            Student student = createStudentWithUserRole(Role.TEACHER);
+            assertThatThrownBy(student::prePersist)
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("STUDENT");
+        }
+
+        @Test
+        @DisplayName("preUpdate calls validateRole and throws on invalid role")
+        void preUpdateThrowsWhenRoleInvalid() {
+            Student student = createStudentWithUserRole(Role.ADMIN);
+            assertThatThrownBy(student::preUpdate)
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("STUDENT");
         }
     }
 

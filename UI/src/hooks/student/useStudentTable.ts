@@ -1,0 +1,195 @@
+import { searchStudentsInList, fetchTeachers, RootState, useAppSelector, useAppDispatch } from '../../store';
+import type { FilterConfig, HeaderConfig } from '../../components';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { fullName, formatGrade, formatName } from '../../utils';
+import { StudentDTO, Role } from '../../services';
+import { useTable } from '../index';
+
+export interface UseStudentTableProps {
+    itemsPerPage?: number;
+}
+
+export function useStudentTable({ itemsPerPage = 10 }: UseStudentTableProps) {
+    const dispatch = useAppDispatch();
+    const currentUser = useAppSelector(state => state.user.data);
+    const { data: teachers } = useAppSelector(state => state.teachers);
+
+    const isAuthorized = useMemo(() => currentUser?.role === Role.ADMIN
+        || currentUser?.role === Role.STAFF || currentUser?.role === Role.TEACHER
+        || currentUser?.role === Role.PARA, [currentUser]);
+
+    useEffect(() => {
+        if (teachers.length === 0) {
+            dispatch(fetchTeachers({  page: 0, size: 1000 }));
+        }
+    }, [dispatch, teachers.length])
+
+    const [selectedStudentIds, setSelectedStudentIds] = useState<number[]>([]);
+    const handleSelectRow = useCallback((id: number | string, checked: boolean) => {
+        setSelectedStudentIds(prev => checked ? [...prev, id as number] : prev.filter(i => i !== id));
+    }, []);
+    const handleSelectAll = useCallback((checked: boolean, allIds: (number | string)[]) => {
+        setSelectedStudentIds(checked ? allIds as number[] : []);
+    }, []);
+
+    const initialFilters = useMemo(() => ({
+        firstNameSearch: '',
+        lastNameSearch: '',
+        emailSearch: '',
+        teacherId: '',
+        minPoints: '',
+        maxPoints: '',
+    }), []);
+
+    const columnsBuilder = useCallback(() => [
+        {
+            key: 'name',
+            header: 'Name',
+            render: (student: StudentDTO) => fullName(student),
+            sortable: true,
+        },
+        {
+            key: 'email',
+            header: 'Email',
+            render: (student: StudentDTO) => student.user.email,
+            sortable: true,
+        },
+        {
+            key: 'grade',
+            header: 'Grade',
+            render: (student: StudentDTO) => formatGrade(student.teacher.grade),
+            sortable: true,
+        },
+        {
+            key: 'teacher',
+            header: 'Teacher',
+            render: (student: StudentDTO) => formatName(student.teacher) || 'N/A',
+            sortable: true,
+        },
+        {
+            key: 'points',
+            header: 'Points',
+            render: (student: StudentDTO) => student.points?.toString(),
+            sortable: true,
+        },
+    ], []);
+
+    const fetchAction = useCallback((params: {
+        page: number;
+        size: number;
+        sort?: string;
+        force?: boolean;
+        firstName?: string;
+        lastName?: string;
+        email?: string;
+        teacherId?: number;
+        minPoints?: number;
+        maxPoints?: number;
+    })=> {
+        return searchStudentsInList(params);
+    }, []);
+
+    const getFetchParams = useCallback((
+        filters: typeof initialFilters,
+        page: number,
+        size: number,
+        sort?: string
+    ) => {
+        const teacherId = filters.teacherId ? parseInt(filters.teacherId, 10) : undefined;
+        const minPoints = filters.minPoints ? parseInt(filters.minPoints, 10) : undefined;
+        const maxPoints = filters.maxPoints ? parseInt(filters.maxPoints, 10) : undefined;
+        return {
+            page,
+            size,
+            sort,
+            firstName: filters.firstNameSearch || undefined,
+            lastName: filters.lastNameSearch || undefined,
+            email: filters.emailSearch,
+            teacherId,
+            minPoints,
+            maxPoints,
+        }
+    }, []);
+
+    const teacherOptions = useMemo(() => {
+        return teachers.filter(teacher => teacher.id !== null && teacher.id !== undefined)
+            .map(teacher => ({ value: teacher.id!.toString(), label: formatName(teacher) }));
+    }, [teachers]);
+
+    const filtersConfig: FilterConfig[] = [
+        {
+            key: 'firstNameSearch',
+            type: 'text' as const,
+            label: 'Search by first name',
+            placeholder: 'Search by first name...',
+        },
+        {
+            key: 'lastNameSearch',
+            type: 'text' as const,
+            label: 'Search by last name',
+            placeholder: 'Search by last name...',
+        },
+        {
+            key: 'emailSearch',
+            type: 'text' as const,
+            label: 'Search by email',
+            placeholder: 'Email address...',
+        },
+        {
+            key: 'teacherId',
+            type: 'select' as const,
+            label: 'Teacher',
+            options: teacherOptions,
+        },
+        {
+            key: 'minPoints',
+            type: 'number' as const,
+            label: 'Min points',
+            placeholder: '0',
+            min: 0,
+            step: 1,
+        },
+        {
+            key: 'maxPoints',
+            type: 'number' as const,
+            label: 'Max points',
+            placeholder: '1000',
+            min: 0,
+            step: 1,
+        },
+    ];
+
+    const headerConfig: HeaderConfig = useMemo(() => ({
+        title: 'Students',
+        itemName: 'students',
+        showCreateButton: isAuthorized,
+        createButtonText: 'Create Student',
+        additionalElements: null,
+    }), [isAuthorized]);
+
+    const table = useTable<StudentDTO, typeof initialFilters>({
+        selector: (state: RootState) => state.students,
+        initialFilters,
+        columnsBuilder,
+        fetchAction,
+        getFetchParams,
+        itemsPerPage,
+        mode: 'crud' as const,
+    });
+
+    const crudTable = table as typeof table & {
+        showCreateModal: boolean;
+        editingItem: StudentDTO | null;
+        deletingItem: StudentDTO | null;
+        handleCreateItem: () => void;
+        handleEditItem: (item: StudentDTO) => void;
+        handleDeleteItem: (item: StudentDTO) => void;
+        handleCloseModals: () => void;
+        handleSuccess: () => void;
+    }
+
+    const selectedStudents = table.data.filter(s => selectedStudentIds.includes(s.id!));
+
+    return { ...crudTable, filtersConfig, headerConfig, isAuthorized,
+        selectedStudentIds, selectedStudents, handleSelectRow, handleSelectAll };
+}

@@ -7,19 +7,37 @@ package com.bearpoints.api.entity;
  *      <li>Student</li>
  *      <li>Teacher</li>
  *      <li>Admin</li>
+ *      <li>Staff</li>
+ *      <li>Para</li>
  * </ul>
  *
  * @see User
- * @version 1.0
+ * @version 1.2
  * @author Dylan Mercer
  */
 public enum Role {
-    /** Standard student account */
+    /**
+     * Standard student account
+     */
     STUDENT,
 
-    /** Teacher account with classroom privileges */
+    /**
+     * Teacher account with classroom privileges
+     */
     TEACHER,
 
-    /** Administrative system account */
-    ADMIN
+    /**
+     * Administrative system account
+     */
+    ADMIN,
+
+    /**
+     * Standard staff account
+     */
+    STAFF,
+
+    /**
+     * Standard paraprofessional account
+     */
+    PARA
 }

@@ -2,6 +2,7 @@ package com.bearpoints.api.unit.controller;
 
 import com.bearpoints.api.controller.LeaderboardController;
 import com.bearpoints.api.dto.LeaderboardEntryDTO;
+import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.dto.PersonDTO;
 import com.bearpoints.api.entity.GradeLevel;
 import com.bearpoints.api.entity.Timeframe;
@@ -37,7 +38,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *
  * <p>Security requirements tested:
  * <ul>
- *     <li>STUDENT, TEACHER, ADMIN roles can access leaderboard</li>
+ *     <li>STUDENT, TEACHER, STAFF, ADMIN roles can access leaderboard</li>
  *     <li>Unauthenticated users are denied access (401 Unauthorized)</li>
  *     <li>Users without required roles are denied access (403 Forbidden)</li>
  * </ul>
@@ -45,7 +46,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @see LeaderboardController
  * @see WithMockUser
  * @see WithAnonymousUser
- * @version 1.1
+ * @version 1.2
  * @author Dylan Mercer
  *
  */
@@ -60,16 +61,19 @@ public class LeaderboardSecurityTests {
     @MockitoBean
     private FirebaseAuthFilter firebaseAuthFilter;
 
-    private List<LeaderboardEntryDTO> sampleLeaderboard;
+    private PagedResponseDTO<LeaderboardEntryDTO> expectedResponse;
 
     @BeforeEach
     void setUp() {
-        sampleLeaderboard = List.of(
+        List<LeaderboardEntryDTO> sampleLeaderboard = List.of(
                 new LeaderboardEntryDTO(1,
-                new PersonDTO(1L, "Student", "One"),
-                new PersonDTO(1L, "Teacher", "A"),
-                GradeLevel.THIRD, 150)
+                        new PersonDTO(1L, "Student", "One"),
+                        new PersonDTO(1L, "Teacher", "A"),
+                        GradeLevel.THIRD, 150)
         );
+        Pageable pageable = PageRequest.of(0, 20);
+        Page<LeaderboardEntryDTO> expectedPage = new PageImpl<>(sampleLeaderboard, pageable, sampleLeaderboard.size());
+        expectedResponse = PagedResponseDTO.of(expectedPage);
     }
 
     /**
@@ -85,10 +89,8 @@ public class LeaderboardSecurityTests {
     @WithMockUser(roles = "STUDENT")
     @DisplayName("STUDENT role can access leaderboard - returns 200 OK")
     void getLeaderboard_WithStudentRole_ReturnsOk() throws Exception {
-        Pageable pageable = PageRequest.of(0, 20);
-        Page<LeaderboardEntryDTO> expectedPage = new PageImpl<>(sampleLeaderboard, pageable, 1);
         when(leaderboardService.getLeaderboard(eq(Timeframe.WEEK), eq(null), eq(null), any(Pageable.class)))
-                .thenReturn(expectedPage);
+                .thenReturn(expectedResponse);
         mockMvc.perform(get("/api/leaderboard").param("timeframe", "WEEK"))
                 .andExpect(status().isOk());
     }
@@ -106,10 +108,8 @@ public class LeaderboardSecurityTests {
     @WithMockUser(roles = "TEACHER")
     @DisplayName("TEACHER role can access leaderboard - returns 200 OK")
     void getLeaderboard_WithTeacherRole_ReturnsOk() throws Exception {
-        Pageable pageable = PageRequest.of(0, 20);
-        Page<LeaderboardEntryDTO> expectedPage = new PageImpl<>(sampleLeaderboard, pageable, 1);
         when(leaderboardService.getLeaderboard(eq(Timeframe.WEEK), eq(null), eq(null), any(Pageable.class)))
-                .thenReturn(expectedPage);
+                .thenReturn(expectedResponse);
         mockMvc.perform(get("/api/leaderboard").param("timeframe", "WEEK"))
                 .andExpect(status().isOk());
     }
@@ -127,10 +127,8 @@ public class LeaderboardSecurityTests {
     @WithMockUser(roles = "ADMIN")
     @DisplayName("ADMIN role can access leaderboard - returns 200 OK")
     void getLeaderboard_WithAdminRole_ReturnsOk() throws Exception {
-        Pageable pageable = PageRequest.of(0, 20);
-        Page<LeaderboardEntryDTO> expectedPage = new PageImpl<>(sampleLeaderboard, pageable, 1);
         when(leaderboardService.getLeaderboard(eq(Timeframe.WEEK), eq(null), eq(null), any(Pageable.class)))
-                .thenReturn(expectedPage);
+                .thenReturn(expectedResponse);
         mockMvc.perform(get("/api/leaderboard").param("timeframe", "WEEK"))
                 .andExpect(status().isOk());
     }
@@ -162,11 +160,9 @@ public class LeaderboardSecurityTests {
     @WithMockUser(roles = "STUDENT")
     @DisplayName("STUDENT role can access leaderboard with teacher filter - returns 200 OK")
     void getLeaderboard_WithTeacherFilterAndStudentRole_ReturnsOk() throws Exception {
-        Pageable pageable = PageRequest.of(0, 20);
-        Page<LeaderboardEntryDTO> expectedPage = new PageImpl<>(sampleLeaderboard, pageable, 1);
         Long teacherId = 1L;
         when(leaderboardService.getLeaderboard(eq(Timeframe.WEEK), eq(teacherId), eq(null), any(Pageable.class)))
-                .thenReturn(expectedPage);
+                .thenReturn(expectedResponse);
         mockMvc.perform(get("/api/leaderboard")
                         .param("timeframe", "WEEK")
                         .param("teacherId", teacherId.toString()))
@@ -183,11 +179,9 @@ public class LeaderboardSecurityTests {
     @WithMockUser(roles = "STUDENT")
     @DisplayName("STUDENT role can access leaderboard with grade filter - returns 200 OK")
     void getLeaderboard_WithGradeFilterAndStudentRole_ReturnsOk() throws Exception {
-        Pageable pageable = PageRequest.of(0, 20);
-        Page<LeaderboardEntryDTO> expectedPage = new PageImpl<>(sampleLeaderboard, pageable, 1);
         GradeLevel grade = GradeLevel.FIRST;
         when(leaderboardService.getLeaderboard(eq(Timeframe.WEEK), eq(null), eq(grade), any(Pageable.class)))
-                .thenReturn(expectedPage);
+                .thenReturn(expectedResponse);
         mockMvc.perform(get("/api/leaderboard")
                         .param("timeframe", "WEEK")
                         .param("grade", String.valueOf(grade)))

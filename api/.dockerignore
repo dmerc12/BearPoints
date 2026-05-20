@@ -1,0 +1,16 @@
+.git
+.gitignore
+README.md
+target/
+*.log
+*.iml
+.idea/
+.vscode/
+Dockerfile
+.dockerignore
+credentials/
+.env
+*.md
+.mvn/wrapper/maven-wrapper.jar
+service-account.json
+firebase-service-account.json

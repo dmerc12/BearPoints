@@ -2,8 +2,8 @@ package com.bearpoints.api.dao;
 
 import com.bearpoints.api.dao.impl.LeaderboardDAOImpl;
 import com.bearpoints.api.dto.LeaderboardEntryDTO;
+import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.entity.GradeLevel;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
@@ -18,12 +18,12 @@ import java.time.LocalDateTime;
  *     <li>Executes complex ranking queries with point aggregation</li>
  *     <li>Supports dynamic filtering by teacher and grade level</li>
  *     <li>Provides database-agnostic JPQL implementation</li>
- *     <li>Maintains correct ranking context withing filtered results</li>
+ *     <li>Maintains correct ranking context within filtered results</li>
  * </ul>
  *
  * @see LeaderboardEntryDTO
  * @see LeaderboardDAOImpl
- * @version 1.1
+ * @version 1.2
  * @author Dylan Mercer
  */
 public interface LeaderboardDAO {
@@ -47,7 +47,7 @@ public interface LeaderboardDAO {
      * - Grade leaderboard - ranks 1,2,3... within grade level
      * findRankedLeaderboard(startDate, null, "FIRST", pageable)
      */
-    Page<LeaderboardEntryDTO> findRankedLeaderboard(
+    PagedResponseDTO<LeaderboardEntryDTO> findRankedLeaderboard(
             LocalDateTime startDate,
             Long teacherId,
             GradeLevel grade,

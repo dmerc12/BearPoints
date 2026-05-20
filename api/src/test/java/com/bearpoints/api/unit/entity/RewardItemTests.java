@@ -32,7 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @see RewardItem
  *
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 public class RewardItemTests {
@@ -194,6 +194,18 @@ public class RewardItemTests {
                     .extracting(ConstraintViolation::getMessage)
                     .containsExactly("Minimum stock quantity is 0");
         }
+    }
+
+    /** Tests null active status validation */
+    @Test
+    @DisplayName("Null active status fails validation")
+    public void rewardItemActiveStatusNull() {
+        validRewardItem.setActive(null);
+        Set<ConstraintViolation<RewardItem>> violations = validator.validate(validRewardItem);
+        assertThat(violations)
+                .filteredOn(v -> v.getPropertyPath().toString().equals("active"))
+                .extracting(ConstraintViolation::getMessage)
+                .containsExactly("Active status is required");
     }
 
     /** Version field tests */

@@ -3,7 +3,11 @@ package com.bearpoints.api.unit.exception;
 import com.bearpoints.api.dto.ErrorResponseDTO;
 import com.bearpoints.api.exception.DuplicateResourceException;
 import com.bearpoints.api.exception.GlobalHandlers;
-import com.bearpoints.api.exception.UserNotFoundException;
+import com.bearpoints.api.exception.InsufficientResourcesException;
+import com.bearpoints.api.exception.ResourceNotFoundException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import com.fasterxml.jackson.databind.exc.ValueInstantiationException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -12,6 +16,7 @@ import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
@@ -34,10 +39,11 @@ import static org.mockito.Mockito.when;
  *     <li>Proper HTTP status codes and messages for handled exceptions</li>
  *     <li>Correct exception type mapping</li>
  *     <li>Duplicate resource exception handling</li>
+ *     <li>JSON parsing and deserialization exception handling</li>
  * </ul>
  *
  * @see GlobalHandlers
- * @version 1.2
+ * @version 1.3
  * @author Dylan Mercer
  */
 @DisplayName("Global Handlers Tests")
@@ -47,12 +53,24 @@ public class GlobalHandlersTests {
     private GlobalHandlers globalHandlers;
 
     @Test
-    @DisplayName("Handle UserNotFoundException - returns 404 with message")
-    void handleUserNotFoundException() {
-        String errorMessage = "User not found with ID: 123";
-        UserNotFoundException ex = new UserNotFoundException(errorMessage);
-        ResponseEntity<ErrorResponseDTO> response = globalHandlers.handleUserNotFoundException(ex);
+    @DisplayName("Handle ResourceNotFoundException - returns 404 with message")
+    void handleResourceNotFoundException() {
+        String errorMessage = "Resource not found with ID: 123";
+        ResourceNotFoundException ex = new ResourceNotFoundException(errorMessage);
+        ResponseEntity<ErrorResponseDTO> response = globalHandlers.handleResourceNotFoundException(ex);
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(errorMessage, response.getBody().getMessage());
+        assertNotNull(response.getBody().getTimestamp());
+    }
+
+    @Test
+    @DisplayName("Handle InsufficientResourcesException - returns 400 with message")
+    void handleInsufficientPointsException() {
+        String errorMessage = "Insufficient points or stock to redeem this reward";
+        InsufficientResourcesException ex = new InsufficientResourcesException(errorMessage);
+        ResponseEntity<ErrorResponseDTO> response = globalHandlers.handleInsufficientResourcesException(ex);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals(errorMessage, response.getBody().getMessage());
         assertNotNull(response.getBody().getTimestamp());
@@ -178,6 +196,98 @@ public class GlobalHandlersTests {
             assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
             assertNotNull(response.getBody());
             assertEquals("", response.getBody().getMessage());
+            assertNotNull(response.getBody().getTimestamp());
+        }
+    }
+
+    @Nested
+    @DisplayName("Handle HttpMessageNotReadableException")
+    class HandleHttpMessageNotReadableExceptionTests {
+        @Test
+        @DisplayName("with ValueInstantiationException root cause - returns 400 with root cause message")
+        void handleHttpMessageNotReadableException_WithValueInstantiationException() {
+            String rootCauseMessage = "Cannot construct instance of `com.bearpoints.api.dto.TeacherDTO`, problem: Invalid grade level: INVALID_GRADE";
+            ValueInstantiationException rootCause = mock(ValueInstantiationException.class);
+            when(rootCause.getMessage()).thenReturn(rootCauseMessage);
+            HttpMessageNotReadableException ex = mock(HttpMessageNotReadableException.class);
+            when(ex.getRootCause()).thenReturn(rootCause);
+            ResponseEntity<ErrorResponseDTO> response = globalHandlers.handleHttpMessageNotReadableException(ex);
+            assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+            assertNotNull(response.getBody());
+            assertEquals(rootCauseMessage, response.getBody().getMessage());
+            assertNotNull(response.getBody().getTimestamp());
+        }
+
+        @Test
+        @DisplayName("with InvalidFormatException root cause - returns 400 with formatted field message")
+        void handleHttpMessageNotReadableException_WithInvalidFormatException() {
+            InvalidFormatException rootCause = mock(InvalidFormatException.class);
+            when(rootCause.getValue()).thenReturn("INVALID_ROLE");
+            JsonMappingException.Reference reference = mock(JsonMappingException.Reference.class);
+            when(reference.getFieldName()).thenReturn("role");
+            when(rootCause.getPath()).thenReturn(Collections.singletonList(reference));
+            HttpMessageNotReadableException ex = mock(HttpMessageNotReadableException.class);
+            when(ex.getRootCause()).thenReturn(rootCause);
+            ResponseEntity<ErrorResponseDTO> response = globalHandlers.handleHttpMessageNotReadableException(ex);
+            assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+            assertNotNull(response.getBody());
+            assertEquals("Invalid value for field 'role': INVALID_ROLE", response.getBody().getMessage());
+            assertNotNull(response.getBody().getTimestamp());
+        }
+
+        @Test
+        @DisplayName("with IllegalArgumentException root cause - returns 400 with root cause message")
+        void handleHttpMessageNotReadableException_WithIllegalArgumentException() {
+            String rootCauseMessage = "Invalid grade level: INVALID_GRADE. Valid values are: [PRE_K, K, FIRST, SECOND, THIRD, FOURTH]";
+            IllegalArgumentException rootCause = new IllegalArgumentException(rootCauseMessage);
+            HttpMessageNotReadableException ex = mock(HttpMessageNotReadableException.class);
+            when(ex.getRootCause()).thenReturn(rootCause);
+            ResponseEntity<ErrorResponseDTO> response = globalHandlers.handleHttpMessageNotReadableException(ex);
+            assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+            assertNotNull(response.getBody());
+            assertEquals(rootCauseMessage, response.getBody().getMessage());
+            assertNotNull(response.getBody().getTimestamp());
+        }
+
+        @Test
+        @DisplayName("with no root cause - returns 400 with default message")
+        void handleHttpMessageNotReadableException_WithNoRootCause() {
+            HttpMessageNotReadableException ex = mock(HttpMessageNotReadableException.class);
+            when(ex.getRootCause()).thenReturn(null);
+            ResponseEntity<ErrorResponseDTO> response = globalHandlers.handleHttpMessageNotReadableException(ex);
+            assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+            assertNotNull(response.getBody());
+            assertEquals("Invalid request body", response.getBody().getMessage());
+            assertNotNull(response.getBody().getTimestamp());
+        }
+
+        @Test
+        @DisplayName("with unknown root cause type - returns 400 with default message")
+        void handleHttpMessageNotReadableException_WithUnknownRootCause() {
+            IOException rootCause = new IOException("Some IO error");
+            HttpMessageNotReadableException ex = mock(HttpMessageNotReadableException.class);
+            when(ex.getRootCause()).thenReturn(rootCause);
+            ResponseEntity<ErrorResponseDTO> response = globalHandlers.handleHttpMessageNotReadableException(ex);
+            assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+            assertNotNull(response.getBody());
+            assertEquals("Invalid request body", response.getBody().getMessage());
+            assertNotNull(response.getBody().getTimestamp());
+        }
+
+        @Test
+        @DisplayName("with InvalidFormatException and null field name - returns 400 with fallback field name")
+        void handleHttpMessageNotReadableException_WithInvalidFormatExceptionAndNullFieldName() {
+            InvalidFormatException rootCause = mock(InvalidFormatException.class);
+            when(rootCause.getValue()).thenReturn("INVALID_VALUE");
+            JsonMappingException.Reference reference = mock(JsonMappingException.Reference.class);
+            when(reference.getFieldName()).thenReturn(null);
+            when(rootCause.getPath()).thenReturn(Collections.singletonList(reference));
+            HttpMessageNotReadableException ex = mock(HttpMessageNotReadableException.class);
+            when(ex.getRootCause()).thenReturn(rootCause);
+            ResponseEntity<ErrorResponseDTO> response = globalHandlers.handleHttpMessageNotReadableException(ex);
+            assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+            assertNotNull(response.getBody());
+            assertEquals("Invalid value for field 'null': INVALID_VALUE", response.getBody().getMessage());
             assertNotNull(response.getBody().getTimestamp());
         }
     }

@@ -168,9 +168,7 @@ public class SecurityConfigTests {
          * <ul>
          *     <li>Request matchers are registered for public endpoints:
          *          <ul>
-         *              <li>POST /api/public/brag-logs</li>
          *              <li>/health</li>
-         *              <li>/public/**</li>
          *          </ul>
          *     </li>
          *     <li>All other requests require authentication</li>
@@ -186,16 +184,15 @@ public class SecurityConfigTests {
                     mock(AuthorizeHttpRequestsConfigurer.AuthorizationManagerRequestMatcherRegistry.class);
             AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizedUrl authorizedUrl =
                     mock(AuthorizeHttpRequestsConfigurer.AuthorizedUrl.class);
-            when(authorizedUrl.permitAll()).thenReturn(registry);
-            when(authorizedUrl.authenticated()).thenReturn(registry);
-            when(registry.requestMatchers(any(HttpMethod.class), any(String.class))).thenReturn(authorizedUrl);
-            when(registry.requestMatchers(any(String[].class))).thenReturn(authorizedUrl);
-            when(registry.anyRequest()).thenReturn(authorizedUrl);
+            lenient().when(authorizedUrl.permitAll()).thenReturn(registry);
+            lenient().when(authorizedUrl.authenticated()).thenReturn(registry);
+            lenient().when(registry.requestMatchers(any(HttpMethod.class), any(String.class))).thenReturn(authorizedUrl);
+            lenient().when(registry.requestMatchers(any(String[].class))).thenReturn(authorizedUrl);
+            lenient().when(registry.anyRequest()).thenReturn(authorizedUrl);
             authCaptor.getValue().customize(registry);
-            verify(registry).requestMatchers(HttpMethod.POST, "/api/public/brag-logs");
-            verify(registry).requestMatchers("/api/health", "/public/**");
+            verify(registry).requestMatchers("/actuator/health");
             verify(registry).anyRequest();
-            verify(authorizedUrl, times(2)).permitAll();
+            verify(authorizedUrl, times(1)).permitAll();
             verify(authorizedUrl).authenticated();
         }
 
@@ -245,7 +242,7 @@ public class SecurityConfigTests {
         UrlBasedCorsConfigurationSource urlBasedSource = (UrlBasedCorsConfigurationSource) source;
         CorsConfiguration config = urlBasedSource.getCorsConfigurations().get("/**");
         assertNotNull(config);
-        assertEquals(List.of("http://localhost:5173"), config.getAllowedOrigins());
+        assertEquals(List.of("http://localhost:5173", "https://dd8gbzj08h6gp.cloudfront.net", "https://bearpoints.org"), config.getAllowedOrigins());
         assertEquals(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"), config.getAllowedMethods());
         assertEquals(List.of("*"), config.getAllowedHeaders());
         assertEquals(Boolean.TRUE, config.getAllowCredentials());

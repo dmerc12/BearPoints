@@ -1,11 +1,14 @@
 package com.bearpoints.api.exception;
 
 import com.bearpoints.api.dto.ErrorResponseDTO;
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import com.fasterxml.jackson.databind.exc.ValueInstantiationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -24,7 +27,7 @@ import java.util.Map;
  *
  * <p>Current exception handlers:
  * <ul>
- *     <li>{@link UserNotFoundException} - Returns HTTP 404 Not Found</li>
+ *     <li>{@link ResourceNotFoundException} - Returns HTTP 404 Not Found</li>
  *     <li>{@link MethodArgumentNotValidException} - Returns HTTP 400 Bad Request with validation errors</li>
  *     <li>{@link DataIntegrityViolationException} - Returns HTTP 409 Conflict for duplicate resources</li>
  *     <li>{@link IllegalArgumentException} - Returns HTTP 400 Bad Request</li>
@@ -40,18 +43,33 @@ public class GlobalHandlers {
     private static final Logger logger = LoggerFactory.getLogger(GlobalHandlers.class);
 
     /**
-     * Handles User not found exceptions.
+     * Handles Resource not found exceptions.
      * <p>Returns a 404 Not Found status with the exception message in the response body.
      *
-     * @param ex The caught UserNotFoundException
+     * @param ex The caught ResourceNotFoundException
      * @return Response entity with error message and status code
      */
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<ErrorResponseDTO> handleUserNotFoundException(UserNotFoundException ex) {
-        logger.warn("User not found", ex);
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponseDTO> handleResourceNotFoundException(ResourceNotFoundException ex) {
+        logger.warn("Resource not found", ex);
         ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO(ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponseDTO);
+    }
+
+    /**
+     * Handles Insufficient resources exceptions.
+     * <p>Returns a 400 Bad request status with the exception message in the response body.
+     *
+     * @param ex The caught InsufficientResourcesException
+     * @return Response entity with error message and status code
+     */
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(InsufficientResourcesException.class)
+    public ResponseEntity<ErrorResponseDTO> handleInsufficientResourcesException(InsufficientResourcesException ex) {
+        logger.warn("Insufficient points", ex);
+        ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponseDTO);
     }
 
     /**
@@ -102,6 +120,30 @@ public class GlobalHandlers {
     public ResponseEntity<ErrorResponseDTO> handleIllegalArgumentException(IllegalArgumentException ex) {
         logger.warn("Client sent invalid request: {}", ex.getMessage());
         ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO(ex.getMessage());
+        return ResponseEntity.badRequest().body(errorResponseDTO);
+    }
+
+    /**
+     * Handles JSON parsing and deserialization exceptions.
+     * <p>Returns a 400 Bad Request status when JSON is malformed or contains invalid values.
+     *
+     * @param ex The caught HttpMessageNotReadableException
+     * @return ResponseEntity with error message and status code
+     */
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponseDTO> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
+        logger.warn("JSON parsing error: {}", ex.getMessage());
+        Throwable rootCause = ex.getRootCause();
+        String errorMessage = "Invalid request body";
+        if (rootCause instanceof ValueInstantiationException) {
+            errorMessage = rootCause.getMessage();
+        } else if (rootCause instanceof InvalidFormatException ife) {
+            errorMessage = "Invalid value for field '" + ife.getPath().getFirst().getFieldName() + "': " + ife.getValue();
+        } else if (rootCause instanceof IllegalArgumentException) {
+            errorMessage = rootCause.getMessage();
+        }
+        ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO(errorMessage);
         return ResponseEntity.badRequest().body(errorResponseDTO);
     }
 

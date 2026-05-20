@@ -1,18 +1,16 @@
 package com.bearpoints.api.dao;
 
-import com.bearpoints.api.dto.TeacherProjection;
-import com.bearpoints.api.entity.GradeLevel;
 import com.bearpoints.api.entity.Teacher;
 import io.micrometer.common.lang.NonNull;
-import jakarta.validation.constraints.NotNull;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.rest.core.annotation.RepositoryRestResource;
-import org.springframework.data.rest.core.annotation.RestResource;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.parameters.P;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.lang.Nullable;
 
 import java.util.List;
 import java.util.Optional;
@@ -20,93 +18,69 @@ import java.util.Optional;
 /**
  * JPA repository for {@link Teacher} entities.
  * <p>Provides CRUD operations and custom queries for teacher management.
- * Exposes REST endpoints under '/teachers' with security constraints.
  *
  * <p>Key features:
  * <ul>
- *     <li>Standard CRUD operations with ADMIN-only delete access</li>
- *     <li>Any authenticated user can access read operations</li>
+ *     <li>Standard CRUD operations</li>
+ *     <li>Custom queries for teacher retrieval</li>
+ *     <li>Pagination and sorting support</li>
+ *     <li>Advanced filtering via specifications</li>
  *     <li>Internal synchronization methods</li>
- *     <li>Role-based access control for write operations</li>
- *     <li>Uses {@link TeacherProjection} for condensed REST representations</li>
  * </ul>
- *
- * <p>Security constraints:
- * <ul>
- *     <li>ADMIN role required for delete operations</li>
- *     <li>ADMIN can create / update any teacher</li>
- *     <li>TEACHER can only update their own profile</li>
- *     <li>All authenticated users can access read operations</li>
- *     <li>Internal sync method not exposed via REST</li>
- * </ul>
- *
- * <p>Projection Usage:
- * REST representations use {@link TeacherProjection} by default for condensed views.
  *
  * @see Teacher
- * @see TeacherProjection
- * @version 1.2
+ * @version 2.1
  * @author Dylan Mercer
  */
-@RepositoryRestResource(
-        path = "teachers",
-        excerptProjection = TeacherProjection.class
-)
-public interface TeacherDAO extends JpaRepository<Teacher, Long> {
+public interface TeacherDAO extends JpaRepository<Teacher, Long>, JpaSpecificationExecutor<Teacher> {
     /**
      * Finds a teacher by their associated user email.
-     * <p>Requires any authenticated role.
      *
      * @param email User's email address
      * @return Optional containing the teacher if found
      */
-    @PreAuthorize("isAuthenticated()")
     Optional<Teacher> findByUserEmail(String email);
 
     /**
-     * Finds teachers by grade level.
-     * <p>Requires any authenticated role.
+     * Retrieves all teachers with pagination and caching support.
      *
-     * @param grade Grade level to search for
-     * @return List of matching teachers
-     */
-    @PreAuthorize("isAuthenticated()")
-    Page<Teacher> findByGrade(@NotNull(message = "Grade is required") GradeLevel grade, Pageable pageable);
-
-    /**
-     * Retrieves all teachers
-     * <p>Requires any authenticated role</p>
-     * @return List of all teachers
+     * @param pageable Pagination information
+     * @return Paginated list of all teachers
      */
     @NonNull
     @Override
     @Cacheable("teachers")
-    @PreAuthorize("isAuthenticated()")
-    List<Teacher> findAll();
+    @Query("SELECT t FROM Teacher t JOIN t.user u WHERE u.role = 'TEACHER'")
+    Page<Teacher> findAll(@NonNull Pageable pageable);
 
+    /**
+     * Finds teachers using specification with pagination.
+     *
+     * @param spec Specifications to search / filter for
+     * @param pageable Pagination information
+     * @return Paginated list of teachers matching specifications
+     */
     @NonNull
     @Override
-    @PreAuthorize("hasRole('ADMIN') or " + "(hasRole('TEACHER') and @securityUtils.isOwnTeacher(#entity, authentication))")
-    <S extends Teacher> S save(@NonNull @P("entity") S entity);
-
-    @Override
-    @PreAuthorize("hasRole('ADMIN')")
-    void delete(@NonNull Teacher entity);
-
-    @Override
-    @PreAuthorize("hasRole('ADMIN')")
-    void deleteAll();
-
-    @Override
-    @PreAuthorize("hasRole('ADMIN')")
-    void deleteAll(@NonNull Iterable<? extends Teacher> entities);
+    Page<Teacher> findAll(@Nullable Specification<Teacher> spec, @NonNull Pageable pageable);
 
     /**
      * Finds un-synced teachers (internal use only).
-     * <p>Not exposed via REST API. Used for Google Sheets synchronization.
+     * <p>Used for Google Sheets synchronization.
      *
      * @return List of unsynced teachers
      */
-    @RestResource(exported = false)
     List<Teacher> findBySyncedToSheetsFalse();
+
+    /**
+     * Checks if teacher is used in any brag logs or students (internal use only).
+     *
+     * @param teacherId Teacher ID to check
+     * @return true if teacher is used in brag logs or students, false otherwise
+     */
+    @Query("SELECT (" +
+            "SELECT COUNT(bl) FROM BragLog bl WHERE bl.teacher.id = :teacherId) > 0 " +
+            "OR " +
+            "(SELECT COUNT(s) FROM Student s WHERE s.teacher.id = :teacherId) > 0")
+    boolean isTeacherUsed(@Param("teacherId") Long teacherId);
 }

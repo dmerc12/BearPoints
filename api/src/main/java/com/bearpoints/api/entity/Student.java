@@ -19,7 +19,7 @@ import java.util.UUID;
  * @see User
  * @see Role
  * @see Syncable
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @Data
@@ -50,6 +50,17 @@ public class Student implements Syncable {
     @NotBlank(message = "Token is required")
     @Column(nullable = false, unique = true, length = 36)
     private String token;
+
+    /**
+     * Student's active status.
+     * <p>Constraints:
+     * <ul>
+     *     <li>Non-null</li>
+     * </ul>
+     */
+    @NotNull(message = "Active status is required")
+    @Column(nullable = false)
+    private Boolean active = true;
 
     /** Student's personal user information */
     @OneToOne
@@ -141,13 +152,31 @@ public class Student implements Syncable {
         this.sheetRowId = rowId;
     }
 
+
+    @PrePersist
+    public void prePersist() {
+        validateRole();
+        generateToken();
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        validateRole();
+    }
+
     /**
      * Generates and sets a new UUID token if it is null on initial save
      */
-    @PrePersist
     public void generateToken() {
         if (token == null) {
             token = UUID.randomUUID().toString();
         }
     }
+
+    public void validateRole() {
+        if (user != null && user.getRole() != Role.STUDENT) {
+            throw new IllegalStateException("Student can only be linked to user with role STUDENT, but found: " + user.getRole());
+        }
+    }
+
 }

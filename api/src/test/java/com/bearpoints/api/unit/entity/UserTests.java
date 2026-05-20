@@ -33,7 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 *  </ul>
  *
 * @see User
-* @version 1.0
+* @version 1.3
 * @author Dylan Mercer
 */
 public class UserTests {
@@ -233,15 +233,71 @@ public class UserTests {
     }
 
     /** Tests null role validation */
+    @Nested
+    @DisplayName("Role validation tests")
+    class RoleValidationTests {
+        @Test
+        @DisplayName("User with ADMIN role passes validation")
+        public void userWithAdminRoleValid() {
+            validUser.setRole(Role.ADMIN);
+            Set<ConstraintViolation<User>> violations = validator.validate(validUser);
+            assertThat(violations).isEmpty();
+        }
+
+        @Test
+        @DisplayName("User with STAFF role passes validation")
+        public void userWithStaffRoleValid() {
+            validUser.setRole(Role.STAFF);
+            Set<ConstraintViolation<User>> violations = validator.validate(validUser);
+            assertThat(violations).isEmpty();
+        }
+
+        @Test
+        @DisplayName("User with PARA role passes validation")
+        public void userWithParaRoleValid() {
+            validUser.setRole(Role.PARA);
+            Set<ConstraintViolation<User>> violations = validator.validate(validUser);
+            assertThat(violations).isEmpty();
+        }
+
+        @Test
+        @DisplayName("User with TEACHER role passes validation")
+        public void userWithTeacherRoleValid() {
+            validUser.setRole(Role.TEACHER);
+            Set<ConstraintViolation<User>> violations = validator.validate(validUser);
+            assertThat(violations).isEmpty();
+        }
+
+        @Test
+        @DisplayName("User with STUDENT role passes validation")
+        public void userWithStudentRoleValid() {
+            validUser.setRole(Role.STUDENT);
+            Set<ConstraintViolation<User>> violations = validator.validate(validUser);
+            assertThat(violations).isEmpty();
+        }
+
+        @Test
+        @DisplayName("Null role fails validation")
+        public void userRoleNull() {
+            validUser.setRole(null);
+            Set<ConstraintViolation<User>> violations = validator.validate(validUser);
+            assertThat(violations)
+                    .filteredOn(v -> v.getPropertyPath().toString().equals("role"))
+                    .extracting(ConstraintViolation::getMessage)
+                    .containsExactly("Role is required");
+        }
+    }
+
+    /** Tests null active status validation */
     @Test
-    @DisplayName("Null role fails validation")
-    public void userRoleNull() {
-        validUser.setRole(null);
+    @DisplayName("Null active status fails validation")
+    public void userActiveStatusNull() {
+        validUser.setActive(null);
         Set<ConstraintViolation<User>> violations = validator.validate(validUser);
         assertThat(violations)
-                .filteredOn(v -> v.getPropertyPath().toString().equals("role"))
+                .filteredOn(v -> v.getPropertyPath().toString().equals("active"))
                 .extracting(ConstraintViolation::getMessage)
-                .containsExactly("Role is required");
+                .containsExactly("Active status is required");
     }
 
     /** Version field tests */

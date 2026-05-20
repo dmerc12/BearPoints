@@ -2,8 +2,10 @@ package com.bearpoints.api.unit.service;
 
 import com.bearpoints.api.dao.LeaderboardDAO;
 import com.bearpoints.api.dto.LeaderboardEntryDTO;
+import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.dto.PersonDTO;
-import com.bearpoints.api.entity.*;
+import com.bearpoints.api.entity.GradeLevel;
+import com.bearpoints.api.entity.Timeframe;
 import com.bearpoints.api.service.LeaderboardService;
 import com.bearpoints.api.service.impl.LeaderboardServiceImpl;
 import org.junit.jupiter.api.DisplayName;
@@ -53,7 +55,7 @@ import static org.mockito.Mockito.when;
  * @see LeaderboardService
  * @see LeaderboardServiceImpl
  * @since 1.0
- * @version 2.1
+ * @version 2.2
  * @author Dylan Mercer
  */
 @ExtendWith(MockitoExtension.class)
@@ -91,9 +93,10 @@ public class LeaderboardServiceTests {
                         GradeLevel.FIRST, 100)
         );
         Page<LeaderboardEntryDTO> expectedPage = new PageImpl<>(expectedContent, pageable, expectedContent.size());
+        PagedResponseDTO<LeaderboardEntryDTO> expectedResponse = PagedResponseDTO.of(expectedPage);
         when(leaderboardDAO.findRankedLeaderboard(any(LocalDateTime.class), eq(null), eq(null), eq(pageable)))
-                .thenReturn(expectedPage);
-        Page<LeaderboardEntryDTO> result = leaderboardService.getLeaderboard(Timeframe.WEEK, null, null, pageable);
+                .thenReturn(expectedResponse);
+        PagedResponseDTO<LeaderboardEntryDTO> result = leaderboardService.getLeaderboard(Timeframe.WEEK, null, null, pageable);
         assertNotNull(result);
         assertEquals(1, result.getContent().size());
         verify(leaderboardDAO).findRankedLeaderboard(expectedStartDate, null, null, pageable);
@@ -119,9 +122,10 @@ public class LeaderboardServiceTests {
                         GradeLevel.FIRST, 100)
         );
         Page<LeaderboardEntryDTO> expectedPage = new PageImpl<>(expectedContent, pageable, expectedContent.size());
+        PagedResponseDTO<LeaderboardEntryDTO> expectedResponse = PagedResponseDTO.of(expectedPage);
         when(leaderboardDAO.findRankedLeaderboard(eq(expectedStartDate), eq(null), eq(null), eq(pageable)))
-                .thenReturn(expectedPage);
-        Page<LeaderboardEntryDTO> result = leaderboardService.getLeaderboard(Timeframe.WEEK, null, null, pageable);
+                .thenReturn(expectedResponse);
+        PagedResponseDTO<LeaderboardEntryDTO> result = leaderboardService.getLeaderboard(Timeframe.WEEK, null, null, pageable);
         assertNotNull(result);
         assertEquals(1, result.getContent().size());
         verify(leaderboardDAO).findRankedLeaderboard(expectedStartDate, null, null, pageable);
@@ -146,9 +150,10 @@ public class LeaderboardServiceTests {
                         GradeLevel.FIRST, 100)
         );
         Page<LeaderboardEntryDTO> expectedPage = new PageImpl<>(expectedContent, pageable, expectedContent.size());
+        PagedResponseDTO<LeaderboardEntryDTO> expectedResponse = PagedResponseDTO.of(expectedPage);
         when(leaderboardDAO.findRankedLeaderboard(eq(expectedStartDate), eq(null), eq(null), eq(pageable)))
-                .thenReturn(expectedPage);
-        Page<LeaderboardEntryDTO> result = leaderboardService.getLeaderboard(Timeframe.MONTH, null, null, pageable);
+                .thenReturn(expectedResponse);
+        PagedResponseDTO<LeaderboardEntryDTO> result = leaderboardService.getLeaderboard(Timeframe.MONTH, null, null, pageable);
         assertNotNull(result);
         assertEquals(1, result.getContent().size());
         verify(leaderboardDAO).findRankedLeaderboard(expectedStartDate, null, null, pageable);
@@ -173,9 +178,10 @@ public class LeaderboardServiceTests {
                         GradeLevel.FIRST, 100)
         );
         Page<LeaderboardEntryDTO> expectedPage = new PageImpl<>(expectedContent, pageable, expectedContent.size());
+        PagedResponseDTO<LeaderboardEntryDTO> expectedResponse = PagedResponseDTO.of(expectedPage);
         when(leaderboardDAO.findRankedLeaderboard(eq(expectedStartDate), eq(null), eq(null), eq(pageable)))
-                .thenReturn(expectedPage);
-        Page<LeaderboardEntryDTO> result = leaderboardService.getLeaderboard(Timeframe.SEMESTER, null, null, pageable);
+                .thenReturn(expectedResponse);
+        PagedResponseDTO<LeaderboardEntryDTO> result = leaderboardService.getLeaderboard(Timeframe.SEMESTER, null, null, pageable);
         assertNotNull(result);
         assertEquals(1, result.getContent().size());
         verify(leaderboardDAO).findRankedLeaderboard(expectedStartDate, null, null, pageable);
@@ -200,9 +206,10 @@ public class LeaderboardServiceTests {
                         GradeLevel.FIRST, 100)
         );
         Page<LeaderboardEntryDTO> expectedPage = new PageImpl<>(expectedContent, pageable, expectedContent.size());
+        PagedResponseDTO<LeaderboardEntryDTO> expectedResponse = PagedResponseDTO.of(expectedPage);
         when(leaderboardDAO.findRankedLeaderboard(eq(expectedStartDate), eq(null), eq(null), eq(pageable)))
-                .thenReturn(expectedPage);
-        Page<LeaderboardEntryDTO> result = leaderboardService.getLeaderboard(Timeframe.YEAR, null, null, pageable);
+                .thenReturn(expectedResponse);
+        PagedResponseDTO<LeaderboardEntryDTO> result = leaderboardService.getLeaderboard(Timeframe.YEAR, null, null, pageable);
         assertNotNull(result);
         assertEquals(1, result.getContent().size());
         verify(leaderboardDAO).findRankedLeaderboard(expectedStartDate, null, null, pageable);
@@ -228,9 +235,10 @@ public class LeaderboardServiceTests {
                         GradeLevel.FIRST, 100)
         );
         Page<LeaderboardEntryDTO> expectedPage = new PageImpl<>(expectedContent, pageable, expectedContent.size());
+        PagedResponseDTO<LeaderboardEntryDTO> expectedResponse = PagedResponseDTO.of(expectedPage);
         when(leaderboardDAO.findRankedLeaderboard(eq(expectedStartDate), eq(teacherId), eq(null), eq(pageable)))
-                .thenReturn(expectedPage);
-        Page<LeaderboardEntryDTO> result = leaderboardService.getLeaderboard(Timeframe.WEEK, teacherId, null, pageable);
+                .thenReturn(expectedResponse);
+        PagedResponseDTO<LeaderboardEntryDTO> result = leaderboardService.getLeaderboard(Timeframe.WEEK, teacherId, null, pageable);
         assertNotNull(result);
         assertEquals(1, result.getContent().size());
         verify(leaderboardDAO).findRankedLeaderboard(expectedStartDate, teacherId, null, pageable);
@@ -256,9 +264,10 @@ public class LeaderboardServiceTests {
                         grade, 100)
         );
         Page<LeaderboardEntryDTO> expectedPage = new PageImpl<>(expectedContent, pageable, expectedContent.size());
+        PagedResponseDTO<LeaderboardEntryDTO> expectedResponse = PagedResponseDTO.of(expectedPage);
         when(leaderboardDAO.findRankedLeaderboard(eq(expectedStartDate), eq(null), eq(grade), eq(pageable)))
-                .thenReturn(expectedPage);
-        Page<LeaderboardEntryDTO> result = leaderboardService.getLeaderboard(Timeframe.WEEK, null, grade, pageable);
+                .thenReturn(expectedResponse);
+        PagedResponseDTO<LeaderboardEntryDTO> result = leaderboardService.getLeaderboard(Timeframe.WEEK, null, grade, pageable);
         assertNotNull(result);
         assertEquals(1, result.getContent().size());
         verify(leaderboardDAO).findRankedLeaderboard(expectedStartDate, null, grade, pageable);

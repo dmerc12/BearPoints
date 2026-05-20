@@ -3,6 +3,7 @@ package com.bearpoints.api.unit.dao;
 import com.bearpoints.api.dao.LeaderboardDAO;
 import com.bearpoints.api.dao.impl.LeaderboardDAOImpl;
 import com.bearpoints.api.dto.LeaderboardEntryDTO;
+import com.bearpoints.api.dto.PagedResponseDTO;
 import com.bearpoints.api.entity.GradeLevel;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
@@ -13,7 +14,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
@@ -47,7 +47,7 @@ import static org.mockito.Mockito.when;
  * @see LeaderboardDAO
  * @see LeaderboardDAOImpl
  *
- * @version 1.1
+ * @version 1.2
  * @author Dylan Mercer
  */
 @ExtendWith(MockitoExtension.class)
@@ -122,7 +122,7 @@ public class LeaderboardDAOTests {
         when(countQuery.setParameter(eq("teacherId"), isNull())).thenReturn(countQuery);
         when(countQuery.setParameter(eq("grade"), isNull())).thenReturn(countQuery);
         when(countQuery.getSingleResult()).thenReturn(3L);
-        Page<LeaderboardEntryDTO> result = leaderboardDAO.findRankedLeaderboard(startDate, null, null, pageable);
+        PagedResponseDTO<LeaderboardEntryDTO> result = leaderboardDAO.findRankedLeaderboard(startDate, null, null, pageable);
         assertNotNull(result);
         assertEquals(3, result.getContent().size());
         assertEquals(3L, result.getTotalElements());
@@ -177,7 +177,7 @@ public class LeaderboardDAOTests {
         when(countQuery.setParameter(eq("teacherId"), eq(teacherId))).thenReturn(countQuery);
         when(countQuery.setParameter(eq("grade"), isNull())).thenReturn(countQuery);
         when(countQuery.getSingleResult()).thenReturn(2L);
-        Page<LeaderboardEntryDTO> result = leaderboardDAO.findRankedLeaderboard(startDate, teacherId, null, pageable);
+        PagedResponseDTO<LeaderboardEntryDTO> result = leaderboardDAO.findRankedLeaderboard(startDate, teacherId, null, pageable);
         assertNotNull(result);
         assertEquals(2, result.getContent().size());
         assertEquals(2L, result.getTotalElements());
@@ -216,7 +216,7 @@ public class LeaderboardDAOTests {
         when(countQuery.setParameter(eq("teacherId"), isNull())).thenReturn(countQuery);
         when(countQuery.setParameter(eq("grade"), eq(grade))).thenReturn(countQuery);
         when(countQuery.getSingleResult()).thenReturn(2L);
-        Page<LeaderboardEntryDTO> result = leaderboardDAO.findRankedLeaderboard(startDate, null, grade, pageable);
+        PagedResponseDTO<LeaderboardEntryDTO> result = leaderboardDAO.findRankedLeaderboard(startDate, null, grade, pageable);
         assertNotNull(result);
         assertEquals(2, result.getContent().size());
         assertEquals(2L, result.getTotalElements());
@@ -253,7 +253,7 @@ public class LeaderboardDAOTests {
         when(countQuery.setParameter(eq("teacherId"), eq(teacherId))).thenReturn(countQuery);
         when(countQuery.setParameter(eq("grade"), eq(grade))).thenReturn(countQuery);
         when(countQuery.getSingleResult()).thenReturn(1L);
-        Page<LeaderboardEntryDTO> result = leaderboardDAO.findRankedLeaderboard(startDate, teacherId, grade, pageable);
+        PagedResponseDTO<LeaderboardEntryDTO> result = leaderboardDAO.findRankedLeaderboard(startDate, teacherId, grade, pageable);
         assertNotNull(result);
         assertEquals(1, result.getContent().size());
         assertEquals(1L, result.getTotalElements());
@@ -291,7 +291,7 @@ public class LeaderboardDAOTests {
         when(countQuery.setParameter(eq("teacherId"), isNull())).thenReturn(countQuery);
         when(countQuery.setParameter(eq("grade"), isNull())).thenReturn(countQuery);
         when(countQuery.getSingleResult()).thenReturn(3L);
-        Page<LeaderboardEntryDTO> result = leaderboardDAO.findRankedLeaderboard(startDate, null, null, secondPage);
+        PagedResponseDTO<LeaderboardEntryDTO> result = leaderboardDAO.findRankedLeaderboard(startDate, null, null, secondPage);
         assertNotNull(result);
         assertEquals(1, result.getContent().size());
         assertEquals(3L, result.getTotalElements());
@@ -328,7 +328,7 @@ public class LeaderboardDAOTests {
         when(countQuery.setParameter(eq("teacherId"), isNull())).thenReturn(countQuery);
         when(countQuery.setParameter(eq("grade"), isNull())).thenReturn(countQuery);
         when(countQuery.getSingleResult()).thenReturn(0L);
-        Page<LeaderboardEntryDTO> result = leaderboardDAO.findRankedLeaderboard(startDate, null, null, pageable);
+        PagedResponseDTO<LeaderboardEntryDTO> result = leaderboardDAO.findRankedLeaderboard(startDate, null, null, pageable);
         assertNotNull(result);
         assertTrue(result.getContent().isEmpty());
         assertEquals(0L, result.getTotalElements());
@@ -358,7 +358,7 @@ public class LeaderboardDAOTests {
         when(contentQuery.getResultList()).thenReturn(sampleResults);
         when(countQuery.setParameter(anyString(), any())).thenReturn(countQuery);
         when(countQuery.getSingleResult()).thenReturn(3L);
-        Page<LeaderboardEntryDTO> result = leaderboardDAO.findRankedLeaderboard(startDate, null, null, pageable);
+        PagedResponseDTO<LeaderboardEntryDTO> result = leaderboardDAO.findRankedLeaderboard(startDate, null, null, pageable);
         List<LeaderboardEntryDTO> content = result.getContent();
         assertThat(content).extracting(LeaderboardEntryDTO::getPoints).containsExactly(150, 120, 100);
         assertThat(content).extracting(LeaderboardEntryDTO::getRank).containsExactly(1, 2, 3);
@@ -390,7 +390,7 @@ public class LeaderboardDAOTests {
         when(contentQuery.setFirstResult(anyInt())).thenReturn(contentQuery);
         when(contentQuery.setMaxResults(anyInt())).thenReturn(contentQuery);
         when(contentQuery.getResultList()).thenReturn(List.of(sampleResults.getFirst(), sampleResults.get(2)));
-        Page<LeaderboardEntryDTO> result = leaderboardDAO.findRankedLeaderboard(startDate, teacherId, grade, pageable);
+        PagedResponseDTO<LeaderboardEntryDTO> result = leaderboardDAO.findRankedLeaderboard(startDate, teacherId, grade, pageable);
         assertNotNull(result);
         verify(countQuery).setParameter("startDate", startDate);
         verify(countQuery).setParameter("teacherId", teacherId);

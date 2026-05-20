@@ -1,10 +1,7 @@
 package com.bearpoints.api.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -19,7 +16,7 @@ import java.util.Set;
  * @see Teacher
  * @see Syncable
  * @see BehaviorType
- * @version 1.0
+ * @version 1.2
  * @author Dylan Mercer
  */
 @Data
@@ -57,6 +54,16 @@ public class BragLog implements Syncable {
     private Teacher teacher;
 
     /**
+     * Grade level at the time of the brag log creation.
+     * <p>Preserves historical accuracy when teachers/students change grades.
+     * <p>Server will set this automatically from the teacher's current grade.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "grade", nullable = false)
+    @NotNull(message = "Grade is required")
+    private GradeLevel grade;
+
+    /**
      * BearBrag's associated behaviors
      * <p>Table associating behaviors with brag logs:
      * <ul>
@@ -79,13 +86,14 @@ public class BragLog implements Syncable {
 
     /**
      * BearBrag's points generated
+     * <p>Server will calculate this automatically from the sum of selected behaviors' point values.
+     *
      * <p>Constraints:
      * <ul>
-     *     <li>Non-null</li>
-     *     <li>Minimum value</li>
+     *     <li>Non-null (after server calculation)</li>
+     *     <li>Minimum value of 1</li>
      * </ul>
      */
-    @NotNull(message = "Points generated is required")
     @Min(value = 1, message = "Minimum points is 1")
     @Column(name = "points_generated", nullable = false)
     private Integer pointsGenerated;
@@ -100,6 +108,29 @@ public class BragLog implements Syncable {
     @Column
     @Size(max = 500, message = "Notes cannot exceed 500 characters")
     private String notes;
+
+    /**
+     * Name of the person who submitted the brag log
+     * <p>Stores "First Last" format for display
+     * <p>Constraints:
+     * <ul>
+     *     <li>Non-blank</li>
+     *     <li>Between 2 and 250 characters</li>
+     * </ul>
+     */
+    @Column(name = "submitter_name", nullable = false)
+    @NotBlank(message = "Submitter name is required")
+    @Size(min = 2, max = 250, message = "Submitter name must be between 2 and 250 characters")
+    private String submitterName;
+
+    /**
+     * Associated user if submitter exists in the system
+     * <p>Optional relationship - null if submitter is not a registered user
+     * <p>Used for role validation and user details when available
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "submitter_user_id")
+    private User submitterUser;
 
     /**
      * Version field for JPA optimistic locking.
@@ -183,5 +214,29 @@ public class BragLog implements Syncable {
     @Override
     public void setSheetRowId(Integer rowId) {
         this.sheetRowId = rowId;
+    }
+
+    /**
+     * Sets default values before persisting the brag log.
+     * <p>Calculates points generated from behaviors if not set.
+     * <p>Sets grade level from teacher's current grade if not set.
+     */
+    @PreUpdate
+    @PrePersist
+    public void setDefaultsBeforePersist() {
+        // Set teacher from student if not set
+        if (this.student != null) {
+            this.teacher = this.student.getTeacher();
+        }
+        // Set grade level from teacher if not set
+        if (this.teacher != null) {
+            this.grade = this.teacher.getGrade();
+        }
+        // Calculate points generated from behaviors if not set
+        if (this.behaviors != null && !this.behaviors.isEmpty()) {
+            this.pointsGenerated = this.behaviors.stream()
+                    .mapToInt(BehaviorType::getPointValue)
+                    .sum();
+        }
     }
 }

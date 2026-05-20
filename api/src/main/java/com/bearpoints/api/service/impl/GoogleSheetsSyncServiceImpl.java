@@ -53,7 +53,7 @@ import java.util.stream.Collectors;
  * </ul>
  *
  * @see GoogleSheetsSyncService
- * @version 1.0
+ * @version 1.1
  * @author Dylan Mercer
  */
 @Service
@@ -61,6 +61,16 @@ import java.util.stream.Collectors;
 public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
     private static final Logger logger = LoggerFactory.getLogger(GoogleSheetsSyncServiceImpl.class);
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+    private static final Map<String, List<String>> SHEET_HEADERS = Map.of(
+            "Users", Arrays.asList("ID", "Email", "First Name", "Last Name", "Role"),
+            "Teachers", Arrays.asList("ID", "Grade", "User ID"),
+            "Students", Arrays.asList("ID", "Points", "Token", "User ID", "Teacher ID"),
+            "BehaviorTypes", Arrays.asList("ID", "Name", "Point Value", "Active"),
+            "BragLogs", Arrays.asList("ID", "Student ID", "Teacher ID", "Behaviors", "Points Generated", "Submitter Name", "Submitter User ID", "Notes", "Timestamp"),
+            "RewardItems", Arrays.asList("ID", "Name", "Point Cost", "Stock"),
+            "StudentRewards", Arrays.asList("ID", "Redeemed At", "Student ID", "Reward Item ID")
+    );
 
     private final UserDAO userRepository;
     private final StudentDAO studentRepository;
@@ -195,10 +205,13 @@ public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
     }
 
     private void syncBragLogs() throws IOException {
+        List<BragLog> unsynced = bragLogRepository.findBySyncedToSheetsFalse();
+        logger.info("Found {} unsynced BragLogs", unsynced.size());
         syncEntity(
                 "BragLogs",
                 bragLogRepository::findBySyncedToSheetsFalse,
                 bragLog -> {
+                    logger.debug("Converting BragLog {} to row", bragLog.getId());
                     String behaviors = bragLog.getBehaviors().stream()
                             .map(BehaviorType::getName)
                             .collect(Collectors.joining(", "));
@@ -208,6 +221,8 @@ public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
                             bragLog.getTeacher().getId().toString(),
                             behaviors,
                             String.valueOf(bragLog.getPointsGenerated()),
+                            bragLog.getSubmitterName(),
+                            bragLog.getSubmitterUser().getId().toString(),
                             bragLog.getNotes(),
                             formatDateTime(bragLog.getTimestamp())
                     );
@@ -260,6 +275,33 @@ public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
     }
 
     /**
+     * Ensures that the given sheet has a header row. If the sheet is empty or has no headers, the header row is appended.
+     *
+     * @param sheetName Name of the sheet to check
+     * @throws IOException If the operation fails
+     */
+    private void ensureHeaders(String sheetName) throws IOException {
+        logger.info("Ensuring headers for sheet {}", sheetName);
+        List<List<Object>> existingData = googleSheetsService.getSheetData(sheetName);
+        if (existingData == null || existingData.isEmpty()) {
+            // Sheet is completely empty - add header row
+            List<String> headers = SHEET_HEADERS.get(sheetName);
+            if (headers == null) {
+                logger.warn("No header definition for sheet: {}", sheetName);
+                return;
+            }
+            logger.info("Sheet '{}' is empty - adding header row", sheetName);
+            googleSheetsService.appendToSheet(sheetName, Collections.singletonList(headers));
+        } else if (existingData.size() == 1 && existingData.getFirst().size() < SHEET_HEADERS.get(sheetName).size()) {
+            // Only one row exists, but it's incomplete - replace with proper header
+            logger.warn("Sheet '{}' has invalid headers, overwriting", sheetName);
+            googleSheetsService.clearSheet(sheetName);
+            List<String> headers = SHEET_HEADERS.get(sheetName);
+            googleSheetsService.appendToSheet(sheetName, Collections.singletonList(headers));
+        }
+    }
+
+    /**
      * Generic synchronization method for entities.
      *
      * @param <T> Entity type implementing Syncable
@@ -277,6 +319,8 @@ public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
             Function<List<Object>, Optional<T>> fromRowConverter,
             Consumer<T> repositorySave,
             Consumer<List<T>> markAndSave) throws IOException {
+        // Ensure sheet headers exist and are valid
+        ensureHeaders(sheetName);
         // 1. Get sheet data
         List<List<Object>> sheetData = googleSheetsService.getSheetData(sheetName);
         Map<Long, Integer> sheetRowMap = createRowIdMap(sheetData);
@@ -356,6 +400,9 @@ public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
             Long userId = Long.parseLong(row.get(2).toString());
             User user = userRepository.findById(userId).orElseThrow(() ->
                     new EntityNotFoundException("User not found: " + userId));
+            if (user.getRole() != Role.TEACHER) {
+                throw new IllegalArgumentException("User " + user.getEmail() + " is not a TEACHER");
+            }
             teacher.setUser(user);
             return Optional.of(teacher);
         } catch (Exception e) {
@@ -375,6 +422,9 @@ public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
             User user = userRepository.findById(userId).orElseThrow(() ->
                     new EntityNotFoundException("User not found: " + userId));
             student.setUser(user);
+            if (user.getRole() != Role.STUDENT) {
+                throw new IllegalArgumentException("User " + user.getEmail() + " is not a STUDENT");
+            }
             Long teacherId = Long.parseLong(row.get(4).toString());
             Teacher teacher = teacherRepository.findById(teacherId).orElseThrow(() ->
                     new EntityNotFoundException("Teacher not found: " + teacherId));
@@ -403,7 +453,7 @@ public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
 
     private Optional<BragLog> parseBragLogFromRow(List<Object> row) {
         try {
-            if (row.size() < 7) return Optional.empty();
+            if (row.size() < 9) return Optional.empty();
             BragLog bragLog = new BragLog();
             bragLog.setId(Long.parseLong(row.getFirst().toString()));
             Long studentId = Long.parseLong(row.get(1).toString());
@@ -417,12 +467,18 @@ public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
             String[] behaviorNames = row.get(3).toString().split(", ");
             Set<BehaviorType> behaviors = Arrays.stream(behaviorNames)
                     .map(behaviorTypeRepository::findByName)
-                    .filter(Objects::nonNull)
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
                     .collect(Collectors.toSet());
             bragLog.setBehaviors(behaviors);
             bragLog.setPointsGenerated(Integer.parseInt(row.get(4).toString()));
-            bragLog.setNotes(row.get(5).toString());
-            bragLog.setTimestamp(LocalDateTime.parse(row.get(6).toString(), DATE_FORMATTER));
+            bragLog.setSubmitterName(row.get(5).toString());
+            Long submitterUserId = Long.parseLong(row.get(6).toString());
+            User submitter = userRepository.findById(submitterUserId).orElseThrow(() ->
+                    new EntityNotFoundException("User not found: " + studentId));
+            bragLog.setSubmitterUser(submitter);
+            bragLog.setNotes(row.get(7).toString());
+            bragLog.setTimestamp(LocalDateTime.parse(row.get(8).toString(), DATE_FORMATTER));
             return Optional.of(bragLog);
         } catch (Exception e) {
             logger.error("Error parsing BragLog from row: {}", row, e);
@@ -468,6 +524,7 @@ public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
 
     private Map<Long, Integer> createRowIdMap(List<List<Object>> sheetData) {
         Map<Long, Integer> sheetRowMap = new HashMap<>();
+        if (sheetData == null || sheetData.size() <= 1) return sheetRowMap;
         // Create ID -> row number mapping (skip header row)
         for (int i = 1; i < sheetData.size(); i++) {
             List<Object> row = sheetData.get(i);
@@ -558,7 +615,9 @@ public class GoogleSheetsSyncServiceImpl implements GoogleSheetsSyncService {
             int rowCount = googleSheetsService.getRowCount(sheetName);
             int operations = rowCount * 2;
             int dailyQuota = 50000;
-            return operations < (dailyQuota * 0.8);
+            boolean result =  operations < (dailyQuota * 0.8);
+            logger.debug("Quota check for {}: rowCount: {}, operations={}, within quota={}", sheetName, rowCount, operations, result);
+            return result;
         } catch (IOException e) {
             logger.error("Failed to get row count for {}: {}", sheetName, e.getMessage());
             return false;

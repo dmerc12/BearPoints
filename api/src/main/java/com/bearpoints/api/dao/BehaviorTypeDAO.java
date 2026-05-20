@@ -1,89 +1,80 @@
 package com.bearpoints.api.dao;
 
-import com.bearpoints.api.dto.BehaviorTypeProjection;
 import com.bearpoints.api.entity.BehaviorType;
 import io.micrometer.common.lang.NonNull;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.rest.core.annotation.RepositoryRestResource;
-import org.springframework.data.rest.core.annotation.RestResource;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.lang.Nullable;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * JPA repository for {@link BehaviorType} entities.
- * <p>Provides CRUD operations and custom queries for behavior types.
- * Exposes REST endpoints under '/behavior-types' with security constraints.
+ * <p>Provides CRUD operations and queries for behavior type management.
  *
  * <p>Key features:
  * <ul>
- *     <li>Standard CRUD operations with ADMIN-only write access</li>
- *     <li>Public access to active behavior types</li>
+ *     <li>Standard CRUD operations</li>
+ *     <li>Pagination and sorting support</li>
+ *     <li>Advanced filtering via specifications</li>
  *     <li>Internal synchronization methods</li>
- *     <li>Uses {@link BehaviorTypeProjection} for condensed REST representations</li>
  * </ul>
- *
- * <p>Security constraints:
- * <ul>
- *     <li>Save/delete operations require ADMIN role</li>
- *     <li>Active behavior types lists is public</li>
- * </ul>
- *
- * <p>Projection usage:
- * REST representations use {@link BehaviorTypeProjection} by default for condensed views.
  *
  * @see BehaviorType
- * @see BehaviorTypeProjection
- * @version 1.1
+ * @version 2.0
  * @author Dylan Mercer
  */
-@RepositoryRestResource(
-        path = "behavior-types",
-        excerptProjection = BehaviorTypeProjection.class
-)
-public interface BehaviorTypeDAO extends JpaRepository<BehaviorType, Long> {
+public interface BehaviorTypeDAO extends JpaRepository<BehaviorType, Long>, JpaSpecificationExecutor<BehaviorType> {
     /**
-     * Finds all active behavior types.
-     * <p>Publicly accessible without authentication.
+     * Retrieves all behavior types with pagination and caching support.
      *
-     * @return List of active behavior types
+     * @param pageable Pagination information
+     * @return List of all behavior types
      */
-    @PreAuthorize("permitAll()")
-    List<BehaviorType> findByActiveTrue();
-
     @NonNull
     @Override
-    @PreAuthorize("hasRole('ADMIN')")
-    <S extends BehaviorType> S save(@NonNull S entity);
+    @Cacheable("behaviors")
+    Page<BehaviorType> findAll(@NonNull Pageable pageable);
 
+    /**
+     * Finds behavior types using specification with pagination.
+     *
+     * @param spec Specification to search / filter for
+     * @param pageable Pagination information
+     * @return Paginated list of behavior types matching specifications
+     */
+    @NonNull
     @Override
-    @PreAuthorize("hasRole('ADMIN')")
-    void delete(@NonNull BehaviorType entity);
-
-    @Override
-    @PreAuthorize("hasRole('ADMIN')")
-    void deleteAll();
-
-    @Override
-    @PreAuthorize("hasRole('ADMIN')")
-    void deleteAll(@NonNull Iterable<? extends BehaviorType> entities);
+    Page<BehaviorType> findAll(@Nullable Specification<BehaviorType> spec, @NonNull Pageable pageable);
 
     /**
      * Finds un-synchronized behavior types (internal use only).
-     * <p>Not exposed via REST API. Used for Google Sheets synchronization.
      *
      * @return List of unsynced behavior types
      */
-    @RestResource(exported = false)
     List<BehaviorType> findBySyncedToSheetsFalse();
 
     /**
-     * Finds behavior type by name (internal use only).
-     * <p>Not exposed via REST API. Used during data parsing.
+     * Finds behavior type by name.
      *
      * @param name Behavior type name
-     * @return Matching behavior type or null
+     * @return Optional containing behavior type if found
      */
-    @RestResource(exported = false)
-    BehaviorType findByName(String name);
+    Optional<BehaviorType> findByName(String name);
+
+    /**
+     * Checks if behavior type is used in any brag logs (internal use only).
+     *
+     * @param behaviorTypeId Behavior type ID to check
+     * @return true if behavior type is used in brag logs, false otherwise
+     */
+    @Query("SELECT COUNT(bl) > 0 FROM BragLog bl JOIN bl.behaviors b WHERE b.id = :behaviorTypeId")
+    boolean isBehaviorTypeUsed(@Param("behaviorTypeId") Long behaviorTypeId);
 }

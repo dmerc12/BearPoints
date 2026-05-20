@@ -15,6 +15,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -55,7 +56,7 @@ import static org.mockito.Mockito.*;
  * </ul>
  *
  * @see TestDataInitializer
- * @version 2.0
+ * @version 2.2
  * @author Dylan Mercer
  */
 @ExtendWith(MockitoExtension.class)
@@ -74,6 +75,12 @@ public class TestDataInitializerTests {
 
     @Mock
     private StudentRewardDAO studentRewardDAO;
+
+    @Mock
+    private StudentDAO studentDAO;
+
+    @Mock
+    private TeacherDAO teacherDAO;
 
     @InjectMocks
     private TestDataInitializer testDataInitializer;
@@ -119,12 +126,17 @@ public class TestDataInitializerTests {
         setEnvVariable(null);
         // Reset constants to their original values after each test
         setConstant("NUM_TEST_ADMINS_TO_CREATE", 12);
+        setConstant("NUM_TEST_STAFF_TO_CREATE", 5);
+        setConstant("NUM_TEST_PARAS_TO_CREATE", 8);
         setConstant("NUM_TEST_TEACHERS_TO_CREATE", 25);
         setConstant("MIN_NUM_TEST_STUDENTS_PER_TEACHER", 20);
         setConstant("MAX_NUM_TEST_STUDENTS_PER_TEACHER", 30);
         setConstant("NUM_TEST_BRAG_LOGS_TO_CREATE", 200);
         setConstant("NUM_TEST_REWARD_ITEMS_TO_CREATE", 20);
         setConstant("NUM_TEST_STUDENT_REWARDS_TO_CREATE", 50);
+        lenient().when(studentDAO.findAll()).thenReturn(Collections.emptyList());
+        lenient().when(teacherDAO.findAll()).thenReturn(Collections.emptyList());
+
     }
 
     /**
@@ -276,6 +288,8 @@ public class TestDataInitializerTests {
         when(userDAO.findByEmail(testEmail)).thenReturn(Optional.empty());
         when(userDAO.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
         setConstant("NUM_TEST_ADMINS_TO_CREATE", 0);
+        setConstant("NUM_TEST_STAFF_TO_CREATE", 0);
+        setConstant("NUM_TEST_PARAS_TO_CREATE", 0);
         setConstant("NUM_TEST_TEACHERS_TO_CREATE", 0);
         setConstant("MIN_NUM_TEST_STUDENTS_PER_TEACHER", 0);
         setConstant("MAX_NUM_TEST_STUDENTS_PER_TEACHER", 0);
@@ -293,10 +307,92 @@ public class TestDataInitializerTests {
     }
 
     /**
+     * Verifies created staff has all required properties
+     * <p>Asserts created staff contains:
+     * <ul>
+     *     <li>Correct email address from environment variable</li>
+     *     <li>Properly extracted first name (first initial)</li>
+     *     <li>Correctly parsed last name from email</li>
+     *     <li>STAFF role assignment</li>
+     * </ul>
+     */
+    @Test
+    @DisplayName("Creates staff with correct properties")
+    void createStaffWithCorrectProperties() throws Exception {
+        setEnvVariable(testEmail);
+        when(userDAO.findByEmail(testEmail)).thenReturn(Optional.empty());
+        when(userDAO.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        setConstant("NUM_TEST_ADMINS_TO_CREATE", 0);
+        setConstant("NUM_TEST_STAFF_TO_CREATE", 1);
+        setConstant("NUM_TEST_PARAS_TO_CREATE", 0);
+        setConstant("NUM_TEST_TEACHERS_TO_CREATE", 0);
+        setConstant("MIN_NUM_TEST_STUDENTS_PER_TEACHER", 0);
+        setConstant("MAX_NUM_TEST_STUDENTS_PER_TEACHER", 0);
+        setConstant("NUM_TEST_BRAG_LOGS_TO_CREATE", 0);
+        setConstant("NUM_TEST_REWARD_ITEMS_TO_CREATE", 0);
+        setConstant("NUM_TEST_STUDENT_REWARDS_TO_CREATE", 0);
+        testDataInitializer.run();
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userDAO, times(2)).save(userCaptor.capture());
+        List<User> savedUsers = userCaptor.getAllValues();
+        User primaryAdmin = savedUsers.getFirst();
+        assertEquals(testEmail, primaryAdmin.getEmail());
+        assertEquals("u", primaryAdmin.getFirstName());
+        assertEquals("user", primaryAdmin.getLastName());
+        assertEquals(Role.ADMIN, primaryAdmin.getRole());
+        User staffUser = savedUsers.get(1);
+        assertEquals("staff0@okcps.org", staffUser.getEmail());
+        assertEquals("staff", staffUser.getFirstName());
+        assertEquals("staff0", staffUser.getLastName());
+        assertEquals(Role.STAFF, staffUser.getRole());
+    }
+
+    /**
+     * Verifies created staff has all required properties
+     * <p>Asserts created staff contains:
+     * <ul>
+     *     <li>Correct email address from environment variable</li>
+     *     <li>Properly extracted first name (first initial)</li>
+     *     <li>Correctly parsed last name from email</li>
+     *     <li>STAFF role assignment</li>
+     * </ul>
+     */
+    @Test
+    @DisplayName("Creates para with correct properties")
+    void createParaWithCorrectProperties() throws Exception {
+        setEnvVariable(testEmail);
+        when(userDAO.findByEmail(testEmail)).thenReturn(Optional.empty());
+        when(userDAO.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        setConstant("NUM_TEST_ADMINS_TO_CREATE", 0);
+        setConstant("NUM_TEST_STAFF_TO_CREATE", 0);
+        setConstant("NUM_TEST_PARAS_TO_CREATE", 1);
+        setConstant("NUM_TEST_TEACHERS_TO_CREATE", 0);
+        setConstant("MIN_NUM_TEST_STUDENTS_PER_TEACHER", 0);
+        setConstant("MAX_NUM_TEST_STUDENTS_PER_TEACHER", 0);
+        setConstant("NUM_TEST_BRAG_LOGS_TO_CREATE", 0);
+        setConstant("NUM_TEST_REWARD_ITEMS_TO_CREATE", 0);
+        setConstant("NUM_TEST_STUDENT_REWARDS_TO_CREATE", 0);
+        testDataInitializer.run();
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userDAO, times(2)).save(userCaptor.capture());
+        List<User> savedUsers = userCaptor.getAllValues();
+        User primaryAdmin = savedUsers.getFirst();
+        assertEquals(testEmail, primaryAdmin.getEmail());
+        assertEquals("u", primaryAdmin.getFirstName());
+        assertEquals("user", primaryAdmin.getLastName());
+        assertEquals(Role.ADMIN, primaryAdmin.getRole());
+        User paraUser = savedUsers.get(1);
+        assertEquals("para0@okcps.org", paraUser.getEmail());
+        assertEquals("para", paraUser.getFirstName());
+        assertEquals("para0", paraUser.getLastName());
+        assertEquals(Role.PARA, paraUser.getRole());
+    }
+
+    /**
      * Verifies creation of multiple administrator accounts
      * <p>Asserts:
      * <ul>
-     *     <li>Correct number of admin accounts are created (primary + conigured count)</li>
+     *     <li>Correct number of admin accounts are created (primary + configured count)</li>
      *     <li>All admin accounts are properly saved to database</li>
      *     <li>No unintended side effects on other entity types</li>
      * </ul>
@@ -307,6 +403,8 @@ public class TestDataInitializerTests {
         setEnvVariable(testEmail);
         when(userDAO.findByEmail(testEmail)).thenReturn(Optional.empty());
         when(userDAO.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        setConstant("NUM_TEST_STAFF_TO_CREATE", 0);
+        setConstant("NUM_TEST_PARAS_TO_CREATE", 0);
         setConstant("NUM_TEST_TEACHERS_TO_CREATE", 0);
         setConstant("MIN_NUM_TEST_STUDENTS_PER_TEACHER", 0);
         setConstant("MAX_NUM_TEST_STUDENTS_PER_TEACHER", 0);
@@ -315,6 +413,78 @@ public class TestDataInitializerTests {
         setConstant("NUM_TEST_STUDENT_REWARDS_TO_CREATE", 0);
         testDataInitializer.run();
         verify(userDAO, times(13)).save(any(User.class));
+    }
+
+    /**
+     * Verifies creation of multiple staff accounts
+     * <p>Asserts:
+     * <ul>
+     *     <li>Correct number of staff accounts are created (primary + configured staff count)</li>
+     *     <li>All staff accounts are properly saved to database</li>
+     *     <li>No unintended side effects on other entity types</li>
+     * </ul>
+     */
+    @Test
+    @DisplayName("Creates multiple test staff")
+    void createsMultipleTestStaff() throws Exception {
+        setEnvVariable(testEmail);
+        when(userDAO.findByEmail(testEmail)).thenReturn(Optional.empty());
+        when(userDAO.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        setConstant("NUM_TEST_ADMINS_TO_CREATE", 0);
+        setConstant("NUM_TEST_PARAS_TO_CREATE", 0);
+        setConstant("NUM_TEST_TEACHERS_TO_CREATE", 0);
+        setConstant("MIN_NUM_TEST_STUDENTS_PER_TEACHER", 0);
+        setConstant("MAX_NUM_TEST_STUDENTS_PER_TEACHER", 0);
+        setConstant("NUM_TEST_BRAG_LOGS_TO_CREATE", 0);
+        setConstant("NUM_TEST_REWARD_ITEMS_TO_CREATE", 0);
+        setConstant("NUM_TEST_STUDENT_REWARDS_TO_CREATE", 0);
+        testDataInitializer.run();
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userDAO, times(6)).save(userCaptor.capture());
+        List<User> savedUsers = userCaptor.getAllValues();
+        assertEquals(Role.ADMIN, savedUsers.getFirst().getRole());
+        for (int i = 1; i <= 5; i++) {
+            User staff = savedUsers.get(i);
+            assertEquals("staff", staff.getFirstName());
+            assertEquals("staff" + (i - 1), staff.getLastName());
+            assertEquals(Role.STAFF, staff.getRole());
+        }
+    }
+
+    /**
+     * Verifies creation of multiple para accounts
+     * <p>Asserts:
+     * <ul>
+     *     <li>Correct number of para accounts are created (primary + configured para count)</li>
+     *     <li>All para accounts are properly saved to database</li>
+     *     <li>No unintended side effects on other entity types</li>
+     * </ul>
+     */
+    @Test
+    @DisplayName("Creates multiple test paras")
+    void createsMultipleTestParas() throws Exception {
+        setEnvVariable(testEmail);
+        when(userDAO.findByEmail(testEmail)).thenReturn(Optional.empty());
+        when(userDAO.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        setConstant("NUM_TEST_ADMINS_TO_CREATE", 0);
+        setConstant("NUM_TEST_STAFF_TO_CREATE", 0);
+        setConstant("NUM_TEST_TEACHERS_TO_CREATE", 0);
+        setConstant("MIN_NUM_TEST_STUDENTS_PER_TEACHER", 0);
+        setConstant("MAX_NUM_TEST_STUDENTS_PER_TEACHER", 0);
+        setConstant("NUM_TEST_BRAG_LOGS_TO_CREATE", 0);
+        setConstant("NUM_TEST_REWARD_ITEMS_TO_CREATE", 0);
+        setConstant("NUM_TEST_STUDENT_REWARDS_TO_CREATE", 0);
+        testDataInitializer.run();
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userDAO, times(9)).save(userCaptor.capture());
+        List<User> savedUsers = userCaptor.getAllValues();
+        assertEquals(Role.ADMIN, savedUsers.getFirst().getRole());
+        for (int i = 1; i <= 8; i++) {
+            User para = savedUsers.get(i);
+            assertEquals("para", para.getFirstName());
+            assertEquals("para" + (i - 1), para.getLastName());
+            assertEquals(Role.PARA, para.getRole());
+        }
     }
 
     /**
@@ -425,7 +595,21 @@ public class TestDataInitializerTests {
             user.setId(1L);
             if (user.getStudent() != null) {
                 user.getStudent().setId(1L);
-                user.getStudent().setTeacher(new Teacher());
+                Teacher teacher = new Teacher();
+                teacher.setId(1L);
+                User teacherUser = new User();
+                teacherUser.setId(2L);
+                teacherUser.setFirstName("Test");
+                teacherUser.setLastName("Teacher");
+                teacher.setUser(teacherUser);
+                teacherUser.setTeacher(teacher);
+                user.getStudent().setTeacher(teacher);
+            }
+            if (user.getTeacher() != null) {
+                user.getTeacher().setId(1L);
+                if (user.getTeacher().getUser() == null) {
+                    user.getTeacher().setUser(user);
+                }
             }
             return user;
         });
@@ -535,7 +719,15 @@ public class TestDataInitializerTests {
             user.setId(1L);
             if (user.getStudent() != null) {
                 user.getStudent().setId(1L);
-                user.getStudent().setTeacher(new Teacher());
+                Teacher teacher = new Teacher();
+                teacher.setId(1L);
+                User teacherUser = new User();
+                teacherUser.setId(2L);
+                teacherUser.setFirstName("Test");
+                teacherUser.setLastName("Teacher");
+                teacher.setUser(teacherUser);
+                teacherUser.setTeacher(teacher);
+                user.getStudent().setTeacher(teacher);
             }
             return user;
         });
@@ -677,6 +869,8 @@ public class TestDataInitializerTests {
         when(userDAO.findByEmail(testEmail)).thenReturn(Optional.empty());
         when(userDAO.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
         setConstant("NUM_TEST_ADMINS_TO_CREATE", 0);
+        setConstant("NUM_TEST_STAFF_TO_CREATE", 0);
+        setConstant("NUM_TEST_PARAS_TO_CREATE", 0);
         setConstant("NUM_TEST_TEACHERS_TO_CREATE", 0);
         setConstant("NUM_TEST_BRAG_LOGS_TO_CREATE", 0);
         setConstant("NUM_TEST_REWARD_ITEMS_TO_CREATE", 0);
@@ -711,6 +905,8 @@ public class TestDataInitializerTests {
             return behaviorType;
         });
         setConstant("NUM_TEST_ADMINS_TO_CREATE", 0);
+        setConstant("NUM_TEST_STAFF_TO_CREATE", 0);
+        setConstant("NUM_TEST_PARAS_TO_CREATE", 0);
         setConstant("NUM_TEST_TEACHERS_TO_CREATE", 0);
         setConstant("NUM_TEST_BRAG_LOGS_TO_CREATE", 0);
         setConstant("NUM_TEST_REWARD_ITEMS_TO_CREATE", 0);
