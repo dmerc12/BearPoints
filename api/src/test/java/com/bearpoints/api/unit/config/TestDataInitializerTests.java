@@ -15,6 +15,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -75,6 +76,12 @@ public class TestDataInitializerTests {
     @Mock
     private StudentRewardDAO studentRewardDAO;
 
+    @Mock
+    private StudentDAO studentDAO;
+
+    @Mock
+    private TeacherDAO teacherDAO;
+
     @InjectMocks
     private TestDataInitializer testDataInitializer;
 
@@ -127,6 +134,9 @@ public class TestDataInitializerTests {
         setConstant("NUM_TEST_BRAG_LOGS_TO_CREATE", 200);
         setConstant("NUM_TEST_REWARD_ITEMS_TO_CREATE", 20);
         setConstant("NUM_TEST_STUDENT_REWARDS_TO_CREATE", 50);
+        lenient().when(studentDAO.findAll()).thenReturn(Collections.emptyList());
+        lenient().when(teacherDAO.findAll()).thenReturn(Collections.emptyList());
+
     }
 
     /**

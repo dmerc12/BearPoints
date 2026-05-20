@@ -581,7 +581,11 @@ public class GoogleSheetsSyncServiceTests {
         @DisplayName("Handles missing teacher in student parsing")
         public void handlesMissingTeacherInStudentParsing() {
             List<Object> row = Arrays.asList("1", "120", "token", "3", "999");
-            when(userDAO.findById(3L)).thenReturn(Optional.of(new User()));
+            User studentUser = new User();
+            studentUser.setId(3L);
+            studentUser.setRole(Role.STUDENT);
+            studentUser.setEmail("student@okcps.org");
+            when(userDAO.findById(3L)).thenReturn(Optional.of(studentUser));
             when(teacherDAO.findById(999L)).thenReturn(Optional.empty());
             Optional<Student> student = ReflectionTestUtils.invokeMethod(syncService, "parseStudentFromRow", row);
             assertNotNull(student);
