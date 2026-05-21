@@ -1,4 +1,4 @@
-import { useAppDispatch, addStudent } from '../../store';
+import { useAppDispatch, addStudent, fetchStudents } from '../../store';
 import { StudentDTO, TeacherDTO } from '../../services';
 import { BaseModal, StudentForm } from '../index';
 import { useStudentForm  } from '../../hooks';
@@ -35,6 +35,7 @@ export function CreateStudentModal({ show, onCancel, onSuccess, defaultTeacherId
             .then(() => {
                 onSuccess();
                 resetForm();
+                dispatch(fetchStudents({ page: 0, size: 10, force: true }));
             }).catch((err: Error) => {
                 console.log('Failed to create student:', err);
         });

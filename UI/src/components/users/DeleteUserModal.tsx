@@ -1,4 +1,4 @@
-import { useAppDispatch, useAppSelector, removeUser } from '../../store';
+import { useAppDispatch, useAppSelector, removeUser, fetchUsers } from '../../store';
 import { formatRole, fullName } from '../../utils';
 import { UserDTO } from '../../services';
 import { Alert } from 'react-bootstrap';
@@ -24,6 +24,7 @@ export function DeleteUserModal({ show, user, onCancel, onSuccess }: DeleteUserM
             .unwrap()
             .then(() => {
                 onSuccess();
+                dispatch(fetchUsers({ page: 0, size: 10, force: true }));
             })
             .catch((error: Error) => {
                 console.log('Failed to delete user', error);

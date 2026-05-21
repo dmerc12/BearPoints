@@ -1,4 +1,4 @@
-import { useAppDispatch, modifyUser } from '../../store';
+import { useAppDispatch, modifyUser, fetchUsers } from '../../store';
 import { BaseModal, UserForm } from '../index';
 import { useUserForm } from '../../hooks';
 import { UserDTO } from '../../services';
@@ -31,6 +31,7 @@ export function EditUserModal({ show, user, onCancel, onSuccess }: EditUserModal
             .then(() => {
                 onSuccess();
                 resetForm();
+                dispatch(fetchUsers({ page: 0, size: 10, force: true }));
             })
             .catch((error: Error) => {
                 console.log('Failed to update user:', error);

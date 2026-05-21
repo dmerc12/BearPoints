@@ -1,4 +1,4 @@
-import { useAppDispatch, addRewardItem } from '../../store';
+import { useAppDispatch, addRewardItem, fetchRewardItems } from '../../store';
 import { BaseModal, RewardItemForm } from '../index';
 import { useRewardItemForm } from '../../hooks';
 import { Alert } from 'react-bootstrap';
@@ -27,6 +27,7 @@ export function CreateRewardItemModal({ show, onCancel, onSuccess }: CreateRewar
             .then(() => {
                 onSuccess();
                 resetForm();
+                dispatch(fetchRewardItems({ page: 0, size: 10, force: true }));
             })
             .catch((error: Error) => {
                 console.log('Failed to create reward item:', error);

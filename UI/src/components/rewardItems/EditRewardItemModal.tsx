@@ -1,4 +1,4 @@
-import { useAppDispatch, modifyRewardItem } from '../../store';
+import { useAppDispatch, modifyRewardItem, fetchRewardItems } from '../../store';
 import { BaseModal, RewardItemForm } from '../index';
 import { useRewardItemForm } from '../../hooks';
 import { RewardItemDTO} from '../../services';
@@ -29,6 +29,7 @@ export function EditRewardItemModal({ show, rewardItem, onCancel, onSuccess }: E
             .then(() => {
                 onSuccess();
                 resetForm();
+                dispatch(fetchRewardItems({ page: 0, size: 10, force: true }));
             })
             .catch((error: Error) => {
                 console.log('Failed to update reward item:', error);

@@ -1,4 +1,4 @@
-import { useAppDispatch, modifyBehaviorType } from '../../store';
+import { useAppDispatch, modifyBehaviorType, fetchBehaviorTypes } from '../../store';
 import { BaseModal, BehaviorTypeForm } from '../index';
 import { useBehaviorTypeForm } from '../../hooks';
 import { BehaviorTypeDTO } from '../../services';
@@ -29,6 +29,7 @@ export function EditBehaviorTypeModal({ show, behaviorType, onCancel, onSuccess 
             .then(() => {
                 onSuccess();
                 resetForm();
+                dispatch(fetchBehaviorTypes({ page: 0, size: 10, force: true }));
             })
             .catch((error: Error) => {
                 console.log('Failed to update behavior type:', error);

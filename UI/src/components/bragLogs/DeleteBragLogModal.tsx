@@ -1,4 +1,4 @@
-import { useAppDispatch, useAppSelector, removeBragLog } from '../../store';
+import { useAppDispatch, useAppSelector, removeBragLog, fetchBragLogs } from '../../store';
 import { BragLogDTO } from '../../services';
 import { Alert } from 'react-bootstrap';
 import { BaseModal } from '../index';
@@ -20,6 +20,7 @@ export function DeleteBragLogModal({ show, bragLog, onCancel, onSuccess }: Delet
             .unwrap()
             .then(() => {
                 onSuccess();
+                dispatch(fetchBragLogs({ page: 0, size: 10, force: true }));
             })
             .catch((error: Error) => {
                 console.log('Failed to delete brag log', error);

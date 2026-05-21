@@ -1,4 +1,4 @@
-import { useAppDispatch, useAppSelector, removeTeacher } from '../../store';
+import { useAppDispatch, useAppSelector, removeTeacher, fetchTeachers } from '../../store';
 import { fullName, formatGrade } from '../../utils';
 import { TeacherDTO } from '../../services';
 import { Alert } from 'react-bootstrap';
@@ -21,6 +21,7 @@ export function DeleteTeacherModal({ show, teacher, onCancel, onSuccess }: Delet
             .unwrap()
             .then(() => {
                 onSuccess();
+                dispatch(fetchTeachers({ page: 0, size: 10, force: true }));
             })
             .catch((error: Error) => {
                 console.log('Failed to delete teacher:', error);

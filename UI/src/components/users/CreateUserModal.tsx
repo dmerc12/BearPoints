@@ -1,4 +1,4 @@
-import { useAppDispatch, addUser } from '../../store';
+import { useAppDispatch, addUser, fetchUsers } from '../../store';
 import { BaseModal, UserForm } from '../index';
 import { UserDTO, Role } from '../../services';
 import { useUserForm } from '../../hooks';
@@ -29,6 +29,7 @@ export function CreateUserModal({ show, onCancel, onSuccess }: CreateAdminModalP
             .then(() => {
                 onSuccess();
                 resetForm();
+                dispatch(fetchUsers({ page: 0, size: 10, force: true }));
             })
             .catch((error: Error) => {
                 console.log('Failed to create user:', error);

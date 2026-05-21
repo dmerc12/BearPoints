@@ -1,4 +1,4 @@
-import { useAppDispatch, modifyBragLog } from '../../store';
+import { useAppDispatch, modifyBragLog, fetchBragLogs } from '../../store';
 import { useInternalBragLogForm } from '../../hooks';
 import { BaseModal, BragLogForm } from '../index';
 import { BragLogDTO } from '../../services';
@@ -32,6 +32,7 @@ export function EditBragLogModal({ show, bragLog, onCancel, onSuccess }: EditBra
             .then(() => {
                 onSuccess();
                 resetForm();
+                dispatch(fetchBragLogs({ page: 0, size: 10, force: true }));
             })
             .catch((error: Error) => {
                 console.log('Failed to update brag log:', error);

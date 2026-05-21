@@ -1,4 +1,4 @@
-import { useAppDispatch, useAppSelector, removeStudentReward } from '../../store';
+import { useAppDispatch, useAppSelector, removeStudentReward, fetchStudentRewards } from '../../store';
 import { StudentRewardDTO } from '../../services';
 import { Alert } from 'react-bootstrap';
 import { BaseModal } from '../index';
@@ -20,6 +20,7 @@ export function DeleteStudentRewardModal({ show, studentReward, onCancel, onSucc
             .unwrap()
             .then(() => {
                 onSuccess();
+                dispatch(fetchStudentRewards({ page: 0, size: 10, force: true }));
             })
             .catch((error: Error) => {
                 console.log('Failed to delete student reward:', error);
