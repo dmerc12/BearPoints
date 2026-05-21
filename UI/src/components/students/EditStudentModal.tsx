@@ -1,4 +1,4 @@
-import { useAppDispatch, modifyStudent } from '../../store';
+import { useAppDispatch, modifyStudent, fetchStudents } from '../../store';
 import { StudentDTO, TeacherDTO } from '../../services';
 import { BaseModal, StudentForm } from '../index';
 import { useStudentForm } from '../../hooks';
@@ -37,6 +37,7 @@ export function EditStudentModal({ show, student, onCancel, onSuccess }: EditStu
             .then(() => {
                 onSuccess();
                 resetForm();
+                dispatch(fetchStudents({ page: 0, size: 10, force: true }));
             }).catch((err: Error) => {
             console.log('Failed to update student:', err);
         });

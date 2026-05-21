@@ -1,4 +1,4 @@
-import { useAppDispatch, modifyStudentReward } from '../../store';
+import { useAppDispatch, modifyStudentReward, fetchStudentRewards } from '../../store';
 import { BaseModal, StudentRewardForm } from '../index';
 import { useStudentRewardForm } from '../../hooks';
 import { StudentRewardDTO } from '../../services';
@@ -28,6 +28,7 @@ export function EditStudentRewardModal({ show, studentReward, onCancel, onSucces
             .then(() => {
                 onSuccess();
                 resetForm();
+                dispatch(fetchStudentRewards({ page: 0, size: 10, force: true }));
             })
             .catch((error: Error) => {
                 console.log('Failed to update student reward:', error);

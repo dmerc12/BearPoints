@@ -133,11 +133,11 @@ export default function BaseTable<T>(props: BaseTableProps<T>) {
     const generatedFilters = useMemo(() => {
         if (renderFilters || !filtersConfig || !updateFilter) return null;
         return (
-            <Row className='mb-3 g-3'>
+            <Row className='justify-content-center mb-3 g-3'>
                 {filtersConfig.map((filter) => {
                     if (filter.type === 'text') {
                         return (
-                            <Col key={filter.key} md={4}>
+                            <Col key={filter.key} md={4} className='col-auto'>
                                 <TextFilter
                                     key={filter.key}
                                     instanceId={`filter-${filter.key}`}
@@ -152,7 +152,7 @@ export default function BaseTable<T>(props: BaseTableProps<T>) {
                         );
                     } else if (filter.type === 'select') {
                         return (
-                            <Col key={filter.key} md={4}>
+                            <Col key={filter.key} md={4} className='col-auto'>
                                 <SelectFilter value={filters?.[filter.key] || ''}
                                               onChange={(value) => updateFilter(filter.key, value)}
                                               label={filter.label}
@@ -162,7 +162,7 @@ export default function BaseTable<T>(props: BaseTableProps<T>) {
                         );
                     } else if (filter.type === 'date') {
                         return (
-                            <Col key={filter.key} md={4}>
+                            <Col key={filter.key} md={4} className='col-auto'>
                                 <DateFilter
                                     value={filters?.[filter.key] || ''}
                                     onChange={(value) => updateFilter(filter.key, value)}
@@ -173,7 +173,7 @@ export default function BaseTable<T>(props: BaseTableProps<T>) {
                         );
                     } else if (filter.type === 'number') {
                         return (
-                            <Col key={filter.key} md={4}>
+                            <Col key={filter.key} md={4} className='col-auto'>
                                 <NumberFilter
                                     value={filters?.[filter.key] || ''}
                                     onChange={(value) => updateFilter(filter.key, value)}
@@ -192,52 +192,53 @@ export default function BaseTable<T>(props: BaseTableProps<T>) {
         );
     }, [filtersConfig, filters, updateFilter, renderFilters]);
 
-    const generatedHeader = useMemo(() => {
-        if (renderHeader || !headerConfig) return null;
+    const renderedTitle = useMemo(() => {
+        if (renderHeader || !headerConfig || !headerConfig.title) return null;
+        return <h2 className="text-center mb-3">{headerConfig.title}</h2>
+    }, [headerConfig, renderHeader]);
+
+    const renderedInfoRow = useMemo(() => {
+        if (renderHeader) return null;
+        const hasRightContent = headerConfig?.additionalElements || (headerConfig?.showCreateButton && onCreateClick) || headerButtons;
         return (
-            <div className='d-flex justify-content-between align-items-center mb-3'>
-                <div>
-                    <h2>{headerConfig.title}</h2>
-                    <p className='text-muted'>
-                        Showing {data.length} of {totalCount} {headerConfig.itemName}
+            <div className="d-flex justify-content-between align-items-center mb-3">
+                <div className="my-auto">
+                    <p className="text-muted">
+                        Showing {data.length} of {totalCount} {headerConfig?.itemName || 'items'}
                     </p>
                 </div>
-                <div className="d-flex gap-2 align-items-center">
-                    {headerConfig.showCreateButton && onCreateClick && (
-                        <Button variant='primary'
-                                onClick={onCreateClick}
-                                className='me-2'
-                                size={size === 's' ? 'sm' : undefined}
-                        >
-                            {headerConfig.createButtonText || `Create ${headerConfig.itemName}`}
-                        </Button>
-                    )}
-                    {headerButtons}
-                </div>
+                {hasRightContent && (
+                    <div className="d-flex gap-2 align-items-center">
+                        {headerConfig?.additionalElements}
+                        {headerButtons}
+                        {headerConfig?.showCreateButton && onCreateClick && (
+                            <Button variant='primary' onClick={onCreateClick} size={size === 's' ? 'sm' : undefined}>
+                                {headerConfig.createButtonText || `Create ${headerConfig.itemName}`}
+                            </Button>
+                        )}
+                    </div>
+                )}
             </div>
         );
-    }, [headerConfig, data.length, totalCount, onCreateClick, size, renderHeader, headerButtons]);
+    }, [data.length, totalCount, headerConfig, onCreateClick, size, headerButtons, renderHeader]);
 
-    const defaultHeader = useMemo(() => {
-        if (generatedHeader) return generatedHeader;
+    const defaultHeaderFallback = useMemo(() => {
+        if (renderHeader) return null;
+        if (headerConfig) return null;
         return (
-            <div className='m-2 d-flex justify-content-between align-items-center'>
+            <div className="d-flex justify-content-between align-items-center mb-3">
                 <span>Showing {data.length} items</span>
-                <div className="d-flex gap-2 align-items-center">
+                <div className="d-flex gap-2">
+                    {headerButtons}
                     {showCreateButton && onCreateClick && (
-                        <Button variant='primary'
-                                onClick={onCreateClick}
-                                className='me-2'
-                                size={size === 's' ? 'sm' : undefined}
-                        >
+                        <Button variant="primary" onClick={onCreateClick} size={size === 's' ? 'sm' : undefined}>
                             {createButtonText}
                         </Button>
                     )}
-                    {headerButtons}
                 </div>
             </div>
         );
-    }, [generatedHeader, data.length, showCreateButton, onCreateClick, createButtonText, size, headerButtons]);
+    }, [data.length, showCreateButton, onCreateClick, createButtonText, size, headerButtons, renderHeader, headerConfig]);
 
     const handleHeaderClick = useCallback((column: TableColumn<T>) => {
         if (column.sortable && onSort) {
@@ -292,8 +293,9 @@ export default function BaseTable<T>(props: BaseTableProps<T>) {
 
     return (
         <div className={`table-responsive ${size === 's' ? 'table-sm' : ''}`}>
-            { generatedFilters || renderFilters?.() }
-            { generatedHeader || renderHeader?.() || defaultHeader }
+            {renderedTitle}
+            {generatedFilters || renderFilters?.()}
+            {renderHeader ? renderHeader() : (headerConfig ? renderedInfoRow : defaultHeaderFallback)}
             <Table striped bordered hover responsive
                    className={`text-center align-middle ${size === 's' ? 'table-sm' : ''}`}
             >

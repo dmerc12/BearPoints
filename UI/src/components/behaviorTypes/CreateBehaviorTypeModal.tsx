@@ -1,4 +1,4 @@
-import { useAppDispatch, addBehaviorType } from '../../store';
+import { useAppDispatch, addBehaviorType, fetchBehaviorTypes } from '../../store';
 import { BaseModal, BehaviorTypeForm } from '../index';
 import { useBehaviorTypeForm } from '../../hooks';
 import { BehaviorTypeDTO } from '../../services';
@@ -28,6 +28,7 @@ export function CreateBehaviorTypeModal({ show, onCancel, onSuccess }: CreateBeh
             .then(() => {
                 onSuccess();
                 resetForm();
+                dispatch(fetchBehaviorTypes({ page: 0, size: 10, force: true }));
             })
             .catch((error: Error) => {
                 console.log('Failed to create behavior type:', error);

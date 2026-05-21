@@ -1,4 +1,4 @@
-import { useAppDispatch, useAppSelector, removeBehaviorType } from '../../store';
+import { useAppDispatch, useAppSelector, removeBehaviorType, fetchBehaviorTypes } from '../../store';
 import { BehaviorTypeDTO } from '../../services';
 import { Alert } from 'react-bootstrap';
 import { BaseModal } from '../index';
@@ -20,6 +20,7 @@ export function DeleteBehaviorTypeModal({ show, behaviorType, onCancel, onSucces
             .unwrap()
             .then(() => {
                 onSuccess();
+                dispatch(fetchBehaviorTypes({ page: 0, size: 10, force: true }));
             })
             .catch((error: Error) => {
                 console.log('Failed to delete behavior types', error);

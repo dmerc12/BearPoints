@@ -1,4 +1,4 @@
-import { useAppDispatch, addStudentReward } from '../../store';
+import { useAppDispatch, addStudentReward, fetchStudentRewards } from '../../store';
 import { BaseModal, StudentRewardForm } from '../index';
 import { useStudentRewardForm } from '../../hooks';
 import { Alert } from 'react-bootstrap';
@@ -26,6 +26,7 @@ export function CreateStudentRewardModal({ show, onCancel, onSuccess }: CreateSt
             .then(() => {
                 onSuccess();
                 resetForm();
+                dispatch(fetchStudentRewards({ page: 0, size: 10, force: true }));
             })
             .catch((error: Error) => {
                 console.log('Failed to create student reward:', error);

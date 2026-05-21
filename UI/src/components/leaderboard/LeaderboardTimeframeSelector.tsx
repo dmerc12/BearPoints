@@ -10,7 +10,7 @@ export function LeaderboardTimeframeSelector(props: LeaderboardTimeframeSelector
     const { currentTimeframe, onTimeframeChange } = props;
 
     return (
-        <div className='mb-3 text-center'>
+        <div className='text-center'>
             <ButtonGroup className='mb-3'>
                 <Button variant={currentTimeframe ===  Timeframe.WEEK ? 'primary' : 'outline-primary'}
                         onClick={() => onTimeframeChange(Timeframe.WEEK)}

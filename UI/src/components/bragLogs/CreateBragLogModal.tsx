@@ -1,4 +1,4 @@
-import { useAppDispatch, addBragLog } from '../../store';
+import { useAppDispatch, addBragLog, fetchBragLogs } from '../../store';
 import { useInternalBragLogForm } from '../../hooks';
 import { BaseModal, BragLogForm } from '../index';
 import { BragLogDTO } from '../../services';
@@ -30,6 +30,7 @@ export function CreateBragLogModal({ show, onCancel, onSuccess }: CreateBragLogM
             .then(() => {
                 onSuccess();
                 resetForm();
+                dispatch(fetchBragLogs({ page: 0, size: 10, force: true }));
             })
             .catch((error: Error) => {
                 console.log('Failed to create brag log:', error);

@@ -1,4 +1,4 @@
-import { useAppDispatch, modifyTeacher } from '../../store';
+import { useAppDispatch, modifyTeacher, fetchTeachers } from '../../store';
 import { TeacherDTO, GradeLevel } from '../../services';
 import { BaseModal, TeacherForm } from '../index';
 import { useTeacherForm } from '../../hooks';
@@ -35,6 +35,7 @@ export function EditTeacherModal({ show, teacher, onCancel, onSuccess }: EditTea
             .then(() => {
                 onSuccess();
                 resetForm();
+                dispatch(fetchTeachers({ page: 0, size: 10, force: true }));
             })
             .catch((error: Error) => {
                 console.log('Failed to update teacher:', error);

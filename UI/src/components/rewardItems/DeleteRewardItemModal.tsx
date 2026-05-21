@@ -1,4 +1,4 @@
-import { useAppDispatch, useAppSelector, removeRewardItem } from '../../store';
+import { useAppDispatch, useAppSelector, removeRewardItem, fetchRewardItems } from '../../store';
 import { RewardItemDTO } from '../../services';
 import { Alert } from 'react-bootstrap';
 import { BaseModal } from '../index';
@@ -20,6 +20,7 @@ export function DeleteRewardItemModal({ show, rewardItem, onCancel, onSuccess }:
             .unwrap()
             .then(() => {
                 onSuccess();
+                dispatch(fetchRewardItems({ page: 0, size: 10, force: true }));
             })
             .catch((error: Error) => {
                 console.log('Failed to delete reward item:', error);

@@ -1,5 +1,5 @@
+import { useAppDispatch, addTeacher, fetchTeachers } from '../../store';
 import { TeacherDTO, GradeLevel } from '../../services';
-import { useAppDispatch, addTeacher } from '../../store';
 import { BaseModal, TeacherForm } from '../index';
 import { useTeacherForm } from '../../hooks';
 import { Alert } from 'react-bootstrap';
@@ -33,6 +33,7 @@ export function CreateTeacherModal({ show, onCancel, onSuccess }: CreateTeacherM
             .then(() => {
                 onSuccess();
                 resetForm();
+                dispatch(fetchTeachers({ page: 0, size: 10, force: true }));
             })
             .catch((error: Error) => {
                 console.log('Failed to create teacher:', error);

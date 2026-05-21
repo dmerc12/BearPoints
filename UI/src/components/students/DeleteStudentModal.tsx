@@ -1,4 +1,4 @@
-import { useAppDispatch, useAppSelector, removeStudent } from '../../store';
+import { useAppDispatch, useAppSelector, removeStudent, fetchStudents } from '../../store';
 import { StudentDTO } from '../../services';
 import { Alert } from 'react-bootstrap';
 import { fullName } from '../../utils';
@@ -21,6 +21,7 @@ export function DeleteStudentModal({ show, student, onCancel, onSuccess }: Delet
             .unwrap()
             .then(() => {
                 onSuccess();
+                dispatch(fetchStudents({ page: 0, size: 10, force: true }));
             })
             .catch((error: Error) => {
                 console.log('Failed to delete student:', error);
