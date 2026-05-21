@@ -35,7 +35,7 @@ jobs:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('api/pom.xml') }}
       - name: Run unit & integration tests
-        env: 
+        env:
           FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
           GOOGLE_SERVICE_ACCOUNT_KEY: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}
           GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
@@ -56,7 +56,6 @@ jobs:
     name: Build & Deploy API + UI
     runs-on: ubuntu-latest
     needs: test-backend
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     permissions:
       id-token: write
       contents: read
@@ -90,7 +89,7 @@ jobs:
       - name: Force ECS deployment
         run: |
           aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_SERVICE --force-new-deployment --region $AWS_REGION
-          
+
       # UI: Build & Deploy to S3 + CloudFront
       - name: Setup Node
         uses: actions/setup-node@v4
